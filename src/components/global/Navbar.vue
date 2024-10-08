@@ -1,5 +1,7 @@
 <script setup></script>
 
 <template>
-  <h1>Nav: All Sessions</h1>
+  <v-app-bar color="primary" app>
+    <v-toolbar-title> ALL SESSIONS </v-toolbar-title>
+  </v-app-bar>
 </template>
