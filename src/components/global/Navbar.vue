@@ -1,7 +1,41 @@
-<script setup></script>
+<script setup>
+import {ref} from "vue"
 
+const navItems = ref([
+  {
+    title: 'All Sessions',
+    disabled: false,
+    href: '/',
+  },
+  {
+    title: 'Products for Dry Tropospheric Correction',
+    disabled: false,
+    href: '/products-for-dry-tropospheric-correction',
+  },
+  {
+    title: 'Variables/catal...',
+    disabled: true,
+  },
+])
+</script>
 <template>
-  <v-app-bar color="primary" app>
-    <v-toolbar-title> ALL SESSIONS </v-toolbar-title>
+  <v-app-bar class="navbar" color="primary" app>
+    <v-toolbar-title> <v-breadcrumbs :items="navItems">
+      <template v-slot:divider>
+        <v-icon icon="mdi-chevron-right"></v-icon>
+      </template>
+    </v-breadcrumbs></v-toolbar-title>
+
+
+    <v-col cols="auto">
+      <v-btn size="large" prepend-icon="mdi-source-pull" variant="flat" class="text-capitalize font-weight-medium" color="btn-primary">Create New Session</v-btn>
+    </v-col>
   </v-app-bar>
 </template>
+
+<style>
+.navbar .v-breadcrumbs-item.v-breadcrumbs-item--disabled {
+  color: #ADDDFF;
+  opacity: 0.8;
+}
+</style>
