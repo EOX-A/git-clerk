@@ -14,7 +14,7 @@ const vuetify = createVuetify({
           primary: "#002742",
           secondary: "#EEF0F1",
           background: "#F7F8F8",
-          "btn-primary": "#D6EEFF"
+          "btn-primary": "#D6EEFF",
         },
       },
     },
