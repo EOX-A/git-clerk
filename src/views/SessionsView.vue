@@ -53,9 +53,9 @@ const sessions = [
             <OctIcon :name="session.status" />
           </v-icon>
           <div class="ml-4">
-            <a href="/dummy-id" class="main-title text-black">{{
+            <router-link :to="'/dummy-id'" class="main-title text-black">{{
               session.title
-            }}</a>
+            }}</router-link>
             <div class="v-list-item-subtitle d-flex align-center pt-2">
               <span>Changes made on: </span>
               <div class="d-flex align-center ml-2">
