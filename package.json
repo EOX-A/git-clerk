@@ -9,15 +9,16 @@
     "preview": "vite preview",
     "lint": "eslint . --fix",
     "format": "prettier --write .",
-    "format:all": "npm run format --ws",
-    "format:check:all": "prettier --check ."
+    "format:check": "prettier --check ."
   },
   "engines": {
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@primer/octicons": "^19.11.0",
     "vue": "^3.4.29",
-    "vue-router": "^4.4.5"
+    "vue-router": "^4.4.5",
+    "vuetify": "^3.7.2"
   },
   "devDependencies": {
     "@eox/eslint-config": "^2.0.0",
