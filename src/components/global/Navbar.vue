@@ -27,7 +27,7 @@ const navItems = ref([
         </template> </v-breadcrumbs
     ></v-toolbar-title>
 
-    <v-col cols="auto">
+    <v-col class="button-nav flex-grow-0">
       <v-btn
         size="large"
         prepend-icon="mdi-source-pull"
@@ -44,5 +44,8 @@ const navItems = ref([
 .navbar .v-breadcrumbs-item.v-breadcrumbs-item--disabled {
   color: #adddff;
   opacity: 0.8;
+}
+.navbar .button-nav {
+  margin-right: 20px;
 }
 </style>
