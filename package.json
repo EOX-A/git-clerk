@@ -16,6 +16,8 @@
   },
   "dependencies": {
     "@primer/octicons": "^19.11.0",
+    "dayjs": "^1.11.13",
+    "octokit": "^4.0.2",
     "vue": "^3.4.29",
     "vue-router": "^4.4.5",
     "vuetify": "^3.7.2"

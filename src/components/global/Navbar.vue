@@ -5,12 +5,12 @@ const navItems = ref([
   {
     title: "All Sessions",
     disabled: false,
-    href: "/",
+    to: { path: "/" },
   },
   {
     title: "Products for Dry Tropospheric Correction",
     disabled: false,
-    href: "/products-for-dry-tropospheric-correction",
+    to: { path: "/products-for-dry-tropospheric-correction" },
   },
   {
     title: "Variables/catal...",
@@ -24,8 +24,9 @@ const navItems = ref([
       <v-breadcrumbs :items="navItems">
         <template v-slot:divider>
           <v-icon icon="mdi-chevron-right"></v-icon>
-        </template> </v-breadcrumbs
-    ></v-toolbar-title>
+        </template>
+      </v-breadcrumbs>
+    </v-toolbar-title>
 
     <v-col class="button-nav flex-grow-0">
       <v-btn

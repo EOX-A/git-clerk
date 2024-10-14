@@ -1,47 +1,22 @@
 <script setup>
 import OctIcon from "@/components/global/OctIcon.vue";
-const sessions = [
-  {
-    title: "Adding SO-FRESH product",
-    color: "grey",
-    status: "git-pull-request-draft",
-    date: "01/06/24",
-    time: "14:30",
-  },
-  {
-    title: "Products for Hydrocoastal-ED",
-    color: "green",
-    status: "git-pull-request",
-    date: "01/06/24",
-    time: "14:30",
-  },
-  {
-    title: "Adding Hydrocoastal variable",
-    color: "violet",
-    status: "git-merge",
-    date: "01/06/24",
-    time: "14:30",
-  },
-  {
-    title: "Ocean Surface Backscatter products & variable",
-    color: "red",
-    status: "git-pull-request-closed",
-    date: "01/06/24",
-    time: "14:30",
-  },
-  {
-    title: "Wet Tropospheric Correction",
-    color: "green",
-    status: "git-pull-request",
-    date: "01/06/24",
-    time: "14:30",
-  },
-];
+import { onMounted, ref } from "vue";
+import { getSessionsList } from "@/api/index.js";
+import { querySessionsList } from "@/methods/sessions-view";
+
+const sessions = ref([]);
+
+onMounted(async () => {
+  const sessionsList = await getSessionsList();
+  sessions.value = querySessionsList(sessionsList);
+});
 </script>
 
 <template>
   <v-list class="py-0">
+    <!-- Session's list -->
     <v-list-item
+      v-if="sessions.length"
       v-for="session in sessions"
       :key="session.title"
       :title="session.title"
@@ -49,11 +24,11 @@ const sessions = [
     >
       <template v-slot:title>
         <div class="d-flex align-start px-5">
-          <v-icon :color="session.color" class="pr-icon opacity-100">
-            <OctIcon :name="session.status" />
+          <v-icon :color="session.status.color" class="pr-icon opacity-100">
+            <OctIcon :name="session.status.icon" />
           </v-icon>
           <div class="ml-4">
-            <router-link :to="'/dummy-id'" class="main-title text-black">{{
+            <router-link :to="session.number" class="main-title text-black">{{
               session.title
             }}</router-link>
             <div class="v-list-item-subtitle d-flex align-center pt-2">
@@ -96,6 +71,36 @@ const sessions = [
           size="large"
           variant="text"
         ></v-btn>
+      </template>
+    </v-list-item>
+
+    <!-- Placeholder for session's list -->
+    <v-list-item
+      v-else
+      v-for="n in 10"
+      :key="n"
+      :title="n"
+      class="sessions-view py-4 border-b-thin"
+    >
+      <template v-slot:title>
+        <div class="d-flex align-start px-5">
+          <v-skeleton-loader type="avatar"></v-skeleton-loader>
+          <div class="ml-4">
+            <v-skeleton-loader width="300px" type="heading"></v-skeleton-loader>
+            <div class="v-list-item-subtitle d-flex align-center pt-2">
+              <v-skeleton-loader width="200px" type="text"></v-skeleton-loader>
+            </div>
+          </div>
+        </div>
+      </template>
+      <template v-slot:append>
+        <v-skeleton-loader
+          v-for="a in 4"
+          :key="a"
+          width="24"
+          type="heading"
+          class="mx-3"
+        ></v-skeleton-loader>
       </template>
     </v-list-item>
   </v-list>
