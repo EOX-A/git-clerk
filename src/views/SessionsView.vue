@@ -1,15 +1,43 @@
 <script setup>
 import OctIcon from "@/components/global/OctIcon.vue";
 import { onMounted, ref } from "vue";
-import { getSessionsList } from "@/api/index.js";
-import { querySessionsList } from "@/methods/sessions-view";
+import { deleteBySessionNumber, getSessionsList } from "@/api/index.js";
+import { querySessionsListMethod } from "@/methods/sessions-view";
+import { useRoute, useRouter } from "vue-router";
+
+const route = useRoute();
+const router = useRouter();
 
 const sessions = ref([]);
+const totalPage = ref(0);
+const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
+const deleteSession = ref(false);
+const snackbar = ref(false);
+
+const updateSessionsList = async () => {
+  sessions.value = [];
+  window.scrollTo({ top: 0 });
+  const sessionsList = await getSessionsList(page.value);
+  querySessionsListMethod(sessionsList, { snackbar, sessions, totalPage });
+};
 
 onMounted(async () => {
-  const sessionsList = await getSessionsList();
-  sessions.value = querySessionsList(sessionsList);
+  await updateSessionsList();
 });
+
+const onPageChange = async (newPage) => {
+  page.value = newPage;
+  await router.push({ query: { ...route.query, page: newPage } });
+  await updateSessionsList();
+};
+
+const deleteSessionHandle = async () => {
+  if (deleteSession.value) {
+    snackbar.value = await deleteBySessionNumber(deleteSession.value.number);
+    deleteSession.value = false;
+    await updateSessionsList();
+  }
+};
 </script>
 
 <template>
@@ -48,6 +76,8 @@ onMounted(async () => {
 
       <template v-slot:append>
         <v-btn
+          :href="session.html_url"
+          target="_blank"
           color="blue-grey-darken-4"
           icon="mdi-github"
           size="large"
@@ -58,6 +88,8 @@ onMounted(async () => {
           icon="mdi-delete-outline"
           size="large"
           variant="text"
+          :disabled="session.state === 'sclosed'"
+          @click="deleteSession = session"
         ></v-btn>
         <v-btn
           color="blue-grey-darken-4"
@@ -70,6 +102,7 @@ onMounted(async () => {
           icon="mdi-file-document-edit"
           size="large"
           variant="text"
+          :disabled="!session.draft || session.state === 'closed'"
         ></v-btn>
       </template>
     </v-list-item>
@@ -104,6 +137,44 @@ onMounted(async () => {
       </template>
     </v-list-item>
   </v-list>
+
+  <div class="text-center py-5">
+    <v-pagination
+      v-if="sessions"
+      v-model="page"
+      :length="totalPage"
+      @update:model-value="onPageChange"
+      density="comfortable"
+      total-visible="6"
+      color="primary"
+      next-icon="mdi-menu-right"
+      prev-icon="mdi-menu-left"
+    ></v-pagination>
+  </div>
+
+  <v-dialog v-model="deleteSession" width="auto">
+    <v-card max-width="400" prepend-icon="mdi-alert" title="Delete Session">
+      <template v-slot:text>
+        Are you sure you want to delete session:
+        <strong>{{ deleteSession.title }}</strong>
+      </template>
+      <template v-slot:actions>
+        <v-spacer></v-spacer>
+        <v-btn @click="deleteSession = false"> Cancel </v-btn>
+        <v-btn color="red" variant="flat" @click="deleteSessionHandle">
+          Delete
+        </v-btn>
+      </template>
+    </v-card>
+  </v-dialog>
+
+  <v-snackbar
+    v-model="snackbar"
+    timeout="3000"
+    :color="snackbar.status"
+    :text="snackbar.text"
+  >
+  </v-snackbar>
 </template>
 
 <style>

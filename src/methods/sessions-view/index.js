@@ -1,1 +1,1 @@
-export { default as querySessionsList } from "./query-sessions-list";
+export { default as querySessionsListMethod } from "./query-sessions-list";

@@ -1,5 +1,5 @@
 import { Octokit } from "octokit";
-import { sessionsList } from "@/api/sessions.js";
+import { sessionsList, deleteSession } from "@/api/session";
 
 const githubConfig = {
   auth: import.meta.env.VUE_APP_GITHUB_TOKEN,
@@ -15,6 +15,10 @@ export async function getLoginData() {
   return data;
 }
 
-export async function getSessionsList() {
-  return sessionsList(octokit, githubConfig);
+export async function getSessionsList(currPage) {
+  return sessionsList(octokit, githubConfig, currPage);
+}
+
+export async function deleteBySessionNumber(sessionNumber) {
+  return deleteSession(octokit, githubConfig, sessionNumber);
 }
