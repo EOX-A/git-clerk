@@ -1,10 +1,11 @@
 <script setup>
 import OctIcon from "@/components/global/OctIcon.vue";
-import { onMounted, ref } from "vue";
+import { inject, onMounted, ref } from "vue";
 import {
   deleteBySessionNumber,
   getSessionsList,
   reviewBySessionNumber,
+  createSessionByName,
 } from "@/api/index.js";
 import {
   querySessionsListMethod,
@@ -22,6 +23,10 @@ const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
 const deleteSession = ref(false);
 const reviewSession = ref(false);
 const snackbar = ref(false);
+const createNewSession = ref(false);
+const newSessionName = ref("");
+
+const navButtonConfig = inject("set-nav-button-config");
 
 const updateSessionsList = async () => {
   sessions.value = [];
@@ -31,7 +36,35 @@ const updateSessionsList = async () => {
   checkValidationStatusMethod(sessions);
 };
 
+const createNewSessionClick = () => {
+  navButtonConfig.value.disabled = true;
+  window.scrollTo({ top: 0 });
+  createNewSession.value = true;
+  newSessionName.value = "";
+};
+
+const clearInputCreateNewSession = () => {
+  navButtonConfig.value.disabled = false;
+  createNewSession.value = false;
+  newSessionName.value = "";
+};
+
+const onKeyEnterCreateNewSession = async (event) => {
+  if (event.key === "Escape") clearInputCreateNewSession();
+  else if (event.key === "Enter") {
+    snackbar.value = await createSessionByName(newSessionName.value);
+    clearInputCreateNewSession();
+    await updateSessionsList();
+  }
+};
+
 onMounted(async () => {
+  console.log(navButtonConfig);
+  navButtonConfig.value = {
+    text: "Create New Session",
+    icon: "mdi-source-pull",
+    click: createNewSessionClick,
+  };
   await updateSessionsList();
 });
 
@@ -62,6 +95,26 @@ const reviewSessionHandle = async () => {
 </script>
 
 <template>
+  <div v-if="createNewSession" class="d-flex justify-center bg-white">
+    <v-row>
+      <v-col cols="12">
+        <!-- Custom styled text field -->
+        <v-text-field
+          v-model="newSessionName"
+          label="Session Name"
+          placeholder="Enter a session name"
+          hide-details
+          append-inner-icon="mdi-close"
+          @click:append-inner="clearInputCreateNewSession"
+          @keydown="onKeyEnterCreateNewSession"
+          @submit="() => console.log('lol')"
+          variant="outlined"
+          class="session-create-field px-6 py-6"
+        />
+      </v-col>
+    </v-row>
+  </div>
+
   <v-list class="py-0">
     <!-- Session's list -->
     <v-list-item
@@ -254,5 +307,34 @@ const reviewSessionHandle = async () => {
 .sessions-view .v-icon.pr-icon svg {
   width: 20px;
   height: 20px;
+}
+
+.session-create-field {
+  border-bottom: 1px solid #647078;
+}
+
+.session-create-field .v-label {
+  color: #6c757d;
+}
+
+.session-create-field .v-field__input {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  color: #000000;
+}
+
+.session-create-field .v-field__append-inner .v-icon {
+  color: #6c757d;
+  cursor: pointer;
+}
+
+.session-create-field.v-text-field--outline {
+  background-color: white;
+  border-color: #d9d9d9;
+  box-shadow: none;
+}
+
+.session-create-field .v-field__outline {
+  border-color: transparent;
 }
 </style>

@@ -1,4 +1,5 @@
 import { getTotalPages } from "../helpers";
+import slugify from "slugify";
 
 export async function sessionsList(octokit, githubConfig, currPage) {
   try {
@@ -21,6 +22,54 @@ export async function sessionsList(octokit, githubConfig, currPage) {
     };
   } catch (error) {
     return error;
+  }
+}
+
+export async function createSession(octokit, githubConfig, name) {
+  try {
+    const { data: user } = await octokit.rest.users.getAuthenticated();
+    const username = user.login;
+
+    const { data: repoInfo } = await octokit.rest.repos.get({
+      owner: githubConfig.username,
+      repo: githubConfig.repo,
+    });
+    const defaultBranch = repoInfo.default_branch;
+
+    const branchName = `${username}/${slugify(name, { lower: true })}`;
+
+    const { data: defaultBranchRef } = await octokit.rest.git.getRef({
+      owner: githubConfig.username,
+      repo: githubConfig.repo,
+      ref: `heads/${defaultBranch}`,
+    });
+    const latestCommitSha = defaultBranchRef.object.sha;
+
+    await octokit.rest.git.createRef({
+      owner: githubConfig.username,
+      repo: githubConfig.repo,
+      ref: `refs/heads/${branchName}`,
+      sha: latestCommitSha,
+    });
+
+    const { data: pullRequest } = await octokit.rest.pulls.create({
+      owner: githubConfig.username,
+      repo: githubConfig.repo,
+      title: name,
+      head: branchName,
+      base: defaultBranch,
+      draft: true,
+    });
+
+    return {
+      text: `Successfully Created Session:  ${name}`,
+      status: "success",
+    };
+  } catch (error) {
+    return {
+      text: error.message,
+      status: "error",
+    };
   }
 }
 

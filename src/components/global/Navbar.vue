@@ -1,5 +1,7 @@
 <script setup>
-import { ref } from "vue";
+import { inject, ref } from "vue";
+
+const navButtonConfig = inject("set-nav-button-config");
 
 const navItems = ref([
   {
@@ -30,12 +32,15 @@ const navItems = ref([
 
     <v-col class="button-nav flex-grow-0">
       <v-btn
+        v-if="navButtonConfig.text"
         size="large"
-        prepend-icon="mdi-source-pull"
+        :prepend-icon="navButtonConfig.icon"
         variant="flat"
         class="text-capitalize font-weight-medium"
         color="btn-primary"
-        >Create New Session</v-btn
+        :disabled="navButtonConfig.disabled"
+        @click="navButtonConfig.click"
+        >{{ navButtonConfig.text }}</v-btn
       >
     </v-col>
   </v-app-bar>

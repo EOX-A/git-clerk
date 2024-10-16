@@ -1,6 +1,7 @@
 import { Octokit } from "octokit";
 import {
   sessionsList,
+  createSession,
   deleteSession,
   reviewSession,
   checkStatusFromRefHead,
@@ -34,4 +35,8 @@ export async function reviewBySessionNumber(sessionNumber, pullRequestId) {
 
 export async function getCheckStatusFromRefHead(refSHA) {
   return checkStatusFromRefHead(octokit, githubConfig, refSHA);
+}
+
+export async function createSessionByName(name) {
+  return createSession(octokit, githubConfig, name);
 }
