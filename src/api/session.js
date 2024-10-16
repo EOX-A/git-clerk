@@ -43,3 +43,38 @@ export async function deleteSession(octokit, githubConfig, prNumber) {
     };
   }
 }
+
+export async function reviewSession(
+  octokit,
+  githubConfig,
+  prNumber,
+  pullRequestId,
+) {
+  try {
+    const response = await octokit.graphql(
+      `
+      mutation ($pullRequestId: ID!) {
+        markPullRequestReadyForReview(input: { pullRequestId: $pullRequestId }) {
+          pullRequest {
+            id
+            title
+          }
+        }
+      }
+    `,
+      {
+        pullRequestId: pullRequestId,
+      },
+    );
+
+    return {
+      text: `Successfully requested to review - ${response.markPullRequestReadyForReview.pullRequest.title}`,
+      status: "success",
+    };
+  } catch (error) {
+    return {
+      text: error.message,
+      status: "error",
+    };
+  }
+}

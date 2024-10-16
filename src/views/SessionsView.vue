@@ -1,9 +1,14 @@
 <script setup>
 import OctIcon from "@/components/global/OctIcon.vue";
 import { onMounted, ref } from "vue";
-import { deleteBySessionNumber, getSessionsList } from "@/api/index.js";
+import {
+  deleteBySessionNumber,
+  getSessionsList,
+  reviewBySessionNumber,
+} from "@/api/index.js";
 import { querySessionsListMethod } from "@/methods/sessions-view";
 import { useRoute, useRouter } from "vue-router";
+import Tooltip from "@/components/global/Tooltip.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -12,6 +17,7 @@ const sessions = ref([]);
 const totalPage = ref(0);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
 const deleteSession = ref(false);
+const reviewSession = ref(false);
 const snackbar = ref(false);
 
 const updateSessionsList = async () => {
@@ -38,6 +44,17 @@ const deleteSessionHandle = async () => {
     await updateSessionsList();
   }
 };
+
+const reviewSessionHandle = async () => {
+  if (reviewSession.value) {
+    snackbar.value = await reviewBySessionNumber(
+      reviewSession.value.number,
+      reviewSession.value.node_id,
+    );
+    reviewSession.value = false;
+    await updateSessionsList();
+  }
+};
 </script>
 
 <template>
@@ -56,9 +73,11 @@ const deleteSessionHandle = async () => {
             <OctIcon :name="session.status.icon" />
           </v-icon>
           <div class="ml-4">
-            <router-link :to="session.number" class="main-title text-black">{{
-              session.title
-            }}</router-link>
+            <router-link
+              :to="`/${session.number}`"
+              class="main-title text-black"
+              >{{ session.title }}</router-link
+            >
             <div class="v-list-item-subtitle d-flex align-center pt-2">
               <span>Changes made on: </span>
               <div class="d-flex align-center ml-2">
@@ -75,35 +94,44 @@ const deleteSessionHandle = async () => {
       </template>
 
       <template v-slot:append>
-        <v-btn
-          :href="session.html_url"
-          target="_blank"
-          color="blue-grey-darken-4"
-          icon="mdi-github"
-          size="large"
-          variant="text"
-        ></v-btn>
-        <v-btn
-          color="blue-grey-darken-4"
-          icon="mdi-delete-outline"
-          size="large"
-          variant="text"
-          :disabled="session.state === 'sclosed'"
-          @click="deleteSession = session"
-        ></v-btn>
-        <v-btn
-          color="blue-grey-darken-4"
-          icon="mdi-monitor-eye"
-          size="large"
-          variant="text"
-        ></v-btn>
-        <v-btn
-          color="blue-grey-darken-4"
-          icon="mdi-file-document-edit"
-          size="large"
-          variant="text"
-          :disabled="!session.draft || session.state === 'closed'"
-        ></v-btn>
+        <Tooltip text="Open in Github">
+          <v-btn
+            :href="session.html_url"
+            target="_blank"
+            color="blue-grey-darken-4"
+            icon="mdi-github"
+            size="large"
+            variant="text"
+          ></v-btn>
+        </Tooltip>
+        <Tooltip text="Delete Session">
+          <v-btn
+            color="blue-grey-darken-4"
+            icon="mdi-delete-outline"
+            size="large"
+            variant="text"
+            :disabled="session.state === 'closed'"
+            @click="deleteSession = session"
+          ></v-btn>
+        </Tooltip>
+        <Tooltip text="Checkout Preview">
+          <v-btn
+            color="blue-grey-darken-4"
+            icon="mdi-monitor-eye"
+            size="large"
+            variant="text"
+          ></v-btn>
+        </Tooltip>
+        <Tooltip text="Request Review">
+          <v-btn
+            color="blue-grey-darken-4"
+            icon="mdi-file-document-edit"
+            size="large"
+            variant="text"
+            @click="reviewSession = session"
+            :disabled="!session.draft || session.state === 'closed'"
+          ></v-btn>
+        </Tooltip>
       </template>
     </v-list-item>
 
@@ -163,6 +191,26 @@ const deleteSessionHandle = async () => {
         <v-btn @click="deleteSession = false"> Cancel </v-btn>
         <v-btn color="red" variant="flat" @click="deleteSessionHandle">
           Delete
+        </v-btn>
+      </template>
+    </v-card>
+  </v-dialog>
+
+  <v-dialog v-model="reviewSession" width="auto">
+    <v-card
+      max-width="400"
+      prepend-icon="mdi-alert"
+      title="Request Review Session"
+    >
+      <template v-slot:text>
+        Are you sure you want to request this session for review:
+        <strong>{{ reviewSession.title }}</strong>
+      </template>
+      <template v-slot:actions>
+        <v-spacer></v-spacer>
+        <v-btn @click="reviewSession = false"> Cancel </v-btn>
+        <v-btn color="red" variant="flat" @click="reviewSessionHandle">
+          Request
         </v-btn>
       </template>
     </v-card>
