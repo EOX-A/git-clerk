@@ -6,6 +6,7 @@ export async function sessionsList(octokit, githubConfig, currPage) {
       owner: githubConfig.username,
       repo: githubConfig.repo,
       state: "all",
+      per_page: 10,
       page: currPage,
     });
 
@@ -76,5 +77,23 @@ export async function reviewSession(
       text: error.message,
       status: "error",
     };
+  }
+}
+
+export async function checkStatusFromRefHead(octokit, githubConfig, refSHA) {
+  try {
+    const response = await octokit.rest.checks.listForRef({
+      owner: githubConfig.username,
+      repo: githubConfig.repo,
+      ref: refSHA,
+    });
+
+    const failedChecks = response.data.check_runs.filter(
+      (check) => check.conclusion === "failure",
+    );
+
+    return failedChecks.length ? "failed" : "success";
+  } catch (error) {
+    return error;
   }
 }

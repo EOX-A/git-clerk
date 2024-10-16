@@ -6,7 +6,10 @@ import {
   getSessionsList,
   reviewBySessionNumber,
 } from "@/api/index.js";
-import { querySessionsListMethod } from "@/methods/sessions-view";
+import {
+  querySessionsListMethod,
+  checkValidationStatusMethod,
+} from "@/methods/sessions-view";
 import { useRoute, useRouter } from "vue-router";
 import Tooltip from "@/components/global/Tooltip.vue";
 
@@ -25,6 +28,7 @@ const updateSessionsList = async () => {
   window.scrollTo({ top: 0 });
   const sessionsList = await getSessionsList(page.value);
   querySessionsListMethod(sessionsList, { snackbar, sessions, totalPage });
+  checkValidationStatusMethod(sessions);
 };
 
 onMounted(async () => {
@@ -73,11 +77,20 @@ const reviewSessionHandle = async () => {
             <OctIcon :name="session.status.icon" />
           </v-icon>
           <div class="ml-4">
-            <router-link
-              :to="`/${session.number}`"
-              class="main-title text-black"
-              >{{ session.title }}</router-link
-            >
+            <div class="d-flex align-center">
+              <router-link
+                :to="`/${session.number}`"
+                class="main-title text-black"
+                >{{ session.title }}</router-link
+              >
+              <Tooltip
+                location="right"
+                v-if="session.check === 'failed'"
+                text="Validation Failed"
+              >
+                <v-icon color="red" icon="px-5 mdi-alert-outline"></v-icon>
+              </Tooltip>
+            </div>
             <div class="v-list-item-subtitle d-flex align-center pt-2">
               <span>Changes made on: </span>
               <div class="d-flex align-center ml-2">
