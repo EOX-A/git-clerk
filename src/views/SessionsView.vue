@@ -253,7 +253,12 @@ const reviewSessionHandle = async () => {
   text-decoration: none;
 }
 .sessions-view.session-closed {
-  border-left: 5px solid #f44336a3;
+  background: #f5f5f5;
+  opacity: 0.4;
+}
+.sessions-view.session-closed:hover {
+  background: white;
+  opacity: 1;
 }
 .sessions-view a.main-title:hover {
   font-weight: 500;
