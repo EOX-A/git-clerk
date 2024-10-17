@@ -97,3 +97,17 @@ export async function checkStatusFromRefHead(octokit, githubConfig, refSHA) {
     return error;
   }
 }
+
+export async function sessionReviewStatus(octokit, githubConfig, prNumber) {
+  try {
+    const response = await octokit.rest.pulls.listReviews({
+      owner: githubConfig.username,
+      repo: githubConfig.repo,
+      pull_number: prNumber,
+    });
+
+    return response.data.some((review) => review.state === "CHANGES_REQUESTED");
+  } catch (error) {
+    return error;
+  }
+}

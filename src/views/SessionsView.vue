@@ -8,7 +8,7 @@ import {
 } from "@/api/index.js";
 import {
   querySessionsListMethod,
-  checkValidationStatusMethod,
+  checkStatusMethod,
 } from "@/methods/sessions-view";
 import { useRoute, useRouter } from "vue-router";
 import Tooltip from "@/components/global/Tooltip.vue";
@@ -28,7 +28,7 @@ const updateSessionsList = async () => {
   window.scrollTo({ top: 0 });
   const sessionsList = await getSessionsList(page.value);
   querySessionsListMethod(sessionsList, { snackbar, sessions, totalPage });
-  checkValidationStatusMethod(sessions);
+  checkStatusMethod(sessions, sessionsList.curr, page);
 };
 
 onMounted(async () => {
@@ -69,7 +69,7 @@ const reviewSessionHandle = async () => {
       v-for="session in sessions"
       :key="session.title"
       :title="session.title"
-      class="sessions-view py-4 border-b-thin"
+      :class="`sessions-view py-4 border-b-thin ${session.state === 'closed' && 'session-closed'}`"
     >
       <template v-slot:title>
         <div class="d-flex align-start px-5">
@@ -77,7 +77,7 @@ const reviewSessionHandle = async () => {
             <OctIcon :name="session.status.icon" />
           </v-icon>
           <div class="ml-4">
-            <div class="d-flex align-center">
+            <div class="d-flex align-center ga-3">
               <router-link
                 :to="`/${session.number}`"
                 class="main-title text-black"
@@ -88,7 +88,16 @@ const reviewSessionHandle = async () => {
                 v-if="session.check === 'failed'"
                 text="Validation Failed"
               >
-                <v-icon color="red" icon="px-5 mdi-alert-outline"></v-icon>
+                <v-icon color="red" size="23" icon="mdi-alert-outline"></v-icon>
+              </Tooltip>
+              <Tooltip
+                location="right"
+                v-if="session.requested_changes"
+                text="Requested Changes"
+              >
+                <v-icon color="red" class="file-diff">
+                  <OctIcon name="file-diff" />
+                </v-icon>
               </Tooltip>
             </div>
             <div class="v-list-item-subtitle d-flex align-center pt-2">
@@ -179,7 +188,7 @@ const reviewSessionHandle = async () => {
     </v-list-item>
   </v-list>
 
-  <div class="text-center py-5">
+  <div class="text-center border-t-thin py-6 bg-background">
     <v-pagination
       v-if="sessions"
       v-model="page"
@@ -222,7 +231,7 @@ const reviewSessionHandle = async () => {
       <template v-slot:actions>
         <v-spacer></v-spacer>
         <v-btn @click="reviewSession = false"> Cancel </v-btn>
-        <v-btn color="red" variant="flat" @click="reviewSessionHandle">
+        <v-btn color="green" variant="flat" @click="reviewSessionHandle">
           Request
         </v-btn>
       </template>
@@ -243,6 +252,9 @@ const reviewSessionHandle = async () => {
   font-weight: 400;
   text-decoration: none;
 }
+.sessions-view.session-closed {
+  border-left: 5px solid #f44336a3;
+}
 .sessions-view a.main-title:hover {
   font-weight: 500;
   text-decoration: underline;
@@ -254,5 +266,12 @@ const reviewSessionHandle = async () => {
 .sessions-view .v-icon.pr-icon svg {
   width: 20px;
   height: 20px;
+}
+.sessions-view .octicon-file-diff {
+  width: 20px;
+  height: 20px;
+}
+.sessions-view .file-diff span {
+  line-height: 0.5;
 }
 </style>

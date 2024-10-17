@@ -4,6 +4,7 @@ import {
   deleteSession,
   reviewSession,
   checkStatusFromRefHead,
+  sessionReviewStatus,
 } from "@/api/session";
 
 const githubConfig = {
@@ -34,4 +35,8 @@ export async function reviewBySessionNumber(sessionNumber, pullRequestId) {
 
 export async function getCheckStatusFromRefHead(refSHA) {
   return checkStatusFromRefHead(octokit, githubConfig, refSHA);
+}
+
+export async function getSessionReviewStatus(sessionNumber) {
+  return sessionReviewStatus(octokit, githubConfig, sessionNumber);
 }
