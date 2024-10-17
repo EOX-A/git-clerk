@@ -9,6 +9,7 @@ export default defineConfig({
   server: {
     port: 3000,
   },
+  envPrefix: "VUE_APP_",
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),

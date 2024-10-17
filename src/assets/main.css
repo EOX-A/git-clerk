@@ -8,3 +8,9 @@
 .v-btn__content {
   letter-spacing: normal;
 }
+
+.v-skeleton-loader__text,
+.v-skeleton-loader__heading,
+.v-skeleton-loader__avatar {
+  margin: 0 !important;
+}
