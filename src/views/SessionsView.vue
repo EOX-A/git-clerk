@@ -231,7 +231,7 @@ const reviewSessionHandle = async () => {
       <template v-slot:actions>
         <v-spacer></v-spacer>
         <v-btn @click="reviewSession = false"> Cancel </v-btn>
-        <v-btn color="green" variant="flat" @click="reviewSessionHandle">
+        <v-btn color="success" variant="flat" @click="reviewSessionHandle">
           Request
         </v-btn>
       </template>
