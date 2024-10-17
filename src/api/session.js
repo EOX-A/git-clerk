@@ -45,14 +45,38 @@ export async function createSession(octokit, githubConfig, name) {
     });
     const latestCommitSha = defaultBranchRef.object.sha;
 
-    await octokit.rest.git.createRef({
+    const { data: latestCommit } = await octokit.rest.git.getCommit({
+      owner: githubConfig.username,
+      repo: githubConfig.repo,
+      commit_sha: latestCommitSha,
+    });
+    const treeSha = latestCommit.tree.sha;
+
+    const t = await octokit.rest.git.createRef({
       owner: githubConfig.username,
       repo: githubConfig.repo,
       ref: `refs/heads/${branchName}`,
       sha: latestCommitSha,
     });
 
-    const { data: pullRequest } = await octokit.rest.pulls.create({
+    const emptyCommitMessage = "chore: create session using empty commit";
+    const { data: commit } = await octokit.rest.git.createCommit({
+      owner: githubConfig.username,
+      repo: githubConfig.repo,
+      message: emptyCommitMessage,
+      tree: treeSha,
+      parents: [latestCommitSha],
+    });
+
+    await octokit.rest.git.updateRef({
+      owner: githubConfig.username,
+      repo: githubConfig.repo,
+      ref: `heads/${branchName}`,
+      sha: commit.sha,
+      force: true,
+    });
+
+    await octokit.rest.pulls.create({
       owner: githubConfig.username,
       repo: githubConfig.repo,
       title: name,

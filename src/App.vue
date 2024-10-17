@@ -9,6 +9,7 @@ provide("set-nav-button-config", navButtonConfig);
 
 <template>
   <v-app>
+    <vue-progress-bar></vue-progress-bar>
     <Navbar />
     <v-main>
       <RouterView />
