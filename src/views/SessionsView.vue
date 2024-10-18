@@ -141,6 +141,15 @@ const reviewSessionHandle = async () => {
                 class="main-title text-black"
                 >{{ session.title }}</router-link
               >
+              <v-chip
+                :href="session.user.html_url"
+                target="_blank"
+                variant="flat"
+                color="blue-grey-lighten-1"
+                size="x-small"
+              >
+                @{{ session.user.login }}
+              </v-chip>
               <Tooltip
                 location="right"
                 v-if="session.check === 'failed'"
@@ -158,13 +167,13 @@ const reviewSessionHandle = async () => {
                 </v-icon>
               </Tooltip>
             </div>
-            <div class="v-list-item-subtitle d-flex align-center pt-2">
+            <div class="v-list-item-subtitle d-flex align-center pt-2 ga-3">
               <span>Changes made on: </span>
-              <div class="d-flex align-center ml-2">
+              <div class="d-flex align-center">
                 <v-icon>mdi-calendar-blank-outline</v-icon>
                 <span class="text-black px-1">{{ session.date }}</span>
               </div>
-              <div class="d-flex align-center ml-2">
+              <div class="d-flex align-center">
                 <v-icon>mdi-clock-time-five-outline</v-icon>
                 <span class="text-black px-1">{{ session.time }}</span>
               </div>
