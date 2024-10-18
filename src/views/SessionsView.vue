@@ -13,11 +13,12 @@ import {
 } from "@/methods/sessions-view";
 import { useRoute, useRouter } from "vue-router";
 import Tooltip from "@/components/global/Tooltip.vue";
+import { useLoader } from "@/helpers/index.js";
 
 const route = useRoute();
 const router = useRouter();
 
-const sessions = ref([]);
+const sessions = ref(null);
 const totalPage = ref(0);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
 const deleteSession = ref(false);
@@ -25,13 +26,13 @@ const reviewSession = ref(false);
 const snackbar = ref(false);
 const createNewSession = ref(false);
 const newSessionName = ref("");
-
+const loader = ref({});
 const navButtonConfig = inject("set-nav-button-config");
 
-const updateSessionsList = async () => {
-  sessions.value = [];
+const updateSessionsList = async (cache = false) => {
+  sessions.value = null;
   window.scrollTo({ top: 0 });
-  const sessionsList = await getSessionsList(page.value);
+  const sessionsList = await getSessionsList(page.value, cache);
   querySessionsListMethod(sessionsList, { snackbar, sessions, totalPage });
   checkStatusMethod(sessions, sessionsList.curr, page);
 };
@@ -52,43 +53,48 @@ const clearInputCreateNewSession = () => {
 const onKeyEnterCreateNewSession = async (event) => {
   if (event.key === "Escape") clearInputCreateNewSession();
   else if (event.key === "Enter") {
+    loader.value = useLoader().show();
     snackbar.value = await createSessionByName(newSessionName.value);
     clearInputCreateNewSession();
+    loader.value.hide();
     await updateSessionsList();
   }
 };
 
 onMounted(async () => {
-  console.log(navButtonConfig);
   navButtonConfig.value = {
     text: "Create New Session",
     icon: "mdi-source-pull",
     click: createNewSessionClick,
   };
-  await updateSessionsList();
+  await updateSessionsList(true);
 });
 
 const onPageChange = async (newPage) => {
   page.value = newPage;
   await router.push({ query: { ...route.query, page: newPage } });
-  await updateSessionsList();
+  await updateSessionsList(true);
 };
 
 const deleteSessionHandle = async () => {
   if (deleteSession.value) {
+    loader.value = useLoader().show();
     snackbar.value = await deleteBySessionNumber(deleteSession.value.number);
     deleteSession.value = false;
+    loader.value.hide();
     await updateSessionsList();
   }
 };
 
 const reviewSessionHandle = async () => {
   if (reviewSession.value) {
+    loader.value = useLoader().show();
     snackbar.value = await reviewBySessionNumber(
       reviewSession.value.number,
       reviewSession.value.node_id,
     );
     reviewSession.value = false;
+    loader.value.hide();
     await updateSessionsList();
   }
 };
@@ -107,9 +113,8 @@ const reviewSessionHandle = async () => {
           append-inner-icon="mdi-close"
           @click:append-inner="clearInputCreateNewSession"
           @keydown="onKeyEnterCreateNewSession"
-          @submit="() => console.log('lol')"
           variant="outlined"
-          class="session-create-field px-6 py-6"
+          class="session-create-field px-6 py-6 border-b-thin"
         />
       </v-col>
     </v-row>
@@ -118,7 +123,7 @@ const reviewSessionHandle = async () => {
   <v-list class="py-0">
     <!-- Session's list -->
     <v-list-item
-      v-if="sessions.length"
+      v-if="sessions && sessions.length"
       v-for="session in sessions"
       :key="session.title"
       :title="session.title"
@@ -212,7 +217,7 @@ const reviewSessionHandle = async () => {
 
     <!-- Placeholder for session's list -->
     <v-list-item
-      v-else
+      v-else-if="sessions === null"
       v-for="n in 10"
       :key="n"
       :title="n"
@@ -239,6 +244,22 @@ const reviewSessionHandle = async () => {
         ></v-skeleton-loader>
       </template>
     </v-list-item>
+    <v-empty-state
+      v-else
+      headline="Whoops, No sessions found."
+      icon="mdi-source-pull"
+      class="my-16 py-16"
+    >
+      <template v-slot:text>
+        To get started, you should
+        <a
+          @click="createNewSessionClick"
+          class="text-blue-accent-4 font-weight-medium"
+          href="#"
+          >create new session</a
+        >
+      </template>
+    </v-empty-state>
   </v-list>
 
   <div class="text-center border-t-thin py-6 bg-background">

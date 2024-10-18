@@ -22,8 +22,8 @@ export async function getLoginData() {
   return data;
 }
 
-export async function getSessionsList(currPage) {
-  return sessionsList(octokit, githubConfig, currPage);
+export async function getSessionsList(currPage, cache) {
+  return sessionsList(octokit, githubConfig, currPage, cache);
 }
 
 export async function deleteBySessionNumber(sessionNumber) {
