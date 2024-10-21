@@ -14,3 +14,16 @@
 .v-skeleton-loader__avatar {
   margin: 0 !important;
 }
+
+.loader-text {
+  color: white;
+  margin-top: -10px;
+  font-size: 16px;
+}
+
+.vl-icon {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}

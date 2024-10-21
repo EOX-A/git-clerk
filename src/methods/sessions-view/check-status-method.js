@@ -1,7 +1,4 @@
-import {
-  getCheckStatusFromRefHead,
-  getSessionReviewStatus,
-} from "@/api/index.js";
+import { getCheckStatus, getSessionReviewStatus } from "@/api/index.js";
 
 export default async function checkStatusMethod(
   sessions,
@@ -10,7 +7,7 @@ export default async function checkStatusMethod(
 ) {
   for (const [index, session] of sessions.value.entries()) {
     if (currPage === updatedPage.value) {
-      const check = await getCheckStatusFromRefHead(session.head.sha);
+      const check = await getCheckStatus(session.number);
       const requestedChanges = await getSessionReviewStatus(session.number);
 
       if (currPage === updatedPage.value) {
