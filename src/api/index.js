@@ -6,12 +6,13 @@ import {
   checkStatusFromRefHead,
   sessionReviewStatus,
 } from "@/api/session";
+import config from "@/../config.js";
 
-const githubConfig = {
-  auth: import.meta.env.VUE_APP_GITHUB_TOKEN,
-  username: import.meta.env.VUE_APP_GITHUB_OWNER,
-  repo: import.meta.env.VUE_APP_GITHUB_REPO,
-};
+const auth = await config.githubAuthToken();
+const username = config.githubOwner;
+const repo = config.githubRepo;
+
+const githubConfig = { auth, username, repo };
 
 const octokit = new Octokit({ auth: githubConfig.auth });
 
