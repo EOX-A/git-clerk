@@ -1,6 +1,6 @@
 <script setup>
 import OctIcon from "@/components/global/OctIcon.vue";
-import { inject, onMounted, ref } from "vue";
+import { h, inject, onMounted, ref } from "vue";
 import {
   deleteBySessionNumber,
   getSessionsList,
@@ -53,7 +53,16 @@ const clearInputCreateNewSession = () => {
 const onKeyEnterCreateNewSession = async (event) => {
   if (event.key === "Escape") clearInputCreateNewSession();
   else if (event.key === "Enter") {
-    loader.value = useLoader().show();
+    loader.value = useLoader().show(
+      {},
+      {
+        after: h(
+          "h5",
+          { class: "loader-text", id: "loader-text" },
+          "Checking fork branch present in your profile...",
+        ),
+      },
+    );
     snackbar.value = await createSessionByName(newSessionName.value);
     clearInputCreateNewSession();
     loader.value.hide();
@@ -139,17 +148,9 @@ const reviewSessionHandle = async () => {
               <router-link
                 :to="`/${session.number}`"
                 class="main-title text-black"
-                >{{ session.title }}</router-link
               >
-              <v-chip
-                :href="session.user.html_url"
-                target="_blank"
-                variant="flat"
-                color="blue-grey-lighten-1"
-                size="x-small"
-              >
-                @{{ session.user.login }}
-              </v-chip>
+                {{ session.title }}
+              </router-link>
               <Tooltip
                 location="right"
                 v-if="session.check === 'failed'"

@@ -4,7 +4,7 @@ import {
   createSession,
   deleteSession,
   reviewSession,
-  checkStatusFromRefHead,
+  checkStatus,
   sessionReviewStatus,
 } from "@/api/session";
 
@@ -23,7 +23,7 @@ export async function getLoginData() {
 }
 
 export async function getSessionsList(currPage, cache) {
-  return sessionsList(octokit, githubConfig, currPage, cache);
+  return sessionsList(octokit, githubConfig, currPage, cache, data.login);
 }
 
 export async function deleteBySessionNumber(sessionNumber) {
@@ -34,8 +34,8 @@ export async function reviewBySessionNumber(sessionNumber, pullRequestId) {
   return reviewSession(octokit, githubConfig, sessionNumber, pullRequestId);
 }
 
-export async function getCheckStatusFromRefHead(refSHA) {
-  return checkStatusFromRefHead(octokit, githubConfig, refSHA);
+export async function getCheckStatus(sessionNumber) {
+  return checkStatus(octokit, githubConfig, sessionNumber);
 }
 
 export async function getSessionReviewStatus(sessionNumber) {

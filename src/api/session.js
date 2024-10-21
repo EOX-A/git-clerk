@@ -1,12 +1,16 @@
 import { getTotalPages } from "../helpers";
 import slugify from "slugify";
 
-export async function sessionsList(octokit, githubConfig, currPage, cache) {
+export async function sessionsList(
+  octokit,
+  githubConfig,
+  currPage,
+  cache,
+  creator,
+) {
   try {
-    const response = await octokit.rest.pulls.list({
-      owner: githubConfig.username,
-      repo: githubConfig.repo,
-      state: "all",
+    const response = await octokit.rest.search.issuesAndPullRequests({
+      q: `repo:${githubConfig.username}/${githubConfig.repo} is:pr author:${creator}`,
       per_page: 10,
       page: currPage,
       headers: {
@@ -17,7 +21,7 @@ export async function sessionsList(octokit, githubConfig, currPage, cache) {
     const totalPages = getTotalPages(response.headers.link) || currPage;
 
     return {
-      data: response.data,
+      data: response.data.items,
       total: totalPages,
       curr: currPage,
       next: totalPages === currPage ? null : currPage + 1,
@@ -35,18 +39,22 @@ export async function createSession(octokit, githubConfig, prName) {
   const forkBranchName = `${username}/${slugifiedPrName}`;
 
   try {
+    const loaderText = document.getElementById("loader-text");
     let fork;
     try {
       fork = await octokit.rest.repos.get({ owner: username, repo });
     } catch (error) {
       if (error.status === 404) {
         fork = await octokit.rest.repos.createFork({ owner, repo });
+        loaderText.innerText = "Creating fork repo...";
 
         // Wait for fork creation to be available and try 3 times
-        let retries = 3;
+        let retries = 6;
         while (retries > 0) {
           try {
-            await new Promise((resolve) => setTimeout(resolve, 10000)); // 10 seconds
+            if (retries === 5)
+              loaderText.innerText = "Creating fork repo! Please be patient...";
+            await new Promise((resolve) => setTimeout(resolve, 5000)); // 5 seconds
             fork = await octokit.rest.repos.get({ owner: username, repo });
             break;
           } catch (err) {
@@ -63,6 +71,7 @@ export async function createSession(octokit, githubConfig, prName) {
       }
     }
 
+    loaderText.innerText = "Updating forked repo...";
     const sourceRepo = await octokit.rest.repos.get({ owner, repo });
     const sourceDefaultBranch = sourceRepo.data.default_branch;
 
@@ -83,6 +92,7 @@ export async function createSession(octokit, githubConfig, prName) {
 
     const latestCommitSha = forkDefaultBranchRef.data.object.sha;
 
+    loaderText.innerText = "Creating new branch...";
     const { data: latestCommit } = await octokit.rest.git.getCommit({
       owner: username,
       repo,
@@ -97,6 +107,7 @@ export async function createSession(octokit, githubConfig, prName) {
       sha: latestCommitSha,
     });
 
+    loaderText.innerText = "Adding first commit to branch...";
     const emptyCommitMessage = "chore: create session using empty commit";
     const { data: commit } = await octokit.rest.git.createCommit({
       owner: username,
@@ -114,7 +125,8 @@ export async function createSession(octokit, githubConfig, prName) {
       force: true,
     });
 
-    const draftPR = await octokit.rest.pulls.create({
+    loaderText.innerText = "Creating repo from new branch...";
+    await octokit.rest.pulls.create({
       owner,
       repo,
       title: prName,
@@ -191,12 +203,22 @@ export async function reviewSession(
   }
 }
 
-export async function checkStatusFromRefHead(octokit, githubConfig, refSHA) {
+export async function checkStatus(octokit, githubConfig, sessionNumber) {
   try {
+    const {
+      data: {
+        head: { sha },
+      },
+    } = await octokit.rest.pulls.get({
+      owner: githubConfig.username,
+      repo: githubConfig.repo,
+      pull_number: sessionNumber,
+    });
+
     const response = await octokit.rest.checks.listForRef({
       owner: githubConfig.username,
       repo: githubConfig.repo,
-      ref: refSHA,
+      ref: sha,
     });
 
     const failedChecks = response.data.check_runs.filter(
