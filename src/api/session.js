@@ -9,6 +9,9 @@ export async function sessionsList(
   creator,
 ) {
   try {
+    // TODO: Remove once next level (file editor view) is amde
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
     const response = await octokit.rest.search.issuesAndPullRequests({
       q: `repo:${githubConfig.username}/${githubConfig.repo} is:pr author:${creator}`,
       per_page: 10,
@@ -154,6 +157,12 @@ export async function deleteSession(octokit, githubConfig, prNumber) {
       repo: githubConfig.repo,
       pull_number: prNumber,
       state: "closed",
+    });
+
+    await octokit.rest.git.deleteRef({
+      owner: response.data.head.repo.owner.login,
+      repo: response.data.head.repo.name,
+      ref: `heads/${response.data.head.ref}`,
     });
 
     return {
