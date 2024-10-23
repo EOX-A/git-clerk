@@ -7,8 +7,16 @@ import { initOctokit } from "@/api/index.js";
 import { useLoader } from "@/helpers/index.js";
 
 const navButtonConfig = ref({});
+const navPaginationItems = ref([
+  {
+    title: "All Sessions",
+    disabled: false,
+    to: { path: "/" },
+  },
+]);
 const isOctokitInitialised = ref(false);
 provide("set-nav-button-config", navButtonConfig);
+provide("set-nav-pagination-items", navPaginationItems);
 
 onMounted(async () => {
   const loader = useLoader().show();

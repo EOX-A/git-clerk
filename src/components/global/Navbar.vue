@@ -2,6 +2,7 @@
 import { inject, ref } from "vue";
 
 const navButtonConfig = inject("set-nav-button-config");
+const navPaginationItems = inject("set-nav-pagination-items");
 
 const navItems = ref([
   {
@@ -23,7 +24,7 @@ const navItems = ref([
 <template>
   <v-app-bar class="navbar" color="primary" app>
     <v-toolbar-title>
-      <v-breadcrumbs :items="navItems">
+      <v-breadcrumbs :items="navPaginationItems">
         <template v-slot:divider>
           <v-icon icon="mdi-chevron-right"></v-icon>
         </template>

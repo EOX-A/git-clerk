@@ -28,6 +28,7 @@ const createNewSession = ref(false);
 const newSessionName = ref("");
 const loader = ref({});
 const navButtonConfig = inject("set-nav-button-config");
+const navPaginationItems = inject("set-nav-pagination-items");
 
 const updateSessionsList = async (cache = false) => {
   sessions.value = null;
@@ -64,9 +65,12 @@ const onKeyEnterCreateNewSession = async (event) => {
       },
     );
     snackbar.value = await createSessionByName(newSessionName.value);
-    clearInputCreateNewSession();
     loader.value.hide();
-    await updateSessionsList();
+
+    if (snackbar.value.number) {
+      setTimeout(() => router.push(`/${snackbar.value.number}`), 750);
+      clearInputCreateNewSession();
+    }
   }
 };
 
@@ -76,6 +80,7 @@ onMounted(async () => {
     icon: "mdi-source-pull",
     click: createNewSessionClick,
   };
+  navPaginationItems.value = [navPaginationItems.value[0]];
   await updateSessionsList(true);
 });
 
@@ -332,11 +337,6 @@ const reviewSessionHandle = async () => {
 </template>
 
 <style>
-.sessions-view a.main-title {
-  font-weight: 400;
-  text-decoration: none;
-}
-
 .sessions-view.session-closed {
   background: #f5f5f5;
   opacity: 0.4;
@@ -345,21 +345,6 @@ const reviewSessionHandle = async () => {
 .sessions-view.session-closed:hover {
   background: white;
   opacity: 1;
-}
-
-.sessions-view a.main-title:hover {
-  font-weight: 500;
-  text-decoration: underline;
-}
-
-.sessions-view .v-list-item-subtitle {
-  opacity: 1;
-  color: #8a969e;
-}
-
-.sessions-view .v-icon.pr-icon svg {
-  width: 20px;
-  height: 20px;
 }
 
 .sessions-view .octicon-file-diff {

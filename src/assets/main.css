@@ -27,3 +27,28 @@
   flex-direction: column;
   align-items: center;
 }
+
+.sessions-view a.main-title,
+.files-view a.main-title {
+  font-weight: 400;
+  text-decoration: none;
+}
+
+.sessions-view a.main-title:hover,
+.files-view a.main-title:hover {
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.sessions-view .v-list-item-subtitle,
+.files-view .v-list-item-subtitle {
+  opacity: 1;
+  color: #8a969e;
+}
+
+.sessions-view .v-icon.pr-icon svg,
+.files-view .v-icon.file-icon svg {
+  width: 20px;
+  height: 20px;
+  margin-top: 3px;
+}
