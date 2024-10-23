@@ -9,7 +9,7 @@ import {
   sessionDetails,
 } from "@/api/session";
 import useOctokitStore from "@/stores/octokit";
-import { filesListFromSession } from "@/api/file";
+import { deleteFile, filesListFromSession } from "@/api/file";
 
 export async function initOctokit() {
   try {
@@ -87,5 +87,19 @@ export async function getFilesListFromSession(sessionNumber, currPage, cache) {
     sessionNumber,
     currPage,
     cache,
+  );
+}
+
+export async function deleteFileBySHA(owner, repo, path, message, sha, ref) {
+  const { githubConfig, octokit } = useOctokitStore();
+  return deleteFile(
+    octokit,
+    githubConfig,
+    owner,
+    repo,
+    path,
+    message,
+    sha,
+    ref,
   );
 }

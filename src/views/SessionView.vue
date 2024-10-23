@@ -1,13 +1,18 @@
 <script setup>
 import { inject, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { getFilesListFromSession, getSessionDetails } from "@/api/index.js";
+import {
+  deleteFileBySHA,
+  getFilesListFromSession,
+  getSessionDetails,
+} from "@/api/index.js";
 import {
   queryFilesListMethod,
   querySessionDetailsMethod,
 } from "@/methods/session-view/index.js";
 import OctIcon from "@/components/global/OctIcon.vue";
 import Tooltip from "@/components/global/Tooltip.vue";
+import { useLoader } from "@/helpers/index.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -16,6 +21,7 @@ const sessionNumber = route.params.sessionNumber;
 const session = ref(null);
 const fileChangesList = ref(null);
 const snackbar = ref(false);
+const loader = ref({});
 const totalPage = ref(0);
 const deleteFile = ref(false);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
@@ -54,6 +60,31 @@ const onPageChange = async (newPage) => {
   page.value = newPage;
   await router.push({ query: { ...route.query, page: newPage } });
   await updateSessionDetails(true);
+};
+
+const deleteFileHandle = async () => {
+  if (deleteFile.value) {
+    loader.value = useLoader().show();
+    const owner = session.value.head.repo.owner.login;
+    const repo = session.value.head.repo.name;
+    const path = deleteFile.value.title;
+    const message = `Deleting ${path} file from the pull request`;
+    const sha = deleteFile.value.sha;
+    const ref = session.value.head.ref;
+
+    snackbar.value = await deleteFileBySHA(
+      owner,
+      repo,
+      path,
+      message,
+      sha,
+      ref,
+    );
+
+    deleteFile.value = false;
+    loader.value.hide();
+    await updateSessionDetails();
+  }
 };
 </script>
 
@@ -180,6 +211,22 @@ const onPageChange = async (newPage) => {
       prev-icon="mdi-menu-left"
     ></v-pagination>
   </div>
+
+  <v-dialog v-model="deleteFile" width="auto">
+    <v-card max-width="400" prepend-icon="mdi-alert" title="Delete Session">
+      <template v-slot:text>
+        Are you sure you want to delete the file:
+        <strong>{{ deleteFile.title }}</strong>
+      </template>
+      <template v-slot:actions>
+        <v-spacer></v-spacer>
+        <v-btn @click="deleteFile = false"> Cancel </v-btn>
+        <v-btn color="red" variant="flat" @click="deleteFileHandle">
+          Delete
+        </v-btn>
+      </template>
+    </v-card>
+  </v-dialog>
 
   <v-snackbar
     v-model="snackbar"

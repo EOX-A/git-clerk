@@ -8,6 +8,8 @@ export async function filesListFromSession(
   cache,
 ) {
   try {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     const response = await octokit.rest.pulls.listFiles({
       owner: githubConfig.username,
       repo: githubConfig.repo,
@@ -30,5 +32,37 @@ export async function filesListFromSession(
     };
   } catch (error) {
     return error;
+  }
+}
+
+export async function deleteFile(
+  octokit,
+  githubConfig,
+  owner,
+  repo,
+  path,
+  message,
+  sha,
+  ref,
+) {
+  try {
+    await octokit.rest.repos.deleteFile({
+      owner,
+      repo,
+      path,
+      message,
+      sha,
+      branch: ref,
+    });
+
+    return {
+      text: `Successfully Deleted ${path}`,
+      status: "success",
+    };
+  } catch (error) {
+    return {
+      text: error.message,
+      status: "error",
+    };
   }
 }
