@@ -13,6 +13,8 @@ import {
 import OctIcon from "@/components/global/OctIcon.vue";
 import Tooltip from "@/components/global/Tooltip.vue";
 import { useLoader } from "@/helpers/index.js";
+import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
+import { DeleteSession } from "@/components/session/index.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -20,11 +22,12 @@ const sessionNumber = route.params.sessionNumber;
 
 const session = ref(null);
 const fileChangesList = ref(null);
-const snackbar = ref(false);
 const loader = ref({});
 const totalPage = ref(0);
 const deleteFile = ref(false);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
+
+const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 
@@ -89,6 +92,61 @@ const deleteFileHandle = async () => {
 </script>
 
 <template>
+  <div
+    v-if="session"
+    class="bg-secondary px-5 py-4 d-flex align-center ga-1 session-tab"
+  >
+    <v-btn
+      :href="session.html_url"
+      target="_blank"
+      color="blue-grey-darken-4"
+      prepend-icon="mdi-github"
+      size="x-large"
+      variant="text"
+      text="Github"
+      class="text-capitalize font-weight-medium"
+    ></v-btn>
+    <DeleteSession
+      text="Delete Session"
+      size="x-large"
+      :session="session"
+      :snackbar="snackbar"
+      :callBack="updateSessionDetails"
+    />
+    <v-btn
+      target="_blank"
+      color="blue-grey-darken-4"
+      prepend-icon="mdi-monitor-eye"
+      size="x-large"
+      variant="text"
+      text="Preview"
+      class="text-capitalize font-weight-medium"
+    ></v-btn>
+    <v-divider inset vertical></v-divider>
+    <v-btn
+      v-if="!session.draft || session.state === 'closed'"
+      target="_blank"
+      color="primary"
+      prepend-icon="mdi-dots-horizontal-circle-outline"
+      size="x-large"
+      variant="flat"
+      text="Pending Review"
+      class="text-capitalize font-weight-medium ml-5"
+      disabled
+    ></v-btn>
+    <v-btn
+      v-else
+      target="_blank"
+      color="blue-grey-lighten-4"
+      prepend-icon="mdi-file-document-edit"
+      size="x-large"
+      variant="flat"
+      text="Submit for Review"
+      class="text-capitalize font-weight-medium ml-5"
+      :disabled="!session.draft || session.state === 'closed'"
+    ></v-btn>
+  </div>
+
   <v-list class="py-0">
     <!-- file's list -->
     <v-list-item
@@ -152,34 +210,8 @@ const deleteFileHandle = async () => {
     </v-list-item>
 
     <!-- Placeholder for file's list -->
-    <v-list-item
-      v-else-if="fileChangesList === null"
-      v-for="n in 10"
-      :key="n"
-      :title="n"
-      class="files-view py-4 border-b-thin"
-    >
-      <template v-slot:title>
-        <div class="d-flex align-start px-5">
-          <v-skeleton-loader type="avatar"></v-skeleton-loader>
-          <div class="ml-4">
-            <v-skeleton-loader width="300px" type="heading"></v-skeleton-loader>
-            <div class="v-list-item-subtitle d-flex align-center pt-2">
-              <v-skeleton-loader width="200px" type="text"></v-skeleton-loader>
-            </div>
-          </div>
-        </div>
-      </template>
-      <template v-slot:append>
-        <v-skeleton-loader
-          v-for="a in 2"
-          :key="a"
-          width="24"
-          type="heading"
-          class="mx-3"
-        ></v-skeleton-loader>
-      </template>
-    </v-list-item>
+    <ListPlaceholder :button="2" v-else-if="fileChangesList === null" />
+
     <v-empty-state
       v-else
       headline="Whoops, No File changes found."
@@ -237,4 +269,16 @@ const deleteFileHandle = async () => {
   </v-snackbar>
 </template>
 
-<style></style>
+<style>
+.session-tab .v-btn__content {
+  font-size: 16px;
+}
+.session-tab .v-btn--disabled.v-btn--variant-flat .v-btn__overlay {
+  opacity: 0;
+}
+
+.session-tab .v-btn__prepend {
+  font-size: 20px;
+  margin-inline-end: 6px;
+}
+</style>

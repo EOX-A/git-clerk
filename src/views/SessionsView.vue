@@ -14,6 +14,8 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import Tooltip from "@/components/global/Tooltip.vue";
 import { useLoader } from "@/helpers/index.js";
+import { DeleteSession } from "@/components/session";
+import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -23,10 +25,11 @@ const totalPage = ref(0);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
 const deleteSession = ref(false);
 const reviewSession = ref(false);
-const snackbar = ref(false);
 const createNewSession = ref(false);
 const newSessionName = ref("");
 const loader = ref({});
+
+const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 
@@ -88,16 +91,6 @@ const onPageChange = async (newPage) => {
   page.value = newPage;
   await router.push({ query: { ...route.query, page: newPage } });
   await updateSessionsList(true);
-};
-
-const deleteSessionHandle = async () => {
-  if (deleteSession.value) {
-    loader.value = useLoader().show();
-    snackbar.value = await deleteBySessionNumber(deleteSession.value.number);
-    deleteSession.value = false;
-    loader.value.hide();
-    await updateSessionsList();
-  }
 };
 
 const reviewSessionHandle = async () => {
@@ -199,16 +192,11 @@ const reviewSessionHandle = async () => {
             variant="text"
           ></v-btn>
         </Tooltip>
-        <Tooltip text="Delete Session">
-          <v-btn
-            color="blue-grey-darken-4"
-            icon="mdi-delete-outline"
-            size="large"
-            variant="text"
-            :disabled="session.state === 'closed'"
-            @click="deleteSession = session"
-          ></v-btn>
-        </Tooltip>
+        <DeleteSession
+          :session="session"
+          :snackbar="snackbar"
+          :callBack="updateSessionsList"
+        />
         <Tooltip text="Checkout Preview">
           <v-btn
             color="blue-grey-darken-4"
@@ -231,34 +219,8 @@ const reviewSessionHandle = async () => {
     </v-list-item>
 
     <!-- Placeholder for session's list -->
-    <v-list-item
-      v-else-if="sessions === null"
-      v-for="n in 10"
-      :key="n"
-      :title="n"
-      class="sessions-view py-4 border-b-thin"
-    >
-      <template v-slot:title>
-        <div class="d-flex align-start px-5">
-          <v-skeleton-loader type="avatar"></v-skeleton-loader>
-          <div class="ml-4">
-            <v-skeleton-loader width="300px" type="heading"></v-skeleton-loader>
-            <div class="v-list-item-subtitle d-flex align-center pt-2">
-              <v-skeleton-loader width="200px" type="text"></v-skeleton-loader>
-            </div>
-          </div>
-        </div>
-      </template>
-      <template v-slot:append>
-        <v-skeleton-loader
-          v-for="a in 4"
-          :key="a"
-          width="24"
-          type="heading"
-          class="mx-3"
-        ></v-skeleton-loader>
-      </template>
-    </v-list-item>
+    <ListPlaceholder v-else-if="sessions === null" />
+
     <v-empty-state
       v-else
       headline="Whoops, No sessions found."
@@ -291,22 +253,6 @@ const reviewSessionHandle = async () => {
     ></v-pagination>
   </div>
 
-  <v-dialog v-model="deleteSession" width="auto">
-    <v-card max-width="400" prepend-icon="mdi-alert" title="Delete Session">
-      <template v-slot:text>
-        Are you sure you want to delete session:
-        <strong>{{ deleteSession.title }}</strong>
-      </template>
-      <template v-slot:actions>
-        <v-spacer></v-spacer>
-        <v-btn @click="deleteSession = false"> Cancel </v-btn>
-        <v-btn color="red" variant="flat" @click="deleteSessionHandle">
-          Delete
-        </v-btn>
-      </template>
-    </v-card>
-  </v-dialog>
-
   <v-dialog v-model="reviewSession" width="auto">
     <v-card
       max-width="400"
@@ -326,14 +272,6 @@ const reviewSessionHandle = async () => {
       </template>
     </v-card>
   </v-dialog>
-
-  <v-snackbar
-    v-model="snackbar"
-    timeout="3000"
-    :color="snackbar.status"
-    :text="snackbar.text"
-  >
-  </v-snackbar>
 </template>
 
 <style>

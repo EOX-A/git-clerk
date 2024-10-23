@@ -14,9 +14,11 @@ const navPaginationItems = ref([
     to: { path: "/" },
   },
 ]);
+const snackbar = ref(false);
 const isOctokitInitialised = ref(false);
 provide("set-nav-button-config", navButtonConfig);
 provide("set-nav-pagination-items", navPaginationItems);
+provide("set-snackbar", snackbar);
 
 onMounted(async () => {
   const loader = useLoader().show();
@@ -36,6 +38,13 @@ onMounted(async () => {
       <template v-if="isOctokitInitialised">
         <RouterView />
       </template>
+      <v-snackbar
+        v-model="snackbar"
+        timeout="3000"
+        :color="snackbar.status"
+        :text="snackbar.text"
+      >
+      </v-snackbar>
     </v-main>
   </v-app>
 </template>
