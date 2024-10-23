@@ -1,5 +1,5 @@
 // config.js
-window.ghConfig = {
+globalThis.ghConfig = {
   githubOwner: "",
   githubRepo: "",
   githubAuthToken: async () => {

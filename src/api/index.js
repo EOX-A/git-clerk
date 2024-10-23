@@ -11,7 +11,7 @@ import useOctokitStore from "@/stores/octokit";
 
 export async function initOctokit() {
   try {
-    const config = window.ghConfig;
+    const config = globalThis.ghConfig;
     const auth =
       (await config.githubAuthToken()) || import.meta.env.VUE_APP_GITHUB_TOKEN;
     const username = config.githubOwner || import.meta.env.VUE_APP_GITHUB_OWNER;
