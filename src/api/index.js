@@ -7,14 +7,15 @@ import {
   checkStatus,
   sessionReviewStatus,
 } from "@/api/session";
-import config from "@/../config.js";
 import useOctokitStore from "@/stores/octokit";
 
 export async function initOctokit() {
   try {
-    const auth = await config.githubAuthToken();
-    const username = config.githubOwner;
-    const repo = config.githubRepo;
+    const config = window.ghConfig;
+    const auth =
+      (await config.githubAuthToken()) || import.meta.env.VUE_APP_GITHUB_TOKEN;
+    const username = config.githubOwner || import.meta.env.VUE_APP_GITHUB_OWNER;
+    const repo = config.githubRepo || import.meta.env.VUE_APP_GITHUB_REPO;
 
     const octokit = new Octokit({ auth });
 
