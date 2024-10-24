@@ -11,6 +11,8 @@ import Tooltip from "@/components/global/Tooltip.vue";
 import { useLoader } from "@/helpers/index.js";
 import { DeleteSession, ReviewSession } from "@/components/session";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
+import ListPagination from "@/components/global/ListPagination.vue";
+import EmptyState from "@/components/global/EmptyState.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -198,37 +200,10 @@ const onPageChange = async (newPage) => {
     <!-- Placeholder for session's list -->
     <ListPlaceholder v-else-if="sessions === null" />
 
-    <v-empty-state
-      v-else
-      headline="Whoops, No sessions found."
-      icon="mdi-source-pull"
-      class="my-16 py-16"
-    >
-      <template v-slot:text>
-        To get started, you should
-        <a
-          @click="createNewSessionClick"
-          class="text-blue-accent-4 font-weight-medium"
-          href="#"
-          >create new session</a
-        >
-      </template>
-    </v-empty-state>
+    <EmptyState v-else :init-func="createNewSessionClick" />
   </v-list>
 
-  <div class="text-center border-t-thin py-6 bg-background">
-    <v-pagination
-      v-if="sessions"
-      v-model="page"
-      :length="totalPage"
-      @update:model-value="onPageChange"
-      density="comfortable"
-      total-visible="6"
-      color="primary"
-      next-icon="mdi-menu-right"
-      prev-icon="mdi-menu-left"
-    ></v-pagination>
-  </div>
+  <ListPagination v-if="sessions" :page :totalPage :onPageChange />
 </template>
 
 <style>

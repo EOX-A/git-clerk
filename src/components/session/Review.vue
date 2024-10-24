@@ -17,6 +17,10 @@ const props = defineProps({
     type: String,
     default: "blue-grey-darken-4",
   },
+  class: {
+    type: String,
+    default: "",
+  },
   text: {
     type: String,
     default: "",
@@ -55,7 +59,7 @@ const reviewSessionHandle = async () => {
       :variant="props.variant"
       :disabled="!props.session.draft || props.session.state === 'closed'"
       @click="reviewSession = props.session"
-      class="text-capitalize font-weight-medium"
+      :class="`text-capitalize font-weight-medium ${props.class}`"
     ></v-btn>
   </Tooltip>
 

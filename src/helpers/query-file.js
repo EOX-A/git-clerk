@@ -1,11 +1,10 @@
-import { getFileChangesStatus } from "@/helpers";
+import { createColorBlocks, getFileChangesStatus } from "@/helpers";
 
 export default function queryFile(file) {
   return {
     title: file.filename,
-    // date: dayjs(session.updated_at).format("DD/MM/YYYY"),
-    // time: dayjs(session.updated_at).format("hh:mm A"),
     state: getFileChangesStatus(file.status),
+    diffColor: createColorBlocks(file.additions, file.deletions, file.changes),
     ...file,
   };
 }
