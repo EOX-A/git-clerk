@@ -6,8 +6,10 @@ import {
   reviewSession,
   checkStatus,
   sessionReviewStatus,
+  sessionDetails,
 } from "@/api/session";
 import useOctokitStore from "@/stores/octokit";
+import { deleteFile, filesListFromSession } from "@/api/file";
 
 export async function initOctokit() {
   try {
@@ -46,6 +48,11 @@ export async function getSessionsList(currPage, cache) {
   );
 }
 
+export async function getSessionDetails(sessionNumber) {
+  const { githubConfig, octokit } = useOctokitStore();
+  return sessionDetails(octokit, githubConfig, sessionNumber);
+}
+
 export async function deleteBySessionNumber(sessionNumber) {
   const { githubConfig, octokit } = useOctokitStore();
   return deleteSession(octokit, githubConfig, sessionNumber);
@@ -69,4 +76,30 @@ export async function getSessionReviewStatus(sessionNumber) {
 export async function createSessionByName(name) {
   const { githubConfig, octokit } = useOctokitStore();
   return createSession(octokit, githubConfig, name);
+}
+
+export async function getFilesListFromSession(sessionNumber, currPage, cache) {
+  const { githubConfig, octokit } = useOctokitStore();
+
+  return filesListFromSession(
+    octokit,
+    githubConfig,
+    sessionNumber,
+    currPage,
+    cache,
+  );
+}
+
+export async function deleteFileBySHA(owner, repo, path, message, sha, ref) {
+  const { githubConfig, octokit } = useOctokitStore();
+  return deleteFile(
+    octokit,
+    githubConfig,
+    owner,
+    repo,
+    path,
+    message,
+    sha,
+    ref,
+  );
 }

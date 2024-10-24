@@ -13,12 +13,12 @@ const router = createRouter({
       component: SessionsView,
     },
     {
-      path: "/:sessionId",
+      path: "/:sessionNumber",
       name: "session",
       component: SessionView,
     },
     {
-      path: "/:sessionId/:fileId",
+      path: "/:sessionNumber/:fileId",
       name: "file-edit",
       component: FileEditView,
     },

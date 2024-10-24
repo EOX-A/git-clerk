@@ -1,12 +1,7 @@
 <script setup>
 import OctIcon from "@/components/global/OctIcon.vue";
 import { h, inject, onMounted, ref } from "vue";
-import {
-  deleteBySessionNumber,
-  getSessionsList,
-  reviewBySessionNumber,
-  createSessionByName,
-} from "@/api/index.js";
+import { getSessionsList, createSessionByName } from "@/api/index.js";
 import {
   querySessionsListMethod,
   checkStatusMethod,
@@ -14,6 +9,10 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import Tooltip from "@/components/global/Tooltip.vue";
 import { useLoader } from "@/helpers/index.js";
+import { DeleteSession, ReviewSession } from "@/components/session";
+import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
+import ListPagination from "@/components/global/ListPagination.vue";
+import EmptyState from "@/components/global/EmptyState.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -23,11 +22,13 @@ const totalPage = ref(0);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
 const deleteSession = ref(false);
 const reviewSession = ref(false);
-const snackbar = ref(false);
 const createNewSession = ref(false);
 const newSessionName = ref("");
 const loader = ref({});
+
+const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
+const navPaginationItems = inject("set-nav-pagination-items");
 
 const updateSessionsList = async (cache = false) => {
   sessions.value = null;
@@ -64,9 +65,12 @@ const onKeyEnterCreateNewSession = async (event) => {
       },
     );
     snackbar.value = await createSessionByName(newSessionName.value);
-    clearInputCreateNewSession();
     loader.value.hide();
-    await updateSessionsList();
+
+    if (snackbar.value.number) {
+      setTimeout(() => router.push(`/${snackbar.value.number}`), 750);
+      clearInputCreateNewSession();
+    }
   }
 };
 
@@ -76,6 +80,7 @@ onMounted(async () => {
     icon: "mdi-source-pull",
     click: createNewSessionClick,
   };
+  navPaginationItems.value = [navPaginationItems.value[0]];
   await updateSessionsList(true);
 });
 
@@ -83,29 +88,6 @@ const onPageChange = async (newPage) => {
   page.value = newPage;
   await router.push({ query: { ...route.query, page: newPage } });
   await updateSessionsList(true);
-};
-
-const deleteSessionHandle = async () => {
-  if (deleteSession.value) {
-    loader.value = useLoader().show();
-    snackbar.value = await deleteBySessionNumber(deleteSession.value.number);
-    deleteSession.value = false;
-    loader.value.hide();
-    await updateSessionsList();
-  }
-};
-
-const reviewSessionHandle = async () => {
-  if (reviewSession.value) {
-    loader.value = useLoader().show();
-    snackbar.value = await reviewBySessionNumber(
-      reviewSession.value.number,
-      reviewSession.value.node_id,
-    );
-    reviewSession.value = false;
-    loader.value.hide();
-    await updateSessionsList();
-  }
 };
 </script>
 
@@ -194,16 +176,11 @@ const reviewSessionHandle = async () => {
             variant="text"
           ></v-btn>
         </Tooltip>
-        <Tooltip text="Delete Session">
-          <v-btn
-            color="blue-grey-darken-4"
-            icon="mdi-delete-outline"
-            size="large"
-            variant="text"
-            :disabled="session.state === 'closed'"
-            @click="deleteSession = session"
-          ></v-btn>
-        </Tooltip>
+        <DeleteSession
+          :session="session"
+          :snackbar="snackbar"
+          :callBack="updateSessionsList"
+        />
         <Tooltip text="Checkout Preview">
           <v-btn
             color="blue-grey-darken-4"
@@ -212,131 +189,24 @@ const reviewSessionHandle = async () => {
             variant="text"
           ></v-btn>
         </Tooltip>
-        <Tooltip text="Request Review">
-          <v-btn
-            color="blue-grey-darken-4"
-            icon="mdi-file-document-edit"
-            size="large"
-            variant="text"
-            @click="reviewSession = session"
-            :disabled="!session.draft || session.state === 'closed'"
-          ></v-btn>
-        </Tooltip>
+        <ReviewSession
+          :session="session"
+          :snackbar="snackbar"
+          :callBack="updateSessionsList"
+        />
       </template>
     </v-list-item>
 
     <!-- Placeholder for session's list -->
-    <v-list-item
-      v-else-if="sessions === null"
-      v-for="n in 10"
-      :key="n"
-      :title="n"
-      class="sessions-view py-4 border-b-thin"
-    >
-      <template v-slot:title>
-        <div class="d-flex align-start px-5">
-          <v-skeleton-loader type="avatar"></v-skeleton-loader>
-          <div class="ml-4">
-            <v-skeleton-loader width="300px" type="heading"></v-skeleton-loader>
-            <div class="v-list-item-subtitle d-flex align-center pt-2">
-              <v-skeleton-loader width="200px" type="text"></v-skeleton-loader>
-            </div>
-          </div>
-        </div>
-      </template>
-      <template v-slot:append>
-        <v-skeleton-loader
-          v-for="a in 4"
-          :key="a"
-          width="24"
-          type="heading"
-          class="mx-3"
-        ></v-skeleton-loader>
-      </template>
-    </v-list-item>
-    <v-empty-state
-      v-else
-      headline="Whoops, No sessions found."
-      icon="mdi-source-pull"
-      class="my-16 py-16"
-    >
-      <template v-slot:text>
-        To get started, you should
-        <a
-          @click="createNewSessionClick"
-          class="text-blue-accent-4 font-weight-medium"
-          href="#"
-          >create new session</a
-        >
-      </template>
-    </v-empty-state>
+    <ListPlaceholder v-else-if="sessions === null" />
+
+    <EmptyState v-else :init-func="createNewSessionClick" />
   </v-list>
 
-  <div class="text-center border-t-thin py-6 bg-background">
-    <v-pagination
-      v-if="sessions"
-      v-model="page"
-      :length="totalPage"
-      @update:model-value="onPageChange"
-      density="comfortable"
-      total-visible="6"
-      color="primary"
-      next-icon="mdi-menu-right"
-      prev-icon="mdi-menu-left"
-    ></v-pagination>
-  </div>
-
-  <v-dialog v-model="deleteSession" width="auto">
-    <v-card max-width="400" prepend-icon="mdi-alert" title="Delete Session">
-      <template v-slot:text>
-        Are you sure you want to delete session:
-        <strong>{{ deleteSession.title }}</strong>
-      </template>
-      <template v-slot:actions>
-        <v-spacer></v-spacer>
-        <v-btn @click="deleteSession = false"> Cancel </v-btn>
-        <v-btn color="red" variant="flat" @click="deleteSessionHandle">
-          Delete
-        </v-btn>
-      </template>
-    </v-card>
-  </v-dialog>
-
-  <v-dialog v-model="reviewSession" width="auto">
-    <v-card
-      max-width="400"
-      prepend-icon="mdi-alert"
-      title="Request Review Session"
-    >
-      <template v-slot:text>
-        Are you sure you want to request this session for review:
-        <strong>{{ reviewSession.title }}</strong>
-      </template>
-      <template v-slot:actions>
-        <v-spacer></v-spacer>
-        <v-btn @click="reviewSession = false"> Cancel </v-btn>
-        <v-btn color="success" variant="flat" @click="reviewSessionHandle">
-          Request
-        </v-btn>
-      </template>
-    </v-card>
-  </v-dialog>
-
-  <v-snackbar
-    v-model="snackbar"
-    timeout="3000"
-    :color="snackbar.status"
-    :text="snackbar.text"
-  >
-  </v-snackbar>
+  <ListPagination v-if="sessions" :page :totalPage :onPageChange />
 </template>
 
 <style>
-.sessions-view a.main-title {
-  font-weight: 400;
-  text-decoration: none;
-}
-
 .sessions-view.session-closed {
   background: #f5f5f5;
   opacity: 0.4;
@@ -345,21 +215,6 @@ const reviewSessionHandle = async () => {
 .sessions-view.session-closed:hover {
   background: white;
   opacity: 1;
-}
-
-.sessions-view a.main-title:hover {
-  font-weight: 500;
-  text-decoration: underline;
-}
-
-.sessions-view .v-list-item-subtitle {
-  opacity: 1;
-  color: #8a969e;
-}
-
-.sessions-view .v-icon.pr-icon svg {
-  width: 20px;
-  height: 20px;
 }
 
 .sessions-view .octicon-file-diff {

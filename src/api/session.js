@@ -129,7 +129,7 @@ export async function createSession(octokit, githubConfig, prName) {
     });
 
     loaderText.innerText = "Creating repo from new branch...";
-    await octokit.rest.pulls.create({
+    const res = await octokit.rest.pulls.create({
       owner,
       repo,
       title: prName,
@@ -141,10 +141,31 @@ export async function createSession(octokit, githubConfig, prName) {
     return {
       text: `Successfully Created Session:  ${prName}`,
       status: "success",
+      number: res.data.number,
     };
   } catch (error) {
     return {
       text: error.message.replaceAll("Reference", "Session"),
+      status: "error",
+    };
+  }
+}
+
+export async function sessionDetails(octokit, githubConfig, prNumber) {
+  try {
+    const response = await octokit.rest.pulls.get({
+      owner: githubConfig.username,
+      repo: githubConfig.repo,
+      pull_number: prNumber,
+      headers: {
+        "If-None-Match": "",
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    return {
+      text: error.message,
       status: "error",
     };
   }

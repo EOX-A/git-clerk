@@ -10,7 +10,7 @@ export default async function checkStatusMethod(
       const check = await getCheckStatus(session.number);
       const requestedChanges = await getSessionReviewStatus(session.number);
 
-      if (currPage === updatedPage.value) {
+      if (currPage === updatedPage.value && sessions.value) {
         sessions.value[index] = {
           ...session,
           requested_changes: requestedChanges,
