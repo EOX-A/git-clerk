@@ -1,7 +1,11 @@
 <script setup>
 import { inject, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { getFilesListFromSession, getSessionDetails } from "@/api/index.js";
+import {
+  getBranchFileStructure,
+  getFilesListFromSession,
+  getSessionDetails,
+} from "@/api/index.js";
 import {
   queryFilesListMethod,
   querySessionDetailsMethod,
@@ -22,6 +26,8 @@ const loader = ref({});
 const totalPage = ref(0);
 const deleteFile = ref(false);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
+
+const directoryStructure = ref({});
 
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
@@ -44,6 +50,8 @@ const updateDetails = async (cache = false) => {
     cache,
   );
   queryFilesListMethod(fileChanges, { snackbar, fileChangesList, totalPage });
+
+  directoryStructure.value = await getBranchFileStructure(session.value);
 };
 
 onMounted(async () => {

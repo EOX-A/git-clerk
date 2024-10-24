@@ -66,3 +66,43 @@ export async function deleteFile(
     };
   }
 }
+
+export async function branchFileStructure(
+  octokit,
+  githubConfig,
+  owner,
+  repo,
+  ref,
+  path,
+) {
+  const dirStructure = {};
+
+  try {
+    const { data } = await octokit.rest.repos.getContent({
+      owner,
+      repo,
+      ref,
+      path,
+    });
+
+    for (const item of data) {
+      if (item.type === "dir") {
+        dirStructure[item.name] = await branchFileStructure(
+          octokit,
+          githubConfig,
+          owner,
+          repo,
+          ref,
+          item.path,
+        );
+      }
+    }
+
+    return dirStructure;
+  } catch (error) {
+    return {
+      text: error.message,
+      status: "error",
+    };
+  }
+}
