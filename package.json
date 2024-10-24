@@ -1,6 +1,6 @@
 {
-  "name": "stac-editing-gui",
-  "version": "0.0.0",
+  "name": "git-clerk",
+  "version": "1.0.0-alpha.1",
   "private": true,
   "type": "module",
   "scripts": {
