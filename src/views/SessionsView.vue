@@ -1,12 +1,7 @@
 <script setup>
 import OctIcon from "@/components/global/OctIcon.vue";
 import { h, inject, onMounted, ref } from "vue";
-import {
-  deleteBySessionNumber,
-  getSessionsList,
-  reviewBySessionNumber,
-  createSessionByName,
-} from "@/api/index.js";
+import { getSessionsList, createSessionByName } from "@/api/index.js";
 import {
   querySessionsListMethod,
   checkStatusMethod,
@@ -14,7 +9,7 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import Tooltip from "@/components/global/Tooltip.vue";
 import { useLoader } from "@/helpers/index.js";
-import { DeleteSession } from "@/components/session";
+import { DeleteSession, ReviewSession } from "@/components/session";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 
 const route = useRoute();
@@ -91,19 +86,6 @@ const onPageChange = async (newPage) => {
   page.value = newPage;
   await router.push({ query: { ...route.query, page: newPage } });
   await updateSessionsList(true);
-};
-
-const reviewSessionHandle = async () => {
-  if (reviewSession.value) {
-    loader.value = useLoader().show();
-    snackbar.value = await reviewBySessionNumber(
-      reviewSession.value.number,
-      reviewSession.value.node_id,
-    );
-    reviewSession.value = false;
-    loader.value.hide();
-    await updateSessionsList();
-  }
 };
 </script>
 
@@ -205,16 +187,11 @@ const reviewSessionHandle = async () => {
             variant="text"
           ></v-btn>
         </Tooltip>
-        <Tooltip text="Request Review">
-          <v-btn
-            color="blue-grey-darken-4"
-            icon="mdi-file-document-edit"
-            size="large"
-            variant="text"
-            @click="reviewSession = session"
-            :disabled="!session.draft || session.state === 'closed'"
-          ></v-btn>
-        </Tooltip>
+        <ReviewSession
+          :session="session"
+          :snackbar="snackbar"
+          :callBack="updateSessionsList"
+        />
       </template>
     </v-list-item>
 
@@ -252,26 +229,6 @@ const reviewSessionHandle = async () => {
       prev-icon="mdi-menu-left"
     ></v-pagination>
   </div>
-
-  <v-dialog v-model="reviewSession" width="auto">
-    <v-card
-      max-width="400"
-      prepend-icon="mdi-alert"
-      title="Request Review Session"
-    >
-      <template v-slot:text>
-        Are you sure you want to request this session for review:
-        <strong>{{ reviewSession.title }}</strong>
-      </template>
-      <template v-slot:actions>
-        <v-spacer></v-spacer>
-        <v-btn @click="reviewSession = false"> Cancel </v-btn>
-        <v-btn color="success" variant="flat" @click="reviewSessionHandle">
-          Request
-        </v-btn>
-      </template>
-    </v-card>
-  </v-dialog>
 </template>
 
 <style>

@@ -14,7 +14,7 @@ import OctIcon from "@/components/global/OctIcon.vue";
 import Tooltip from "@/components/global/Tooltip.vue";
 import { useLoader } from "@/helpers/index.js";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
-import { DeleteSession } from "@/components/session/index.js";
+import { DeleteSession, ReviewSession } from "@/components/session/index.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -122,9 +122,9 @@ const deleteFileHandle = async () => {
       text="Preview"
       class="text-capitalize font-weight-medium"
     ></v-btn>
-    <v-divider inset vertical></v-divider>
+    <v-divider v-if="session.state !== 'closed'" inset vertical></v-divider>
     <v-btn
-      v-if="!session.draft || session.state === 'closed'"
+      v-if="!session.draft && session.state !== 'closed'"
       target="_blank"
       color="primary"
       prepend-icon="mdi-dots-horizontal-circle-outline"
@@ -134,17 +134,17 @@ const deleteFileHandle = async () => {
       class="text-capitalize font-weight-medium ml-5"
       disabled
     ></v-btn>
-    <v-btn
-      v-else
-      target="_blank"
-      color="blue-grey-lighten-4"
-      prepend-icon="mdi-file-document-edit"
-      size="x-large"
-      variant="flat"
+    <ReviewSession
+      v-else-if="session.draft && session.state !== 'closed'"
       text="Submit for Review"
-      class="text-capitalize font-weight-medium ml-5"
-      :disabled="!session.draft || session.state === 'closed'"
-    ></v-btn>
+      size="x-large"
+      color="blue-grey-lighten-4"
+      variant="flat"
+      :session="session"
+      :snackbar="snackbar"
+      :callBack="updateSessionDetails"
+      class="ml-5"
+    />
   </div>
 
   <v-list class="py-0">

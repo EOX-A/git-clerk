@@ -157,6 +157,9 @@ export async function sessionDetails(octokit, githubConfig, prNumber) {
       owner: githubConfig.username,
       repo: githubConfig.repo,
       pull_number: prNumber,
+      headers: {
+        "If-None-Match": "",
+      },
     });
 
     return response.data;
