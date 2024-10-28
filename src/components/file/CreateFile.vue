@@ -126,7 +126,7 @@ const createFile = async () => {
   >
     <v-card>
       <v-toolbar color="primary">
-        <v-btn icon="mdi-close" @click="props.addNewFileClick(false)"></v-btn>
+        <v-btn icon="mdi-close" @click="close"></v-btn>
 
         <v-toolbar-title>Add New File</v-toolbar-title>
 
