@@ -13,6 +13,7 @@ import {
   branchFileStructure,
   deleteFile,
   filesListFromSession,
+  updateFile,
 } from "@/api/file";
 
 export async function initOctokit() {
@@ -108,7 +109,7 @@ export async function deleteFileBySHA(owner, repo, path, message, sha, ref) {
   );
 }
 
-export async function getBranchFileStructure(session) {
+export async function getBranchFileStructure(session, path) {
   const { githubConfig, octokit } = useOctokitStore();
   const { head } = session;
 
@@ -118,6 +119,22 @@ export async function getBranchFileStructure(session) {
     head.repo.owner.login,
     head.repo.name,
     head.ref,
-    "",
+    path,
+  );
+}
+
+export async function createAndUpdateFile(session, path, fileName, content) {
+  const { githubConfig, octokit } = useOctokitStore();
+  const { head } = session;
+
+  return updateFile(
+    octokit,
+    githubConfig,
+    head.repo.owner.login,
+    head.repo.name,
+    head.ref,
+    path,
+    fileName,
+    content,
   );
 }

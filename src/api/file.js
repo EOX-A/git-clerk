@@ -75,7 +75,7 @@ export async function branchFileStructure(
   ref,
   path,
 ) {
-  const dirStructure = {};
+  const dirStructure = [];
 
   try {
     const { data } = await octokit.rest.repos.getContent({
@@ -87,18 +87,42 @@ export async function branchFileStructure(
 
     for (const item of data) {
       if (item.type === "dir") {
-        dirStructure[item.name] = await branchFileStructure(
-          octokit,
-          githubConfig,
-          owner,
-          repo,
-          ref,
-          item.path,
-        );
+        dirStructure.push(item.name);
       }
     }
 
     return dirStructure;
+  } catch (error) {
+    return [];
+  }
+}
+
+export async function updateFile(
+  octokit,
+  githubConfig,
+  owner,
+  repo,
+  ref,
+  path,
+  fileName,
+  content,
+) {
+  try {
+    const base64Content = btoa(content);
+
+    await octokit.rest.repos.createOrUpdateFileContents({
+      owner,
+      repo,
+      path: (path + fileName).replace("/", ""),
+      message: `chores: file updated - ${path + fileName}`,
+      content: base64Content,
+      branch: ref,
+    });
+
+    return {
+      text: `File updated: ${fileName}`,
+      status: "success",
+    };
   } catch (error) {
     return {
       text: error.message,

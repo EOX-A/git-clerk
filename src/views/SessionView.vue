@@ -1,11 +1,7 @@
 <script setup>
 import { inject, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import {
-  getBranchFileStructure,
-  getFilesListFromSession,
-  getSessionDetails,
-} from "@/api/index.js";
+import { getFilesListFromSession, getSessionDetails } from "@/api/index.js";
 import {
   queryFilesListMethod,
   querySessionDetailsMethod,
@@ -14,7 +10,7 @@ import OctIcon from "@/components/global/OctIcon.vue";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import ListPagination from "@/components/global/ListPagination.vue";
 import EmptyState from "@/components/global/EmptyState.vue";
-import { DeleteFile, ActionTab } from "@/components/file";
+import { DeleteFile, ActionTab, CreateFile } from "@/components/file";
 
 const route = useRoute();
 const router = useRouter();
@@ -25,15 +21,16 @@ const fileChangesList = ref(null);
 const loader = ref({});
 const totalPage = ref(0);
 const deleteFile = ref(false);
+const addNewFileDialog = ref(false);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
-
-const directoryStructure = ref({});
 
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 
-const addNewFileClick = async () => {};
+const addNewFileClick = async (state) => {
+  addNewFileDialog.value = state;
+};
 
 const updateDetails = async (cache = false) => {
   fileChangesList.value = null;
@@ -50,15 +47,13 @@ const updateDetails = async (cache = false) => {
     cache,
   );
   queryFilesListMethod(fileChanges, { snackbar, fileChangesList, totalPage });
-
-  directoryStructure.value = await getBranchFileStructure(session.value);
 };
 
 onMounted(async () => {
   navButtonConfig.value = {
     text: "Add New File",
     icon: "mdi-plus",
-    click: addNewFileClick,
+    click: () => addNewFileClick(true),
   };
   await updateDetails();
 });
@@ -71,6 +66,13 @@ const onPageChange = async (newPage) => {
 </script>
 
 <template>
+  <CreateFile
+    v-if="session && addNewFileClick"
+    :updateDetails
+    :addNewFileClick
+    :open="addNewFileDialog"
+    :session
+  />
   <ActionTab :session :updateDetails />
 
   <v-list class="py-0">
