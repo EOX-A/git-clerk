@@ -66,3 +66,67 @@ export async function deleteFile(
     };
   }
 }
+
+export async function branchFileStructure(
+  octokit,
+  githubConfig,
+  owner,
+  repo,
+  ref,
+  path,
+) {
+  const dirStructure = [];
+
+  try {
+    const { data } = await octokit.rest.repos.getContent({
+      owner,
+      repo,
+      ref,
+      path,
+    });
+
+    for (const item of data) {
+      if (item.type === "dir") {
+        dirStructure.push(item.name);
+      }
+    }
+
+    return dirStructure;
+  } catch (error) {
+    return [];
+  }
+}
+
+export async function updateFile(
+  octokit,
+  githubConfig,
+  owner,
+  repo,
+  ref,
+  path,
+  fileName,
+  content,
+) {
+  try {
+    const base64Content = btoa(content);
+
+    await octokit.rest.repos.createOrUpdateFileContents({
+      owner,
+      repo,
+      path: (path + fileName).replace("/", ""),
+      message: `chores: file updated - ${path + fileName}`,
+      content: base64Content,
+      branch: ref,
+    });
+
+    return {
+      text: `File updated: ${fileName}`,
+      status: "success",
+    };
+  } catch (error) {
+    return {
+      text: error.message,
+      status: "error",
+    };
+  }
+}
