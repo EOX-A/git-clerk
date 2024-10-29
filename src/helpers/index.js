@@ -5,3 +5,4 @@ export { default as getTotalPages } from "./get-total-pages";
 export { default as useLoader } from "./use-loader.js";
 export { default as getFileChangesStatus } from "./get-file-changes-status";
 export { default as createColorBlocks } from "./create-file-diff-color-block";
+export { encodeString, decodeString } from "./encoding-decoding-string.js";

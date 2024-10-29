@@ -64,7 +64,7 @@ const deleteFileHandle = async () => {
       :text="props.text"
       variant="text"
       @click="deleteFile = props.file"
-      :disabled="props.file.status === 'removed'"
+      :disabled="props.file?.status === 'removed'"
       class="text-capitalize font-weight-medium"
     ></v-btn>
   </Tooltip>

@@ -14,6 +14,7 @@ import {
   deleteFile,
   filesListFromSession,
   updateFile,
+  fileDetails,
 } from "@/api/file";
 
 export async function initOctokit() {
@@ -106,6 +107,19 @@ export async function deleteFileBySHA(owner, repo, path, message, sha, ref) {
     message,
     sha,
     ref,
+  );
+}
+
+export async function getFileDetails(session, filePath) {
+  const { octokit } = useOctokitStore();
+  const { head } = session.value;
+
+  return fileDetails(
+    octokit,
+    head.repo.owner.login,
+    head.repo.name,
+    head.ref,
+    filePath,
   );
 }
 

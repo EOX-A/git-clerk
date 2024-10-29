@@ -67,6 +67,24 @@ export async function deleteFile(
   }
 }
 
+export async function fileDetails(octokit, owner, repo, ref, filePath) {
+  try {
+    const { data } = await octokit.rest.repos.getContent({
+      owner,
+      repo,
+      ref,
+      path: filePath,
+    });
+
+    return data;
+  } catch (error) {
+    return {
+      text: error.message,
+      status: "error",
+    };
+  }
+}
+
 export async function branchFileStructure(
   octokit,
   githubConfig,

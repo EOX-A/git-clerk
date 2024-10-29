@@ -15,7 +15,7 @@ export default function querySessionDetailsMethod(sessionDetails, props) {
       {
         title: props.session.value.title,
         disabled: true,
-        to: { path: "/" },
+        to: { path: `/${props.session.value.number}` },
       },
     ];
   }
