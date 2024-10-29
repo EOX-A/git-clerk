@@ -75,7 +75,7 @@ onMounted(() => {
 
 watch(updatedFilePathArr, async (newPathArr) => {
   currPathDirStructure.value = [];
-  const currPath = newPathArr[newPathArr.length - 1];
+  const currPath = newPathArr.join("/").replace("/", "");
 
   currPathDirStructure.value = await getBranchFileStructure(
     props.session,
