@@ -3,9 +3,10 @@ import { inject, onMounted, ref } from "vue";
 import { getFileDetails, getSessionDetails } from "@/api/index.js";
 import { useRoute, useRouter } from "vue-router";
 import { querySessionDetailsMethod } from "@/methods/session-view/index.js";
-import { decodeString } from "@/helpers/index.js";
+import { decodeString, isValidFormJSON } from "@/helpers/index.js";
 import queryFileDetailsMethod from "../methods/file-edit-view/query-file-details.js";
 import { DeleteFile } from "@/components/file/index.js";
+import "@eox/jsonform/dist/eox-jsonform.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -68,6 +69,14 @@ onMounted(async () => {
   <div v-if="fileContent" class="bg-white px-12 py-10 d-block">
     <h2>{{ session.title }}</h2>
     <p>{{ file.name }}</p>
+
+    <eox-jsonform
+      v-if="isValidFormJSON(fileContent)"
+      :schema="JSON.parse(fileContent)"
+    ></eox-jsonform>
+    <div v-else>
+      <p>Not a correct json-form</p>
+    </div>
   </div>
 </template>
 
