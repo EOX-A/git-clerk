@@ -88,11 +88,19 @@ onMounted(async () => {
   .je-indented-panel > div > div {
     display: grid;
     grid-template-columns: 1fr 1fr; /* Two equal columns */
-    gap: 10px;
+    gap: 20px 50px;
   }
-  // .row:has([style="display: none;"]) {
-  //     display: none;
-  // }
+  .row:has([style="display: none;"][data-schematype]) {
+      display: none;
+  }
+  form[data-theme="html"] .je-indented-panel{
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .je-indented-panel .row {
+    padding: 0 !important;
+  }
 `;
 
   // Append the <style> element to the shadow root
