@@ -7,8 +7,12 @@ import {
 } from "@/api/index.js";
 import { useRoute, useRouter } from "vue-router";
 import { querySessionDetailsMethod } from "@/methods/session-view/index.js";
-import { decodeString, isValidFormJSON, useLoader } from "@/helpers/index.js";
-import queryFileDetailsMethod from "../methods/file-edit-view/query-file-details.js";
+import { decodeString, useLoader } from "@/helpers/index.js";
+import {
+  queryFileDetailsMethod,
+  initEOXJSONFormMethod,
+  hideHiddenFieldsMethod,
+} from "../methods/file-edit-view";
 import { DeleteFile } from "@/components/file/index.js";
 import isEqual from "lodash.isequal";
 import "@eox/jsonform/dist/eox-jsonform.js";
@@ -24,6 +28,7 @@ const file = ref(null);
 const fileContent = ref(null);
 const reset = ref(false);
 const updatedFileContent = ref(null);
+const initValue = ref(null);
 const jsonFormInstance = ref(null);
 const isFormJSON = ref(false);
 
@@ -62,49 +67,23 @@ const saveFile = async () => {
     );
 
     if (snackbar.value.status === "success") {
+      updatedFileContent.value = null;
       await updateFileDetails(false);
+      initEOXJSONFormMethod(jsonFormInstance, isFormJSON);
     }
   }
   loader.hide();
 };
 
 onMounted(async () => {
+  const loader = useLoader().show();
   updateNavButtonConfig();
   await updateFileDetails();
-  jsonFormInstance.value = document.querySelector("eox-jsonform");
-
-  // Ensure the element has an open shadow root
-  const shadowRoot =
-    jsonFormInstance.value.shadowRoot ||
-    jsonFormInstance.value.attachShadow({ mode: "open" });
-
-  // Create a <style> element
-  const style = document.createElement("style");
-  style.textContent = `
-   .je-indented-panel .row {
-    margin-top: 10px;
-    padding: 10px;
+  if (isFormJSON.value) {
+    initEOXJSONFormMethod(jsonFormInstance, isFormJSON);
+    hideHiddenFieldsMethod(jsonFormInstance);
   }
-  .je-indented-panel > div > div {
-    display: grid;
-    grid-template-columns: 1fr 1fr; /* Two equal columns */
-    gap: 20px 50px;
-  }
-  .row:has([style="display: none;"][data-schematype]) {
-      display: none;
-  }
-  form[data-theme="html"] .je-indented-panel{
-    border: none !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-  .je-indented-panel .row {
-    padding: 0 !important;
-  }
-`;
-
-  // Append the <style> element to the shadow root
-  shadowRoot.appendChild(style);
+  loader.hide();
 });
 
 const updateNavButtonConfig = (text = "Saved", disabled = true) => {
@@ -138,6 +117,7 @@ const onChangeJSON = (e) => {
     );
 
     if (!updatedFileContent.value) {
+      initValue.value = e.detail;
       updatedFileContent.value = newSchema;
       fileContent.value = JSON.stringify(newSchema);
     } else if (!isEqual(updatedFileContent.value, newSchema)) {
@@ -147,12 +127,14 @@ const onChangeJSON = (e) => {
 
     if (isEqual(updatedFileContent.value, JSON.parse(fileContent.value)))
       updateNavButtonConfig();
+
+    hideHiddenFieldsMethod(jsonFormInstance);
   }
 };
 
 const resetContent = () => {
   if (isFormJSON) {
-    jsonFormInstance.value.editor.setValue({});
+    jsonFormInstance.value.editor.setValue(initValue.value);
   }
 };
 </script>
@@ -182,7 +164,7 @@ const resetContent = () => {
     </Tooltip>
   </div>
 
-  <div v-if="fileContent" class="bg-white px-12 py-10 d-block">
+  <div v-if="fileContent" class="bg-white fill-height px-12 py-10 d-block">
     <h2>{{ session.title }}</h2>
     <p>{{ file.name }}</p>
 
