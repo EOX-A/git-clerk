@@ -110,7 +110,7 @@ export async function deleteFileBySHA(owner, repo, path, message, sha, ref) {
   );
 }
 
-export async function getFileDetails(session, filePath) {
+export async function getFileDetails(session, filePath, cache = true) {
   const { octokit } = useOctokitStore();
   const { head } = session.value;
 
@@ -120,6 +120,7 @@ export async function getFileDetails(session, filePath) {
     head.repo.name,
     head.ref,
     filePath,
+    cache,
   );
 }
 
@@ -137,7 +138,13 @@ export async function getBranchFileStructure(session, path) {
   );
 }
 
-export async function createAndUpdateFile(session, path, fileName, content) {
+export async function createAndUpdateFile(
+  session,
+  path,
+  fileName,
+  content,
+  sha,
+) {
   const { githubConfig, octokit } = useOctokitStore();
   const { head } = session;
 
@@ -150,5 +157,6 @@ export async function createAndUpdateFile(session, path, fileName, content) {
     path,
     fileName,
     content,
+    sha,
   );
 }

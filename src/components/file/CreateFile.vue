@@ -105,7 +105,7 @@ const createFile = async () => {
 
   snackbar.value = await createAndUpdateFile(
     props.session,
-    updatedFilePath.value,
+    (updatedFilePath.value + filePath.value).replace("/", ""),
     filePath.value,
     fileContent.value,
   );

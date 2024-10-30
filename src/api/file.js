@@ -67,13 +67,20 @@ export async function deleteFile(
   }
 }
 
-export async function fileDetails(octokit, owner, repo, ref, filePath) {
+export async function fileDetails(octokit, owner, repo, ref, filePath, cache) {
   try {
+    if (!cache) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+
     const { data } = await octokit.rest.repos.getContent({
       owner,
       repo,
       ref,
       path: filePath,
+      headers: {
+        ...(cache ? {} : { "If-None-Match": "" }),
+      },
     });
 
     return data;
@@ -124,6 +131,7 @@ export async function updateFile(
   path,
   fileName,
   content,
+  sha,
 ) {
   try {
     const base64Content = btoa(content);
@@ -131,10 +139,11 @@ export async function updateFile(
     await octokit.rest.repos.createOrUpdateFileContents({
       owner,
       repo,
-      path: (path + fileName).replace("/", ""),
-      message: `chores: file updated - ${path + fileName}`,
+      path,
+      message: `chores: file updated - ${path}`,
       content: base64Content,
       branch: ref,
+      ...(sha ? { sha } : {}),
     });
 
     return {
