@@ -13,10 +13,9 @@ import {
   initEOXJSONFormMethod,
   hideHiddenFieldsMethod,
 } from "../methods/file-edit-view";
-import { DeleteFile } from "@/components/file/index.js";
+import { ActionTabFileEditor } from "@/components/file/index.js";
 import isEqual from "lodash.isequal";
 import "@eox/jsonform/dist/eox-jsonform.js";
-import Tooltip from "@/components/global/Tooltip.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -57,20 +56,20 @@ const updateFileDetails = async (cache = true) => {
 
 const saveFile = async () => {
   const loader = useLoader().show();
-  if (isFormJSON) {
-    snackbar.value = await createAndUpdateFile(
-      session.value,
-      filePath,
-      file.value.name,
-      JSON.stringify(updatedFileContent.value, null, 2),
-      file.value.sha,
-    );
+  snackbar.value = await createAndUpdateFile(
+    session.value,
+    filePath,
+    file.value.name,
+    isFormJSON.value
+      ? JSON.stringify(updatedFileContent.value, null, 2)
+      : fileContent.value,
+    file.value.sha,
+  );
 
-    if (snackbar.value.status === "success") {
-      updatedFileContent.value = null;
-      await updateFileDetails(false);
-      initEOXJSONFormMethod(jsonFormInstance, isFormJSON);
-    }
+  if (snackbar.value.status === "success") {
+    updatedFileContent.value = null;
+    await updateFileDetails(false);
+    initEOXJSONFormMethod(jsonFormInstance, isFormJSON);
   }
   loader.hide();
 };
@@ -109,8 +108,8 @@ function updateSchemaDefaults(schema, formValues) {
   return schema;
 }
 
-const onChangeJSON = (e) => {
-  if (e.detail) {
+const onFileChange = (e) => {
+  if (e.detail && isFormJSON.value) {
     const newSchema = updateSchemaDefaults(
       JSON.parse(fileContent.value),
       e.detail,
@@ -129,54 +128,56 @@ const onChangeJSON = (e) => {
       updateNavButtonConfig();
 
     hideHiddenFieldsMethod(jsonFormInstance);
+  } else {
+    if (fileContent.value === atob(file.value.content)) {
+      updateNavButtonConfig();
+    } else {
+      updateNavButtonConfig("Save", false);
+    }
   }
 };
 
 const resetContent = () => {
-  if (isFormJSON) {
+  if (isFormJSON.value) {
     jsonFormInstance.value.editor.setValue(initValue.value);
+  } else {
+    fileContent.value = atob(file.value.content);
   }
 };
 </script>
 
 <template>
-  <div
-    v-if="session"
-    class="bg-secondary px-5 py-4 d-flex align-center ga-1 action-tab"
-  >
-    <DeleteFile
-      text="Delete File"
-      size="x-large"
-      :file
-      :session
-      :callBack="() => router.push(`/${session.number}`)"
-    />
-    <v-spacer></v-spacer>
-    <Tooltip text="Reset Content">
-      <v-btn
-        color="blue-grey-darken-4"
-        icon="mdi-restart"
-        size="large"
-        variant="text"
-        :disabled="reset"
-        @click="resetContent"
-      ></v-btn>
-    </Tooltip>
-  </div>
+  <ActionTabFileEditor
+    v-if="session && file"
+    :file
+    :session
+    :reset
+    :resetContent
+  />
 
-  <div v-if="fileContent" class="bg-white fill-height px-12 py-10 d-block">
+  <div
+    v-if="fileContent !== null"
+    class="bg-white fill-height px-12 py-8 d-block file-editor"
+  >
     <h2>{{ session.title }}</h2>
     <p>{{ file.name }}</p>
 
-    <eox-jsonform
-      v-if="isFormJSON"
-      :schema="JSON.parse(fileContent)"
-      :noShadow="false"
-      :unstyled="false"
-      @change="onChangeJSON"
-    ></eox-jsonform>
-    <div v-else>
-      <p>Not a correct json-form</p>
+    <div v-if="isFormJSON">
+      <eox-jsonform
+        :schema="JSON.parse(fileContent)"
+        :noShadow="false"
+        :unstyled="false"
+        @change="onFileChange"
+      ></eox-jsonform>
+    </div>
+    <div v-else class="mt-8">
+      <v-textarea
+        v-model="fileContent"
+        class="bg-white text-mono"
+        label="File Content"
+        variant="outlined"
+        @change="onFileChange"
+      ></v-textarea>
     </div>
   </div>
 </template>
@@ -192,13 +193,18 @@ const resetContent = () => {
   font-size: 20px;
   margin-inline-end: 6px;
 }
-.je-indented-panel .row {
+.file-editor .je-indented-panel .row {
   margin-top: 10px;
   padding: 10px;
 }
-.je-indented-panel > div > div {
+.file-editor .je-indented-panel > div > div {
   display: grid;
   grid-template-columns: 1fr 1fr; /* Two equal columns */
   gap: 10px;
+}
+.file-editor textarea.v-field__input {
+  padding: 10px;
+  height: 66vh;
+  background: #f6f6f6 !important;
 }
 </style>

@@ -79,7 +79,7 @@ export async function fileDetails(octokit, owner, repo, ref, filePath, cache) {
       ref,
       path: filePath,
       headers: {
-        ...(cache ? {} : { "If-None-Match": "" }),
+        "If-None-Match": "",
       },
     });
 
