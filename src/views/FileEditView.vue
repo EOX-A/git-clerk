@@ -70,6 +70,7 @@ const saveFile = async () => {
     updatedFileContent.value = null;
     await updateFileDetails(false);
     initEOXJSONFormMethod(jsonFormInstance, isFormJSON);
+    updateNavButtonConfig();
   }
   loader.hide();
 };
@@ -143,6 +144,7 @@ const resetContent = () => {
   } else {
     fileContent.value = atob(file.value.content);
   }
+  updateNavButtonConfig();
 };
 </script>
 
