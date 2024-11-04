@@ -15,7 +15,7 @@ import {
 } from "../methods/file-edit-view";
 import { ActionTabFileEditor } from "@/components/file/index.js";
 import isEqual from "lodash.isequal";
-import "@eox/jsonform/dist/eox-jsonform.js";
+import "@eox/jsonform";
 
 const route = useRoute();
 const router = useRouter();
