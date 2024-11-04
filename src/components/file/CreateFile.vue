@@ -1,7 +1,11 @@
 <script setup>
 import { onMounted, ref, watch, defineProps, inject } from "vue";
 import { createAndUpdateFile, getBranchFileStructure } from "@/api/index.js";
-import { useLoader } from "@/helpers/index.js";
+import { encodeString, useLoader } from "@/helpers/index.js";
+import map from "lodash.map";
+import { useRouter } from "vue-router";
+
+const router = useRouter();
 
 const filePath = ref(null);
 const fileContent = ref("");
@@ -103,17 +107,32 @@ const createFile = async () => {
   }
   const loader = useLoader().show();
 
+  const fullFilePath = (updatedFilePath.value + filePath.value).replace(
+    "/",
+    "",
+  );
+
   snackbar.value = await createAndUpdateFile(
     props.session,
-    updatedFilePath.value,
+    fullFilePath,
     filePath.value,
     fileContent.value,
   );
   if (snackbar.value.status === "success") {
+    await router.push(`/${props.session.number}/${encodeString(fullFilePath)}`);
     close();
     props.updateDetails();
   }
   loader.hide();
+};
+
+const onSelectFile = (item) => {
+  if (item.type === "file") {
+    const encodedFilePath = encodeString(
+      (updatedFilePath.value + item.name).replace("/", ""),
+    );
+    router.push(`/${props.session.number}/${encodedFilePath}`);
+  }
 };
 </script>
 
@@ -145,7 +164,7 @@ const createFile = async () => {
               @keydown="onKeyDownPathName"
               variant="plain"
               placeholder="Enter filename along with path"
-              :items="currPathDirStructure"
+              :items="map(currPathDirStructure, 'name')"
               hide-details
               color="primary"
               class="border-b-thin text-mono"
@@ -155,6 +174,26 @@ const createFile = async () => {
                   class="prepend text-mono font-weight-bold text-primary opacity-80"
                   >(root){{ updatedFilePath }}</span
                 >
+              </template>
+              <template v-slot:item="{ props, item, index }">
+                <v-list-item
+                  :prepend-icon="`mdi-${currPathDirStructure[index].icon}-outline`"
+                  v-bind="props"
+                  :title="item.raw"
+                  @click="() => onSelectFile(currPathDirStructure[index])"
+                >
+                  <template
+                    v-if="currPathDirStructure[index].type === 'file'"
+                    v-slot:append
+                  >
+                    <div
+                      class="text-blue-accent-4 d-flex align-center ga-2 text-sm-body-2 font-weight-bold"
+                    >
+                      <p class="text-uppercase">Edit File</p>
+                      <v-icon>mdi-open-in-new</v-icon>
+                    </div>
+                  </template>
+                </v-list-item>
               </template>
             </v-combobox>
           </v-col>

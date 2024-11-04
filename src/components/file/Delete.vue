@@ -32,7 +32,7 @@ const deleteFileHandle = async () => {
     const loader = useLoader().show();
     const owner = props.session.head.repo.owner.login;
     const repo = props.session.head.repo.name;
-    const path = deleteFile.value.title;
+    const path = deleteFile.value.title || deleteFile.value.path;
     const message = `Deleting ${path} file from the pull request`;
     const sha = deleteFile.value.sha;
     const ref = props.session.head.ref;
@@ -49,7 +49,7 @@ const deleteFileHandle = async () => {
     deleteFile.value = false;
     loader.hide();
 
-    await props.callBack();
+    if (snackbar.value.status === "success") await props.callBack();
   }
 };
 </script>
@@ -63,8 +63,8 @@ const deleteFileHandle = async () => {
       :size="props.size"
       :text="props.text"
       variant="text"
+      :disabled="props.file?.status === 'removed'"
       @click="deleteFile = props.file"
-      :disabled="props.file.status === 'removed'"
       class="text-capitalize font-weight-medium"
     ></v-btn>
   </Tooltip>

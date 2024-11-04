@@ -18,7 +18,7 @@ const router = createRouter({
       component: SessionView,
     },
     {
-      path: "/:sessionNumber/:fileId",
+      path: "/:sessionNumber/:encodedFilePath",
       name: "file-edit",
       component: FileEditView,
     },

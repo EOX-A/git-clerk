@@ -67,6 +67,31 @@ export async function deleteFile(
   }
 }
 
+export async function fileDetails(octokit, owner, repo, ref, filePath, cache) {
+  try {
+    if (!cache) {
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+    }
+
+    const { data } = await octokit.rest.repos.getContent({
+      owner,
+      repo,
+      ref,
+      path: filePath,
+      headers: {
+        "If-None-Match": "",
+      },
+    });
+
+    return data;
+  } catch (error) {
+    return {
+      text: error.message,
+      status: "error",
+    };
+  }
+}
+
 export async function branchFileStructure(
   octokit,
   githubConfig,
@@ -86,9 +111,10 @@ export async function branchFileStructure(
     });
 
     for (const item of data) {
-      if (item.type === "dir") {
-        dirStructure.push(item.name);
-      }
+      dirStructure.push({
+        ...item,
+        icon: item.type === "dir" ? "folder" : "file",
+      });
     }
 
     return dirStructure;
@@ -106,6 +132,7 @@ export async function updateFile(
   path,
   fileName,
   content,
+  sha,
 ) {
   try {
     const base64Content = btoa(content);
@@ -113,10 +140,11 @@ export async function updateFile(
     await octokit.rest.repos.createOrUpdateFileContents({
       owner,
       repo,
-      path: (path + fileName).replace("/", ""),
-      message: `chores: file updated - ${path + fileName}`,
+      path,
+      message: `chores: file updated - ${path}`,
       content: base64Content,
       branch: ref,
+      ...(sha ? { sha } : {}),
     });
 
     return {

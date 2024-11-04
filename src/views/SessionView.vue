@@ -10,7 +10,8 @@ import OctIcon from "@/components/global/OctIcon.vue";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import ListPagination from "@/components/global/ListPagination.vue";
 import EmptyState from "@/components/global/EmptyState.vue";
-import { DeleteFile, ActionTab, CreateFile } from "@/components/file";
+import { DeleteFile, ActionTabFileList, CreateFile } from "@/components/file";
+import { encodeString } from "@/helpers/index.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -73,7 +74,7 @@ const onPageChange = async (newPage) => {
     :open="addNewFileDialog"
     :session
   />
-  <ActionTab :session :updateDetails />
+  <ActionTabFileList :session :updateDetails />
 
   <v-list class="py-0">
     <!-- file's list -->
@@ -92,7 +93,7 @@ const onPageChange = async (newPage) => {
           <div class="ml-4">
             <div class="d-flex align-center ga-3">
               <router-link
-                :to="`/${session.number}/${file.sha}`"
+                :to="`/${session.number}/${encodeString(file.title)}`"
                 class="main-title text-black"
               >
                 {{ file.title }}
