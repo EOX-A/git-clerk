@@ -15,7 +15,7 @@ import {
 } from "../methods/file-edit-view";
 import { ActionTabFileEditor } from "@/components/file/index.js";
 import isEqual from "lodash.isequal";
-import "@eox/jsonform/dist/eox-jsonform.js";
+import "@eox/jsonform";
 
 const route = useRoute();
 const router = useRouter();
@@ -162,7 +162,7 @@ const resetContent = () => {
     class="bg-white fill-height px-12 py-8 d-block file-editor"
   >
     <h2>{{ session.title }}</h2>
-    <p>{{ file.name }}</p>
+    <p>{{ filePath }}</p>
 
     <div v-if="isFormJSON">
       <eox-jsonform
