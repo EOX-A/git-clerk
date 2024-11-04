@@ -111,9 +111,10 @@ export async function branchFileStructure(
     });
 
     for (const item of data) {
-      if (item.type === "dir") {
-        dirStructure.push(item.name);
-      }
+      dirStructure.push({
+        ...item,
+        icon: item.type === "dir" ? "folder" : "file",
+      });
     }
 
     return dirStructure;

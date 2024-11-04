@@ -19,6 +19,7 @@
     "@primer/octicons": "^19.11.0",
     "dayjs": "^1.11.13",
     "lodash.isequal": "^4.5.0",
+    "lodash.map": "^4.6.0",
     "octokit": "^4.0.2",
     "pinia": "^2.2.4",
     "slugify": "^1.6.6",

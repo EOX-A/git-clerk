@@ -162,7 +162,7 @@ const resetContent = () => {
     class="bg-white fill-height px-12 py-8 d-block file-editor"
   >
     <h2>{{ session.title }}</h2>
-    <p>{{ file.name }}</p>
+    <p>{{ filePath }}</p>
 
     <div v-if="isFormJSON">
       <eox-jsonform
