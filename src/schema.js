@@ -41,14 +41,13 @@ export const SCHEMA_MAP = [
   },
 ];
 
-export function getSchema(inputPath) {
+export function getSchemaURL(inputPath) {
   for (const schema of SCHEMA_MAP) {
     const pathPattern = schema.path.replace(/<id>/g, "[^/]+");
     const regex = new RegExp(`^${pathPattern}$`);
 
     if (regex.test(inputPath)) {
-      console.log(schema);
-      return schema;
+      return schema.url;
     }
   }
   return null;

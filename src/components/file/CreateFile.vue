@@ -1,8 +1,12 @@
 <script setup>
-import { onMounted, ref, watch, defineProps, inject } from "vue";
-import { createAndUpdateFile, getBranchFileStructure } from "@/api/index.js";
+import { onMounted, ref, watch, defineProps, inject, h } from "vue";
+import {
+  createAndUpdateFile,
+  fetchSchemaFromURL,
+  getBranchFileStructure,
+} from "@/api/index.js";
 import { useLoader } from "@/helpers/index.js";
-import { getSchema } from "@/schema.js";
+import { getSchemaURL } from "@/schema.js";
 
 const filePath = ref(null);
 const fileContent = ref("");
@@ -34,6 +38,30 @@ const updateFilePath = (newPath) => {
   updatedFilePath.value = path;
 };
 
+const updateSchema = async () => {
+  const fullPath = updatedFilePath.value + filePath.value;
+  const schemaURL = getSchemaURL(fullPath);
+  if (schemaURL) {
+    const loader = useLoader().show(
+      {},
+      {
+        after: h(
+          "h5",
+          { class: "loader-text", id: "loader-text" },
+          `Fetching schema for - ${filePath.value}`,
+        ),
+      },
+    );
+
+    const data = await fetchSchemaFromURL(schemaURL);
+
+    if (data.status === "error") snackbar.value = data;
+    else fileContent.value = JSON.stringify(data, "", 2);
+
+    loader.hide();
+  }
+};
+
 const onKeyDownPathName = async (event) => {
   const { key } = event;
 
@@ -55,6 +83,8 @@ const onKeyDownPathName = async (event) => {
         updatedFilePath.value = updatedFilePathArr.value.join("/") + "/";
       }
     }
+  } else {
+    setTimeout(updateSchema, 100);
   }
 };
 
@@ -100,9 +130,6 @@ const createFile = async () => {
       text: "Please add a filename",
       status: "error",
     };
-    return;
-  } else {
-    getSchema(updatedFilePath.value + filePath.value);
     return;
   }
   const loader = useLoader().show();
