@@ -2,6 +2,7 @@
 import { onMounted, ref, watch, defineProps, inject } from "vue";
 import { createAndUpdateFile, getBranchFileStructure } from "@/api/index.js";
 import { useLoader } from "@/helpers/index.js";
+import { getSchema } from "@/schema.js";
 
 const filePath = ref(null);
 const fileContent = ref("");
@@ -99,6 +100,9 @@ const createFile = async () => {
       text: "Please add a filename",
       status: "error",
     };
+    return;
+  } else {
+    getSchema(updatedFilePath.value + filePath.value);
     return;
   }
   const loader = useLoader().show();
