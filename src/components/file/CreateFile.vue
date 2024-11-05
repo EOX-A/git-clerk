@@ -6,7 +6,7 @@ import {
   getBranchFileStructure,
 } from "@/api/index.js";
 import { encodeString, useLoader } from "@/helpers/index.js";
-import { getSchemaURL } from "@/schema.js";
+import { getSchemaURL } from "@/helpers";
 import map from "lodash.map";
 import { useRouter } from "vue-router";
 
@@ -58,11 +58,13 @@ const updateSchema = async () => {
     );
 
     const data = await fetchSchemaFromURL(schemaURL);
+    loader.hide();
 
     if (data.status === "error") snackbar.value = data;
-    else fileContent.value = JSON.stringify(data, "", 2);
-
-    loader.hide();
+    else {
+      fileContent.value = JSON.stringify(data, "", 2);
+      await createFile();
+    }
   }
 };
 
