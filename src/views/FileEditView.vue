@@ -7,7 +7,11 @@ import {
 } from "@/api/index.js";
 import { useRoute, useRouter } from "vue-router";
 import { querySessionDetailsMethod } from "@/methods/session-view/index.js";
-import { decodeString, useLoader } from "@/helpers/index.js";
+import {
+  decodeString,
+  updateSchemaDefaults,
+  useLoader,
+} from "@/helpers/index.js";
 import {
   queryFileDetailsMethod,
   initEOXJSONFormMethod,
@@ -95,19 +99,6 @@ const updateNavButtonConfig = (text = "Saved", disabled = true) => {
   };
   reset.value = disabled;
 };
-
-function updateSchemaDefaults(schema, formValues) {
-  let properties = schema.allOf[0].properties;
-
-  for (let key in formValues) {
-    if (properties[key] && !properties[key]?.options?.hidden) {
-      properties[key].default = formValues[key];
-    }
-  }
-
-  schema.allOf[0].properties = properties;
-  return schema;
-}
 
 const onFileChange = (e) => {
   if (e.detail && isFormJSON.value) {
