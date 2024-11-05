@@ -32,6 +32,27 @@ export function initEOXJSONFormMethod(jsonFormInstance, isFormJSON) {
     const shadowRoot = getShadowRoot(jsonFormInstance);
     const style = document.createElement("style");
 
+    setTimeout(() => {
+      const expandButtons = [
+        ...shadowRoot.querySelectorAll(
+          ".row:not([style*='display: none']) .je-header .json-editor-btn-collapse.json-editor-btntype-toggle span",
+        ),
+      ].filter((span) => span.innerText === "Expand");
+
+      expandButtons.forEach((expandButtonEle) => {
+        const thirdParentEle =
+          expandButtonEle?.parentElement?.parentElement?.parentElement;
+
+        if (thirdParentEle) {
+          const displayNoneItems = thirdParentEle.querySelectorAll(
+            '.je-indented-panel[style*="display: none"]',
+          );
+
+          if (displayNoneItems.length) expandButtonEle.click();
+        }
+      });
+    }, 500);
+
     style.textContent = `
       .je-indented-panel .row {
         margin-top: 10px;
