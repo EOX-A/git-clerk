@@ -236,8 +236,8 @@ const onSelectFile = (item) => {
         <v-textarea
           v-model="fileContent"
           class="bg-white text-mono"
-          label="Enter file content here"
-          variant="outlined"
+          placeholder="Enter file content here"
+          variant="plain"
         ></v-textarea>
       </div>
     </v-card>
@@ -278,8 +278,33 @@ const onSelectFile = (item) => {
   font-weight: 800;
 }
 .create-file textarea.v-field__input {
-  padding: 10px;
-  height: 80vh;
-  background: #f6f6f6 !important;
+  all: unset;
+}
+.create-file textarea.v-field__input {
+  font-family: "Courier New", monospace;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  padding: 12px;
+  tab-size: 2;
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  width: 100%;
+  height: calc(100vh - 230px) !important;
+  white-space: pre;
+  overflow-wrap: normal;
+  overflow-x: auto;
+  resize: none;
+}
+.create-file textarea.v-field__input:focus {
+  outline: none;
+}
+.create-file textarea.v-field__input {
+  background-image: linear-gradient(to right, #f5f5f5 30px, #ffffff 30px);
+  background-size: 100% 24px;
+  background-repeat: repeat-y;
+  padding-left: 45px;
 }
 </style>

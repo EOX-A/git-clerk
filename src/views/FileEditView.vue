@@ -66,7 +66,7 @@ const saveFile = async () => {
     file.value.name,
     isFormJSON.value
       ? JSON.stringify(updatedFileContent.value, null, 2)
-      : fileContent.value,
+      : updatedFileContent.value,
     file.value.sha,
   );
 
@@ -83,8 +83,8 @@ onMounted(async () => {
   const loader = useLoader().show();
   updateNavButtonConfig();
   await updateFileDetails();
+  initEOXJSONFormMethod(jsonFormInstance, isFormJSON);
   if (isFormJSON.value) {
-    initEOXJSONFormMethod(jsonFormInstance, isFormJSON);
     hideHiddenFieldsMethod(jsonFormInstance);
   }
   loader.hide();
@@ -101,7 +101,7 @@ const updateNavButtonConfig = (text = "Saved", disabled = true) => {
 };
 
 const onFileChange = (e) => {
-  if (e.detail && isFormJSON.value) {
+  if (e.detail && !e.detail.file && isFormJSON.value) {
     const newSchema = updateSchemaDefaults(
       JSON.parse(fileContent.value),
       e.detail,
@@ -121,21 +121,36 @@ const onFileChange = (e) => {
 
     hideHiddenFieldsMethod(jsonFormInstance);
   } else {
-    if (fileContent.value === atob(file.value.content)) {
+    if (!updatedFileContent.value) {
+      initValue.value = e.detail;
+      fileContent.value = e.detail.file;
+    }
+    if (e.detail.file === atob(file.value.content)) {
       updateNavButtonConfig();
     } else {
       updateNavButtonConfig("Save", false);
     }
+    updatedFileContent.value = e.detail.file;
   }
 };
 
 const resetContent = () => {
-  if (isFormJSON.value) {
-    jsonFormInstance.value.editor.setValue(initValue.value);
-  } else {
-    fileContent.value = atob(file.value.content);
-  }
+  jsonFormInstance.value.editor.setValue(initValue.value);
   updateNavButtonConfig();
+};
+
+const getFileSchema = () => {
+  return {
+    title: "git-clerk",
+    type: "object",
+    properties: {
+      file: {
+        type: "string",
+        format: "textarea",
+        default: fileContent.value,
+      },
+    },
+  };
 };
 </script>
 
@@ -150,27 +165,18 @@ const resetContent = () => {
 
   <div
     v-if="fileContent !== null"
-    class="bg-white fill-height px-12 py-8 d-block file-editor"
+    :class="`bg-white fill-height px-12 py-8 d-block file-editor ${!isFormJSON && 'file-editor-code'}`"
   >
     <h2>{{ session.title }}</h2>
     <p>{{ filePath }}</p>
 
-    <div v-if="isFormJSON">
+    <div>
       <eox-jsonform
-        :schema="JSON.parse(fileContent)"
+        :schema="isFormJSON ? JSON.parse(fileContent) : getFileSchema()"
         :noShadow="false"
         :unstyled="false"
         @change="onFileChange"
       ></eox-jsonform>
-    </div>
-    <div v-else class="mt-8">
-      <v-textarea
-        v-model="fileContent"
-        class="bg-white text-mono"
-        label="File Content"
-        variant="outlined"
-        @change="onFileChange"
-      ></v-textarea>
     </div>
   </div>
 </template>
@@ -190,9 +196,9 @@ const resetContent = () => {
   margin-top: 10px;
   padding: 10px;
 }
-.file-editor .je-indented-panel > div > div {
+.file-editor:not(.file-editor-code) .je-indented-panel > div > div {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* Two equal columns */
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
 .file-editor textarea.v-field__input {
