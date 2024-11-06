@@ -135,10 +135,14 @@ const onPageChange = async (newPage) => {
               </router-link>
               <Tooltip
                 location="right"
-                v-if="session.check === 'failed'"
-                text="Validation Failed"
+                v-if="session.check && !session.check.success"
+                :text="session.check.tooltip"
               >
-                <v-icon color="red" size="23" icon="mdi-alert-outline"></v-icon>
+                <v-icon
+                  :color="session.check.color"
+                  size="23"
+                  :icon="session.check.icon"
+                ></v-icon>
               </Tooltip>
               <Tooltip
                 location="right"
