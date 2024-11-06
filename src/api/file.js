@@ -1,4 +1,5 @@
 import { getTotalPages } from "@/helpers/index.js";
+import axios from "axios";
 
 export async function filesListFromSession(
   octokit,
@@ -154,6 +155,18 @@ export async function updateFile(
   } catch (error) {
     return {
       text: error.message,
+      status: "error",
+    };
+  }
+}
+
+export async function schemaFromURL(url) {
+  try {
+    const res = await axios.get(url);
+    return res.data;
+  } catch (error) {
+    return {
+      text: "Failed to fetch schema: Please manually add appropriate schema for the file.",
       status: "error",
     };
   }

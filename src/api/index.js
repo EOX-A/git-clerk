@@ -15,6 +15,7 @@ import {
   filesListFromSession,
   updateFile,
   fileDetails,
+  schemaFromURL,
 } from "@/api/file";
 
 export async function initOctokit() {
@@ -159,4 +160,8 @@ export async function createAndUpdateFile(
     content,
     sha,
   );
+}
+
+export async function fetchSchemaFromURL(url) {
+  return schemaFromURL(url);
 }
