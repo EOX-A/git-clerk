@@ -3,6 +3,7 @@ import { inject, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getFilesListFromSession, getSessionDetails } from "@/api/index.js";
 import {
+  checkStatusMethod,
   queryFilesListMethod,
   querySessionDetailsMethod,
 } from "@/methods/session-view/index.js";
@@ -42,6 +43,10 @@ const updateDetails = async (cache = false) => {
     session,
     navPaginationItems,
   });
+
+  if (session.value.closed_at) navButtonConfig.value.disabled = true;
+  checkStatusMethod(session);
+
   const fileChanges = await getFilesListFromSession(
     sessionNumber,
     page.value,
@@ -93,8 +98,13 @@ const onPageChange = async (newPage) => {
           <div class="ml-4">
             <div class="d-flex align-center ga-3">
               <router-link
-                :to="`/${session.number}/${encodeString(file.title)}`"
-                class="main-title text-black"
+                :to="
+                  !session.closed_at
+                    ? `/${session.number}/${encodeString(file.title)}`
+                    : null
+                "
+                :disabled="session.closed_at"
+                :class="`main-title text-black ${session.closed_at && 'no-hover-link'}`"
               >
                 {{ file.title }}
               </router-link>
@@ -143,5 +153,9 @@ const onPageChange = async (newPage) => {
   width: 12px;
   height: 12px;
   border: 1px solid white;
+}
+.no-hover-link:hover {
+  text-decoration: none !important;
+  font-weight: 400 !important;
 }
 </style>

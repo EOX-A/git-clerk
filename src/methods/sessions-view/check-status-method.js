@@ -1,27 +1,5 @@
 import { getCheckStatus, getSessionReviewStatus } from "@/api/index.js";
-
-const status = {
-  success: {
-    tooltip: "Validation Successful",
-    icon: "mdi-check-bold",
-    color: "green",
-  },
-  pending: {
-    tooltip: "Validation Pending",
-    icon: "mdi-alert-outline",
-    color: "orange",
-  },
-  failure: {
-    tooltip: "Validation Failed",
-    icon: "mdi-close-octagon-outline",
-    color: "red",
-  },
-  error: {
-    tooltip: "Validation Failed",
-    icon: "mdi-close-octagon-outline",
-    color: "red",
-  },
-};
+import { CHECK_STATUS } from "@/enums.js";
 
 export default async function checkStatusMethod(
   sessions,
@@ -37,10 +15,7 @@ export default async function checkStatusMethod(
         sessions.value[index] = {
           ...session,
           requested_changes: requestedChanges,
-          check: {
-            ...status[check],
-            success: Boolean(check === "success"),
-          },
+          check: CHECK_STATUS[check],
         };
       }
     }

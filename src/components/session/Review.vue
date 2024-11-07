@@ -57,10 +57,29 @@ const reviewSessionHandle = async () => {
       :size="props.size"
       :text="props.text"
       :variant="props.variant"
-      :disabled="!props.session.draft || props.session.state === 'closed'"
+      :disabled="
+        !props.session.draft ||
+        props.session.state === 'closed' ||
+        !props.session.check ||
+        !props.session.check.success
+      "
       @click="reviewSession = props.session"
       :class="`text-capitalize font-weight-medium ${props.class}`"
     ></v-btn>
+  </Tooltip>
+  <Tooltip
+    v-if="
+      props.text &&
+      props.session.draft &&
+      props.session.check?.success === false
+    "
+    :text="`${props.session.check.tooltip}: Cannot request for review`"
+  >
+    <v-icon
+      :color="props.session.check.color"
+      class="ml-2"
+      :icon="props.session.check.icon.replace('-outline', '')"
+    ></v-icon>
   </Tooltip>
 
   <v-dialog v-model="reviewSession" width="auto">

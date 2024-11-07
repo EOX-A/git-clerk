@@ -245,13 +245,17 @@ export async function checkStatus(octokit, githubConfig, sessionNumber) {
       pull_number: sessionNumber,
     });
 
-    const response = await octokit.rest.repos.getCombinedStatusForRef({
+    const response = await octokit.rest.checks.listForRef({
       owner: githubConfig.username,
       repo: githubConfig.repo,
       ref: sha,
     });
 
-    return response.data.state || "pending";
+    const failedChecks = response.data.check_runs.filter(
+      (check) => check.conclusion === "failure",
+    );
+
+    return failedChecks.length ? "failed" : "success";
   } catch (error) {
     return error;
   }

@@ -1,25 +1,8 @@
 <script setup>
-import { inject, ref } from "vue";
+import { inject } from "vue";
 
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
-
-const navItems = ref([
-  {
-    title: "All Sessions",
-    disabled: false,
-    to: { path: "/" },
-  },
-  {
-    title: "Products for Dry Tropospheric Correction",
-    disabled: false,
-    to: { path: "/products-for-dry-tropospheric-correction" },
-  },
-  {
-    title: "Variables/catal...",
-    disabled: true,
-  },
-]);
 </script>
 <template>
   <v-app-bar class="navbar" color="primary" app>
