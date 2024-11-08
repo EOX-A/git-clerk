@@ -9,7 +9,7 @@ export const CHECK_STATUS = {
   failed: {
     tooltip: "Validation Failed",
     icon: "mdi-alert-outline",
-    color: "red",
+    color: "red-accent-4",
     status: "failure",
     success: false,
   },

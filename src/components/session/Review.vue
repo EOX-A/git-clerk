@@ -34,6 +34,9 @@ const props = defineProps({
 const snackbar = inject("set-snackbar");
 const reviewSession = ref(false);
 
+const error =
+  props.text && props.session.draft && props.session.check?.success === false;
+
 const reviewSessionHandle = async () => {
   if (reviewSession.value) {
     const loader = useLoader().show();
@@ -49,7 +52,13 @@ const reviewSessionHandle = async () => {
 </script>
 
 <template>
-  <Tooltip text="Request Review">
+  <Tooltip
+    :text="
+      error
+        ? `${props.session.check.tooltip}: Cannot request for review`
+        : `Request Review`
+    "
+  >
     <v-btn
       :color="props.color"
       :icon="props.text ? false : 'mdi-file-document-edit'"
@@ -65,21 +74,14 @@ const reviewSessionHandle = async () => {
       "
       @click="reviewSession = props.session"
       :class="`text-capitalize font-weight-medium ${props.class}`"
-    ></v-btn>
-  </Tooltip>
-  <Tooltip
-    v-if="
-      props.text &&
-      props.session.draft &&
-      props.session.check?.success === false
-    "
-    :text="`${props.session.check.tooltip}: Cannot request for review`"
-  >
-    <v-icon
-      :color="props.session.check.color"
-      class="ml-2"
-      :icon="props.session.check.icon.replace('-outline', '')"
-    ></v-icon>
+    >
+      <template v-if="error" v-slot:append>
+        <v-icon
+          :color="props.session.check.color"
+          :icon="props.session.check.icon.replace('-outline', '')"
+        ></v-icon>
+      </template>
+    </v-btn>
   </Tooltip>
 
   <v-dialog v-model="reviewSession" width="auto">
@@ -102,3 +104,10 @@ const reviewSessionHandle = async () => {
     </v-card>
   </v-dialog>
 </template>
+
+<style>
+.action-tab .v-btn--disabled.v-btn--variant-flat .v-btn__prepend,
+.action-tab .v-btn--disabled.v-btn--variant-flat .v-btn__content {
+  opacity: 0.5 !important;
+}
+</style>
