@@ -5,8 +5,7 @@ import {
   fetchSchemaFromURL,
   getBranchFileStructure,
 } from "@/api/index.js";
-import { encodeString, useLoader } from "@/helpers/index.js";
-import { getSchemaURL } from "@/helpers";
+import { encodeString, getSchemaDetails, useLoader } from "@/helpers/index.js";
 import map from "lodash.map";
 import { useRouter } from "vue-router";
 
@@ -44,8 +43,8 @@ const updateFilePath = (newPath) => {
 
 const updateSchema = async () => {
   const fullPath = updatedFilePath.value + filePath.value;
-  const schemaURL = getSchemaURL(fullPath);
-  if (schemaURL) {
+  const schemaDetails = getSchemaDetails(fullPath);
+  if (schemaDetails) {
     const loader = useLoader().show(
       {},
       {
@@ -57,7 +56,8 @@ const updateSchema = async () => {
       },
     );
 
-    const data = await fetchSchemaFromURL(schemaURL);
+    const data =
+      schemaDetails.schema || (await fetchSchemaFromURL(schemaDetails.url));
     loader.hide();
 
     if (data.status === "error") snackbar.value = data;

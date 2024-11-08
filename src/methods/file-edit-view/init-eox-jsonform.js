@@ -66,41 +66,40 @@ export function initEOXJSONFormMethod(jsonFormInstance, isFormJSON) {
           padding: 10px;
         }
       `
-        : `
-        .je-object__controls,
-        .je-form-input-label {
-          display: none !important;
-        }
-        .je-textarea {
-          font-family: 'Courier New', monospace;
-          font-size: 14px;
-          font-weight: 500;
-          line-height: 1.5;
-          padding: 12px;
-          tab-size: 2;
-          background-color: #ffffff;
-          color: #000000;
-          border: 1px solid #e0e0e0;
-          border-radius: 4px;
-          width: 100%;
-          height: calc(100vh - 300px) !important;
-          resize: vertical;
-          white-space: pre;
-          overflow-wrap: normal;
-          overflow-x: auto;
-          margin-top: 10px;
-          resize: none;
-        }
-        .je-textarea:focus {
-          outline: none;
-        }
-        .je-textarea {
-          background-image: linear-gradient(to right, #f5f5f5 30px, #ffffff 30px);
-          background-size: 100% 24px;
-          background-repeat: repeat-y;
-          padding-left: 45px;
-        }
-      `
+        : ``
+    }
+    .je-object__controls,
+    .je-form-input-label {
+      display: none !important;
+    }
+    .je-textarea {
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.5;
+      padding: 12px;
+      tab-size: 2;
+      background-color: #ffffff;
+      color: #000000;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      width: 100%;
+      height: calc(100vh - 300px) !important;
+      resize: vertical;
+      white-space: pre;
+      overflow-wrap: normal;
+      overflow-x: auto;
+      margin-top: 10px;
+      resize: none;
+    }
+    .je-textarea:focus {
+      outline: none;
+    }
+    .je-textarea {
+      background-image: linear-gradient(to right, #f5f5f5 30px, #ffffff 30px);
+      background-size: 100% 24px;
+      background-repeat: repeat-y;
+      padding-left: 45px;
     }
     form[data-theme="html"] .je-indented-panel {
       border: none !important;
