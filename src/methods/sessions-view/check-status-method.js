@@ -1,4 +1,5 @@
 import { getCheckStatus, getSessionReviewStatus } from "@/api/index.js";
+import { CHECK_STATUS } from "@/enums.js";
 
 export default async function checkStatusMethod(
   sessions,
@@ -14,7 +15,7 @@ export default async function checkStatusMethod(
         sessions.value[index] = {
           ...session,
           requested_changes: requestedChanges,
-          check,
+          check: CHECK_STATUS[check],
         };
       }
     }

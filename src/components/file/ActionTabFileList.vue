@@ -1,6 +1,7 @@
 <script setup>
 import { DeleteSession, ReviewSession } from "@/components/session/index.js";
 import { defineProps, inject } from "vue";
+import OctIcon from "@/components/global/OctIcon.vue";
 
 const snackbar = inject("set-snackbar");
 
@@ -61,7 +62,11 @@ const props = defineProps({
       disabled
     ></v-btn>
     <ReviewSession
-      v-else-if="props.session.draft && props.session.state !== 'closed'"
+      v-else-if="
+        props.session.draft &&
+        props.session.check &&
+        props.session.state !== 'closed'
+      "
       text="Submit for Review"
       size="x-large"
       color="blue-grey-lighten-4"
@@ -71,6 +76,15 @@ const props = defineProps({
       :callBack="props.updateDetails"
       class="ml-5"
     />
+    <v-spacer></v-spacer>
+    <div
+      :class="`px-4 mx-5  session-icon d-flex align-center justify-center bg-${session.status.color} rounded-pill ga-2`"
+    >
+      <OctIcon :name="session.status.icon" />
+      <span class="text-capitalize font-weight-bold">{{
+        session.status.state
+      }}</span>
+    </div>
   </div>
 </template>
 
@@ -84,5 +98,9 @@ const props = defineProps({
 .action-tab .v-btn__prepend {
   font-size: 20px;
   margin-inline-end: 6px;
+}
+.session-icon {
+  height: 40px;
+  line-height: 0px;
 }
 </style>

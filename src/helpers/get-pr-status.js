@@ -1,7 +1,7 @@
 export default function getPrStatus(session) {
   let color = "green";
   let icon = "git-pull-request";
-  let state = "draft";
+  let state = "open";
 
   if (session.state === "open") {
     if (session.draft) {
@@ -10,7 +10,7 @@ export default function getPrStatus(session) {
       state = "draft";
     }
   } else {
-    if (session.merged_at) {
+    if (session.merged_at || session.pull_request?.merged_at) {
       color = "violet";
       icon = "git-merge";
       state = "merged";
