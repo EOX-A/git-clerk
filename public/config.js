@@ -62,6 +62,11 @@ globalThis.schemaMap = [
         file: {
           type: "string",
           format: "textarea",
+          "options": {
+            "inputAttributes": {
+              "placeholder": "Enter some text"
+            }
+          }
         },
       },
     },
