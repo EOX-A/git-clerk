@@ -34,6 +34,7 @@ const updatedFileContent = ref(null);
 const initValue = ref(null);
 const jsonFormInstance = ref(null);
 const isFormJSON = ref(false);
+const previewURL = ref(null);
 
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
@@ -41,6 +42,7 @@ const navPaginationItems = inject("set-nav-pagination-items");
 
 const updateFileDetails = async (cache = true) => {
   fileContent.value = null;
+  previewURL.value = null;
   window.scrollTo({ top: 0 });
   const sessionDetails = await getSessionDetails(sessionNumber);
   querySessionDetailsMethod(sessionDetails, {
@@ -55,6 +57,7 @@ const updateFileDetails = async (cache = true) => {
     navPaginationItems,
     fileContent,
     isFormJSON,
+    previewURL,
   });
 };
 
@@ -87,6 +90,24 @@ onMounted(async () => {
   if (isFormJSON.value) {
     hideHiddenFieldsMethod(jsonFormInstance);
   }
+
+  window.addEventListener("message", function (event) {
+    if (
+      event.origin === window.location.origin &&
+      event.data &&
+      event.data.type === "SCHEMA_DATA_PREVIEW_UPDATE" &&
+      event.data.detail
+    ) {
+      const newSchema = updateSchemaDefaults(
+        JSON.parse(fileContent.value),
+        event.data.detail,
+      );
+
+      if (!isEqual(updatedFileContent.value, newSchema)) {
+        jsonFormInstance.value.editor.setValue(event.data.detail);
+      }
+    }
+  });
   loader.hide();
 });
 
@@ -107,12 +128,28 @@ const onFileChange = (e) => {
       e.detail,
     );
 
+    const previewFrame = document.getElementById("previewFrame");
+    const message = {
+      type: "SCHEMA_DATA_EDITOR_UPDATE",
+      detail: e.detail,
+    };
+
     if (!updatedFileContent.value) {
       initValue.value = e.detail;
       updatedFileContent.value = newSchema;
       fileContent.value = JSON.stringify(newSchema);
+      setTimeout(
+        () =>
+          previewFrame.contentWindow.postMessage(
+            message,
+            window.location.origin,
+          ),
+        1000,
+      );
     } else if (!isEqual(updatedFileContent.value, newSchema)) {
       updatedFileContent.value = newSchema;
+      previewFrame.contentWindow.postMessage(message, window.location.origin);
+
       updateNavButtonConfig("Save", false);
     } else updateNavButtonConfig();
 
@@ -177,6 +214,13 @@ const getFileSchema = () => {
         :unstyled="false"
         @change="onFileChange"
       ></eox-jsonform>
+      <iframe
+        v-if="previewURL"
+        id="previewFrame"
+        :src="previewURL"
+        width="100%"
+        height="300"
+      ></iframe>
     </div>
   </div>
 </template>

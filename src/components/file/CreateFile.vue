@@ -62,7 +62,14 @@ const updateSchema = async () => {
 
     if (data.status === "error") snackbar.value = data;
     else {
-      fileContent.value = JSON.stringify(data, "", 2);
+      fileContent.value = JSON.stringify(
+        {
+          ...data,
+          ...(schemaDetails.preview ? { preview: schemaDetails.preview } : {}),
+        },
+        "",
+        2,
+      );
       await createFile();
     }
   }

@@ -13,12 +13,12 @@ const router = createRouter({
       component: SessionsView,
     },
     {
-      path: "/:sessionNumber",
+      path: "/:sessionNumber([a-zA-Z0-9-]+)",
       name: "session",
       component: SessionView,
     },
     {
-      path: "/:sessionNumber/:encodedFilePath",
+      path: "/:sessionNumber([a-zA-Z0-9-]+)/:encodedFilePath([a-zA-Z0-9-=]+)",
       name: "file-edit",
       component: FileEditView,
     },

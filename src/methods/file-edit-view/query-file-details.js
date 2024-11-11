@@ -18,6 +18,9 @@ export default function queryFileDetailsMethod(fileDetails, props) {
     props.file.value = fileDetails;
     props.fileContent.value = atob(fileDetails.content);
     props.isFormJSON.value = isValidFormJSON(props.fileContent.value);
+    props.previewURL.value = props.isFormJSON.value
+      ? JSON.parse(props.fileContent.value).preview || null
+      : null;
 
     props.navPaginationItems.value = [
       props.navPaginationItems.value[0],
