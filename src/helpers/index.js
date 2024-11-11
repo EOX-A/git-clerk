@@ -8,4 +8,4 @@ export { default as createColorBlocks } from "./create-file-diff-color-block";
 export { encodeString, decodeString } from "./encoding-decoding-string.js";
 export { default as isValidFormJSON } from "./is-valid-form-json";
 export { default as updateSchemaDefaults } from "./update-schema-default";
-export { getSchemaURL } from "./schema";
+export { getSchemaDetails } from "./schema";
