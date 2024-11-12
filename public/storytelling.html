@@ -14,31 +14,37 @@
   // import "https://unpkg.com/@eox/storytelling/dist/eox-storytelling.js";
   import "http://127.0.0.1:3002/eox-storytelling.js";
   import "https://unpkg.com/@eox/jsonform/dist/eox-jsonform.js";
+  import "https://unpkg.com/@eox/map/dist/eox-map.js";
 </script>
 
 <script>
+  let previousMarkdown;
   // Listen for messages from parent
   window.onload = function() {
     window.addEventListener('message', function (event) {
       if (event.origin === window.location.origin && event.data && event.data.type === "SCHEMA_DATA_EDITOR_UPDATE") {
         const preview = document.querySelector("#storytelling-preview")
         if(preview.markdown !== event.data.detail.Story) {
-          preview.markdown = event.data.detail.Story
+          previousMarkdown = event.data.detail.Story
+          preview.markdown = previousMarkdown
         }
       }
     });
   }
 
+  // Send messages to parent
   document.querySelector('#storytelling-preview')
     .addEventListener('changed', (e) => {
-      const message = {
-        type: 'SCHEMA_DATA_PREVIEW_UPDATE',
-        detail: {
-          Story: e.detail
-        }
-      };
+      if(previousMarkdown !== e.detail) {
+        const message = {
+          type: 'SCHEMA_DATA_PREVIEW_UPDATE',
+          detail: {
+            Story: e.detail
+          }
+        };
 
-      window.parent.postMessage(message, window.location.origin);
+        window.parent.postMessage(message, window.location.origin);
+      }
     });
 </script>
 </body>

@@ -1,4 +1,4 @@
-import { getTotalPages } from "@/helpers/index.js";
+import { getTotalPages, encodeString } from "@/helpers/index.js";
 import axios from "axios";
 
 export async function filesListFromSession(
@@ -136,7 +136,7 @@ export async function updateFile(
   sha,
 ) {
   try {
-    const base64Content = btoa(content);
+    const base64Content = encodeString(content);
 
     await octokit.rest.repos.createOrUpdateFileContents({
       owner,

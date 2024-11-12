@@ -25,9 +25,15 @@ export function hideHiddenFieldsMethod(jsonFormInstance) {
   const intervalId = setInterval(checkForElements, 100);
 }
 
-export function initEOXJSONFormMethod(jsonFormInstance, isFormJSON) {
+export function initEOXJSONFormMethod(
+  jsonFormInstance,
+  isFormJSON,
+  previewURL,
+) {
   jsonFormInstance.value = document.querySelector("eox-jsonform");
   const shadowRoot = getShadowRoot(jsonFormInstance);
+  const mainDivClass =
+    ".je-indented-panel > div > div:not(.je-child-editor-holder):not(.je-child-editor-holder *)";
 
   const style = document.createElement("style");
 
@@ -37,6 +43,29 @@ export function initEOXJSONFormMethod(jsonFormInstance, isFormJSON) {
         ".row:not([style*='display: none']) .je-header .json-editor-btn-collapse.json-editor-btntype-toggle span",
       ),
     ].filter((span) => span.innerText === "Expand");
+
+    const editorValue = jsonFormInstance.value.value;
+    if (
+      editorValue &&
+      Object.keys(editorValue).length === 1 &&
+      previewURL.value
+    ) {
+      shadowRoot.querySelector(mainDivClass).style.display = "block";
+      shadowRoot.querySelector(`${mainDivClass} .row`).style.marginTop = "0px";
+
+      const bodySelector = `${mainDivClass} .row .EasyMDEContainer .CodeMirror`;
+      shadowRoot.querySelector(bodySelector).style.height =
+        "calc(100vh - 318px)";
+      shadowRoot.querySelector(bodySelector).style.borderBottomRightRadius =
+        "0px";
+      shadowRoot.querySelector(bodySelector).style.backgroundColor = "#fafafa";
+
+      const toolbarSelector = `${mainDivClass} .row .EasyMDEContainer .editor-toolbar`;
+      shadowRoot.querySelector(toolbarSelector).style.borderTopRightRadius =
+        "0px";
+      shadowRoot.querySelector(toolbarSelector).style.backgroundColor =
+        "#EEF0F1";
+    }
 
     expandButtons.forEach((expandButtonEle) => {
       const thirdParentEle =
@@ -56,16 +85,16 @@ export function initEOXJSONFormMethod(jsonFormInstance, isFormJSON) {
     ${
       isFormJSON.value
         ? `
-        .je-indented-panel > div > div:not(.je-child-editor-holder):not(.je-child-editor-holder *) {
-          display: grid;
-          grid-template-columns: 1fr 1fr; /* Two equal columns */
-          gap: 20px 50px;
-        }
-        .je-indented-panel .row {
-          margin-top: 10px;
-          padding: 10px;
-        }
-      `
+          ${mainDivClass} {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Two equal columns */
+            gap: 20px 50px;
+          }
+          .je-indented-panel .row {
+            margin-top: 10px;
+            padding: 10px;
+          }
+        `
         : ``
     }
     .je-object__controls,

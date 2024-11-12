@@ -1,5 +1,5 @@
 import { RequestError } from "octokit";
-import { isValidFormJSON } from "@/helpers/index.js";
+import { decodeString, isValidFormJSON } from "@/helpers/index.js";
 
 export default function queryFileDetailsMethod(fileDetails, props) {
   if (fileDetails instanceof RequestError) {
@@ -16,7 +16,7 @@ export default function queryFileDetailsMethod(fileDetails, props) {
     ];
   } else {
     props.file.value = fileDetails;
-    props.fileContent.value = atob(fileDetails.content);
+    props.fileContent.value = decodeString(fileDetails.content);
     props.isFormJSON.value = isValidFormJSON(props.fileContent.value);
     props.previewURL.value = props.isFormJSON.value
       ? JSON.parse(props.fileContent.value).preview || null

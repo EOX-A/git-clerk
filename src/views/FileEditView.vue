@@ -1,5 +1,5 @@
 <script setup>
-import { inject, onMounted, ref } from "vue";
+import { inject, onMounted, onUnmounted, ref } from "vue";
 import {
   createAndUpdateFile,
   getFileDetails,
@@ -9,6 +9,7 @@ import { useRoute, useRouter } from "vue-router";
 import { querySessionDetailsMethod } from "@/methods/session-view/index.js";
 import {
   decodeString,
+  getFileSchema,
   updateSchemaDefaults,
   useLoader,
 } from "@/helpers/index.js";
@@ -16,9 +17,11 @@ import {
   queryFileDetailsMethod,
   initEOXJSONFormMethod,
   hideHiddenFieldsMethod,
+  debouncePostMessageMethod,
 } from "../methods/file-edit-view";
 import { ActionTabFileEditor } from "@/components/file/index.js";
 import isEqual from "lodash.isequal";
+import debounce from "lodash.debounce";
 import "@eox/jsonform";
 
 const route = useRoute();
@@ -40,7 +43,10 @@ const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 
+const debouncedPostMessage = debounce(debouncePostMessageMethod, 500);
+
 const updateFileDetails = async (cache = true) => {
+  updatedFileContent.value = null;
   fileContent.value = null;
   previewURL.value = null;
   window.scrollTo({ top: 0 });
@@ -74,42 +80,12 @@ const saveFile = async () => {
   );
 
   if (snackbar.value.status === "success") {
-    updatedFileContent.value = null;
     await updateFileDetails(false);
-    initEOXJSONFormMethod(jsonFormInstance, isFormJSON);
+    initEOXJSONFormMethod(jsonFormInstance, isFormJSON, previewURL);
     updateNavButtonConfig();
   }
   loader.hide();
 };
-
-onMounted(async () => {
-  const loader = useLoader().show();
-  updateNavButtonConfig();
-  await updateFileDetails();
-  initEOXJSONFormMethod(jsonFormInstance, isFormJSON);
-  if (isFormJSON.value) {
-    hideHiddenFieldsMethod(jsonFormInstance);
-  }
-
-  window.addEventListener("message", function (event) {
-    if (
-      event.origin === window.location.origin &&
-      event.data &&
-      event.data.type === "SCHEMA_DATA_PREVIEW_UPDATE" &&
-      event.data.detail
-    ) {
-      const newSchema = updateSchemaDefaults(
-        JSON.parse(fileContent.value),
-        event.data.detail,
-      );
-
-      if (!isEqual(updatedFileContent.value, newSchema)) {
-        jsonFormInstance.value.editor.setValue(event.data.detail);
-      }
-    }
-  });
-  loader.hide();
-});
 
 const updateNavButtonConfig = (text = "Saved", disabled = true) => {
   navButtonConfig.value = {
@@ -122,13 +98,12 @@ const updateNavButtonConfig = (text = "Saved", disabled = true) => {
 };
 
 const onFileChange = (e) => {
-  if (e.detail && !e.detail.file && isFormJSON.value) {
+  if (e.detail && e.detail.file === undefined && isFormJSON.value) {
     const newSchema = updateSchemaDefaults(
       JSON.parse(fileContent.value),
       e.detail,
     );
 
-    const previewFrame = document.getElementById("previewFrame");
     const message = {
       type: "SCHEMA_DATA_EDITOR_UPDATE",
       detail: e.detail,
@@ -138,17 +113,10 @@ const onFileChange = (e) => {
       initValue.value = e.detail;
       updatedFileContent.value = newSchema;
       fileContent.value = JSON.stringify(newSchema);
-      setTimeout(
-        () =>
-          previewFrame.contentWindow.postMessage(
-            message,
-            window.location.origin,
-          ),
-        1000,
-      );
+      debouncedPostMessage(message, window.location.origin, true);
     } else if (!isEqual(updatedFileContent.value, newSchema)) {
       updatedFileContent.value = newSchema;
-      previewFrame.contentWindow.postMessage(message, window.location.origin);
+      debouncedPostMessage(message, window.location.origin);
 
       updateNavButtonConfig("Save", false);
     } else updateNavButtonConfig();
@@ -158,11 +126,11 @@ const onFileChange = (e) => {
 
     hideHiddenFieldsMethod(jsonFormInstance);
   } else {
-    if (!updatedFileContent.value) {
+    if (updatedFileContent.value === null) {
       initValue.value = e.detail;
       fileContent.value = e.detail.file;
     }
-    if (e.detail.file === atob(file.value.content)) {
+    if (e.detail.file === decodeString(file.value.content)) {
       updateNavButtonConfig();
     } else {
       updateNavButtonConfig("Save", false);
@@ -173,22 +141,45 @@ const onFileChange = (e) => {
 
 const resetContent = () => {
   jsonFormInstance.value.editor.setValue(initValue.value);
+  initEOXJSONFormMethod(jsonFormInstance, isFormJSON, previewURL);
   updateNavButtonConfig();
 };
 
-const getFileSchema = () => {
-  return {
-    title: "git-clerk",
-    type: "object",
-    properties: {
-      file: {
-        type: "string",
-        format: "textarea",
-        default: fileContent.value,
-      },
-    },
-  };
-};
+onMounted(async () => {
+  const loader = useLoader().show();
+  updateNavButtonConfig();
+  await updateFileDetails();
+  initEOXJSONFormMethod(jsonFormInstance, isFormJSON, previewURL);
+  if (isFormJSON.value) {
+    hideHiddenFieldsMethod(jsonFormInstance);
+  }
+
+  window.addEventListener("message", function (event) {
+    if (
+      event.origin === window.location.origin &&
+      event.data &&
+      event.data.type === "SCHEMA_DATA_PREVIEW_UPDATE" &&
+      event.data.detail
+    ) {
+      if (previewURL.value) {
+        const newSchema = updateSchemaDefaults(
+          JSON.parse(fileContent.value),
+          event.data.detail,
+        );
+
+        if (!isEqual(updatedFileContent.value, newSchema)) {
+          jsonFormInstance.value.editor.setValue(event.data.detail);
+          initEOXJSONFormMethod(jsonFormInstance, isFormJSON, previewURL);
+        }
+      }
+    }
+  });
+  loader.hide();
+});
+
+onUnmounted(() => {
+  debouncedPostMessage.cancel();
+});
 </script>
 
 <template>
@@ -202,26 +193,39 @@ const getFileSchema = () => {
 
   <div
     v-if="fileContent !== null"
-    :class="`bg-white fill-height px-12 py-8 d-block file-editor ${!isFormJSON && 'file-editor-code'}`"
+    :class="`bg-white px-12 py-8 d-block file-editor ${!isFormJSON && 'file-editor-code'}`"
   >
     <h2>{{ session.title }}</h2>
     <p>{{ filePath }}</p>
 
-    <div>
-      <eox-jsonform
-        :schema="isFormJSON ? JSON.parse(fileContent) : getFileSchema()"
-        :noShadow="false"
-        :unstyled="false"
-        @change="onFileChange"
-      ></eox-jsonform>
-      <iframe
-        v-if="previewURL"
-        id="previewFrame"
-        :src="previewURL"
-        width="100%"
-        height="300"
-      ></iframe>
-    </div>
+    <v-row no-gutters :class="previewURL ? 'd-flex mt-6' : ''">
+      <v-col :cols="previewURL ? 3 : 12" class="overflow-x-auto">
+        <eox-jsonform
+          :schema="
+            isFormJSON ? JSON.parse(fileContent) : getFileSchema(fileContent)
+          "
+          :noShadow="false"
+          :unstyled="false"
+          :class="previewURL ? 'with-preview' : ''"
+          @change="onFileChange"
+        ></eox-jsonform>
+      </v-col>
+      <v-col v-if="previewURL" class="mt-2 file-preview">
+        <div class="preview-toolbar bg-secondary">
+          <p
+            class="text-uppercase font-weight-bold text-sm-body-2 text-blue-grey-darken-2 d-flex align-center ga-2"
+          >
+            <v-icon icon="mdi-monitor-eye"></v-icon> PREVIEW
+          </p>
+        </div>
+        <iframe
+          v-if="previewURL"
+          id="previewFrame"
+          :src="previewURL"
+          height="300"
+        ></iframe>
+      </v-col>
+    </v-row>
   </div>
 </template>
 
@@ -236,6 +240,9 @@ const getFileSchema = () => {
   font-size: 20px;
   margin-inline-end: 6px;
 }
+.file-editor {
+  height: 95%;
+}
 .file-editor .je-indented-panel .row {
   margin-top: 10px;
   padding: 10px;
@@ -249,5 +256,41 @@ const getFileSchema = () => {
   padding: 10px;
   height: 66vh;
   background: #f6f6f6 !important;
+}
+.file-preview iframe {
+  box-sizing: border-box;
+  border: 1px solid #ced4da;
+  border-bottom-right-radius: 4px;
+  font: inherit;
+  z-index: 0;
+  word-wrap: break-word;
+  width: 100%;
+  height: calc(100vh - 318px);
+}
+
+.file-preview {
+  width: 100%;
+}
+
+.file-preview .preview-toolbar {
+  position: relative;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -o-user-select: none;
+  user-select: none;
+  padding: 13.5px 10px;
+  border-top: 1px solid #ced4da;
+  border-left: 1px solid #ced4da;
+  border-right: 1px solid #ced4da;
+  border-top-right-radius: 4px;
+}
+
+.file-preview .preview-toolbar p {
+  letter-spacing: 0.25px !important;
+}
+
+.file-editor .with-preview {
+  width: 35vw;
 }
 </style>
