@@ -56,12 +56,12 @@ export function initEOXJSONFormMethod(
       const bodySelector = `${mainDivClass} .row .EasyMDEContainer .CodeMirror`;
       shadowRoot.querySelector(bodySelector).style.height =
         "calc(100vh - 318px)";
-      shadowRoot.querySelector(bodySelector).style.borderBottomRightRadius =
+      shadowRoot.querySelector(bodySelector).style.borderBottomLeftRadius =
         "0px";
       shadowRoot.querySelector(bodySelector).style.backgroundColor = "#fafafa";
 
       const toolbarSelector = `${mainDivClass} .row .EasyMDEContainer .editor-toolbar`;
-      shadowRoot.querySelector(toolbarSelector).style.borderTopRightRadius =
+      shadowRoot.querySelector(toolbarSelector).style.borderTopLeftRadius =
         "0px";
       shadowRoot.querySelector(toolbarSelector).style.backgroundColor =
         "#EEF0F1";

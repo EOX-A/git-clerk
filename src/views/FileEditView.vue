@@ -199,21 +199,10 @@ onUnmounted(() => {
     <p>{{ filePath }}</p>
 
     <v-row no-gutters :class="previewURL ? 'd-flex mt-6' : ''">
-      <v-col :cols="previewURL ? 3 : 12" class="overflow-x-auto">
-        <eox-jsonform
-          :schema="
-            isFormJSON ? JSON.parse(fileContent) : getFileSchema(fileContent)
-          "
-          :noShadow="false"
-          :unstyled="false"
-          :class="previewURL ? 'with-preview' : ''"
-          @change="onFileChange"
-        ></eox-jsonform>
-      </v-col>
       <v-col v-if="previewURL" class="mt-2 file-preview">
         <div class="preview-toolbar bg-secondary">
           <p
-            class="text-uppercase font-weight-bold text-sm-body-2 text-blue-grey-darken-2 d-flex align-center ga-2"
+            class="text-uppercase font-weight-bold text-sm-body-2 text-blue-grey-darken-2 d-flex align-center ga-2 mx-3"
           >
             <v-icon icon="mdi-monitor-eye"></v-icon> PREVIEW
           </p>
@@ -224,6 +213,17 @@ onUnmounted(() => {
           :src="previewURL"
           height="300"
         ></iframe>
+      </v-col>
+      <v-col :cols="previewURL ? 3 : 12" class="overflow-x-auto">
+        <eox-jsonform
+          :schema="
+            isFormJSON ? JSON.parse(fileContent) : getFileSchema(fileContent)
+          "
+          :noShadow="false"
+          :unstyled="false"
+          :class="previewURL ? 'with-preview' : ''"
+          @change="onFileChange"
+        ></eox-jsonform>
       </v-col>
     </v-row>
   </div>
@@ -260,7 +260,7 @@ onUnmounted(() => {
 .file-preview iframe {
   box-sizing: border-box;
   border: 1px solid #ced4da;
-  border-bottom-right-radius: 4px;
+  border-bottom-left-radius: 4px;
   font: inherit;
   z-index: 0;
   word-wrap: break-word;
@@ -283,7 +283,7 @@ onUnmounted(() => {
   border-top: 1px solid #ced4da;
   border-left: 1px solid #ced4da;
   border-right: 1px solid #ced4da;
-  border-top-right-radius: 4px;
+  border-top-left-radius: 4px;
 }
 
 .file-preview .preview-toolbar p {
