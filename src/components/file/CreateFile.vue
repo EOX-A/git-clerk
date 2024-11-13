@@ -8,6 +8,7 @@ import {
 import { encodeString, getSchemaDetails, useLoader } from "@/helpers/index.js";
 import map from "lodash.map";
 import { useRouter } from "vue-router";
+import FileUploader from "@/components/file/FileUploader.vue";
 
 const router = useRouter();
 
@@ -240,6 +241,8 @@ const onSelectFile = (item) => {
         </v-row>
       </div>
       <div class="pa-6">
+        <FileUploader />
+        <v-divider class="mb-5 mt-6 mx-15"></v-divider>
         <v-textarea
           v-model="fileContent"
           class="bg-white text-mono"
