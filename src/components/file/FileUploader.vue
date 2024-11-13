@@ -1,5 +1,6 @@
 <script setup>
-import { inject, ref } from "vue";
+import { inject, ref, watch } from "vue";
+const emit = defineEmits(["changed"]);
 
 const files = ref([]);
 const fileInput = ref(null);
@@ -66,6 +67,10 @@ const resetFileInput = () => {
 const triggerFileInput = () => {
   fileInput.value?.click();
 };
+
+watch(files.value, (newFiles) => {
+  emit("changed", newFiles);
+});
 </script>
 
 <template>

@@ -2,6 +2,7 @@
 import { onMounted, ref, watch, defineProps, inject, h } from "vue";
 import {
   createAndUpdateFile,
+  createAndUpdateMultipleFiles,
   fetchSchemaFromURL,
   getBranchFileStructure,
 } from "@/api/index.js";
@@ -12,6 +13,7 @@ import FileUploader from "@/components/file/FileUploader.vue";
 
 const router = useRouter();
 
+const files = ref([]);
 const filePath = ref(null);
 const fileContent = ref("");
 const updatedFilePath = ref("/");
@@ -139,7 +141,7 @@ const close = () => {
 };
 
 const createFile = async () => {
-  if (!filePath.value) {
+  if (!files.value.length && !filePath.value) {
     snackbar.value = {
       text: "Please add a filename",
       status: "error",
@@ -148,19 +150,31 @@ const createFile = async () => {
   }
   const loader = useLoader().show();
 
-  const fullFilePath = (updatedFilePath.value + filePath.value).replace(
-    "/",
-    "",
-  );
+  if (files.value.length) {
+    snackbar.value = await createAndUpdateMultipleFiles(
+      props.session,
+      updatedFilePath.value,
+      files.value,
+    );
+  } else {
+    const fullFilePath = (updatedFilePath.value + filePath.value).replace(
+      "/",
+      "",
+    );
 
-  snackbar.value = await createAndUpdateFile(
-    props.session,
-    fullFilePath,
-    filePath.value,
-    fileContent.value,
-  );
+    snackbar.value = await createAndUpdateFile(
+      props.session,
+      fullFilePath,
+      filePath.value,
+      fileContent.value,
+    );
+  }
+
   if (snackbar.value.status === "success") {
-    await router.push(`/${props.session.number}/${encodeString(fullFilePath)}`);
+    if (!files.value.length)
+      await router.push(
+        `/${props.session.number}/${encodeString(fullFilePath)}`,
+      );
     close();
     props.updateDetails();
   }
@@ -241,7 +255,7 @@ const onSelectFile = (item) => {
         </v-row>
       </div>
       <div class="pa-6">
-        <FileUploader />
+        <FileUploader @changed="(newFiles) => (files = newFiles)" />
         <v-divider class="mb-5 mt-6 mx-15"></v-divider>
         <v-textarea
           v-model="fileContent"
