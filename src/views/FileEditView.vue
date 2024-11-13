@@ -20,7 +20,6 @@ import {
 import { ActionTabFileEditor } from "@/components/file/index.js";
 import debounce from "lodash.debounce";
 import "@eox/jsonform";
-import {} from "@/methods/file-edit-view/file-change";
 
 const route = useRoute();
 const router = useRouter();
