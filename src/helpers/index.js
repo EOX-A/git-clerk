@@ -9,3 +9,4 @@ export { encodeString, decodeString } from "./encoding-decoding-string.js";
 export { default as isValidFormJSON } from "./is-valid-form-json";
 export { default as updateSchemaDefaults } from "./update-schema-default";
 export { getSchemaDetails, getFileSchema } from "./schema";
+export { default as stringifyIfNeeded } from "./stringify-if-needed";

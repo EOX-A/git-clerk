@@ -2,12 +2,19 @@
 import { inject, onMounted, onUnmounted, ref } from "vue";
 import {
   createAndUpdateFile,
+  fetchSchemaFromURL,
   getFileDetails,
   getSessionDetails,
 } from "@/api/index.js";
 import { useRoute, useRouter } from "vue-router";
 import { querySessionDetailsMethod } from "@/methods/session-view/index.js";
-import { decodeString, getFileSchema, useLoader } from "@/helpers/index.js";
+import {
+  decodeString,
+  getFileSchema,
+  getSchemaDetails,
+  stringifyIfNeeded,
+  useLoader,
+} from "@/helpers/index.js";
 import {
   queryFileDetailsMethod,
   initEOXJSONFormMethod,
@@ -31,10 +38,10 @@ const file = ref(null);
 const fileContent = ref(null);
 const reset = ref(false);
 const updatedFileContent = ref(null);
-const initValue = ref(null);
 const jsonFormInstance = ref(null);
-const isFormJSON = ref(false);
+const isSchemaBased = ref(false);
 const previewURL = ref(null);
+const schemaMetaDetails = ref(null);
 
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
@@ -46,21 +53,33 @@ const updateFileDetails = async (cache = true) => {
   updatedFileContent.value = null;
   fileContent.value = null;
   previewURL.value = null;
+  schemaMetaDetails.value = null;
   window.scrollTo({ top: 0 });
+
   const sessionDetails = await getSessionDetails(sessionNumber);
   querySessionDetailsMethod(sessionDetails, {
     snackbar,
     session,
     navPaginationItems,
   });
+
+  const schemaDetails = getSchemaDetails("/" + filePath) || getFileSchema();
+  const schema =
+    schemaDetails.schema || (await fetchSchemaFromURL(schemaDetails.url));
+  schemaMetaDetails.value = {
+    ...schemaDetails,
+    schema,
+  };
+
   const fileDetails = await getFileDetails(session, filePath, cache);
   queryFileDetailsMethod(fileDetails, {
     snackbar,
     file,
     navPaginationItems,
     fileContent,
-    isFormJSON,
+    isSchemaBased,
     previewURL,
+    schemaMetaDetails,
   });
 };
 
@@ -70,15 +89,19 @@ const saveFile = async () => {
     session.value,
     filePath,
     file.value.name,
-    isFormJSON.value
-      ? JSON.stringify(updatedFileContent.value, null, 2)
+    isSchemaBased.value
+      ? stringifyIfNeeded(
+          schemaMetaDetails.value.output
+            ? updatedFileContent.value[schemaMetaDetails.value.output]
+            : updatedFileContent.value,
+        )
       : updatedFileContent.value,
     file.value.sha,
   );
 
   if (snackbar.value.status === "success") {
     await updateFileDetails(false);
-    initEOXJSONFormMethod(jsonFormInstance, isFormJSON, previewURL);
+    initEOXJSONFormMethod(jsonFormInstance, isSchemaBased, previewURL);
     updateNavButtonConfig();
   }
   loader.hide();
@@ -99,7 +122,6 @@ const onFileChange = (e) => {
   const props = {
     file,
     detail,
-    initValue,
     fileContent,
     jsonFormInstance,
     updatedFileContent,
@@ -107,14 +129,13 @@ const onFileChange = (e) => {
     updateNavButtonConfig,
   };
 
-  if (e.detail && e.detail.file === undefined && isFormJSON.value)
-    jsonSchemaFileChangeMethod(props);
+  if (e.detail && isSchemaBased.value) jsonSchemaFileChangeMethod(props);
   else genericFileChangeMethod(props);
 };
 
 const resetContent = () => {
-  jsonFormInstance.value.editor.setValue(initValue.value);
-  initEOXJSONFormMethod(jsonFormInstance, isFormJSON, previewURL);
+  jsonFormInstance.value.editor.setValue(fileContent.value);
+  initEOXJSONFormMethod(jsonFormInstance, isSchemaBased, previewURL);
   updateNavButtonConfig();
 };
 
@@ -122,16 +143,15 @@ onMounted(async () => {
   const loader = useLoader().show();
   updateNavButtonConfig();
   await updateFileDetails();
-  initEOXJSONFormMethod(jsonFormInstance, isFormJSON, previewURL);
-  if (isFormJSON.value) {
+  initEOXJSONFormMethod(jsonFormInstance, isSchemaBased, previewURL);
+  if (isSchemaBased.value) {
     hideHiddenFieldsMethod(jsonFormInstance);
   }
   addPostMessageEventMethod({
     previewURL,
-    fileContent,
     updatedFileContent,
     jsonFormInstance,
-    isFormJSON,
+    isSchemaBased,
   });
   loader.hide();
 });
@@ -151,14 +171,21 @@ onUnmounted(() => {
   />
 
   <div
-    v-if="fileContent !== null"
-    :class="`bg-white px-12 py-8 d-block file-editor ${!isFormJSON && 'file-editor-code'}`"
+    v-if="fileContent !== null && schemaMetaDetails.schema"
+    :class="`bg-white ${!previewURL && 'px-12 py-8 non-preview-height'} d-block file-editor ${schemaMetaDetails.generic && 'file-editor-code'}`"
   >
-    <h2>{{ session.title }}</h2>
-    <p>{{ filePath }}</p>
-
-    <v-row no-gutters :class="previewURL ? 'd-flex mt-6' : ''">
-      <v-col v-if="previewURL" class="mt-2 file-preview">
+    <v-row no-gutters :class="previewURL ? 'd-flex' : ''">
+      <v-col :cols="previewURL ? 3 : 12" class="overflow-x-auto">
+        <eox-jsonform
+          :schema="schemaMetaDetails.schema"
+          :value="fileContent"
+          :noShadow="false"
+          :unstyled="false"
+          :class="previewURL ? 'with-preview' : ''"
+          @change="onFileChange"
+        ></eox-jsonform>
+      </v-col>
+      <v-col v-if="previewURL" class="file-preview">
         <div class="preview-toolbar bg-secondary">
           <p
             class="text-uppercase font-weight-bold text-sm-body-2 text-blue-grey-darken-2 d-flex align-center ga-2 mx-3"
@@ -172,17 +199,6 @@ onUnmounted(() => {
           :src="previewURL"
           height="300"
         ></iframe>
-      </v-col>
-      <v-col :cols="previewURL ? 3 : 12" class="overflow-x-auto">
-        <eox-jsonform
-          :schema="
-            isFormJSON ? JSON.parse(fileContent) : getFileSchema(fileContent)
-          "
-          :noShadow="false"
-          :unstyled="false"
-          :class="previewURL ? 'with-preview' : ''"
-          @change="onFileChange"
-        ></eox-jsonform>
       </v-col>
     </v-row>
   </div>
@@ -199,7 +215,7 @@ onUnmounted(() => {
   font-size: 20px;
   margin-inline-end: 6px;
 }
-.file-editor {
+.file-editor.non-preview-height {
   height: 95%;
 }
 .file-editor .je-indented-panel .row {
@@ -219,16 +235,16 @@ onUnmounted(() => {
 .file-preview iframe {
   box-sizing: border-box;
   border: 1px solid #ced4da;
-  border-bottom-left-radius: 4px;
   font: inherit;
   z-index: 0;
   word-wrap: break-word;
   width: 100%;
-  height: calc(100vh - 318px);
+  height: calc(100vh - 194px);
 }
 
 .file-preview {
   width: 100%;
+  line-height: 0px;
 }
 
 .file-preview .preview-toolbar {
@@ -242,7 +258,6 @@ onUnmounted(() => {
   border-top: 1px solid #ced4da;
   border-left: 1px solid #ced4da;
   border-right: 1px solid #ced4da;
-  border-top-left-radius: 4px;
 }
 
 .file-preview .preview-toolbar p {

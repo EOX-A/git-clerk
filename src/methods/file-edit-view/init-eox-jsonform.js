@@ -27,7 +27,7 @@ export function hideHiddenFieldsMethod(jsonFormInstance) {
 
 export function initEOXJSONFormMethod(
   jsonFormInstance,
-  isFormJSON,
+  isSchemaBased,
   previewURL,
 ) {
   jsonFormInstance.value = document.querySelector("eox-jsonform");
@@ -53,16 +53,17 @@ export function initEOXJSONFormMethod(
       shadowRoot.querySelector(mainDivClass).style.display = "block";
       shadowRoot.querySelector(`${mainDivClass} .row`).style.marginTop = "0px";
 
+      const bodyWrapperSelector = `${mainDivClass} .row .EasyMDEContainer`;
+      shadowRoot.querySelector(bodyWrapperSelector).style.margin = "0px";
+
       const bodySelector = `${mainDivClass} .row .EasyMDEContainer .CodeMirror`;
       shadowRoot.querySelector(bodySelector).style.height =
-        "calc(100vh - 318px)";
-      shadowRoot.querySelector(bodySelector).style.borderBottomLeftRadius =
-        "0px";
+        "calc(100vh - 194px)";
+      shadowRoot.querySelector(bodySelector).style.borderRadius = "0px";
       shadowRoot.querySelector(bodySelector).style.backgroundColor = "#fafafa";
 
       const toolbarSelector = `${mainDivClass} .row .EasyMDEContainer .editor-toolbar`;
-      shadowRoot.querySelector(toolbarSelector).style.borderTopLeftRadius =
-        "0px";
+      shadowRoot.querySelector(toolbarSelector).style.borderRadius = "0px";
       shadowRoot.querySelector(toolbarSelector).style.backgroundColor =
         "#EEF0F1";
     }
@@ -83,7 +84,7 @@ export function initEOXJSONFormMethod(
 
   style.textContent = `
     ${
-      isFormJSON.value
+      isSchemaBased.value
         ? `
           ${mainDivClass} {
             display: grid;
@@ -113,12 +114,11 @@ export function initEOXJSONFormMethod(
       border: 1px solid #e0e0e0;
       border-radius: 4px;
       width: 100%;
-      height: calc(100vh - 300px) !important;
+      height: calc(100vh - 240px) !important;
       resize: vertical;
       white-space: pre;
       overflow-wrap: normal;
       overflow-x: auto;
-      margin-top: 10px;
       resize: none;
     }
     .je-textarea:focus {

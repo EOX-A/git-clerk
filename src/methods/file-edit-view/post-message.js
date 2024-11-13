@@ -14,10 +14,9 @@ export function debouncePostMessageMethod(message, origin, init = false) {
 
 export function addPostMessageEventMethod({
   previewURL,
-  fileContent,
   updatedFileContent,
   jsonFormInstance,
-  isFormJSON,
+  isSchemaBased,
 }) {
   window.addEventListener("message", function (event) {
     if (
@@ -27,14 +26,9 @@ export function addPostMessageEventMethod({
       event.data.detail
     ) {
       if (previewURL.value) {
-        const newSchema = updateSchemaDefaults(
-          JSON.parse(fileContent.value),
-          event.data.detail,
-        );
-
-        if (!isEqual(updatedFileContent.value, newSchema)) {
+        if (!isEqual(updatedFileContent.value, event.data.detail)) {
           jsonFormInstance.value.editor.setValue(event.data.detail);
-          initEOXJSONFormMethod(jsonFormInstance, isFormJSON, previewURL);
+          initEOXJSONFormMethod(jsonFormInstance, isSchemaBased, previewURL);
         }
       }
     }
