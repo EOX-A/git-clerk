@@ -44,6 +44,7 @@ const props = defineProps({
       variant="text"
       text="Preview"
       class="text-capitalize font-weight-medium"
+      disabled
     ></v-btn>
     <v-divider
       v-if="props.session.state !== 'closed'"
