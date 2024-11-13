@@ -7,22 +7,20 @@ import {
 } from "@/api/index.js";
 import { useRoute, useRouter } from "vue-router";
 import { querySessionDetailsMethod } from "@/methods/session-view/index.js";
-import {
-  decodeString,
-  getFileSchema,
-  updateSchemaDefaults,
-  useLoader,
-} from "@/helpers/index.js";
+import { decodeString, getFileSchema, useLoader } from "@/helpers/index.js";
 import {
   queryFileDetailsMethod,
   initEOXJSONFormMethod,
   hideHiddenFieldsMethod,
   debouncePostMessageMethod,
+  jsonSchemaFileChangeMethod,
+  genericFileChangeMethod,
+  addPostMessageEventMethod,
 } from "../methods/file-edit-view";
 import { ActionTabFileEditor } from "@/components/file/index.js";
-import isEqual from "lodash.isequal";
 import debounce from "lodash.debounce";
 import "@eox/jsonform";
+import {} from "@/methods/file-edit-view/file-change";
 
 const route = useRoute();
 const router = useRouter();
@@ -98,45 +96,21 @@ const updateNavButtonConfig = (text = "Saved", disabled = true) => {
 };
 
 const onFileChange = (e) => {
-  if (e.detail && e.detail.file === undefined && isFormJSON.value) {
-    const newSchema = updateSchemaDefaults(
-      JSON.parse(fileContent.value),
-      e.detail,
-    );
+  const detail = e.detail;
+  const props = {
+    file,
+    detail,
+    initValue,
+    fileContent,
+    jsonFormInstance,
+    updatedFileContent,
+    debouncedPostMessage,
+    updateNavButtonConfig,
+  };
 
-    const message = {
-      type: "SCHEMA_DATA_EDITOR_UPDATE",
-      detail: e.detail,
-    };
-
-    if (!updatedFileContent.value) {
-      initValue.value = e.detail;
-      updatedFileContent.value = newSchema;
-      fileContent.value = JSON.stringify(newSchema);
-      debouncedPostMessage(message, window.location.origin, true);
-    } else if (!isEqual(updatedFileContent.value, newSchema)) {
-      updatedFileContent.value = newSchema;
-      debouncedPostMessage(message, window.location.origin);
-
-      updateNavButtonConfig("Save", false);
-    } else updateNavButtonConfig();
-
-    if (isEqual(updatedFileContent.value, JSON.parse(fileContent.value)))
-      updateNavButtonConfig();
-
-    hideHiddenFieldsMethod(jsonFormInstance);
-  } else {
-    if (updatedFileContent.value === null) {
-      initValue.value = e.detail;
-      fileContent.value = e.detail.file;
-    }
-    if (e.detail.file === decodeString(file.value.content)) {
-      updateNavButtonConfig();
-    } else {
-      updateNavButtonConfig("Save", false);
-    }
-    updatedFileContent.value = e.detail.file;
-  }
+  if (e.detail && e.detail.file === undefined && isFormJSON.value)
+    jsonSchemaFileChangeMethod(props);
+  else genericFileChangeMethod(props);
 };
 
 const resetContent = () => {
@@ -153,26 +127,12 @@ onMounted(async () => {
   if (isFormJSON.value) {
     hideHiddenFieldsMethod(jsonFormInstance);
   }
-
-  window.addEventListener("message", function (event) {
-    if (
-      event.origin === window.location.origin &&
-      event.data &&
-      event.data.type === "SCHEMA_DATA_PREVIEW_UPDATE" &&
-      event.data.detail
-    ) {
-      if (previewURL.value) {
-        const newSchema = updateSchemaDefaults(
-          JSON.parse(fileContent.value),
-          event.data.detail,
-        );
-
-        if (!isEqual(updatedFileContent.value, newSchema)) {
-          jsonFormInstance.value.editor.setValue(event.data.detail);
-          initEOXJSONFormMethod(jsonFormInstance, isFormJSON, previewURL);
-        }
-      }
-    }
+  addPostMessageEventMethod({
+    previewURL,
+    fileContent,
+    updatedFileContent,
+    jsonFormInstance,
+    isFormJSON,
   });
   loader.hide();
 });

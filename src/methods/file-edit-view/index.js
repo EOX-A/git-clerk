@@ -3,4 +3,11 @@ export {
   initEOXJSONFormMethod,
   hideHiddenFieldsMethod,
 } from "./init-eox-jsonform";
-export { default as debouncePostMessageMethod } from "./debounce-post-message";
+export {
+  debouncePostMessageMethod,
+  addPostMessageEventMethod,
+} from "./post-message.js";
+export {
+  jsonSchemaFileChangeMethod,
+  genericFileChangeMethod,
+} from "./file-change";
