@@ -48,7 +48,7 @@ export function genericFileChangeMethod({
     initValue.value = detail;
     fileContent.value = detail.file;
   }
-  if (e.detail.file === decodeString(file.value.content)) {
+  if (detail.file === decodeString(file.value.content)) {
     updateNavButtonConfig();
   } else {
     updateNavButtonConfig("Save", false);
