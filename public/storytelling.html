@@ -21,7 +21,7 @@
   // Listen for messages from parent
   window.onload = function() {
     window.addEventListener('message', function (event) {
-      if (event.origin === window.location.origin && event.data && event.data.type === "SCHEMA_DATA_EDITOR_UPDATE") {
+      if (event.data && event.data.type === "SCHEMA_DATA_EDITOR_UPDATE") {
         const preview = document.querySelector("#storytelling-preview")
         if(preview.markdown !== event.data.detail.Story) {
           previousMarkdown = event.data.detail.Story
@@ -42,7 +42,7 @@
           }
         };
 
-        window.parent.postMessage(message, window.location.origin);
+        window.parent.postMessage(message, "*");
       }
     });
 </script>

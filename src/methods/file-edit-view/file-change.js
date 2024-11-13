@@ -17,10 +17,10 @@ export function jsonSchemaFileChangeMethod({
 
   if (!updatedFileContent.value) {
     updatedFileContent.value = fileContent.value;
-    debouncedPostMessage(message, window.location.origin, true);
+    debouncedPostMessage(message, "*", true);
   } else if (!isEqual(updatedFileContent.value, detail)) {
     updatedFileContent.value = detail;
-    debouncedPostMessage(message, window.location.origin);
+    debouncedPostMessage(message, "*");
     updateNavButtonConfig("Save", false);
   } else updateNavButtonConfig();
 

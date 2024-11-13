@@ -20,7 +20,6 @@ export function addPostMessageEventMethod({
 }) {
   window.addEventListener("message", function (event) {
     if (
-      event.origin === window.location.origin &&
       event.data &&
       event.data.type === "SCHEMA_DATA_PREVIEW_UPDATE" &&
       event.data.detail
