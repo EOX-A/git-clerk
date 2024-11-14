@@ -141,8 +141,8 @@ const onPageChange = async (newPage) => {
       v-else
       headline="No changes found in this session"
       img="/img/files.svg"
-      icon="mdi-plus"
-      btn-text="Add New File"
+      icon="mdi-pencil-plus"
+      btn-text="Add/Edit File"
       description="No changes found in this session. You can start a new file to add updates."
       :init-func="addNewFileClick"
     />

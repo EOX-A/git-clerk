@@ -35,6 +35,7 @@ const props = defineProps({
       <v-btn
         class="text-capitalize"
         color="primary"
+        size="large"
         :text="props.btnText"
         :prepend-icon="props.icon"
         @click="props.initFunc"

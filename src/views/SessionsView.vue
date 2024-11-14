@@ -85,7 +85,7 @@ const onKeyEnterCreateNewSession = async (event) => {
 
 onMounted(async () => {
   navButtonConfig.value = {
-    text: "Create New Session",
+    text: "Start New Session",
     icon: "mdi-source-pull",
     click: createNewSessionClick,
   };
@@ -111,7 +111,7 @@ const onPageChange = async (newPage) => {
           <v-text-field
             v-model="newSessionName"
             label="Session Name"
-            placeholder="Enter a session name"
+            placeholder="Name your Session..."
             hide-details
             append-inner-icon="mdi-close"
             @click:append-inner="clearInputCreateNewSession"

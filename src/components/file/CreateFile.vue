@@ -188,22 +188,25 @@ const getSelectedFileFolder = (name) => {
 <template>
   <div
     v-if="props.open"
-    class="d-flex justify-center bg-blue-grey-lighten-4 border-b create-file"
+    class="d-flex justify-center border-b create-file"
   >
-    <v-row class="my-0">
-      <v-col class="py-3 px-8 d-flex align-center">
+    <v-row>
+      <v-col cols="12" class="d-flex">
+        <div
+          class="px-6 py-6 border-b-thin session-create-field d-flex w-100 align-center justify-center"
+        >
         <v-combobox
           v-model="filePath"
           @paste="onPastePathName"
           @keydown="onKeyDownPathName"
-          variant="plain"
-          placeholder="Enter filename along with path"
+          label="File Name"
+          placeholder="my/new/file.txt"
           :items="map(currPathDirStructure, 'name')"
           hide-details
           color="primary"
-          class="border-b-thin text-mono"
+          variant="outlined"
         >
-          <template #prepend>
+          <template #prepend-inner>
             <span
               class="prepend text-mono font-weight-bold text-primary opacity-80"
               >(root){{ updatedFilePath }}</span
@@ -230,15 +233,14 @@ const getSelectedFileFolder = (name) => {
             </v-list-item>
           </template>
         </v-combobox>
-
         <v-btn
           @click="updateSchema"
           icon="mdi-plus"
           variant="flat"
           color="primary"
-          size="small"
-          class="ml-3"
+          size="large"
         ></v-btn>
+        </div>
       </v-col>
     </v-row>
   </div>
@@ -275,8 +277,47 @@ const getSelectedFileFolder = (name) => {
   padding: 0px;
 }
 .create-file .v-combobox .v-field__input input::placeholder {
-  color: grey;
+  /* color: grey;
   opacity: 0.5;
-  font-weight: 800;
+  font-weight: 800; */
+  font-family: monospace;
+}
+/* Same as SessionsView.vue */
+/* TODO refactor */
+.session-create-field {
+  border-bottom: 1px solid #647078;
+}
+
+.session-create-field .v-field {
+  border-radius: 6px 0px 0px 6px;
+}
+
+.session-create-field button {
+  border-radius: 0px 6px 6px 0px;
+}
+
+.session-create-field .v-label {
+  color: #6c757d;
+}
+
+.session-create-field .v-field__input {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  color: #000000;
+}
+
+.session-create-field .v-field__append-inner .v-icon {
+  color: #6c757d;
+  cursor: pointer;
+}
+
+.session-create-field.v-text-field--outline {
+  background-color: white;
+  border-color: #d9d9d9;
+  box-shadow: none;
+}
+
+.session-create-field .v-field__outline {
+  border-color: transparent;
 }
 </style>
