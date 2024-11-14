@@ -1,12 +1,13 @@
 function getShadowRoot(jsonFormInstance) {
   return (
-    jsonFormInstance.value.shadowRoot ||
-    jsonFormInstance.value.attachShadow({ mode: "open" })
+    jsonFormInstance.value?.shadowRoot ||
+    jsonFormInstance.value?.attachShadow({ mode: "open" })
   );
 }
 
 export function hideHiddenFieldsMethod(jsonFormInstance) {
   const shadowRoot = getShadowRoot(jsonFormInstance);
+  if (!shadowRoot) return;
 
   const checkForElements = () => {
     const elements = shadowRoot.querySelectorAll(".je-indented-panel .row");
@@ -32,6 +33,8 @@ export function initEOXJSONFormMethod(
 ) {
   jsonFormInstance.value = document.querySelector("eox-jsonform");
   const shadowRoot = getShadowRoot(jsonFormInstance);
+  if (!shadowRoot) return;
+
   const mainDivClass =
     ".je-indented-panel > div > div:not(.je-child-editor-holder):not(.je-child-editor-holder *)";
 
