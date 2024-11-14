@@ -31,6 +31,7 @@ const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 
 const addNewFileClick = async (state) => {
+  navButtonConfig.value.disabled = state;
   addNewFileDialog.value = state;
 };
 
@@ -57,8 +58,8 @@ const updateDetails = async (cache = false) => {
 
 onMounted(async () => {
   navButtonConfig.value = {
-    text: "Add New File",
-    icon: "mdi-plus",
+    text: "Add/Edit File",
+    icon: "mdi-pencil-plus",
     click: () => addNewFileClick(true),
   };
   await updateDetails();
