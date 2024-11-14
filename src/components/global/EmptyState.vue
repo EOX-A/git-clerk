@@ -4,15 +4,18 @@ import { defineProps } from "vue";
 const props = defineProps({
   headline: {
     type: String,
-    default: "Whoops, No sessions found.",
+  },
+  description: {
+    type: String,
   },
   icon: {
     type: String,
-    default: "mdi-source-pull",
   },
   btnText: {
     type: String,
-    default: "Create new session",
+  },
+  img: {
+    type: String,
   },
   initFunc: Function,
 });
@@ -20,18 +23,23 @@ const props = defineProps({
 
 <template>
   <v-empty-state
-    :headline="props.headline"
-    :icon="props.icon"
+    :action-text="props.btnText"
+    :action-icon="props.icon"
+    :image="props.img"
+    :text="props.description"
+    :title="props.headline"
+    @click:action="props.initFunc"
     class="my-16 py-16 empty-state"
   >
-    <template v-slot:text>
-      To get started, you should
-      <a
+    <template v-slot:actions>
+      <v-btn
+        class="text-capitalize"
+        color="primary"
+        size="large"
+        :text="props.btnText"
+        :prepend-icon="props.icon"
         @click="props.initFunc"
-        class="text-blue-accent-4 font-weight-medium"
-        href="#"
-        >{{ props.btnText }}</a
-      >
+      />
     </template>
   </v-empty-state>
 </template>

@@ -31,6 +31,7 @@ const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 
 const addNewFileClick = async (state) => {
+  navButtonConfig.value.disabled = state;
   addNewFileDialog.value = state;
 };
 
@@ -57,8 +58,8 @@ const updateDetails = async (cache = false) => {
 
 onMounted(async () => {
   navButtonConfig.value = {
-    text: "Add New File",
-    icon: "mdi-plus",
+    text: "Add/Edit File",
+    icon: "mdi-pencil-plus",
     click: () => addNewFileClick(true),
   };
   await updateDetails();
@@ -133,14 +134,16 @@ const onPageChange = async (newPage) => {
     </v-list-item>
 
     <!-- Placeholder for file's list -->
-    <ListPlaceholder :button="2" v-else-if="fileChangesList === null" />
+    <ListPlaceholder :button="1" v-else-if="fileChangesList === null" />
 
     <!-- Empty State -->
     <EmptyState
       v-else
-      icon="mdi-file-code-outline"
-      headline="Whoops, No File changes found."
-      btn-text="Add New File"
+      headline="No changes found in this session"
+      img="/img/files.svg"
+      icon="mdi-pencil-plus"
+      btn-text="Add/Edit File"
+      description="No changes found in this session. You can start a new file to add updates."
       :init-func="addNewFileClick"
     />
   </v-list>

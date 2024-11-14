@@ -21,6 +21,7 @@
     "dayjs": "^1.11.13",
     "js-base64": "^3.7.7",
     "lodash.debounce": "^4.0.8",
+    "lodash.find": "^4.6.0",
     "lodash.isequal": "^4.5.0",
     "lodash.map": "^4.6.0",
     "octokit": "^4.0.2",

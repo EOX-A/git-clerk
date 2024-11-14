@@ -13,6 +13,7 @@ import {
 } from "@/helpers/index.js";
 import map from "lodash.map";
 import { useRouter } from "vue-router";
+import find from "lodash.find";
 
 const router = useRouter();
 
@@ -50,16 +51,7 @@ const updateSchema = async () => {
   const fullPath = updatedFilePath.value + filePath.value;
   const schemaDetails = getSchemaDetails(fullPath);
   if (schemaDetails) {
-    const loader = useLoader().show(
-      {},
-      {
-        after: h(
-          "h5",
-          { class: "loader-text", id: "loader-text" },
-          `Fetching schema for - ${filePath.value}`,
-        ),
-      },
-    );
+    const loader = useLoader().show();
 
     const schema =
       schemaDetails.schema || (await fetchSchemaFromURL(schemaDetails.url));
@@ -86,13 +78,14 @@ const updateSchema = async () => {
         }
       }, 500);
     }
-  }
+  } else await createFile();
 };
 
 const onKeyDownPathName = async (event) => {
   const { key } = event;
 
-  if (key === "/") {
+  if (event.key === "Escape") close();
+  else if (key === "/") {
     if (!filePath.value) {
       handleFilePathReset();
     } else {
@@ -110,8 +103,6 @@ const onKeyDownPathName = async (event) => {
         updatedFilePath.value = updatedFilePathArr.value.join("/") + "/";
       }
     }
-  } else {
-    setTimeout(updateSchema, 100);
   }
 };
 
@@ -188,81 +179,71 @@ const onSelectFile = (item) => {
     router.push(`/${props.session.number}/${encodedFilePath}`);
   }
 };
+
+const getSelectedFileFolder = (name) => {
+  return find(currPathDirStructure.value, { name });
+};
 </script>
 
 <template>
-  <v-dialog
-    v-model="props.open"
-    transition="dialog-bottom-transition"
-    fullscreen
-    class="create-file"
+  <div
+    v-if="props.open"
+    class="d-flex justify-center border-b create-file"
   >
-    <v-card>
-      <v-toolbar color="primary">
-        <v-btn icon="mdi-close" @click="close"></v-btn>
-
-        <v-toolbar-title>Add New File</v-toolbar-title>
-
-        <v-spacer></v-spacer>
-
-        <v-toolbar-items>
-          <v-btn text="Create" @click="createFile"></v-btn>
-        </v-toolbar-items>
-      </v-toolbar>
-      <div>
-        <v-row>
-          <v-col>
-            <v-combobox
-              v-model="filePath"
-              @paste="onPastePathName"
-              @keydown="onKeyDownPathName"
-              variant="plain"
-              placeholder="Enter filename along with path"
-              :items="map(currPathDirStructure, 'name')"
-              hide-details
-              color="primary"
-              class="border-b-thin text-mono"
+    <v-row>
+      <v-col cols="12" class="d-flex">
+        <div
+          class="px-6 py-6 border-b-thin session-create-field d-flex w-100 align-center justify-center"
+        >
+        <v-combobox
+          v-model="filePath"
+          @paste="onPastePathName"
+          @keydown="onKeyDownPathName"
+          label="File Name"
+          placeholder="my/new/file.txt"
+          :items="map(currPathDirStructure, 'name')"
+          hide-details
+          color="primary"
+          variant="outlined"
+        >
+          <template #prepend-inner>
+            <span
+              class="prepend text-mono font-weight-bold text-primary opacity-80"
+              >(root){{ updatedFilePath }}</span
             >
-              <template #prepend>
-                <span
-                  class="prepend text-mono font-weight-bold text-primary opacity-80"
-                  >(root){{ updatedFilePath }}</span
+          </template>
+          <template v-slot:item="{ props, item, index }">
+            <v-list-item
+              :prepend-icon="`mdi-${getSelectedFileFolder(item.raw).icon}-outline`"
+              v-bind="props"
+              :title="item.raw"
+              @click="() => onSelectFile(getSelectedFileFolder(item.raw))"
+            >
+              <template
+                v-if="getSelectedFileFolder(item.raw).type === 'file'"
+                v-slot:append
+              >
+                <div
+                  class="text-blue-accent-4 d-flex align-center ga-2 text-sm-body-2 font-weight-bold"
                 >
+                  <p class="text-uppercase">Edit File</p>
+                  <v-icon>mdi-open-in-new</v-icon>
+                </div>
               </template>
-              <template v-slot:item="{ props, item, index }">
-                <v-list-item
-                  :prepend-icon="`mdi-${currPathDirStructure[index].icon}-outline`"
-                  v-bind="props"
-                  :title="item.raw"
-                  @click="() => onSelectFile(currPathDirStructure[index])"
-                >
-                  <template
-                    v-if="currPathDirStructure[index].type === 'file'"
-                    v-slot:append
-                  >
-                    <div
-                      class="text-blue-accent-4 d-flex align-center ga-2 text-sm-body-2 font-weight-bold"
-                    >
-                      <p class="text-uppercase">Edit File</p>
-                      <v-icon>mdi-open-in-new</v-icon>
-                    </div>
-                  </template>
-                </v-list-item>
-              </template>
-            </v-combobox>
-          </v-col>
-        </v-row>
-      </div>
-      <div class="pa-6">
-        <v-textarea
-          v-model="fileContent"
-          class="bg-white text-mono"
-          placeholder="Enter file content here"
-          variant="plain"
-        ></v-textarea>
-      </div>
-    </v-card>
-  </v-dialog>
+            </v-list-item>
+          </template>
+        </v-combobox>
+        <v-btn
+          @click="updateSchema"
+          icon="mdi-plus"
+          variant="flat"
+          color="primary"
+          size="large"
+        ></v-btn>
+        </div>
+      </v-col>
+    </v-row>
+  </div>
 </template>
 
 <style>
@@ -272,6 +253,9 @@ const onSelectFile = (item) => {
 .create-file .v-field__input {
   padding: 0px;
   margin: 0;
+}
+.create-file button {
+  border-radius: 6px;
 }
 .create-file
   .v-input--density-default.v-input--plain-underlined
@@ -290,42 +274,50 @@ const onSelectFile = (item) => {
   display: none !important;
 }
 .create-file .v-input {
-  background: #f6f6f6;
-  padding: 6px 0px;
+  padding: 0px;
 }
 .create-file .v-combobox .v-field__input input::placeholder {
-  color: grey;
+  /* color: grey;
   opacity: 0.5;
-  font-weight: 800;
+  font-weight: 800; */
+  font-family: monospace;
 }
-.create-file textarea.v-field__input {
-  all: unset;
+/* Same as SessionsView.vue */
+/* TODO refactor */
+.session-create-field {
+  border-bottom: 1px solid #647078;
 }
-.create-file textarea.v-field__input {
-  font-family: "Courier New", monospace;
-  font-size: 14px;
-  font-weight: 500;
-  line-height: 1.5;
-  padding: 12px;
-  tab-size: 2;
-  background-color: #ffffff;
+
+.session-create-field .v-field {
+  border-radius: 6px 0px 0px 6px;
+}
+
+.session-create-field button {
+  border-radius: 0px 6px 6px 0px;
+}
+
+.session-create-field .v-label {
+  color: #6c757d;
+}
+
+.session-create-field .v-field__input {
+  padding-top: 10px;
+  padding-bottom: 10px;
   color: #000000;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  width: 100%;
-  height: calc(100vh - 230px) !important;
-  white-space: pre;
-  overflow-wrap: normal;
-  overflow-x: auto;
-  resize: none;
 }
-.create-file textarea.v-field__input:focus {
-  outline: none;
+
+.session-create-field .v-field__append-inner .v-icon {
+  color: #6c757d;
+  cursor: pointer;
 }
-.create-file textarea.v-field__input {
-  background-image: linear-gradient(to right, #f5f5f5 30px, #ffffff 30px);
-  background-size: 100% 24px;
-  background-repeat: repeat-y;
-  padding-left: 45px;
+
+.session-create-field.v-text-field--outline {
+  background-color: white;
+  border-color: #d9d9d9;
+  box-shadow: none;
+}
+
+.session-create-field .v-field__outline {
+  border-color: transparent;
 }
 </style>
