@@ -174,7 +174,16 @@ onUnmounted(() => {
     v-if="fileContent !== null && schemaMetaDetails.schema"
     :class="`bg-white ${!previewURL && 'px-12 py-8 non-preview-height'} d-block file-editor ${schemaMetaDetails.generic && 'file-editor-code'}`"
   >
-    <v-row no-gutters :class="previewURL ? 'd-flex' : ''">
+    <div
+      v-if="file.encoding === 'none'"
+      class="d-flex align-center justify-center flex-column h-50"
+    >
+      <router-link target="_blank" :href="file.download_url"
+        >View Raw</router-link
+      >
+      <p>(Sorry about that, but we can’t show files that are big right now.)</p>
+    </div>
+    <v-row v-else no-gutters :class="previewURL ? 'd-flex' : ''">
       <v-col :cols="previewURL ? 3 : 12" class="overflow-x-auto">
         <eox-jsonform
           :schema="schemaMetaDetails.schema"
