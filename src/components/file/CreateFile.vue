@@ -270,7 +270,7 @@ const onSelectFile = (item) => {
       </div>
       <div class="pa-6">
         <FileUploader @changed="(newFiles) => (files = newFiles)" />
-        <v-divider class="mb-5 mt-6 mx-15"></v-divider>
+        <v-divider class="mb-7 mt-8 mx-15"> OR </v-divider>
         <v-textarea
           v-model="fileContent"
           class="bg-white text-mono"

@@ -113,9 +113,19 @@ watch(files.value, (newFiles) => {
           :key="index"
           :title="file.name"
           :subtitle="`${(file.size / (1024 * 1024)).toFixed(2)} MB`"
+          lines="three"
+          prepend-icon="mdi-file"
         >
-          <template v-slot:prepend>
-            <v-icon icon="mdi-file-image"></v-icon>
+          <template v-slot:title>
+            <v-text-field
+              :model-value="file.newName || file.name"
+              placeholder="File Name"
+              density="compact"
+              variant="underlined"
+              hide-details
+              class="w-25 pa-0 mb-2 bg-white"
+              @update:model-value="(val) => file.newName = val"
+            ></v-text-field>
           </template>
 
           <template v-slot:append>

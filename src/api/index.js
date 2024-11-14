@@ -168,7 +168,8 @@ export async function createAndUpdateMultipleFiles(session, path, files, sha) {
   const errorFiles = [];
 
   for (const file of files) {
-    const fullFilePath = (path + file.name).replace("/", "");
+    const fileName = file.newName || file.name
+    const fullFilePath = (path + fileName).replace("/", "");
 
     const arrayBuffer = await file.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
@@ -180,13 +181,13 @@ export async function createAndUpdateMultipleFiles(session, path, files, sha) {
       head.repo.name,
       head.ref,
       fullFilePath,
-      file.name,
+      fileName,
       { bytes },
       sha,
     );
 
     if (result.status === "error") {
-      errorFiles.push(file.name);
+      errorFiles.push(fileName);
     }
   }
 
