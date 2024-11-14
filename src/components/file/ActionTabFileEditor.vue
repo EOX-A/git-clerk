@@ -35,15 +35,6 @@ const props = defineProps({
       text="Github"
       class="text-capitalize font-weight-medium"
     ></v-btn>
-    <v-btn
-      target="_blank"
-      color="blue-grey-darken-4"
-      prepend-icon="mdi-monitor-eye"
-      size="x-large"
-      variant="text"
-      text="Preview"
-      class="text-capitalize font-weight-medium"
-    ></v-btn>
     <DeleteFile
       text="Delete File"
       size="x-large"

@@ -6,7 +6,12 @@ import {
   fetchSchemaFromURL,
   getBranchFileStructure,
 } from "@/api/index.js";
-import { encodeString, getSchemaDetails, useLoader } from "@/helpers/index.js";
+import {
+  encodeString,
+  getSchemaDetails,
+  stringifyIfNeeded,
+  useLoader,
+} from "@/helpers/index.js";
 import map from "lodash.map";
 import { useRouter } from "vue-router";
 import FileUploader from "@/components/file/FileUploader.vue";
@@ -59,21 +64,30 @@ const updateSchema = async () => {
       },
     );
 
-    const data =
+    const schema =
       schemaDetails.schema || (await fetchSchemaFromURL(schemaDetails.url));
-    loader.hide();
 
-    if (data.status === "error") snackbar.value = data;
-    else {
-      fileContent.value = JSON.stringify(
-        {
-          ...data,
-          ...(schemaDetails.preview ? { preview: schemaDetails.preview } : {}),
-        },
-        "",
-        2,
-      );
-      await createFile();
+    if (schema.status === "error") {
+      snackbar.value = schema;
+      loader.hide();
+    } else {
+      const jsonForm = document.createElement("eox-jsonform");
+      jsonForm.style.display = "none";
+      jsonForm.schema = schema;
+      document.body.appendChild(jsonForm);
+
+      const intervalId = setInterval(() => {
+        if (jsonForm.editor) {
+          fileContent.value = stringifyIfNeeded(
+            schemaDetails.content || jsonForm.editor.getValue(),
+          );
+          createFile();
+
+          clearInterval(intervalId);
+          jsonForm.remove();
+          loader.hide();
+        }
+      }, 500);
     }
   }
 };

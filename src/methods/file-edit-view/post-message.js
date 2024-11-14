@@ -14,27 +14,20 @@ export function debouncePostMessageMethod(message, origin, init = false) {
 
 export function addPostMessageEventMethod({
   previewURL,
-  fileContent,
   updatedFileContent,
   jsonFormInstance,
-  isFormJSON,
+  isSchemaBased,
 }) {
   window.addEventListener("message", function (event) {
     if (
-      event.origin === window.location.origin &&
       event.data &&
       event.data.type === "SCHEMA_DATA_PREVIEW_UPDATE" &&
       event.data.detail
     ) {
       if (previewURL.value) {
-        const newSchema = updateSchemaDefaults(
-          JSON.parse(fileContent.value),
-          event.data.detail,
-        );
-
-        if (!isEqual(updatedFileContent.value, newSchema)) {
+        if (!isEqual(updatedFileContent.value, event.data.detail)) {
           jsonFormInstance.value.editor.setValue(event.data.detail);
-          initEOXJSONFormMethod(jsonFormInstance, isFormJSON, previewURL);
+          initEOXJSONFormMethod(jsonFormInstance, isSchemaBased, previewURL);
         }
       }
     }
