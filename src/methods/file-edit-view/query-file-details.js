@@ -1,5 +1,5 @@
 import { RequestError } from "octokit";
-import { isValidFormJSON } from "@/helpers/index.js";
+import { decodeString } from "@/helpers/index.js";
 
 export default function queryFileDetailsMethod(fileDetails, props) {
   if (fileDetails instanceof RequestError) {
@@ -16,8 +16,18 @@ export default function queryFileDetailsMethod(fileDetails, props) {
     ];
   } else {
     props.file.value = fileDetails;
-    props.fileContent.value = atob(fileDetails.content);
-    props.isFormJSON.value = isValidFormJSON(props.fileContent.value);
+    const content = decodeString(fileDetails.content);
+    props.isSchemaBased.value = props.schemaMetaDetails.value.generic
+      ? false
+      : true;
+    props.fileContent.value = props.isSchemaBased.value
+      ? props.schemaMetaDetails.value.output
+        ? { [props.schemaMetaDetails.value.output]: content }
+        : JSON.parse(content)
+      : {
+          file: content,
+        };
+    props.previewURL.value = props.schemaMetaDetails.value.preview || null;
 
     props.navPaginationItems.value = [
       props.navPaginationItems.value[0],

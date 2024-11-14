@@ -54,21 +54,34 @@ globalThis.schemaMap = [
     url: "https://esa-earthcode.github.io/open-science-catalog-validation/schemas/variables/children.json",
   },
   {
-    path: "/storytelling/<id>.json",
+    path: "/storytelling/<id>.md",
+    output: "Story",
+    content: "## Sample Section",
     schema: {
       title: "git-clerk",
       type: "object",
       properties: {
-        file: {
+        Story: {
           type: "string",
-          format: "textarea",
-          "options": {
-            "inputAttributes": {
-              "placeholder": "Enter some text"
-            }
-          }
+          format: "markdown",
+          options: {
+            simplemde: {
+              toolbar: [
+                "bold",
+                "italic",
+                "strikethrough",
+                "heading",
+                "|",
+                "unordered-list",
+                "ordered-list",
+                "link",
+              ],
+              spellChecker: false,
+            },
+          },
         },
       },
     },
+    preview: "/storytelling.html"
   },
 ]

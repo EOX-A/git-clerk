@@ -25,9 +25,15 @@ export function hideHiddenFieldsMethod(jsonFormInstance) {
   const intervalId = setInterval(checkForElements, 100);
 }
 
-export function initEOXJSONFormMethod(jsonFormInstance, isFormJSON) {
+export function initEOXJSONFormMethod(
+  jsonFormInstance,
+  isSchemaBased,
+  previewURL,
+) {
   jsonFormInstance.value = document.querySelector("eox-jsonform");
   const shadowRoot = getShadowRoot(jsonFormInstance);
+  const mainDivClass =
+    ".je-indented-panel > div > div:not(.je-child-editor-holder):not(.je-child-editor-holder *)";
 
   const style = document.createElement("style");
 
@@ -37,6 +43,30 @@ export function initEOXJSONFormMethod(jsonFormInstance, isFormJSON) {
         ".row:not([style*='display: none']) .je-header .json-editor-btn-collapse.json-editor-btntype-toggle span",
       ),
     ].filter((span) => span.innerText === "Expand");
+
+    const editorValue = jsonFormInstance.value.value;
+    if (
+      editorValue &&
+      Object.keys(editorValue).length === 1 &&
+      previewURL.value
+    ) {
+      shadowRoot.querySelector(mainDivClass).style.display = "block";
+      shadowRoot.querySelector(`${mainDivClass} .row`).style.marginTop = "0px";
+
+      const bodyWrapperSelector = `${mainDivClass} .row .EasyMDEContainer`;
+      shadowRoot.querySelector(bodyWrapperSelector).style.margin = "0px";
+
+      const bodySelector = `${mainDivClass} .row .EasyMDEContainer .CodeMirror`;
+      shadowRoot.querySelector(bodySelector).style.height =
+        "calc(100vh - 194px)";
+      shadowRoot.querySelector(bodySelector).style.borderRadius = "0px";
+      shadowRoot.querySelector(bodySelector).style.backgroundColor = "#fafafa";
+
+      const toolbarSelector = `${mainDivClass} .row .EasyMDEContainer .editor-toolbar`;
+      shadowRoot.querySelector(toolbarSelector).style.borderRadius = "0px";
+      shadowRoot.querySelector(toolbarSelector).style.backgroundColor =
+        "#EEF0F1";
+    }
 
     expandButtons.forEach((expandButtonEle) => {
       const thirdParentEle =
@@ -54,18 +84,18 @@ export function initEOXJSONFormMethod(jsonFormInstance, isFormJSON) {
 
   style.textContent = `
     ${
-      isFormJSON.value
+      isSchemaBased.value
         ? `
-        .je-indented-panel > div > div:not(.je-child-editor-holder):not(.je-child-editor-holder *) {
-          display: grid;
-          grid-template-columns: 1fr 1fr; /* Two equal columns */
-          gap: 20px 50px;
-        }
-        .je-indented-panel .row {
-          margin-top: 10px;
-          padding: 10px;
-        }
-      `
+          ${mainDivClass} {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Two equal columns */
+            gap: 20px 50px;
+          }
+          .je-indented-panel .row {
+            margin-top: 10px;
+            padding: 10px;
+          }
+        `
         : ``
     }
     .je-object__controls,
@@ -84,12 +114,11 @@ export function initEOXJSONFormMethod(jsonFormInstance, isFormJSON) {
       border: 1px solid #e0e0e0;
       border-radius: 4px;
       width: 100%;
-      height: calc(100vh - 300px) !important;
+      height: calc(100vh - 240px) !important;
       resize: vertical;
       white-space: pre;
       overflow-wrap: normal;
       overflow-x: auto;
-      margin-top: 10px;
       resize: none;
     }
     .je-textarea:focus {

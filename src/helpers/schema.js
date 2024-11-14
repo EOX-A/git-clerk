@@ -11,3 +11,19 @@ export function getSchemaDetails(inputPath) {
   }
   return null;
 }
+
+export function getFileSchema() {
+  return {
+    generic: true,
+    schema: {
+      title: "git-clerk",
+      type: "object",
+      properties: {
+        file: {
+          type: "string",
+          format: "textarea",
+        },
+      },
+    },
+  };
+}
