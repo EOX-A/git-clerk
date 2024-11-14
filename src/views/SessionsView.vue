@@ -51,27 +51,36 @@ const clearInputCreateNewSession = () => {
   newSessionName.value = "";
 };
 
+const createFile = async () => {
+  if (!newSessionName.value) {
+    snackbar.value = {
+      text: "Session name is empty. Please provide a session name.",
+      status: "error",
+    };
+    return;
+  }
+  loader.value = useLoader().show(
+    {},
+    {
+      after: h(
+        "h5",
+        { class: "loader-text", id: "loader-text" },
+        "Checking fork branch present in your profile...",
+      ),
+    },
+  );
+  snackbar.value = await createSessionByName(newSessionName.value);
+  loader.value.hide();
+
+  if (snackbar.value.number) {
+    setTimeout(() => router.push(`/${snackbar.value.number}`), 750);
+    clearInputCreateNewSession();
+  }
+};
+
 const onKeyEnterCreateNewSession = async (event) => {
   if (event.key === "Escape") clearInputCreateNewSession();
-  else if (event.key === "Enter") {
-    loader.value = useLoader().show(
-      {},
-      {
-        after: h(
-          "h5",
-          { class: "loader-text", id: "loader-text" },
-          "Checking fork branch present in your profile...",
-        ),
-      },
-    );
-    snackbar.value = await createSessionByName(newSessionName.value);
-    loader.value.hide();
-
-    if (snackbar.value.number) {
-      setTimeout(() => router.push(`/${snackbar.value.number}`), 750);
-      clearInputCreateNewSession();
-    }
-  }
+  else if (event.key === "Enter") await createFile();
 };
 
 onMounted(async () => {
@@ -94,19 +103,29 @@ const onPageChange = async (newPage) => {
 <template>
   <div v-if="createNewSession" class="d-flex justify-center bg-white">
     <v-row>
-      <v-col cols="12">
+      <v-col cols="12" class="d-flex">
         <!-- Custom styled text field -->
-        <v-text-field
-          v-model="newSessionName"
-          label="Session Name"
-          placeholder="Enter a session name"
-          hide-details
-          append-inner-icon="mdi-close"
-          @click:append-inner="clearInputCreateNewSession"
-          @keydown="onKeyEnterCreateNewSession"
-          variant="outlined"
-          class="session-create-field px-6 py-6 border-b-thin"
-        />
+        <div
+          class="px-6 py-6 border-b-thin session-create-field d-flex w-100 align-center justify-center"
+        >
+          <v-text-field
+            v-model="newSessionName"
+            label="Session Name"
+            placeholder="Enter a session name"
+            hide-details
+            append-inner-icon="mdi-close"
+            @click:append-inner="clearInputCreateNewSession"
+            @keydown="onKeyEnterCreateNewSession"
+            variant="outlined"
+          />
+          <v-btn
+            @click="createFile"
+            icon="mdi-plus"
+            variant="flat"
+            color="primary"
+            size="large"
+          ></v-btn>
+        </div>
       </v-col>
     </v-row>
   </div>
@@ -180,31 +199,40 @@ const onPageChange = async (newPage) => {
             variant="text"
           ></v-btn>
         </Tooltip>
-        <DeleteSession
-          :session="session"
-          :snackbar="snackbar"
-          :callBack="updateSessionsList"
-        />
-        <Tooltip text="Checkout Preview">
-          <v-btn
-            color="blue-grey-darken-4"
-            icon="mdi-monitor-eye"
-            size="large"
-            variant="text"
-          ></v-btn>
-        </Tooltip>
         <ReviewSession
           :session="session"
           :snackbar="snackbar"
           :callBack="updateSessionsList"
         />
+        <DeleteSession
+          :session="session"
+          :snackbar="snackbar"
+          :callBack="updateSessionsList"
+        />
+        <!--        TODO: Add later-->
+        <!--        <Tooltip text="Checkout Preview">-->
+        <!--          <v-btn-->
+        <!--            color="blue-grey-darken-4"-->
+        <!--            icon="mdi-monitor-eye"-->
+        <!--            size="large"-->
+        <!--            variant="text"-->
+        <!--          ></v-btn>-->
+        <!--        </Tooltip>-->
       </template>
     </v-list-item>
 
     <!-- Placeholder for session's list -->
     <ListPlaceholder v-else-if="sessions === null" />
 
-    <EmptyState v-else :init-func="createNewSessionClick" />
+    <EmptyState
+      v-else
+      headline="No session started yet"
+      icon="mdi-source-pull"
+      img="/img/session.svg"
+      btn-text="Start New Session"
+      description="Start a new session to share your ideas and propose updates."
+      :init-func="createNewSessionClick"
+    />
   </v-list>
 
   <ListPagination v-if="sessions" :page :totalPage :onPageChange />
@@ -232,6 +260,14 @@ const onPageChange = async (newPage) => {
 
 .session-create-field {
   border-bottom: 1px solid #647078;
+}
+
+.session-create-field .v-field {
+  border-radius: 6px 0px 0px 6px;
+}
+
+.session-create-field button {
+  border-radius: 0px 6px 6px 0px;
 }
 
 .session-create-field .v-label {

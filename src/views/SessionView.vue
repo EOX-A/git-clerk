@@ -133,14 +133,16 @@ const onPageChange = async (newPage) => {
     </v-list-item>
 
     <!-- Placeholder for file's list -->
-    <ListPlaceholder :button="2" v-else-if="fileChangesList === null" />
+    <ListPlaceholder :button="1" v-else-if="fileChangesList === null" />
 
     <!-- Empty State -->
     <EmptyState
       v-else
-      icon="mdi-file-code-outline"
-      headline="Whoops, No File changes found."
+      headline="No changes found in this session"
+      img="/img/files.svg"
+      icon="mdi-plus"
       btn-text="Add New File"
+      description="No changes found in this session. You can start a new file to add updates."
       :init-func="addNewFileClick"
     />
   </v-list>

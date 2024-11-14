@@ -36,16 +36,17 @@ const props = defineProps({
       :snackbar="snackbar"
       :callBack="props.updateDetails"
     />
-    <v-btn
-      target="_blank"
-      color="blue-grey-darken-4"
-      prepend-icon="mdi-monitor-eye"
-      size="x-large"
-      variant="text"
-      text="Preview"
-      class="text-capitalize font-weight-medium"
-      disabled
-    ></v-btn>
+    <!--    TODO: Add later-->
+    <!--    <v-btn-->
+    <!--      target="_blank"-->
+    <!--      color="blue-grey-darken-4"-->
+    <!--      prepend-icon="mdi-monitor-eye"-->
+    <!--      size="x-large"-->
+    <!--      variant="text"-->
+    <!--      text="Preview"-->
+    <!--      class="text-capitalize font-weight-medium"-->
+    <!--      disabled-->
+    <!--    ></v-btn>-->
     <v-divider
       v-if="props.session.state !== 'closed'"
       inset
