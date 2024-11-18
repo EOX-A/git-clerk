@@ -42,12 +42,16 @@ const handleFilePathReset = (value = null) => {
 };
 
 const updateFilePath = (newPath) => {
-  const path = (updatedFilePath.value + newPath).replace(/\/\//g, "/");
+  const normalizedPath = (updatedFilePath.value + newPath).replace(
+    /\/\//g,
+    "/",
+  );
+  const pathParts = normalizedPath.split("/");
   updatedFilePathArr.value =
-    path.split("/").length > 1 && path.split("/").at(-1) === ""
-      ? path.split("/").slice(0, -1)
-      : path.split("/");
-  updatedFilePath.value = path;
+    pathParts.length > 1 && !pathParts.at(-1)
+      ? pathParts.slice(0, -1)
+      : pathParts;
+  updatedFilePath.value = normalizedPath;
 };
 
 const updateSchema = async () => {
@@ -111,20 +115,19 @@ const onKeyDownPathName = async (event) => {
 
 const onPastePathName = (event) => {
   const pasteValue = event.clipboardData.getData("text");
-  if (pasteValue.includes("/")) {
-    const finalValue = pasteValue.startsWith("/")
-      ? pasteValue.slice(1)
-      : pasteValue; // removes the leading "/"
-    let fileName = null;
-    if (finalValue) {
-      const pathParts = finalValue.split("/");
-      fileName = pathParts[pathParts.length - 1] || null;
+  if (!pasteValue.includes("/")) return;
 
-      if (fileName) updateFilePath(pathParts.slice(0, -1).join("/") + "/");
-      else updateFilePath(finalValue);
-    }
-    handleFilePathReset(fileName);
-  }
+  const finalValue = pasteValue.replace(/^\//, "");
+  if (!finalValue) return;
+
+  const pathParts = finalValue.split("/");
+  const fileName = pathParts[pathParts.length - 1] || null;
+  const filePath = fileName
+    ? pathParts.slice(0, -1).join("/") + "/"
+    : finalValue;
+
+  updateFilePath(filePath);
+  handleFilePathReset(fileName);
 };
 
 onMounted(() => {
