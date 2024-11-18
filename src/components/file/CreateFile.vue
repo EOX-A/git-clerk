@@ -54,38 +54,46 @@ const updateFilePath = (newPath) => {
   updatedFilePath.value = normalizedPath;
 };
 
-const updateSchema = async () => {
-  const fullPath = updatedFilePath.value + filePath.value;
-  const schemaDetails = getSchemaDetails(fullPath);
-  if (schemaDetails) {
-    const loader = useLoader().show();
+const addOrEditFile = async () => {
+  const existingFile = find(currPathDirStructure.value, {
+    name: filePath.value,
+  });
 
-    const schema =
-      schemaDetails.schema || (await fetchSchemaFromURL(schemaDetails.url));
+  if (existingFile) {
+    onSelectFile(existingFile);
+  } else {
+    const fullPath = updatedFilePath.value + filePath.value;
+    const schemaDetails = getSchemaDetails(fullPath);
+    if (schemaDetails) {
+      const loader = useLoader().show();
 
-    if (schema.status === "error") {
-      snackbar.value = schema;
-      loader.hide();
-    } else {
-      const jsonForm = document.createElement("eox-jsonform");
-      jsonForm.style.display = "none";
-      jsonForm.schema = schema;
-      document.body.appendChild(jsonForm);
+      const schema =
+        schemaDetails.schema || (await fetchSchemaFromURL(schemaDetails.url));
 
-      const intervalId = setInterval(() => {
-        if (jsonForm.editor) {
-          fileContent.value = stringifyIfNeeded(
-            schemaDetails.content || jsonForm.editor.getValue(),
-          );
-          createFile();
+      if (schema.status === "error") {
+        snackbar.value = schema;
+        loader.hide();
+      } else {
+        const jsonForm = document.createElement("eox-jsonform");
+        jsonForm.style.display = "none";
+        jsonForm.schema = schema;
+        document.body.appendChild(jsonForm);
 
-          clearInterval(intervalId);
-          jsonForm.remove();
-          loader.hide();
-        }
-      }, 500);
-    }
-  } else await createFile();
+        const intervalId = setInterval(() => {
+          if (jsonForm.editor) {
+            fileContent.value = stringifyIfNeeded(
+              schemaDetails.content || jsonForm.editor.getValue(),
+            );
+            createFile();
+
+            clearInterval(intervalId);
+            jsonForm.remove();
+            loader.hide();
+          }
+        }, 500);
+      }
+    } else await createFile();
+  }
 };
 
 const onKeyDownPathName = async (event) => {
@@ -221,7 +229,7 @@ const getSelectedFileFolder = (name) => {
                 >(root){{ updatedFilePath }}</span
               >
             </template>
-            <template v-slot:item="{ props, item, index }">
+            <template v-slot:item="{ props, item }">
               <v-list-item
                 :prepend-icon="`mdi-${getSelectedFileFolder(item.raw).icon}-outline`"
                 v-bind="props"
@@ -243,7 +251,7 @@ const getSelectedFileFolder = (name) => {
             </template>
           </v-combobox>
           <v-btn
-            @click="updateSchema"
+            @click="addOrEditFile"
             icon="mdi-plus"
             variant="flat"
             color="primary"
