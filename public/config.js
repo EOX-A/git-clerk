@@ -12,6 +12,8 @@ globalThis.ghConfig = {
   },
 };
 
+const PATH_TO_UPLOAD = 'assets';
+
 // Shared upload functionality
 const handleFileUpload = async (file, editor, fileType, insertTemplate) => {
   // Check if file is correct type
@@ -76,7 +78,7 @@ const handleFileUpload = async (file, editor, fileType, insertTemplate) => {
     // Upload file to branch
     const timestamp = Date.now();
     const fileName = file.name.replace(/[^a-zA-Z0-9\s.-]/g, '').replace(/\s+/g, '-').replace(/\.([^.]*)$/, `-${timestamp}.$1`);
-    const uploadResponse = await fetch(`https://api.github.com/repos/${branchOwner}/${repoName}/contents/assets/${fileName}`, {
+    const uploadResponse = await fetch(`https://api.github.com/repos/${branchOwner}/${repoName}/contents/${PATH_TO_UPLOAD}/${fileName}`, {
       method: 'PUT',
       headers: {
         'Authorization': `token ${token}`,
