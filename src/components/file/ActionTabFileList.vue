@@ -30,7 +30,7 @@ const props = defineProps({
       class="text-capitalize font-weight-medium"
     ></v-btn>
     <DeleteSession
-      text="Delete Session"
+      tab
       size="x-large"
       :session="props.session"
       :snackbar="snackbar"

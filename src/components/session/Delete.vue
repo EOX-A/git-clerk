@@ -15,7 +15,11 @@ const props = defineProps({
   },
   text: {
     type: String,
-    default: "",
+    default: "Delete Session",
+  },
+  tab: {
+    type: Boolean,
+    default: false,
   },
   callBack: Function,
 });
@@ -28,25 +32,34 @@ const deleteSessionHandle = async () => {
     snackbar.value = await deleteBySessionNumber(deleteSession.value.number);
     deleteSession.value = false;
     loader.hide();
-    await props.callBack();
+    await callBack();
   }
 };
+
+const disabled = props.session.state === "closed";
 </script>
 
 <template>
   <Tooltip text="Delete Session">
     <v-btn
       color="blue-grey-darken-4"
-      :icon="props.text ? false : 'mdi-delete-outline'"
+      :icon="tab ? false : 'mdi-delete-outline'"
       prepend-icon="mdi-delete-outline"
-      :size="props.size"
-      :text="props.text"
+      :size="size"
+      :text="text"
       variant="text"
-      :disabled="props.session.state === 'closed'"
-      @click="deleteSession = props.session"
-      class="text-capitalize font-weight-medium"
+      :disabled="disabled"
+      @click="deleteSession = session"
+      class="text-capitalize font-weight-medium d-none d-sm-flex"
     ></v-btn>
   </Tooltip>
+  <v-list-item
+    @click="deleteSession = session"
+    prepend-icon="mdi-delete-outline"
+    :title="props.text"
+    :disabled="disabled"
+    class="d-flex d-sm-none"
+  ></v-list-item>
 
   <v-dialog v-model="deleteSession" width="auto">
     <v-card max-width="400" prepend-icon="mdi-alert" title="Delete Session">

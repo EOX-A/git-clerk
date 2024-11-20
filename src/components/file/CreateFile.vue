@@ -186,60 +186,57 @@ const getSelectedFileFolder = (name) => {
 </script>
 
 <template>
-  <div
-    v-if="props.open"
-    class="d-flex justify-center border-b create-file"
-  >
+  <div v-if="props.open" class="d-flex justify-center border-b create-file">
     <v-row>
       <v-col cols="12" class="d-flex">
         <div
           class="px-6 py-6 border-b-thin session-create-field d-flex w-100 align-center justify-center"
         >
-        <v-combobox
-          v-model="filePath"
-          @paste="onPastePathName"
-          @keydown="onKeyDownPathName"
-          label="File Name"
-          placeholder="my/new/file.txt"
-          :items="map(currPathDirStructure, 'name')"
-          hide-details
-          color="primary"
-          variant="outlined"
-        >
-          <template #prepend-inner>
-            <span
-              class="prepend text-mono font-weight-bold text-primary opacity-80"
-              >(root){{ updatedFilePath }}</span
-            >
-          </template>
-          <template v-slot:item="{ props, item, index }">
-            <v-list-item
-              :prepend-icon="`mdi-${getSelectedFileFolder(item.raw).icon}-outline`"
-              v-bind="props"
-              :title="item.raw"
-              @click="() => onSelectFile(getSelectedFileFolder(item.raw))"
-            >
-              <template
-                v-if="getSelectedFileFolder(item.raw).type === 'file'"
-                v-slot:append
+          <v-combobox
+            v-model="filePath"
+            @paste="onPastePathName"
+            @keydown="onKeyDownPathName"
+            label="File Name"
+            placeholder="my/new/file.txt"
+            :items="map(currPathDirStructure, 'name')"
+            hide-details
+            color="primary"
+            variant="outlined"
+          >
+            <template #prepend-inner>
+              <span
+                class="prepend text-mono font-weight-bold text-primary opacity-80"
+                >(root){{ updatedFilePath }}</span
               >
-                <div
-                  class="text-blue-accent-4 d-flex align-center ga-2 text-sm-body-2 font-weight-bold"
+            </template>
+            <template v-slot:item="{ props, item, index }">
+              <v-list-item
+                :prepend-icon="`mdi-${getSelectedFileFolder(item.raw).icon}-outline`"
+                v-bind="props"
+                :title="item.raw"
+                @click="() => onSelectFile(getSelectedFileFolder(item.raw))"
+              >
+                <template
+                  v-if="getSelectedFileFolder(item.raw).type === 'file'"
+                  v-slot:append
                 >
-                  <p class="text-uppercase">Edit File</p>
-                  <v-icon>mdi-open-in-new</v-icon>
-                </div>
-              </template>
-            </v-list-item>
-          </template>
-        </v-combobox>
-        <v-btn
-          @click="updateSchema"
-          icon="mdi-plus"
-          variant="flat"
-          color="primary"
-          size="large"
-        ></v-btn>
+                  <div
+                    class="text-blue-accent-4 d-flex align-center ga-2 text-sm-body-2 font-weight-bold"
+                  >
+                    <p class="text-uppercase">Edit File</p>
+                    <v-icon>mdi-open-in-new</v-icon>
+                  </div>
+                </template>
+              </v-list-item>
+            </template>
+          </v-combobox>
+          <v-btn
+            @click="updateSchema"
+            icon="mdi-plus"
+            variant="flat"
+            color="primary"
+            size="large"
+          ></v-btn>
         </div>
       </v-col>
     </v-row>

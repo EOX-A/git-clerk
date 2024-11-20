@@ -49,6 +49,12 @@ const reviewSessionHandle = async () => {
     await props.callBack();
   }
 };
+
+const disabled =
+  !props.session.draft ||
+  props.session.state === "closed" ||
+  !props.session.check ||
+  !props.session.check.success;
 </script>
 
 <template>
@@ -66,14 +72,9 @@ const reviewSessionHandle = async () => {
       :size="props.size"
       :text="props.text"
       :variant="props.variant"
-      :disabled="
-        !props.session.draft ||
-        props.session.state === 'closed' ||
-        !props.session.check ||
-        !props.session.check.success
-      "
+      :disabled="disabled"
       @click="reviewSession = props.session"
-      :class="`text-capitalize font-weight-medium ${props.class}`"
+      :class="`text-capitalize font-weight-medium ${props.class} d-none d-sm-flex`"
     >
       <template v-if="error" v-slot:append>
         <v-icon
@@ -83,6 +84,13 @@ const reviewSessionHandle = async () => {
       </template>
     </v-btn>
   </Tooltip>
+  <v-list-item
+    @click="reviewSession = props.session"
+    prepend-icon="mdi-file-document-edit"
+    :title="props.text"
+    :disabled="disabled"
+    class="d-flex d-sm-none"
+  ></v-list-item>
 
   <v-dialog v-model="reviewSession" width="auto">
     <v-card
