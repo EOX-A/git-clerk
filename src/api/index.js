@@ -26,6 +26,11 @@ export async function initOctokit() {
     const username = config.githubOwner || import.meta.env.VUE_APP_GITHUB_OWNER;
     const repo = config.githubRepo || import.meta.env.VUE_APP_GITHUB_REPO;
 
+    globalThis.ghConfig = {
+      ...config,
+      config: { auth, username, repo },
+    };
+
     const octokit = new Octokit({ auth });
 
     const { data } = await octokit.rest.users.getAuthenticated();

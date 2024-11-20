@@ -1,4 +1,4 @@
-import { updateSchemaDefaults } from "@/helpers/index.js";
+import { updateSchemaDefaults, useLoader } from "@/helpers/index.js";
 import isEqual from "lodash.isequal";
 import { initEOXJSONFormMethod } from "@/methods/file-edit-view/init-eox-jsonform.js";
 
@@ -18,6 +18,8 @@ export function addPostMessageEventMethod({
   jsonFormInstance,
   isSchemaBased,
 }) {
+  const loader = useLoader();
+  let loaderInstance = null;
   window.addEventListener("message", function (event) {
     if (
       event.data &&
@@ -31,5 +33,9 @@ export function addPostMessageEventMethod({
         }
       }
     }
+    if (event.data && event.data.type === "EDITOR_FILE_UPLOADING")
+      loaderInstance = loader.show();
+    if (event.data && event.data.type === "EDITOR_FILE_UPLOADED")
+      loaderInstance?.hide();
   });
 }
