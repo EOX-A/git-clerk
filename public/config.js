@@ -97,7 +97,7 @@ const handleFileUpload = async (file, editor, fileType, insertTemplate) => {
     }
 
     const uploadData = await uploadResponse.json();
-    const fileUrl = uploadData.content.download_url;
+    const fileUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${uploadData.commit.sha}/${PATH_TO_UPLOAD}/${fileName}`;
 
     // Insert using provided template
     editor.codemirror.getDoc().setValue(
