@@ -24,7 +24,6 @@ export function addPostMessageEventMethod({
       event.data.type === "SCHEMA_DATA_PREVIEW_UPDATE" &&
       event.data.detail
     ) {
-      console.log(event.data);
       if (previewURL.value) {
         if (!isEqual(updatedFileContent.value, event.data.detail)) {
           jsonFormInstance.value.editor.setValue(event.data.detail);
