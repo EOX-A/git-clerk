@@ -47,12 +47,11 @@ const props = defineProps({
     </template>
     <template v-slot:append>
       <v-skeleton-loader
-        v-if="props.button"
         v-for="a in props.button"
         :key="a"
         width="24"
         type="heading"
-        class="mx-3"
+        :class="`mx-3 ${a > 1 ? 'd-none d-sm-flex' : ''}`"
       ></v-skeleton-loader>
     </template>
   </v-list-item>

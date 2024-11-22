@@ -56,3 +56,14 @@ html {
   height: 20px;
   margin-top: 3px;
 }
+
+@media (max-width: 600px) {
+  .sessions-view.v-list-item--density-default:not(
+      .v-list-item--nav
+    ).v-list-item--one-line,
+  .files-view.v-list-item--density-default:not(
+      .v-list-item--nav
+    ).v-list-item--one-line {
+    padding-inline: 0px;
+  }
+}

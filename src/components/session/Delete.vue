@@ -40,26 +40,54 @@ const disabled = props.session.state === "closed";
 </script>
 
 <template>
-  <Tooltip text="Delete Session">
-    <v-btn
-      color="blue-grey-darken-4"
-      :icon="tab ? false : 'mdi-delete-outline'"
-      prepend-icon="mdi-delete-outline"
-      :size="size"
-      :text="text"
-      variant="text"
-      :disabled="disabled"
-      @click="deleteSession = session"
-      class="text-capitalize font-weight-medium d-none d-sm-flex"
-    ></v-btn>
-  </Tooltip>
+  <!-- Tab = true -->
+  <!-- Mobile -->
+  <v-btn
+    v-if="tab"
+    color="blue-grey-darken-4"
+    icon="mdi-delete-outline"
+    :size="size"
+    variant="text"
+    :disabled="disabled"
+    @click="deleteSession = session"
+    class="d-flex d-sm-none"
+  ></v-btn>
+  <!-- Non-mobile -->
+  <v-btn
+    v-if="tab"
+    color="blue-grey-darken-4"
+    prepend-icon="mdi-delete-outline"
+    :size="size"
+    :text="text"
+    variant="text"
+    :disabled="disabled"
+    @click="deleteSession = session"
+    class="text-capitalize font-weight-medium d-none d-sm-flex"
+  ></v-btn>
+
+  <!-- Tab = false -->
+  <!-- Mobile -->
   <v-list-item
+    v-if="!tab"
     @click="deleteSession = session"
     prepend-icon="mdi-delete-outline"
     :title="props.text"
     :disabled="disabled"
     class="d-flex d-sm-none"
   ></v-list-item>
+  <!-- Non-mobile -->
+  <Tooltip :text="props.text">
+    <v-btn
+      v-if="!tab"
+      color="blue-grey-darken-4"
+      icon="mdi-delete-outline"
+      :size="size"
+      variant="text"
+      :disabled="disabled"
+      @click="deleteSession = session"
+      class="d-none d-sm-flex"
+    ></v-btn>
+  </Tooltip>
 
   <v-dialog v-model="deleteSession" width="auto">
     <v-card max-width="400" prepend-icon="mdi-alert" title="Delete Session">

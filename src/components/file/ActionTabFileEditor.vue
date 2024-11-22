@@ -24,7 +24,9 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="bg-secondary px-5 py-3 d-flex align-center ga-1 action-tab">
+  <div
+    class="bg-secondary px-0 px-sm-5 py-3 d-flex align-center ga-1 action-tab"
+  >
     <v-btn
       :href="file.html_url"
       target="_blank"

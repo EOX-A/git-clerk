@@ -23,13 +23,21 @@ const props = defineProps({
   },
   text: {
     type: String,
-    default: "",
+    default: "Submit for Review",
   },
   variant: {
     type: String,
     default: "text",
   },
   callBack: Function,
+  tab: {
+    type: Boolean,
+    default: false,
+  },
+  tooltip: {
+    type: String,
+    default: "Request Review",
+  },
 });
 const snackbar = inject("set-snackbar");
 const reviewSession = ref(false);
@@ -62,12 +70,12 @@ const disabled =
     :text="
       error
         ? `${props.session.check.tooltip}: Cannot request for review`
-        : `Request Review`
+        : props.tooltip
     "
   >
     <v-btn
       :color="props.color"
-      :icon="props.text ? false : 'mdi-file-document-edit'"
+      :icon="props.tab ? false : 'mdi-file-document-edit'"
       prepend-icon="mdi-file-document-edit"
       :size="props.size"
       :text="props.text"
@@ -84,13 +92,30 @@ const disabled =
       </template>
     </v-btn>
   </Tooltip>
+
+  <!-- Tab = false -->
+  <!-- Mobile -->
   <v-list-item
+    v-if="!props.tab"
     @click="reviewSession = props.session"
     prepend-icon="mdi-file-document-edit"
     :title="props.text"
     :disabled="disabled"
     class="d-flex d-sm-none"
   ></v-list-item>
+  <!-- Non-mobile -->
+  <Tooltip :text="props.tooltip">
+    <v-btn
+      v-if="!props.tab"
+      @click="reviewSession = props.session"
+      color="blue-grey-darken-4"
+      icon="mdi-file-document-edit"
+      :size="props.size"
+      variant="text"
+      :disabled="disabled"
+      class="d-none d-sm-flex"
+    ></v-btn>
+  </Tooltip>
 
   <v-dialog v-model="reviewSession" width="auto">
     <v-card

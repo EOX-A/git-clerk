@@ -152,6 +152,14 @@ export function initEOXJSONFormMethod(
     .editor-statusbar {
       display: none;
     }
+    @media (max-width: 600px) {
+      .je-textarea {
+        height: calc(100vh - 195px) !important;
+      }
+      .je-indented-panel > div > div:not(.je-child-editor-holder):not(.je-child-editor-holder *) {
+        display: block !important;
+      }
+    }
   `;
 
   shadowRoot.appendChild(style);
