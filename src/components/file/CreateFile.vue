@@ -37,48 +37,63 @@ const props = defineProps({
   updateDetails: Function,
 });
 
-const handleFilePathReset = () => {
-  setTimeout(() => (filePath.value = null), 100);
+const handleFilePathReset = (value = null) => {
+  setTimeout(() => (filePath.value = value), 100);
 };
 
 const updateFilePath = (newPath) => {
-  const path = (updatedFilePath.value + newPath).replace(/\/\//g, "/");
-  updatedFilePathArr.value = path.split("/").slice(0, -1);
-  updatedFilePath.value = path;
+  const normalizedPath = (updatedFilePath.value + newPath).replace(
+    /\/\//g,
+    "/",
+  );
+  const pathParts = normalizedPath.split("/");
+  updatedFilePathArr.value =
+    pathParts.length > 1 && !pathParts.at(-1)
+      ? pathParts.slice(0, -1)
+      : pathParts;
+  updatedFilePath.value = normalizedPath;
 };
 
-const updateSchema = async () => {
-  const fullPath = updatedFilePath.value + filePath.value;
-  const schemaDetails = getSchemaDetails(fullPath);
-  if (schemaDetails) {
-    const loader = useLoader().show();
+const addOrEditFile = async () => {
+  const existingFile = find(currPathDirStructure.value, {
+    name: filePath.value,
+  });
 
-    const schema =
-      schemaDetails.schema || (await fetchSchemaFromURL(schemaDetails.url));
+  if (existingFile) {
+    onSelectFile(existingFile);
+  } else {
+    const fullPath = updatedFilePath.value + filePath.value;
+    const schemaDetails = getSchemaDetails(fullPath);
+    if (schemaDetails) {
+      const loader = useLoader().show();
 
-    if (schema.status === "error") {
-      snackbar.value = schema;
-      loader.hide();
-    } else {
-      const jsonForm = document.createElement("eox-jsonform");
-      jsonForm.style.display = "none";
-      jsonForm.schema = schema;
-      document.body.appendChild(jsonForm);
+      const schema =
+        schemaDetails.schema || (await fetchSchemaFromURL(schemaDetails.url));
 
-      const intervalId = setInterval(() => {
-        if (jsonForm.editor) {
-          fileContent.value = stringifyIfNeeded(
-            schemaDetails.content || jsonForm.editor.getValue(),
-          );
-          createFile();
+      if (schema.status === "error") {
+        snackbar.value = schema;
+        loader.hide();
+      } else {
+        const jsonForm = document.createElement("eox-jsonform");
+        jsonForm.style.display = "none";
+        jsonForm.schema = schema;
+        document.body.appendChild(jsonForm);
 
-          clearInterval(intervalId);
-          jsonForm.remove();
-          loader.hide();
-        }
-      }, 500);
-    }
-  } else await createFile();
+        const intervalId = setInterval(() => {
+          if (jsonForm.editor) {
+            fileContent.value = stringifyIfNeeded(
+              schemaDetails.content || jsonForm.editor.getValue(),
+            );
+            createFile();
+
+            clearInterval(intervalId);
+            jsonForm.remove();
+            loader.hide();
+          }
+        }, 500);
+      }
+    } else await createFile();
+  }
 };
 
 const onKeyDownPathName = async (event) => {
@@ -108,14 +123,19 @@ const onKeyDownPathName = async (event) => {
 
 const onPastePathName = (event) => {
   const pasteValue = event.clipboardData.getData("text");
-  if (pasteValue.startsWith("/")) {
-    const finalValue = pasteValue.slice(1); // removes the leading "/"
-    if (finalValue) {
-      const path = finalValue + (!pasteValue.endsWith("/") ? "/" : "");
-      updateFilePath(path);
-    }
-    handleFilePathReset();
-  }
+  if (!pasteValue.includes("/")) return;
+
+  const finalValue = pasteValue.replace(/^\//, "");
+  if (!finalValue) return;
+
+  const pathParts = finalValue.split("/");
+  const fileName = pathParts[pathParts.length - 1] || null;
+  const filePath = fileName
+    ? pathParts.slice(0, -1).join("/") + "/"
+    : finalValue;
+
+  updateFilePath(filePath);
+  handleFilePathReset(fileName);
 };
 
 onMounted(() => {
@@ -186,60 +206,57 @@ const getSelectedFileFolder = (name) => {
 </script>
 
 <template>
-  <div
-    v-if="props.open"
-    class="d-flex justify-center border-b create-file"
-  >
+  <div v-if="props.open" class="d-flex justify-center border-b create-file">
     <v-row>
       <v-col cols="12" class="d-flex">
         <div
           class="px-6 py-6 border-b-thin session-create-field d-flex w-100 align-center justify-center"
         >
-        <v-combobox
-          v-model="filePath"
-          @paste="onPastePathName"
-          @keydown="onKeyDownPathName"
-          label="File Name"
-          placeholder="my/new/file.txt"
-          :items="map(currPathDirStructure, 'name')"
-          hide-details
-          color="primary"
-          variant="outlined"
-        >
-          <template #prepend-inner>
-            <span
-              class="prepend text-mono font-weight-bold text-primary opacity-80"
-              >(root){{ updatedFilePath }}</span
-            >
-          </template>
-          <template v-slot:item="{ props, item, index }">
-            <v-list-item
-              :prepend-icon="`mdi-${getSelectedFileFolder(item.raw).icon}-outline`"
-              v-bind="props"
-              :title="item.raw"
-              @click="() => onSelectFile(getSelectedFileFolder(item.raw))"
-            >
-              <template
-                v-if="getSelectedFileFolder(item.raw).type === 'file'"
-                v-slot:append
+          <v-combobox
+            v-model="filePath"
+            @paste="onPastePathName"
+            @keydown="onKeyDownPathName"
+            label="File Name"
+            placeholder="my/new/file.txt"
+            :items="map(currPathDirStructure, 'name')"
+            hide-details
+            color="primary"
+            variant="outlined"
+          >
+            <template #prepend-inner>
+              <span
+                class="prepend text-mono font-weight-bold text-primary opacity-80"
+                >(root){{ updatedFilePath }}</span
               >
-                <div
-                  class="text-blue-accent-4 d-flex align-center ga-2 text-sm-body-2 font-weight-bold"
+            </template>
+            <template v-slot:item="{ props, item }">
+              <v-list-item
+                :prepend-icon="`mdi-${getSelectedFileFolder(item.raw).icon}-outline`"
+                v-bind="props"
+                :title="item.raw"
+                @click="() => onSelectFile(getSelectedFileFolder(item.raw))"
+              >
+                <template
+                  v-if="getSelectedFileFolder(item.raw).type === 'file'"
+                  v-slot:append
                 >
-                  <p class="text-uppercase">Edit File</p>
-                  <v-icon>mdi-open-in-new</v-icon>
-                </div>
-              </template>
-            </v-list-item>
-          </template>
-        </v-combobox>
-        <v-btn
-          @click="updateSchema"
-          icon="mdi-plus"
-          variant="flat"
-          color="primary"
-          size="large"
-        ></v-btn>
+                  <div
+                    class="text-blue-accent-4 d-flex align-center ga-2 text-sm-body-2 font-weight-bold"
+                  >
+                    <p class="text-uppercase">Edit File</p>
+                    <v-icon>mdi-open-in-new</v-icon>
+                  </div>
+                </template>
+              </v-list-item>
+            </template>
+          </v-combobox>
+          <v-btn
+            @click="addOrEditFile"
+            icon="mdi-plus"
+            variant="flat"
+            color="primary"
+            size="large"
+          ></v-btn>
         </div>
       </v-col>
     </v-row>
