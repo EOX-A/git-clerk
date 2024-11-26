@@ -1,5 +1,9 @@
 <script setup>
-import { DeleteSession, ReviewSession } from "@/components/session/index.js";
+import {
+  DeleteSession,
+  ReviewSession,
+  GithubSession,
+} from "@/components/session/index.js";
 import { defineProps, inject } from "vue";
 import OctIcon from "@/components/global/OctIcon.vue";
 
@@ -17,40 +21,22 @@ const props = defineProps({
 <template>
   <div
     v-if="session"
-    class="bg-secondary px-5 py-4 d-flex align-center ga-1 action-tab"
+    class="bg-secondary px-0 px-sm-5 py-4 d-flex align-center ga-1 action-tab"
+    :class="{ 'flex-row-reverse': $vuetify?.display?.smAndDown }"
   >
-    <v-btn
-      :href="props.session.html_url"
-      target="_blank"
-      color="blue-grey-darken-4"
-      prepend-icon="mdi-github"
-      size="x-large"
-      variant="text"
-      text="Github"
-      class="text-capitalize font-weight-medium"
-    ></v-btn>
+    <GithubSession :url="props.session.html_url" tab size="x-large" />
     <DeleteSession
-      text="Delete Session"
+      tab
       size="x-large"
       :session="props.session"
       :snackbar="snackbar"
       :callBack="props.updateDetails"
     />
-    <!--    TODO: Add later-->
-    <!--    <v-btn-->
-    <!--      target="_blank"-->
-    <!--      color="blue-grey-darken-4"-->
-    <!--      prepend-icon="mdi-monitor-eye"-->
-    <!--      size="x-large"-->
-    <!--      variant="text"-->
-    <!--      text="Preview"-->
-    <!--      class="text-capitalize font-weight-medium"-->
-    <!--      disabled-->
-    <!--    ></v-btn>-->
     <v-divider
       v-if="props.session.state !== 'closed'"
       inset
       vertical
+      class="d-none d-sm-flex"
     ></v-divider>
     <v-btn
       v-if="!props.session.draft && props.session.state !== 'closed'"
@@ -60,7 +46,7 @@ const props = defineProps({
       size="x-large"
       variant="flat"
       text="Pending Review"
-      class="text-capitalize font-weight-medium ml-5"
+      class="text-capitalize font-weight-medium ml-5 d-none d-sm-flex"
       disabled
     ></v-btn>
     <ReviewSession
@@ -69,6 +55,7 @@ const props = defineProps({
         props.session.check &&
         props.session.state !== 'closed'
       "
+      tab
       text="Submit for Review"
       size="x-large"
       color="blue-grey-lighten-4"

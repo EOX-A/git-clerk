@@ -15,7 +15,11 @@ const props = defineProps({
   },
   text: {
     type: String,
-    default: "",
+    default: "Delete Session",
+  },
+  tab: {
+    type: Boolean,
+    default: false,
   },
   callBack: Function,
 });
@@ -28,23 +32,60 @@ const deleteSessionHandle = async () => {
     snackbar.value = await deleteBySessionNumber(deleteSession.value.number);
     deleteSession.value = false;
     loader.hide();
-    await props.callBack();
+    await callBack();
   }
 };
+
+const disabled = props.session.state === "closed";
 </script>
 
 <template>
-  <Tooltip text="Delete Session">
+  <!-- Tab = true -->
+  <!-- Mobile -->
+  <v-btn
+    v-if="tab"
+    color="blue-grey-darken-4"
+    icon="mdi-delete-outline"
+    :size="size"
+    variant="text"
+    :disabled="disabled"
+    @click="deleteSession = session"
+    class="d-flex d-sm-none"
+  ></v-btn>
+  <!-- Non-mobile -->
+  <v-btn
+    v-if="tab"
+    color="blue-grey-darken-4"
+    prepend-icon="mdi-delete-outline"
+    :size="size"
+    :text="text"
+    variant="text"
+    :disabled="disabled"
+    @click="deleteSession = session"
+    class="text-capitalize font-weight-medium d-none d-sm-flex"
+  ></v-btn>
+
+  <!-- Tab = false -->
+  <!-- Mobile -->
+  <v-list-item
+    v-if="!tab"
+    @click="deleteSession = session"
+    prepend-icon="mdi-delete-outline"
+    :title="props.text"
+    :disabled="disabled"
+    class="d-flex d-sm-none"
+  ></v-list-item>
+  <!-- Non-mobile -->
+  <Tooltip :text="props.text">
     <v-btn
+      v-if="!tab"
       color="blue-grey-darken-4"
-      :icon="props.text ? false : 'mdi-delete-outline'"
-      prepend-icon="mdi-delete-outline"
-      :size="props.size"
-      :text="props.text"
+      icon="mdi-delete-outline"
+      :size="size"
       variant="text"
-      :disabled="props.session.state === 'closed'"
-      @click="deleteSession = props.session"
-      class="text-capitalize font-weight-medium"
+      :disabled="disabled"
+      @click="deleteSession = session"
+      class="d-none d-sm-flex"
     ></v-btn>
   </Tooltip>
 

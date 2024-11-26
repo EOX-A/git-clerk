@@ -9,7 +9,7 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import Tooltip from "@/components/global/Tooltip.vue";
 import { useLoader } from "@/helpers/index.js";
-import { DeleteSession, ReviewSession } from "@/components/session";
+import { ActionList } from "@/components/session";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import ListPagination from "@/components/global/ListPagination.vue";
 import EmptyState from "@/components/global/EmptyState.vue";
@@ -174,7 +174,7 @@ const onPageChange = async (newPage) => {
               </Tooltip>
             </div>
             <div class="v-list-item-subtitle d-flex align-center pt-2 ga-3">
-              <span>Changes made on: </span>
+              <span class="d-none d-sm-flex">Changes made on: </span>
               <div class="d-flex align-center">
                 <v-icon>mdi-calendar-blank-outline</v-icon>
                 <span class="text-black px-1">{{ session.date }}</span>
@@ -189,35 +189,11 @@ const onPageChange = async (newPage) => {
       </template>
 
       <template v-slot:append>
-        <Tooltip text="Open in Github">
-          <v-btn
-            :href="session.html_url"
-            target="_blank"
-            color="blue-grey-darken-4"
-            icon="mdi-github"
-            size="large"
-            variant="text"
-          ></v-btn>
-        </Tooltip>
-        <ReviewSession
+        <ActionList
           :session="session"
           :snackbar="snackbar"
           :callBack="updateSessionsList"
         />
-        <DeleteSession
-          :session="session"
-          :snackbar="snackbar"
-          :callBack="updateSessionsList"
-        />
-        <!--        TODO: Add later-->
-        <!--        <Tooltip text="Checkout Preview">-->
-        <!--          <v-btn-->
-        <!--            color="blue-grey-darken-4"-->
-        <!--            icon="mdi-monitor-eye"-->
-        <!--            size="large"-->
-        <!--            variant="text"-->
-        <!--          ></v-btn>-->
-        <!--        </Tooltip>-->
       </template>
     </v-list-item>
 

@@ -172,9 +172,9 @@ onUnmounted(() => {
 
   <div
     v-if="fileContent !== null && schemaMetaDetails.schema"
-    :class="`bg-white ${!previewURL && 'px-12 py-8 non-preview-height'} d-block file-editor ${schemaMetaDetails.generic && 'file-editor-code'}`"
+    :class="`bg-white ${!previewURL && 'px-4 px-sm-12 py-4 py-sm-8 non-preview-height'} d-block file-editor ${schemaMetaDetails.generic && 'file-editor-code'}`"
   >
-    <v-row no-gutters :class="previewURL ? 'd-flex' : ''">
+    <v-row no-gutters :class="previewURL ? 'd-block d-sm-flex' : ''">
       <v-col :cols="previewURL ? 3 : 12" class="overflow-x-auto">
         <eox-jsonform
           :schema="schemaMetaDetails.schema"
@@ -266,5 +266,11 @@ onUnmounted(() => {
 
 .file-editor .with-preview {
   width: 35vw;
+}
+
+@media (max-width: 600px) {
+  .file-editor .v-col-3 {
+    max-width: 100vw;
+  }
 }
 </style>

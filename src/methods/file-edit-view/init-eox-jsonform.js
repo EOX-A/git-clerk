@@ -98,8 +98,8 @@ export function initEOXJSONFormMethod(
         `
         : ``
     }
-    .je-object__controls,
-    .je-form-input-label {
+    .je-object__controls
+    ${!isSchemaBased.value || previewURL.value ? ", .je-form-input-label" : ""} {
       display: none !important;
     }
     .je-textarea {
@@ -151,6 +151,14 @@ export function initEOXJSONFormMethod(
     }
     .editor-statusbar {
       display: none;
+    }
+    @media (max-width: 600px) {
+      .je-textarea {
+        height: calc(100vh - 195px) !important;
+      }
+      .je-indented-panel > div > div:not(.je-child-editor-holder):not(.je-child-editor-holder *) {
+        display: block !important;
+      }
     }
   `;
 
