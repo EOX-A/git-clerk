@@ -11,6 +11,24 @@ const navPaginationItems = inject("set-nav-pagination-items");
         <template v-slot:divider>
           <v-icon icon="mdi-chevron-right"></v-icon>
         </template>
+        <template v-slot:title="{ item }">
+          <v-icon
+            v-if="
+              $vuetify.display.smAndDown &&
+              navPaginationItems.indexOf(item) === 0
+            "
+            icon="mdi-folder-outline"
+            size="x-large"
+            class="text-h5"
+          />
+          <div
+            v-else
+            class="d-flex align-center text-truncate"
+            :style="$vuetify.display.smAndDown ? 'max-width: 50px' : ''"
+          >
+            {{ item.title }}
+          </div>
+        </template>
       </v-breadcrumbs>
     </v-toolbar-title>
 
