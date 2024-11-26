@@ -98,8 +98,8 @@ export function initEOXJSONFormMethod(
         `
         : ``
     }
-    .je-object__controls,
-    .je-form-input-label {
+    .je-object__controls
+    ${!isSchemaBased.value || previewURL.value ? ", .je-form-input-label" : ""} {
       display: none !important;
     }
     .je-textarea {
