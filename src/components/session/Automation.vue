@@ -15,8 +15,8 @@ const props = defineProps({
 const jsonFormInstance = ref(null);
 
 const handleAutomationSubmit = async () => {
-  const validate = jsonFormInstance.editor.validate();
-  const value = jsonFormInstance.editor.getValue();
+  const validate = jsonFormInstance.value.editor.validate();
+  const value = jsonFormInstance.value.editor.getValue();
   await handleAutomationMethod(props, value, validate, snackbar);
 };
 
