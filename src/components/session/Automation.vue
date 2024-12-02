@@ -1,6 +1,7 @@
 <script setup>
+import { initEOXJSONFormMethod } from "@/methods/file-edit-view";
 import { handleAutomationMethod } from "@/methods/session-view";
-import { inject } from "vue";
+import { inject, ref, onMounted } from "vue";
 const snackbar = inject("set-snackbar");
 
 const props = defineProps({
@@ -11,30 +12,38 @@ const props = defineProps({
   session: Object,
 });
 
+const jsonFormInstance = ref(null);
+
 const handleAutomationSubmit = async () => {
-  const eoxJSONFormEle = document.getElementById("automation-form");
-  const validate = eoxJSONFormEle.editor.validate();
-  const value = eoxJSONFormEle.editor.getValue();
+  const validate = jsonFormInstance.editor.validate();
+  const value = jsonFormInstance.editor.getValue();
   await handleAutomationMethod(props, value, validate, snackbar);
 };
+
+onMounted(() => {
+  initEOXJSONFormMethod(
+    jsonFormInstance,
+    { value: true },
+    { value: false },
+    true,
+  );
+});
 </script>
 
 <template>
-  <!-- Automation Dialog -->
-
-  <v-card v-if="props.selectedAutomation">
-    <v-card-title class="text-h5 pa-4">
-      {{ props.selectedAutomation.title }}
-    </v-card-title>
-
-    <v-card-text class="pa-4">
+  <v-card
+    v-if="props.selectedAutomation"
+    prepend-icon="mdi-auto-fix"
+    :title="props.selectedAutomation.title"
+  >
+    <template v-slot:text>
       <eox-jsonform
         id="automation-form"
         :schema="props.selectedAutomation.inputSchema"
       />
-    </v-card-text>
+    </template>
 
-    <v-card-actions class="pa-4">
+    <template v-slot:actions>
       <v-spacer></v-spacer>
       <v-btn
         color="grey-darken-1"
@@ -46,6 +55,12 @@ const handleAutomationSubmit = async () => {
       <v-btn color="primary" variant="elevated" @click="handleAutomationSubmit">
         Submit
       </v-btn>
-    </v-card-actions>
+    </template>
   </v-card>
 </template>
+
+<style>
+.v-card-item {
+  background-color: #eef0f1;
+}
+</style>
