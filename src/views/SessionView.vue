@@ -31,6 +31,7 @@ const navPaginationItems = inject("set-nav-pagination-items");
 
 const automationDialog = ref(false);
 const selectedAutomation = ref(null);
+const suggestionList = ref([]);
 
 const addNewFileClick = async (state) => {
   navButtonConfig.value.disabled = state;
@@ -64,6 +65,18 @@ onMounted(async () => {
     icon: "mdi-pencil-plus",
     click: () => addNewFileClick(true),
   };
+
+  suggestionList.value = [
+    ...AUTOMATION,
+    {
+      title: "Add File Manually",
+      description:
+        "Create a file by entering the file path and details manually.",
+      icon: "mdi-plus",
+      func: () => addNewFileClick(true),
+    },
+  ];
+
   await updateDetails();
 });
 
@@ -159,11 +172,11 @@ const handleAutomationClose = () => {
       class="my-16 py-16 empty-state"
     >
       <template v-slot:actions>
-        <v-container class="pa-4">
+        <v-container class="pa-4 pt-10">
           <v-row>
             <!-- Dynamic automation buttons -->
             <v-col
-              v-for="(automation, index) in AUTOMATION"
+              v-for="(automation, index) in suggestionList"
               :key="index"
               cols="12"
               md="4"
@@ -178,8 +191,10 @@ const handleAutomationClose = () => {
                   color="primary"
                   class="text-white mb-4 py-6 text-body-1 font-weight-regular"
                   style="text-transform: none"
-                  prepend-icon="mdi-auto-fix"
-                  @click="handleAutomationClick(automation)"
+                  :prepend-icon="automation.icon || 'mdi-auto-fix'"
+                  @click="
+                    automation.func?.() || handleAutomationClick(automation)
+                  "
                 >
                   {{ automation.title }}
                 </v-btn>
@@ -190,37 +205,6 @@ const handleAutomationClose = () => {
                     >
                     <span class="text-grey-darken-1 text-body-2">
                       {{ automation.description }}
-                    </span>
-                  </div>
-                </div>
-              </v-card>
-            </v-col>
-
-            <!-- Static "Add File Manually" button -->
-            <v-col cols="12" md="4">
-              <v-card
-                variant="outlined"
-                color="blue-grey-lighten-4"
-                class="rounded-lg pa-4"
-              >
-                <v-btn
-                  block
-                  color="primary"
-                  class="text-white mb-4 py-6 text-body-1 font-weight-regular"
-                  style="text-transform: none"
-                  prepend-icon="mdi-plus"
-                  @click="addNewFileClick(true)"
-                >
-                  Add File Manually
-                </v-btn>
-                <div class="px-4 pb-4">
-                  <div class="d-flex">
-                    <v-icon size="18" color="grey" class="mr-2"
-                      >mdi-information</v-icon
-                    >
-                    <span class="text-grey-darken-1 text-body-2">
-                      Create a file by entering the file path and details
-                      manually.
                     </span>
                   </div>
                 </div>
