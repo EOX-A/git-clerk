@@ -161,6 +161,40 @@ const insertVideoTool = {
   title: "Attach Video",
 };
 
+const storytellingConfig = {
+  output: "Story",
+    content: "## Sample Section",
+    schema: {
+      title: "git-clerk",
+      type: "object",
+      properties: {
+        Story: {
+          type: "string",
+          format: "markdown",
+          options: {
+            simplemde: {
+              toolbar: [
+                "bold",
+                "italic",
+                "strikethrough",
+                "heading",
+                "|",
+                "unordered-list",
+                "ordered-list",
+                "link",
+                "|",
+                insertImageTool,
+                insertVideoTool
+              ],
+              spellChecker: false,
+            },
+          },
+        },
+      },
+    },
+    preview: "/storytelling.html"
+}
+
 globalThis.schemaMap = [
   {
     path: "/eo-missions/catalog.json",
@@ -203,38 +237,12 @@ globalThis.schemaMap = [
     url: "https://esa-earthcode.github.io/open-science-catalog-validation/schemas/variables/children.json",
   },
   {
+    path: "/storytelling/<id>.md",
+    ...storytellingConfig
+  },
+  {
     path: "/narratives/<id>.md",
-    output: "Story",
-    content: "## Sample Section",
-    schema: {
-      title: "git-clerk",
-      type: "object",
-      properties: {
-        Story: {
-          type: "string",
-          format: "markdown",
-          options: {
-            simplemde: {
-              toolbar: [
-                "bold",
-                "italic",
-                "strikethrough",
-                "heading",
-                "|",
-                "unordered-list",
-                "ordered-list",
-                "link",
-                "|",
-                insertImageTool,
-                insertVideoTool
-              ],
-              spellChecker: false,
-            },
-          },
-        },
-      },
-    },
-    preview: "/storytelling.html"
+    ...storytellingConfig
   },
 ]
 
