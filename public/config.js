@@ -237,3 +237,66 @@ globalThis.schemaMap = [
     preview: "/storytelling.html"
   },
 ]
+
+globalThis.automation = [
+  {
+    title: "Bootstrap Product",
+    description: "Bootstrap a new file with the correct folder structure and ID.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string"
+        },
+        title: {
+          type: "string"
+        }
+      }
+    },
+    steps: [
+      {
+        type: "add",
+        path: (input) => `/products/${input.id}/collection.json`,
+        content: (input) => ({ id: input.id })
+      },
+      {
+        type: "edit",
+        path: "/products/catalog.json",
+        transform: (content, input) => {
+          content.links = [
+            ...content.links,
+            {
+              rel: "child",
+              href: `./${input.id}/collection.json`,
+              type: "application/json",
+              title: input.title
+            },
+          ]
+          return content
+        }
+      }
+    ]
+  },
+  {
+    title: "Create Narrative",
+    description: "Create a new narrative file with the given ID and title.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string"
+        },
+        title: {
+          type: "string"
+        }
+      }
+    },
+    steps: [
+      {
+        type: "add",
+        path: (input) => `/narratives/${input.id}.md`,
+        content: (input) => `# ${input.title}`
+      }
+    ]
+  }
+]

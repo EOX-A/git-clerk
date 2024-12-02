@@ -10,9 +10,8 @@ import {
 import OctIcon from "@/components/global/OctIcon.vue";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import ListPagination from "@/components/global/ListPagination.vue";
-import EmptyState from "@/components/global/EmptyState.vue";
 import { DeleteFile, ActionTabFileList, CreateFile } from "@/components/file";
-import { encodeString } from "@/helpers/index.js";
+import { encodeString, AUTOMATION } from "@/helpers/index.js";
 
 const route = useRoute();
 const router = useRouter();
@@ -137,15 +136,72 @@ const onPageChange = async (newPage) => {
     <ListPlaceholder :button="1" v-else-if="fileChangesList === null" />
 
     <!-- Empty State -->
-    <EmptyState
+    <v-empty-state
       v-else
-      headline="No changes found in this session"
-      img="/img/files.svg"
-      icon="mdi-pencil-plus"
-      btn-text="Add/Edit File"
-      description="No changes found in this session. You can start a new file to add updates."
-      :init-func="addNewFileClick"
-    />
+      action-icon="mdi-pencil-plus"
+      image="/img/files.svg"
+      text="No changes found in this session. You can start a new file to add updates."
+      title="No changes found in this session"
+      @click:action="addNewFileClick"
+      class="my-16 py-16 empty-state"
+    >
+      <template v-slot:actions>
+        <v-container class="pa-4">
+          <v-row>
+            <!-- Dynamic automation buttons -->
+            <v-col v-for="(automation, index) in AUTOMATION" 
+                   :key="index" 
+                   cols="12" 
+                   md="4">
+              <v-card variant="outlined" color="blue-grey-lighten-4" class="rounded-lg pa-4">
+                <v-btn
+                  block
+                  color="primary"
+                  class="text-white mb-4 py-6 text-body-1 font-weight-regular"
+                  style="text-transform: none"
+                  prepend-icon="mdi-auto-fix"
+                >
+                  {{ automation.title }}
+                </v-btn>
+                <div class="px-4 pb-4">
+                  <div class="d-flex">
+                    <v-icon size="18" color="grey" class="mr-2">mdi-information</v-icon>
+                    <span class="text-grey-darken-1 text-body-2">
+                      {{ automation.description }}
+                    </span>
+                  </div>
+                </div>
+              </v-card>
+            </v-col>
+
+            <!-- Static "Add File Manually" button -->
+            <v-col cols="12" md="4">
+              <v-card variant="outlined" color="blue-grey-lighten-4" class="rounded-lg pa-4">
+                <v-btn
+                  block
+                  color="primary"
+                  class="text-white mb-4 py-6 text-body-1 font-weight-regular"
+                  style="text-transform: none"
+                  prepend-icon="mdi-plus"
+                  @click="addNewFileClick(true)"
+                >
+                  Add File Manually
+                </v-btn>
+                <div class="px-4 pb-4">
+                  <div class="d-flex">
+                    <v-icon size="18" color="grey" class="mr-2">mdi-information</v-icon>
+                    <span class="text-grey-darken-1 text-body-2">
+                      Create a file by entering the file path and details manually.
+                    </span>
+                  </div>
+                </div>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-container>
+      </template>
+    </v-empty-state>
+
   </v-list>
 
   <ListPagination v-if="fileChangesList" :page :totalPage :onPageChange />
