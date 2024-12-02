@@ -12,6 +12,8 @@ import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import ListPagination from "@/components/global/ListPagination.vue";
 import { DeleteFile, ActionTabFileList, CreateFile } from "@/components/file";
 import { encodeString, AUTOMATION } from "@/helpers/index.js";
+import "@eox/jsonform";
+import Automation from "@/components/session/Automation.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -19,15 +21,16 @@ const sessionNumber = route.params.sessionNumber;
 
 const session = ref(null);
 const fileChangesList = ref(null);
-const loader = ref({});
 const totalPage = ref(0);
-const deleteFile = ref(false);
 const addNewFileDialog = ref(false);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
 
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
+
+const automationDialog = ref(false);
+const selectedAutomation = ref(null);
 
 const addNewFileClick = async (state) => {
   navButtonConfig.value.disabled = state;
@@ -68,6 +71,16 @@ const onPageChange = async (newPage) => {
   page.value = newPage;
   await router.push({ query: { ...route.query, page: newPage } });
   await updateDetails(true);
+};
+
+const handleAutomationClick = (automation) => {
+  selectedAutomation.value = automation;
+  automationDialog.value = true;
+};
+
+const handleAutomationClose = () => {
+  selectedAutomation.value = null;
+  automationDialog.value = false;
 };
 </script>
 
@@ -149,23 +162,32 @@ const onPageChange = async (newPage) => {
         <v-container class="pa-4">
           <v-row>
             <!-- Dynamic automation buttons -->
-            <v-col v-for="(automation, index) in AUTOMATION" 
-                   :key="index" 
-                   cols="12" 
-                   md="4">
-              <v-card variant="outlined" color="blue-grey-lighten-4" class="rounded-lg pa-4">
+            <v-col
+              v-for="(automation, index) in AUTOMATION"
+              :key="index"
+              cols="12"
+              md="4"
+            >
+              <v-card
+                variant="outlined"
+                color="blue-grey-lighten-4"
+                class="rounded-lg pa-4"
+              >
                 <v-btn
                   block
                   color="primary"
                   class="text-white mb-4 py-6 text-body-1 font-weight-regular"
                   style="text-transform: none"
                   prepend-icon="mdi-auto-fix"
+                  @click="handleAutomationClick(automation)"
                 >
                   {{ automation.title }}
                 </v-btn>
                 <div class="px-4 pb-4">
                   <div class="d-flex">
-                    <v-icon size="18" color="grey" class="mr-2">mdi-information</v-icon>
+                    <v-icon size="18" color="grey" class="mr-2"
+                      >mdi-information</v-icon
+                    >
                     <span class="text-grey-darken-1 text-body-2">
                       {{ automation.description }}
                     </span>
@@ -176,7 +198,11 @@ const onPageChange = async (newPage) => {
 
             <!-- Static "Add File Manually" button -->
             <v-col cols="12" md="4">
-              <v-card variant="outlined" color="blue-grey-lighten-4" class="rounded-lg pa-4">
+              <v-card
+                variant="outlined"
+                color="blue-grey-lighten-4"
+                class="rounded-lg pa-4"
+              >
                 <v-btn
                   block
                   color="primary"
@@ -189,9 +215,12 @@ const onPageChange = async (newPage) => {
                 </v-btn>
                 <div class="px-4 pb-4">
                   <div class="d-flex">
-                    <v-icon size="18" color="grey" class="mr-2">mdi-information</v-icon>
+                    <v-icon size="18" color="grey" class="mr-2"
+                      >mdi-information</v-icon
+                    >
                     <span class="text-grey-darken-1 text-body-2">
-                      Create a file by entering the file path and details manually.
+                      Create a file by entering the file path and details
+                      manually.
                     </span>
                   </div>
                 </div>
@@ -201,10 +230,20 @@ const onPageChange = async (newPage) => {
         </v-container>
       </template>
     </v-empty-state>
-
   </v-list>
 
   <ListPagination v-if="fileChangesList" :page :totalPage :onPageChange />
+
+  <!-- Use the Automation component -->
+  <v-dialog v-model="automationDialog" max-width="500px">
+    <Automation
+      :handleAutomationClose
+      :updateDetails
+      :automationDialog
+      :selectedAutomation
+      :session
+    />
+  </v-dialog>
 </template>
 
 <style>

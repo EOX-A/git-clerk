@@ -203,7 +203,7 @@ globalThis.schemaMap = [
     url: "https://esa-earthcode.github.io/open-science-catalog-validation/schemas/variables/children.json",
   },
   {
-    path: "/storytelling/<id>.md",
+    path: "/narratives/<id>.md",
     output: "Story",
     content: "## Sample Section",
     schema: {
@@ -246,12 +246,15 @@ globalThis.automation = [
       type: "object",
       properties: {
         id: {
-          type: "string"
+          type: "string",
+          minLength: 1
         },
         title: {
-          type: "string"
+          type: "string",
+          minLength: 1
         }
-      }
+      },
+      required: ["id", "title"]
     },
     steps: [
       {
@@ -284,12 +287,15 @@ globalThis.automation = [
       type: "object",
       properties: {
         id: {
-          type: "string"
+          type: "string",
+          minLength: 1
         },
         title: {
-          type: "string"
+          type: "string",
+          minLength: 1
         }
-      }
+      },
+      required: ["id", "title"]
     },
     steps: [
       {
