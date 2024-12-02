@@ -60,22 +60,26 @@ const updateDetails = async (cache = false) => {
 };
 
 onMounted(async () => {
-  navButtonConfig.value = {
-    text: "Add/Edit File",
-    icon: "mdi-pencil-plus",
-    click: () => addNewFileClick(true),
-  };
-
   suggestionList.value = [
     ...AUTOMATION,
     {
-      title: "Add File Manually",
+      title: "Add/Edit File Manually",
       description:
         "Create a file by entering the file path and details manually.",
       icon: "mdi-plus",
       func: () => addNewFileClick(true),
     },
   ];
+
+  navButtonConfig.value = {
+    text: "Add/Edit File",
+    icon: "mdi-pencil-plus",
+    list: suggestionList.value.map((suggestion) => ({
+      ...suggestion,
+      click: () => suggestion.func?.() || handleAutomationClick(suggestion),
+      icon: suggestion.icon || "mdi-auto-fix",
+    })),
+  };
 
   await updateDetails();
 });

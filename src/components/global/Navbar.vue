@@ -34,7 +34,7 @@ const navPaginationItems = inject("set-nav-pagination-items");
 
     <v-col class="button-nav flex-grow-0">
       <v-btn
-        v-if="navButtonConfig.text"
+        v-if="navButtonConfig.text && navButtonConfig.click"
         size="large"
         :prepend-icon="navButtonConfig.icon"
         variant="flat"
@@ -44,6 +44,31 @@ const navPaginationItems = inject("set-nav-pagination-items");
         @click="navButtonConfig.click"
         >{{ navButtonConfig.text }}</v-btn
       >
+      <v-menu
+        location="bottom"
+        v-if="navButtonConfig.text && navButtonConfig.list"
+      >
+        <template v-slot:activator="{ props }">
+          <v-btn
+            size="large"
+            :prepend-icon="navButtonConfig.icon"
+            variant="flat"
+            class="text-capitalize font-weight-medium"
+            color="btn-primary"
+            v-bind="props"
+            >{{ navButtonConfig.text }}</v-btn
+          >
+        </template>
+        <v-list>
+          <v-list-item
+            v-for="(item, index) in navButtonConfig.list"
+            :prepend-icon="item.icon"
+            :title="item.title"
+            :key="index"
+            @click="item.click"
+          ></v-list-item>
+        </v-list>
+      </v-menu>
     </v-col>
   </v-app-bar>
 </template>
