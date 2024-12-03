@@ -118,7 +118,7 @@ export async function deleteFileBySHA(owner, repo, path, message, sha, ref) {
 
 export async function getFileDetails(session, filePath, cache = true) {
   const { octokit } = useOctokitStore();
-  const { head } = session.value;
+  const { head } = session;
 
   return fileDetails(
     octokit,

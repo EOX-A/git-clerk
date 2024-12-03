@@ -10,9 +10,10 @@ import {
 import OctIcon from "@/components/global/OctIcon.vue";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import ListPagination from "@/components/global/ListPagination.vue";
-import EmptyState from "@/components/global/EmptyState.vue";
 import { DeleteFile, ActionTabFileList, CreateFile } from "@/components/file";
-import { encodeString } from "@/helpers/index.js";
+import { encodeString, AUTOMATION } from "@/helpers/index.js";
+import "@eox/jsonform";
+import Automation from "@/components/session/Automation.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -20,15 +21,17 @@ const sessionNumber = route.params.sessionNumber;
 
 const session = ref(null);
 const fileChangesList = ref(null);
-const loader = ref({});
 const totalPage = ref(0);
-const deleteFile = ref(false);
 const addNewFileDialog = ref(false);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
 
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
+
+const automationDialog = ref(false);
+const selectedAutomation = ref(null);
+const suggestionList = ref([]);
 
 const addNewFileClick = async (state) => {
   navButtonConfig.value.disabled = state;
@@ -57,11 +60,27 @@ const updateDetails = async (cache = false) => {
 };
 
 onMounted(async () => {
+  suggestionList.value = [
+    ...AUTOMATION,
+    {
+      title: "Add/Edit File Manually",
+      description:
+        "Create a file by entering the file path and details manually.",
+      icon: "mdi-plus",
+      func: () => addNewFileClick(true),
+    },
+  ];
+
   navButtonConfig.value = {
     text: "Add/Edit File",
     icon: "mdi-pencil-plus",
-    click: () => addNewFileClick(true),
+    list: suggestionList.value.map((suggestion) => ({
+      ...suggestion,
+      click: () => suggestion.func?.() || handleAutomationClick(suggestion),
+      icon: suggestion.icon || "mdi-auto-fix",
+    })),
   };
+
   await updateDetails();
 });
 
@@ -69,6 +88,16 @@ const onPageChange = async (newPage) => {
   page.value = newPage;
   await router.push({ query: { ...route.query, page: newPage } });
   await updateDetails(true);
+};
+
+const handleAutomationClick = (automation) => {
+  selectedAutomation.value = automation;
+  automationDialog.value = true;
+};
+
+const handleAutomationClose = () => {
+  selectedAutomation.value = null;
+  automationDialog.value = false;
 };
 </script>
 
@@ -137,18 +166,72 @@ const onPageChange = async (newPage) => {
     <ListPlaceholder :button="1" v-else-if="fileChangesList === null" />
 
     <!-- Empty State -->
-    <EmptyState
+    <v-empty-state
       v-else
-      headline="No changes found in this session"
-      img="/img/files.svg"
-      icon="mdi-pencil-plus"
-      btn-text="Add/Edit File"
-      description="No changes found in this session. You can start a new file to add updates."
-      :init-func="addNewFileClick"
-    />
+      action-icon="mdi-pencil-plus"
+      image="/img/files.svg"
+      text="No changes found in this session. You can start a new file to add updates."
+      title="No changes found in this session"
+      @click:action="addNewFileClick"
+      class="my-16 py-16 empty-state"
+    >
+      <template v-slot:actions>
+        <v-container class="pa-4 pt-10">
+          <v-row>
+            <!-- Dynamic automation buttons -->
+            <v-col
+              v-for="(automation, index) in suggestionList"
+              :key="index"
+              cols="12"
+              md="4"
+            >
+              <v-card
+                variant="outlined"
+                color="blue-grey-lighten-4"
+                class="rounded-lg pa-4"
+              >
+                <v-btn
+                  block
+                  color="primary"
+                  class="text-white mb-4 py-6 text-body-1 font-weight-regular"
+                  style="text-transform: none"
+                  :prepend-icon="automation.icon || 'mdi-auto-fix'"
+                  @click="
+                    automation.func?.() || handleAutomationClick(automation)
+                  "
+                >
+                  {{ automation.title }}
+                </v-btn>
+                <div class="px-4 pb-4">
+                  <div class="d-flex">
+                    <v-icon size="18" color="grey" class="mr-2"
+                      >mdi-information</v-icon
+                    >
+                    <span class="text-grey-darken-1 text-body-2">
+                      {{ automation.description }}
+                    </span>
+                  </div>
+                </div>
+              </v-card>
+            </v-col>
+          </v-row>
+        </v-container>
+      </template>
+    </v-empty-state>
   </v-list>
 
   <ListPagination v-if="fileChangesList" :page :totalPage :onPageChange />
+
+  <!-- Use the Automation component -->
+  <v-dialog v-model="automationDialog" max-width="500px">
+    <Automation
+      :handleAutomationClose
+      :updateDetails
+      :automationDialog
+      :selectedAutomation
+      :session
+    />
+  </v-dialog>
 </template>
 
 <style>

@@ -29,6 +29,7 @@ export function initEOXJSONFormMethod(
   jsonFormInstance,
   isSchemaBased,
   previewURL,
+  basic = false,
 ) {
   jsonFormInstance.value = document.querySelector("eox-jsonform");
   const shadowRoot = getShadowRoot(jsonFormInstance);
@@ -84,7 +85,7 @@ export function initEOXJSONFormMethod(
 
   style.textContent = `
     ${
-      isSchemaBased.value
+      isSchemaBased.value && !basic
         ? `
           ${mainDivClass} {
             display: grid;
@@ -97,6 +98,15 @@ export function initEOXJSONFormMethod(
           }
         `
         : ``
+    }
+    ${
+      basic
+        ? `
+      form[data-theme="html"] .je-form-input-label {
+        text-transform: capitalize;
+      }
+    `
+        : ""
     }
     .je-object__controls
     ${!isSchemaBased.value || previewURL.value ? ", .je-form-input-label" : ""} {

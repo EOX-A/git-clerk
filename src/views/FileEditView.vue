@@ -71,7 +71,7 @@ const updateFileDetails = async (cache = true) => {
     schema,
   };
 
-  const fileDetails = await getFileDetails(session, filePath, cache);
+  const fileDetails = await getFileDetails(session.value, filePath, cache);
   queryFileDetailsMethod(fileDetails, {
     snackbar,
     file,

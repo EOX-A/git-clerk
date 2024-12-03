@@ -161,6 +161,40 @@ const insertVideoTool = {
   title: "Attach Video",
 };
 
+const storytellingConfig = {
+  output: "Story",
+    content: "## Sample Section",
+    schema: {
+      title: "git-clerk",
+      type: "object",
+      properties: {
+        Story: {
+          type: "string",
+          format: "markdown",
+          options: {
+            simplemde: {
+              toolbar: [
+                "bold",
+                "italic",
+                "strikethrough",
+                "heading",
+                "|",
+                "unordered-list",
+                "ordered-list",
+                "link",
+                "|",
+                insertImageTool,
+                insertVideoTool
+              ],
+              spellChecker: false,
+            },
+          },
+        },
+      },
+    },
+    preview: "/storytelling.html"
+}
+
 globalThis.schemaMap = [
   {
     path: "/eo-missions/catalog.json",
@@ -204,36 +238,87 @@ globalThis.schemaMap = [
   },
   {
     path: "/storytelling/<id>.md",
-    output: "Story",
-    content: "## Sample Section",
-    schema: {
-      title: "git-clerk",
+    ...storytellingConfig
+  },
+  {
+    path: "/narratives/<id>.md",
+    ...storytellingConfig
+  },
+]
+
+globalThis.automation = [
+  {
+    title: "Bootstrap Product",
+    description: "Bootstrap a new file with the correct folder structure and ID.",
+    inputSchema: {
       type: "object",
       properties: {
-        Story: {
+        id: {
           type: "string",
-          format: "markdown",
-          options: {
-            simplemde: {
-              toolbar: [
-                "bold",
-                "italic",
-                "strikethrough",
-                "heading",
-                "|",
-                "unordered-list",
-                "ordered-list",
-                "link",
-                "|",
-                insertImageTool,
-                insertVideoTool
-              ],
-              spellChecker: false,
-            },
-          },
+          minLength: 1
         },
+        title: {
+          type: "string",
+          minLength: 1
+        }
       },
+      required: ["id", "title"]
     },
-    preview: "/storytelling.html"
+    steps: [
+      {
+        type: "add",
+        path: (input) => `/products/${input.id}/collection.json`,
+        content: (input) => ({ id: input.id, title: input.title })
+      },
+      {
+        type: "edit",
+        path: "/products/catalog.json",
+        transform: (content, input) => {
+          content.links = [
+            ...content.links,
+            {
+              rel: "child",
+              href: `./${input.id}/collection.json`,
+              type: "application/json",
+              title: input.title
+            },
+          ]
+          return content
+        }
+      },
+      {
+        type: "navigate",
+        path: (input) => `/products/${input.id}/collection.json`
+      }
+    ]
   },
+  {
+    title: "Create Narrative",
+    description: "Create a new narrative file with the given ID and title.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          minLength: 1
+        },
+        title: {
+          type: "string",
+          minLength: 1
+        }
+      },
+      required: ["id", "title"]
+    },
+    steps: [
+      {
+        type: "add",
+        path: (input) => `/narratives/${input.id}.md`,
+        content: (input) => `# ${input.title}`
+      },
+      {
+        type: "navigate",
+        path: (input) => `/narratives/${input.id}.md`
+      }
+    ]
+  }
 ]
