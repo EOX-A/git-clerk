@@ -268,7 +268,7 @@ globalThis.automation = [
       {
         type: "add",
         path: (input) => `/products/${input.id}/collection.json`,
-        content: (input) => ({ id: input.id })
+        content: (input) => ({ id: input.id, title: input.title })
       },
       {
         type: "edit",
@@ -285,6 +285,10 @@ globalThis.automation = [
           ]
           return content
         }
+      },
+      {
+        type: "navigate",
+        path: (input) => `/products/${input.id}/collection.json`
       }
     ]
   },
@@ -310,6 +314,10 @@ globalThis.automation = [
         type: "add",
         path: (input) => `/narratives/${input.id}.md`,
         content: (input) => `# ${input.title}`
+      },
+      {
+        type: "navigate",
+        path: (input) => `/narratives/${input.id}.md`
       }
     ]
   }

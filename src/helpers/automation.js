@@ -1,19 +1,33 @@
-import { decodeString, parseIfNeeded, stringifyIfNeeded } from "@/helpers";
+import {
+  decodeString,
+  encodeString,
+  parseIfNeeded,
+  stringifyIfNeeded,
+} from "@/helpers";
 import { createAndUpdateFile, getFileDetails } from "@/api";
 
 export const AUTOMATION = globalThis.automation || [];
-const LOADER_MSG = {
-  add: "Creating File",
-  edit: "Transforming File",
+const getLoaderMsg = (type, path, currentMsg) => {
+  const messages = {
+    add: "Creating File",
+    edit: "Transforming File",
+    navigate: `Navigating to /${path}`,
+  };
+  return messages[type] || currentMsg;
 };
 
-export async function runAutomation(props, value) {
+export async function runAutomation(props, value, router) {
   const loaderEle = document.getElementById("loader-text");
   for (const step of props.selectedAutomation.steps) {
     let path = typeof step.path === "function" ? step.path(value) : step.path;
     if (path.startsWith("/")) path = path.substring(1);
     const session = props.session;
-    if (loaderEle) loaderEle.textContent = LOADER_MSG[step.type];
+    if (loaderEle)
+      loaderEle.textContent = getLoaderMsg(
+        step.type,
+        path,
+        loaderEle.textContent,
+      );
 
     if (step.content) {
       const content = stringifyIfNeeded(step.content(value));
@@ -31,6 +45,9 @@ export async function runAutomation(props, value) {
         stringifyIfNeeded(transformedContent),
         fileDetails.sha,
       );
+    } else if (step.type === "navigate") {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await router.push(`/${session.number}/${encodeString(path)}`);
     }
   }
 }

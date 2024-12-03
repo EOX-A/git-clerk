@@ -5,6 +5,7 @@ export default async function handleAutomationMethod(
   props,
   value,
   validate,
+  router,
   snackbar,
 ) {
   if (validate.length) {
@@ -20,7 +21,7 @@ export default async function handleAutomationMethod(
       },
     );
     try {
-      await runAutomation(props, value);
+      await runAutomation(props, value, router);
       loader.hide();
       props.handleAutomationClose();
       props.updateDetails();

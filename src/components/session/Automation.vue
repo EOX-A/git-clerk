@@ -2,7 +2,9 @@
 import { initEOXJSONFormMethod } from "@/methods/file-edit-view";
 import { handleAutomationMethod } from "@/methods/session-view";
 import { inject, ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 const snackbar = inject("set-snackbar");
+const router = useRouter();
 
 const props = defineProps({
   selectedAutomation: Object,
@@ -17,7 +19,7 @@ const jsonFormInstance = ref(null);
 const handleAutomationSubmit = async () => {
   const validate = jsonFormInstance.value.editor.validate();
   const value = jsonFormInstance.value.editor.getValue();
-  await handleAutomationMethod(props, value, validate, snackbar);
+  await handleAutomationMethod(props, value, validate, router, snackbar);
 };
 
 onMounted(() => {
