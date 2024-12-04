@@ -23,12 +23,13 @@ export async function initOctokit() {
     const config = globalThis.ghConfig;
     const auth =
       (await config.githubAuthToken()) || import.meta.env.VUE_APP_GITHUB_TOKEN;
-    const username = config.githubOwner || import.meta.env.VUE_APP_GITHUB_OWNER;
     const repo = config.githubRepo || import.meta.env.VUE_APP_GITHUB_REPO;
+    const username = repo.split("/")[0];
+    const repoName = repo.split("/")[1];
 
     globalThis.ghConfig = {
       ...config,
-      config: { auth, username, repo },
+      config: { auth, username, repo: repoName },
     };
 
     const octokit = new Octokit({ auth });
@@ -36,7 +37,7 @@ export async function initOctokit() {
     const { data } = await octokit.rest.users.getAuthenticated();
 
     return {
-      githubConfig: { auth, username, repo },
+      githubConfig: { auth, username, repo: repoName },
       githubUserData: data,
       octokit,
     };
