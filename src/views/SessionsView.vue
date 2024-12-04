@@ -189,11 +189,7 @@ const onPageChange = async (newPage) => {
       </template>
 
       <template v-slot:append>
-        <ActionList
-          :session="session"
-          :snackbar="snackbar"
-          :callBack="updateSessionsList"
-        />
+        <ActionList :session="session" :callBack="updateSessionsList" />
       </template>
     </v-list-item>
 

@@ -29,7 +29,6 @@ const props = defineProps({
       tab
       size="x-large"
       :session="props.session"
-      :snackbar="snackbar"
       :callBack="props.updateDetails"
     />
     <v-divider
@@ -61,7 +60,6 @@ const props = defineProps({
       color="blue-grey-lighten-4"
       variant="flat"
       :session="props.session"
-      :snackbar="snackbar"
       :callBack="props.updateDetails"
       class="ml-5"
     />

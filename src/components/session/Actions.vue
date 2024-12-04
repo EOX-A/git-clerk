@@ -8,13 +8,12 @@ import {
 
 const props = defineProps({
   session: Object,
-  snackbar: Object,
   callBack: Function,
 });
 </script>
 
 <template>
   <GithubSession :url="session.html_url" />
-  <ReviewSession :session="session" :snackbar="snackbar" :callBack="callBack" />
-  <DeleteSession :session="session" :snackbar="snackbar" :callBack="callBack" />
+  <ReviewSession :session="session" :callBack="callBack" />
+  <DeleteSession :session="session" :callBack="callBack" />
 </template>
