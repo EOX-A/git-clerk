@@ -1,7 +1,7 @@
 // config.js
 globalThis.ghConfig = {
   githubRepo: "",
-  githubAuthToken: async () => new Promise((resolve) => resolve("")),
+  githubAuthToken: () => new Promise((resolve) => resolve("")),
 };
 
 const PATH_TO_UPLOAD = 'assets';
