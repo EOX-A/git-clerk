@@ -59,14 +59,14 @@ const navPaginationItems = inject("set-nav-pagination-items");
             >{{ navButtonConfig.text }}</v-btn
           >
         </template>
-        <v-list class="pa-2" density="compact">
+        <v-list class="pa-2 button-list" density="compact">
           <v-list-item
             v-for="(item, index) in navButtonConfig.list"
             :prepend-icon="item.icon"
             :title="item.title"
             :key="index"
             @click="item.click"
-            class="rounded-lg mb-1"
+            class="rounded-lg m-0"
             color="grey-lighten-4"
             active-color="grey-lighten-3"
             hover
@@ -106,5 +106,8 @@ const navPaginationItems = inject("set-nav-pagination-items");
   .navbar .v-toolbar__content > .v-toolbar-title {
     margin-inline-start: 8px;
   }
+}
+.button-list .v-list-item__prepend .v-list-item__spacer {
+  width: 18px !important;
 }
 </style>
