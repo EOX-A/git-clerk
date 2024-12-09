@@ -143,16 +143,18 @@ onMounted(async () => {
   const loader = useLoader().show();
   updateNavButtonConfig();
   await updateFileDetails();
-  initEOXJSONFormMethod(jsonFormInstance, isSchemaBased, previewURL);
-  if (isSchemaBased.value) {
-    hideHiddenFieldsMethod(jsonFormInstance);
+  if (file.value.encoding !== "none") {
+    initEOXJSONFormMethod(jsonFormInstance, isSchemaBased, previewURL);
+    if (isSchemaBased.value) {
+      hideHiddenFieldsMethod(jsonFormInstance);
+    }
+    addPostMessageEventMethod({
+      previewURL,
+      updatedFileContent,
+      jsonFormInstance,
+      isSchemaBased,
+    });
   }
-  addPostMessageEventMethod({
-    previewURL,
-    updatedFileContent,
-    jsonFormInstance,
-    isSchemaBased,
-  });
   loader.hide();
 });
 
@@ -174,7 +176,21 @@ onUnmounted(() => {
     v-if="fileContent !== null && schemaMetaDetails.schema"
     :class="`bg-white ${!previewURL && 'px-4 px-sm-12 py-4 py-sm-8 non-preview-height'} d-block file-editor ${schemaMetaDetails.generic && 'file-editor-code'}`"
   >
-    <v-row no-gutters :class="previewURL ? 'd-block d-sm-flex' : ''">
+    <div
+      class="d-flex align-center align-self-center justify-center flex-column py-12"
+      v-if="file.encoding === 'none'"
+    >
+      <p class="text-sm-body-2 text-blue-grey-darken-2">
+        Sorry about that, but we can’t show files that are this big right now.
+      </p>
+      <router-link
+        class="text-sm-body-2 text-blue-darken-2 font-weight-bold"
+        :href="file.download_url"
+        target="_blank"
+        >View Raw</router-link
+      >
+    </div>
+    <v-row v-else no-gutters :class="previewURL ? 'd-block d-sm-flex' : ''">
       <v-col :cols="previewURL ? 3 : 12" class="overflow-x-auto">
         <eox-jsonform
           :schema="schemaMetaDetails.schema"

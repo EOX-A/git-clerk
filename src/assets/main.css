@@ -67,3 +67,7 @@ html {
     padding-inline: 0px;
   }
 }
+
+.z-index {
+  z-index: 1;
+}

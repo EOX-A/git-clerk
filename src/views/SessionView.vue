@@ -15,6 +15,7 @@ import {
   ActionTabFileList,
   CreateFile,
   FileUploader,
+  DuplicateFile,
 } from "@/components/file";
 import { encodeString, AUTOMATION } from "@/helpers/index.js";
 import "@eox/jsonform";
@@ -169,8 +170,9 @@ const handleAutomationClose = () => {
         </div>
       </template>
 
-      <template v-slot:append>
-        <DeleteFile :file :session :call-back="updateDetails" />
+      <template v-slot:append v-if="!session.closed_at">
+        <DuplicateFile :file :session :callBack="updateDetails" />
+        <DeleteFile :file :session :callBack="updateDetails" />
       </template>
     </v-list-item>
 
@@ -189,7 +191,7 @@ const handleAutomationClose = () => {
     >
       <template v-slot:actions>
         <v-container class="pa-4 pt-10">
-          <v-row>
+          <v-row class="justify-center">
             <!-- Dynamic automation buttons -->
             <v-col
               v-for="(automation, index) in suggestionList"
