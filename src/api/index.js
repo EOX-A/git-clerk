@@ -150,7 +150,7 @@ export async function createAndUpdateFile(
   path,
   fileName,
   content,
-  sha,
+  sha = null,
 ) {
   const { githubConfig, octokit } = useOctokitStore();
   const { head } = session;

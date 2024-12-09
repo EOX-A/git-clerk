@@ -10,7 +10,12 @@ import {
 import OctIcon from "@/components/global/OctIcon.vue";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import ListPagination from "@/components/global/ListPagination.vue";
-import { DeleteFile, ActionTabFileList, CreateFile } from "@/components/file";
+import {
+  DeleteFile,
+  ActionTabFileList,
+  CreateFile,
+  DuplicateFile,
+} from "@/components/file";
 import { encodeString, AUTOMATION } from "@/helpers/index.js";
 import "@eox/jsonform";
 import Automation from "@/components/session/Automation.vue";
@@ -157,8 +162,9 @@ const handleAutomationClose = () => {
         </div>
       </template>
 
-      <template v-slot:append>
-        <DeleteFile :file :session :call-back="updateDetails" />
+      <template v-slot:append v-if="!session.closed_at">
+        <DuplicateFile :file :session :callBack="updateDetails" />
+        <DeleteFile :file :session :callBack="updateDetails" />
       </template>
     </v-list-item>
 
