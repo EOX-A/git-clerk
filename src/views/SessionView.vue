@@ -183,7 +183,7 @@ const handleAutomationClose = () => {
     >
       <template v-slot:actions>
         <v-container class="pa-4 pt-10">
-          <v-row>
+          <v-row class="justify-center">
             <!-- Dynamic automation buttons -->
             <v-col
               v-for="(automation, index) in suggestionList"
