@@ -131,7 +131,7 @@ export async function getFileDetails(session, filePath, cache = true) {
   );
 }
 
-export async function getBranchFileStructure(session, path) {
+export async function getBranchFileStructure(session, path, noFiles = false) {
   const { githubConfig, octokit } = useOctokitStore();
   const { head } = session;
 
@@ -142,6 +142,7 @@ export async function getBranchFileStructure(session, path) {
     head.repo.name,
     head.ref,
     path,
+    noFiles,
   );
 }
 
@@ -166,6 +167,48 @@ export async function createAndUpdateFile(
     content,
     sha,
   );
+}
+
+export async function createAndUpdateMultipleFiles(session, path, files, sha) {
+  const { githubConfig, octokit } = useOctokitStore();
+  const { head } = session;
+  const errorFiles = [];
+
+  for (const file of files) {
+    const fileName = file.newName || file.name;
+    const fullFilePath = path + fileName;
+
+    const arrayBuffer = await file.arrayBuffer();
+    const bytes = new Uint8Array(arrayBuffer);
+
+    const result = await updateFile(
+      octokit,
+      githubConfig,
+      head.repo.owner.login,
+      head.repo.name,
+      head.ref,
+      fullFilePath,
+      fileName,
+      { bytes },
+      sha,
+    );
+
+    if (result.status === "error") {
+      errorFiles.push(fileName);
+    }
+  }
+
+  if (errorFiles.length) {
+    return {
+      text: `Upload failed for following files: ${errorFiles.join(", ")}`,
+      status: "error",
+    };
+  } else {
+    return {
+      text: "Uploaded successfully",
+      status: "success",
+    };
+  }
 }
 
 export async function fetchSchemaFromURL(url) {

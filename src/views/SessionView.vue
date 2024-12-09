@@ -14,6 +14,7 @@ import {
   DeleteFile,
   ActionTabFileList,
   CreateFile,
+  FileUploader,
   DuplicateFile,
 } from "@/components/file";
 import { encodeString, AUTOMATION } from "@/helpers/index.js";
@@ -29,6 +30,7 @@ const fileChangesList = ref(null);
 const totalPage = ref(0);
 const addNewFileDialog = ref(false);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
+const uploadFilesDialog = ref(false);
 
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
@@ -73,6 +75,12 @@ onMounted(async () => {
         "Create a file by entering the file path and details manually.",
       icon: "mdi-plus",
       func: () => addNewFileClick(true),
+    },
+    {
+      title: "Upload Files",
+      description: "Upload files from your computer.",
+      icon: "mdi-upload",
+      func: () => (uploadFilesDialog.value = true),
     },
   ];
 
@@ -227,6 +235,13 @@ const handleAutomationClose = () => {
   </v-list>
 
   <ListPagination v-if="fileChangesList" :page :totalPage :onPageChange />
+
+  <FileUploader
+    :open="uploadFilesDialog"
+    :close="() => (uploadFilesDialog = false)"
+    :session
+    :updateDetails
+  />
 
   <!-- Use the Automation component -->
   <v-dialog v-model="automationDialog" max-width="500px">
