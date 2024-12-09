@@ -25,7 +25,7 @@ const props = defineProps({
 
 const duplicateFile = ref(false);
 
-const duplicateFileClick = async (state = true) => {
+const duplicateFileClick = async (state) => {
   duplicateFile.value = state;
 };
 </script>
@@ -40,7 +40,7 @@ const duplicateFileClick = async (state = true) => {
       :text="props.text"
       variant="text"
       :disabled="props.file?.status === 'removed'"
-      @click="duplicateFileClick"
+      @click="duplicateFileClick(props.file)"
       class="text-capitalize font-weight-medium"
     ></v-btn>
   </Tooltip>
