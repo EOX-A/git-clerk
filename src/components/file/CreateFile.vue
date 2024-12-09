@@ -4,8 +4,10 @@ import {
   createAndUpdateFile,
   fetchSchemaFromURL,
   getBranchFileStructure,
+  getFileDetails,
 } from "@/api/index.js";
 import {
+  decodeString,
   encodeString,
   getSchemaDetails,
   stringifyIfNeeded,
@@ -33,6 +35,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  duplicateFile: {
+    type: Object,
+    default: null,
+  },
   addNewFileClick: Function,
   updateDetails: Function,
 });
@@ -59,7 +65,24 @@ const addOrEditFile = async () => {
     name: filePath.value,
   });
 
-  if (existingFile) {
+  if (props.duplicateFile) {
+    const loader = useLoader().show();
+    const fileDetails = await getFileDetails(
+      props.session,
+      props.duplicateFile.title,
+      false,
+    );
+    fileContent.value = decodeString(fileDetails.content);
+    if (fileDetails.encoding !== "none") {
+      createFile(existingFile?.sha);
+    } else {
+      snackbar.value = {
+        text: "File is large and cannot be duplicated by Git Clerk",
+        status: "error",
+      };
+    }
+    loader.hide();
+  } else if (existingFile) {
     onSelectFile(existingFile);
   } else {
     const fullPath = updatedFilePath.value + filePath.value;
@@ -162,7 +185,7 @@ const close = () => {
   currPathDirStructure.value = [];
 };
 
-const createFile = async () => {
+const createFile = async (sha = null) => {
   if (!filePath.value) {
     snackbar.value = {
       text: "Please add a filename",
@@ -182,6 +205,7 @@ const createFile = async () => {
     fullFilePath,
     filePath.value,
     fileContent.value,
+    sha,
   );
   if (snackbar.value.status === "success") {
     await router.push(`/${props.session.number}/${encodeString(fullFilePath)}`);
@@ -207,10 +231,10 @@ const getSelectedFileFolder = (name) => {
 
 <template>
   <div v-if="props.open" class="d-flex justify-center border-b create-file">
-    <v-row>
-      <v-col cols="12" class="d-flex">
+    <v-row class="mr-0">
+      <v-col cols="12" class="d-flex pr-0">
         <div
-          class="px-6 py-6 border-b-thin session-create-field d-flex w-100 align-center justify-center"
+          :class="`px-6 ${props.duplicateFile ? 'py-4' : 'py-6'} border-b-thin session-create-field d-flex w-100 align-center justify-center`"
         >
           <v-combobox
             v-model="filePath"
@@ -250,13 +274,21 @@ const getSelectedFileFolder = (name) => {
               </v-list-item>
             </template>
           </v-combobox>
-          <v-btn
-            @click="addOrEditFile"
-            icon="mdi-plus"
-            variant="flat"
-            color="primary"
-            size="large"
-          ></v-btn>
+          <div class="d-flex align-center ga-2">
+            <v-btn
+              @click="addOrEditFile"
+              :icon="props.duplicateFile ? 'mdi-content-copy' : 'mdi-plus'"
+              variant="flat"
+              color="primary"
+              size="large"
+            ></v-btn>
+            <v-btn
+              variant="text"
+              icon="mdi-close"
+              @click="close"
+              class="px-1 rounded-circle"
+            ></v-btn>
+          </div>
         </div>
       </v-col>
     </v-row>
