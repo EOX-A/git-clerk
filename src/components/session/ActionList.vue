@@ -7,10 +7,6 @@ defineProps({
     type: Object,
     required: true,
   },
-  snackbar: {
-    type: Object,
-    required: true,
-  },
   callBack: {
     type: Function,
     required: true,
@@ -20,7 +16,7 @@ defineProps({
 
 <template>
   <div class="d-none d-sm-flex">
-    <Actions :session="session" :snackbar="snackbar" :callBack="callBack" />
+    <Actions :session="session" :callBack="callBack" />
   </div>
   <div class="d-flex d-sm-none">
     <v-menu :close-on-content-click="false">
@@ -33,7 +29,7 @@ defineProps({
         ></v-btn>
       </template>
       <v-list>
-        <Actions :session="session" :snackbar="snackbar" :callBack="callBack" />
+        <Actions :session="session" :callBack="callBack" />
       </v-list>
     </v-menu>
   </div>
