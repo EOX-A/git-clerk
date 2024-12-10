@@ -17,6 +17,8 @@ import map from "lodash.map";
 import { useRouter } from "vue-router";
 import find from "lodash.find";
 
+const emit = defineEmits(["changed"]);
+
 const router = useRouter();
 
 const filePath = ref(null);
@@ -32,6 +34,10 @@ const props = defineProps({
     default: {},
   },
   open: {
+    type: Boolean,
+    default: false,
+  },
+  pathSelector: {
     type: Boolean,
     default: false,
   },
@@ -172,6 +178,7 @@ watch(updatedFilePathArr, async (newPathArr) => {
   currPathDirStructure.value = await getBranchFileStructure(
     props.session,
     currPath,
+    true,
   );
 });
 
@@ -195,7 +202,7 @@ const createFile = async (sha = null) => {
   }
   const loader = useLoader().show();
 
-  const fullFilePath = (updatedFilePath.value + filePath.value).replace(
+  const fullFilePath = (updatedFilePath.value + (filePath.value || "")).replace(
     "/",
     "",
   );
@@ -227,21 +234,33 @@ const onSelectFile = (item) => {
 const getSelectedFileFolder = (name) => {
   return find(currPathDirStructure.value, { name });
 };
+
+watch([filePath, updatedFilePath], ([newFilePath, newUpdatedFilePath]) => {
+  const fullFilePath = (newUpdatedFilePath + (newFilePath || "")).replace(
+    "/",
+    "",
+  );
+
+  emit("changed", fullFilePath);
+});
 </script>
 
 <template>
-  <div v-if="props.open" class="d-flex justify-center border-b create-file">
+  <div
+    v-if="props.open"
+    :class="`d-flex justify-center ${props.pathSelector ? '' : 'border-b'} create-file`"
+  >
     <v-row class="mr-0">
       <v-col cols="12" class="d-flex pr-0">
         <div
-          :class="`px-6 ${props.duplicateFile ? 'py-4' : 'py-6'} border-b-thin session-create-field d-flex w-100 align-center justify-center`"
+          :class="`${props.pathSelector ? 'px-0 py-3 path-selector' : props.duplicateFile ? 'px-6 py-4 border-b-thin' : 'px-6 py-6 border-b-thin'} session-create-field d-flex w-100 align-center justify-center`"
         >
           <v-combobox
             v-model="filePath"
             @paste="onPastePathName"
             @keydown="onKeyDownPathName"
-            label="File Name"
-            placeholder="my/new/file.txt"
+            :label="props.pathSelector ? 'File Path' : 'File Name'"
+            :placeholder="props.pathSelector ? 'my/new/path/' : 'file.txt'"
             :items="map(currPathDirStructure, 'name')"
             hide-details
             color="primary"
@@ -249,7 +268,7 @@ const getSelectedFileFolder = (name) => {
           >
             <template #prepend-inner>
               <span
-                class="prepend text-mono font-weight-bold text-primary opacity-80"
+                class="prepend text-mono font-weight-bold text-primary opacity-80 text-no-wrap"
                 >(root){{ updatedFilePath }}</span
               >
             </template>
@@ -274,7 +293,7 @@ const getSelectedFileFolder = (name) => {
               </v-list-item>
             </template>
           </v-combobox>
-          <div class="d-flex align-center ga-2">
+          <div v-if="!props.pathSelector" class="d-flex align-center ga-2">
             <v-btn
               @click="addOrEditFile"
               :icon="props.duplicateFile ? 'mdi-content-copy' : 'mdi-plus'"
@@ -337,8 +356,16 @@ const getSelectedFileFolder = (name) => {
   border-bottom: 1px solid #647078;
 }
 
+.session-create-field.path-selector {
+  border-bottom: none;
+}
+
 .session-create-field .v-field {
   border-radius: 6px 0px 0px 6px;
+}
+
+.session-create-field.path-selector .v-field {
+  border-radius: 6px;
 }
 
 .session-create-field button {

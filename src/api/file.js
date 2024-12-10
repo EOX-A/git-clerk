@@ -100,6 +100,7 @@ export async function branchFileStructure(
   repo,
   ref,
   path,
+  noFiles = false,
 ) {
   const dirStructure = [];
 
@@ -112,6 +113,10 @@ export async function branchFileStructure(
     });
 
     for (const item of data) {
+      if (noFiles && item.type === "file") {
+        continue;
+      }
+
       dirStructure.push({
         ...item,
         icon: item.type === "dir" ? "folder" : "file",
