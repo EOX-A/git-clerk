@@ -94,6 +94,7 @@ const saveFile = async () => {
           schemaMetaDetails.value.output
             ? updatedFileContent.value[schemaMetaDetails.value.output]
             : updatedFileContent.value,
+          decodeString(file.value.content),
         )
       : updatedFileContent.value,
     file.value.sha,
