@@ -14,3 +14,10 @@ export const CHECK_STATUS = {
     success: false,
   },
 };
+
+export const OSC_REQUIRED_PROPERTIES_PATHS = {
+  "osc:themes": "themes",
+  "osc:missions": "eo-missions",
+  "osc:project": "projects",
+  "osc:variables": "variables",
+};

@@ -110,6 +110,9 @@ export async function branchFileStructure(
       repo,
       ref,
       path,
+      headers: {
+        "If-None-Match": "",
+      },
     });
 
     for (const item of data) {
