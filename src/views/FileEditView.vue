@@ -251,7 +251,7 @@ onUnmounted(() => {
   margin-inline-end: 6px;
 }
 .file-editor.non-preview-height {
-  height: 95%;
+  min-height: 95%;
 }
 .file-editor .je-indented-panel .row {
   margin-top: 10px;
