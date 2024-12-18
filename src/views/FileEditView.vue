@@ -28,7 +28,7 @@ import {
 import { ActionTabFileEditor } from "@/components/file/index.js";
 import debounce from "lodash.debounce";
 import "@eox/jsonform";
-import { OSC_REQUIRED_PROPERTIES_PATHS } from "@/enums";
+import { PROPERTIES_ENUM_PATHS } from "@/enums";
 
 const route = useRoute();
 const router = useRouter();
@@ -73,11 +73,14 @@ const updateFileDetails = async (cache = true) => {
     schema,
   };
   if (schemaMetaDetails.value.schema.allOf) {
-    for (const property of Object.keys(OSC_REQUIRED_PROPERTIES_PATHS)) {
+    for (const property of Object.keys(PROPERTIES_ENUM_PATHS)) {
       const propertyAvailable =
         schemaMetaDetails.value.schema.allOf[1].properties[property];
       if (propertyAvailable) {
-        const path = OSC_REQUIRED_PROPERTIES_PATHS[property];
+        let path = PROPERTIES_ENUM_PATHS[property];
+        if (path.startsWith("/")) {
+          path = path.substring(1);
+        }
         const folders = await getBranchFileStructure(session.value, path, true);
         const enumValues = folders.map((folder) => folder.path);
         if (propertyAvailable.items) {

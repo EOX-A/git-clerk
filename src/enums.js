@@ -15,9 +15,4 @@ export const CHECK_STATUS = {
   },
 };
 
-export const OSC_REQUIRED_PROPERTIES_PATHS = {
-  "osc:themes": "themes",
-  "osc:missions": "eo-missions",
-  "osc:project": "projects",
-  "osc:variables": "variables",
-};
+export const PROPERTIES_ENUM_PATHS = globalThis.propertiesEnumPath;
