@@ -178,7 +178,7 @@ watch(updatedFilePathArr, async (newPathArr) => {
   currPathDirStructure.value = await getBranchFileStructure(
     props.session,
     currPath,
-    true,
+    props.duplicateFile ? true : false,
   );
 });
 

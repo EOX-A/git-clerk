@@ -14,3 +14,5 @@ export const CHECK_STATUS = {
     success: false,
   },
 };
+
+export const PROPERTIES_ENUM_PATHS = globalThis.propertiesEnumPath;

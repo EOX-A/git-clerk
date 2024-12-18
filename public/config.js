@@ -314,3 +314,10 @@ globalThis.automation = [
     ]
   }
 ]
+
+globalThis.propertiesEnumPath = {
+  "osc:themes": "/themes",
+  "osc:missions": "/eo-missions",
+  "osc:project": "/projects",
+  "osc:variables": "/variables",
+};
