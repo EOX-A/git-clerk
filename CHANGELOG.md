@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.0](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.0.0...git-clerk-v1.1.0) (2024-12-19)
+
+
+### Features
+
+* Add dependency ([#61](https://github.com/EOX-A/git-clerk/issues/61)) ([2683fec](https://github.com/EOX-A/git-clerk/commit/2683fec476d6e0c7671080b1ebd84ab52b28d657))
+
 ## [1.0.0](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.0.0-alpha.1...git-clerk-v1.0.0) (2024-12-16)
 
 
