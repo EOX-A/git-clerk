@@ -27,6 +27,8 @@ import {
 import { ActionTabFileEditor } from "@/components/file/index.js";
 import debounce from "lodash.debounce";
 import "@eox/jsonform";
+import "@eox/drawtools";
+import "@eox/map";
 
 const route = useRoute();
 const router = useRouter();

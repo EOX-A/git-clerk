@@ -96,6 +96,10 @@ export function initEOXJSONFormMethod(
             margin-top: 10px;
             padding: 10px;
           }
+          [data-schemapath*="spatial"] .je-indented-panel div,
+          [data-schemapath*="temporal"] .je-indented-panel div {
+            grid-template-columns: 1fr !important;
+          }
         `
         : ``
     }
