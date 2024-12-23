@@ -40,7 +40,7 @@ export async function createSession(octokit, githubConfig, prName) {
   const username = (await octokit.rest.users.getAuthenticated()).data.login;
   const slugifiedPrName = slugify(prName, {
     lower: true,
-    remove: /[*+~.()'"!:@]/g,
+    strict: true,
   });
   const forkBranchName = `${username}/${slugifiedPrName}`;
 
