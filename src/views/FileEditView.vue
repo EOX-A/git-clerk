@@ -26,7 +26,9 @@ import {
 } from "../methods/file-edit-view";
 import { ActionTabFileEditor } from "@/components/file/index.js";
 import debounce from "lodash.debounce";
-import "@eox/jsonform";
+// TODO: Remove this once we have a proper way to add custom editors
+import "../../../EOxElements/elements/jsonform/src/main";
+// import "@eox/jsonform";
 import "@eox/drawtools";
 import "@eox/map";
 
@@ -44,6 +46,7 @@ const jsonFormInstance = ref(null);
 const isSchemaBased = ref(false);
 const previewURL = ref(null);
 const schemaMetaDetails = ref(null);
+const customEditorInterfaces = ref(null);
 
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
@@ -66,8 +69,16 @@ const updateFileDetails = async (cache = true) => {
   });
 
   const schemaDetails = getSchemaDetails("/" + filePath) || getFileSchema();
-  const schema =
+
+  // TODO: Remove this once we have a proper way to add custom editors
+  let schema =
     schemaDetails.schema || (await fetchSchemaFromURL(schemaDetails.url));
+  schema.allOf[0].properties.test = {
+    title: "Test Field",
+    type: "array",
+    format: "test-editor",
+  };
+
   schemaMetaDetails.value = {
     ...schemaDetails,
     schema,
@@ -143,6 +154,7 @@ const resetContent = () => {
 };
 
 onMounted(async () => {
+  customEditorInterfaces.value = globalThis.customEditorInterfaces || [];
   const loader = useLoader().show();
   updateNavButtonConfig();
   await updateFileDetails();
@@ -194,7 +206,11 @@ onUnmounted(() => {
       >
     </div>
     <v-row v-else no-gutters :class="previewURL ? 'd-block d-sm-flex' : ''">
-      <v-col :cols="previewURL ? 3 : 12" class="overflow-x-auto">
+      <v-col
+        v-if="customEditorInterfaces"
+        :cols="previewURL ? 3 : 12"
+        class="overflow-x-auto"
+      >
         <eox-jsonform
           :schema="schemaMetaDetails.schema"
           :value="fileContent"
@@ -202,6 +218,7 @@ onUnmounted(() => {
           :unstyled="false"
           :class="previewURL ? 'with-preview' : ''"
           @change="onFileChange"
+          :customEditorInterfaces="customEditorInterfaces"
         ></eox-jsonform>
       </v-col>
       <v-col v-if="previewURL" class="file-preview">

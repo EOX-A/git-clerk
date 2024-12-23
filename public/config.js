@@ -314,3 +314,34 @@ globalThis.automation = [
     ]
   }
 ]
+
+class TestEditor extends JSONEditor.AbstractEditor {
+  register() {
+    console.log("register plugin")
+    super.register();
+  }
+
+  unregister() {
+    console.log("unregister plugin")
+    super.unregister();
+  }
+
+  // Build the editor UI
+  build() {
+    console.log("build plugin")
+  }
+
+  // Destroy the editor and remove all associated elements
+  destroy() {
+    console.log("destroy plugin")
+    super.destroy();
+  }
+}
+
+globalThis.customEditorInterfaces = [
+  {
+    type: "array",
+    format: "test-editor",
+    func: TestEditor,
+  },
+]
