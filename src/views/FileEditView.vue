@@ -3,6 +3,7 @@ import { inject, onMounted, onUnmounted, ref } from "vue";
 import {
   createAndUpdateFile,
   fetchSchemaFromURL,
+  getBranchFileStructure,
   getFileDetails,
   getSessionDetails,
 } from "@/api/index.js";
@@ -31,6 +32,7 @@ import "../../../EOxElements/elements/jsonform/src/main";
 // import "@eox/jsonform";
 import "@eox/drawtools";
 import "@eox/map";
+import { PROPERTIES_ENUM_PATHS } from "@/enums";
 
 const route = useRoute();
 const router = useRouter();
@@ -84,6 +86,25 @@ const updateFileDetails = async (cache = true) => {
     ...schemaDetails,
     schema,
   };
+  if (schemaMetaDetails.value.schema.allOf) {
+    for (const property of Object.keys(PROPERTIES_ENUM_PATHS)) {
+      const propertyAvailable =
+        schemaMetaDetails.value.schema.allOf[1].properties[property];
+      if (propertyAvailable) {
+        let path = PROPERTIES_ENUM_PATHS[property];
+        if (path.startsWith("/")) {
+          path = path.substring(1);
+        }
+        const folders = await getBranchFileStructure(session.value, path, true);
+        const enumValues = folders.map((folder) => folder.path);
+        if (propertyAvailable.items) {
+          propertyAvailable.items.enum = enumValues;
+        } else {
+          propertyAvailable.enum = ["", ...enumValues];
+        }
+      }
+    }
+  }
 
   const fileDetails = await getFileDetails(session.value, filePath, cache);
   queryFileDetailsMethod(fileDetails, {
@@ -253,7 +274,7 @@ onUnmounted(() => {
   margin-inline-end: 6px;
 }
 .file-editor.non-preview-height {
-  height: 95%;
+  min-height: 95%;
 }
 .file-editor .je-indented-panel .row {
   margin-top: 10px;

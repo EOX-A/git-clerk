@@ -402,3 +402,9 @@ globalThis.customEditorInterfaces = [
     func: TestEditor,
   },
 ]
+globalThis.propertiesEnumPath = {
+  "osc:themes": "/themes",
+  "osc:missions": "/eo-missions",
+  "osc:project": "/projects",
+  "osc:variables": "/variables",
+};
