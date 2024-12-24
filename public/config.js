@@ -317,30 +317,87 @@ globalThis.automation = [
 
 class TestEditor extends JSONEditor.AbstractEditor {
   register() {
-    console.log("register plugin")
+    console.log("register plugin");
     super.register();
   }
 
   unregister() {
-    console.log("unregister plugin")
+    console.log("unregister plugin");
     super.unregister();
   }
 
   // Build the editor UI
   build() {
-    console.log("build plugin")
+    const properties = this.schema.properties;
+    const options = this.options;
+    const description = this.schema.description;
+    const theme = this.theme;
+    const startVals = this.defaults.startVals[this.key];
+
+    // Create label and description elements if not in compact mode
+    if (!options.compact)
+      this.header = this.label = theme.getFormInputLabel(
+        this.getTitle(),
+        this.isRequired(),
+      );
+    if (description)
+      this.description = theme.getFormInputDescription(
+        this.translateProperty(description),
+      );
+    if (options.infoText)
+      this.infoButton = theme.getInfoButton(
+        this.translateProperty(options.infoText),
+      );
+
+    console.log(this);
+    console.log(properties);
+    console.log(options);
+    console.log(description);
+    console.log(theme.getFormControl);
+    console.log(startVals); 
+
+    if (this.schema.type === "string") {
+      const selector = document.createElement("select");
+
+      // Add options to the select input
+      const enumOptions = this.schema.enum || [];
+      enumOptions.forEach(option => {
+        const optionElement = document.createElement("option");
+        optionElement.value = option;
+        optionElement.text = option;
+        selector.appendChild(optionElement);
+      });
+
+      this.input = selector;
+      this.input.id = this.formname;
+      this.control = theme.getFormControl(
+        this.label,
+        this.input,
+        this.description,
+        this.infoButton,
+      );
+      console.log(this.control)
+
+      this.container.appendChild(this.control);
+    }
   }
 
   // Destroy the editor and remove all associated elements
   destroy() {
-    console.log("destroy plugin")
+    console.log("destroy plugin");
+    if (this.label && this.label.parentNode)
+      this.label.parentNode.removeChild(this.label);
+    if (this.description && this.description.parentNode)
+      this.description.parentNode.removeChild(this.description);
+    if (this.input && this.input.parentNode)
+      this.input.parentNode.removeChild(this.input);
     super.destroy();
   }
 }
 
 globalThis.customEditorInterfaces = [
   {
-    type: "array",
+    type: "string",
     format: "test-editor",
     func: TestEditor,
   },

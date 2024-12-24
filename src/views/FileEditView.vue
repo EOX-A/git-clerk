@@ -75,8 +75,9 @@ const updateFileDetails = async (cache = true) => {
     schemaDetails.schema || (await fetchSchemaFromURL(schemaDetails.url));
   schema.allOf[0].properties.test = {
     title: "Test Field",
-    type: "array",
+    type: "string",
     format: "test-editor",
+    enum: ["test1", "test2", "test3"],
   };
 
   schemaMetaDetails.value = {
