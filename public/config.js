@@ -396,32 +396,29 @@ class TestEditor extends JSONEditor.AbstractEditor {
   }
 }
 
-globalThis.customEditorInterfaces = [
-  {
+globalThis.customEditorInterfaces = {
+  "osc:project": {
     type: "string",
     format: "osc-project",
     func: TestEditor,
+    path: "/projects"
   },
-  {
+  "osc:themes": {
     type: "array",
     format: "osc-themes",
     func: TestEditor,
+    path: "/themes"
   },
-  {
-    type: "array",
-    format: "osc-variables",
-    func: TestEditor,
-  },
-  {
+  "osc:missions": {
     type: "array",
     format: "osc-missions",
     func: TestEditor,
+    path: "/eo-missions"
   },
-]
-
-globalThis.propertiesEnumPath = {
-  "osc:themes": "/themes",
-  "osc:missions": "/eo-missions",
-  "osc:project": "/projects",
-  "osc:variables": "/variables",
-};
+  "osc:variables": {
+    type: "array",
+    format: "osc-variables",
+    func: TestEditor,
+    path: "/variables"
+  },
+}

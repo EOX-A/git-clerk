@@ -15,4 +15,4 @@ export const CHECK_STATUS = {
   },
 };
 
-export const PROPERTIES_ENUM_PATHS = globalThis.propertiesEnumPath;
+export const CUSTOM_EDITOR_INTERFACES = globalThis.customEditorInterfaces || {};
