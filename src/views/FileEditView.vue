@@ -72,15 +72,8 @@ const updateFileDetails = async (cache = true) => {
 
   const schemaDetails = getSchemaDetails("/" + filePath) || getFileSchema();
 
-  // TODO: Remove this once we have a proper way to add custom editors
-  let schema =
+  const schema =
     schemaDetails.schema || (await fetchSchemaFromURL(schemaDetails.url));
-  schema.allOf[0].properties.test = {
-    title: "Test Field",
-    type: "string",
-    format: "test-editor",
-    enum: ["test1", "test2", "test3"],
-  };
 
   schemaMetaDetails.value = {
     ...schemaDetails,

@@ -317,12 +317,10 @@ globalThis.automation = [
 
 class TestEditor extends JSONEditor.AbstractEditor {
   register() {
-    console.log("register plugin");
     super.register();
   }
 
   unregister() {
-    console.log("unregister plugin");
     super.unregister();
   }
 
@@ -349,42 +347,45 @@ class TestEditor extends JSONEditor.AbstractEditor {
         this.translateProperty(options.infoText),
       );
 
-    console.log(this);
-    console.log(properties);
-    console.log(options);
-    console.log(description);
-    console.log(theme.getFormControl);
-    console.log(startVals); 
+    const selector = document.createElement("select");
 
-    if (this.schema.type === "string") {
-      const selector = document.createElement("select");
+    // Add options to the select input
+    const enumOptions = this.schema.enum || this.schema.items.enum || [];
+    enumOptions.forEach(option => {
+      const optionElement = document.createElement("option");
+      optionElement.value = option;
+      optionElement.text = option;
+      selector.appendChild(optionElement);
+      if(this.schema.type === "array" && startVals && startVals.includes(option)) {
+        optionElement.selected = true;
+      }
+    });
 
-      // Add options to the select input
-      const enumOptions = this.schema.enum || [];
-      enumOptions.forEach(option => {
-        const optionElement = document.createElement("option");
-        optionElement.value = option;
-        optionElement.text = option;
-        selector.appendChild(optionElement);
+    this.input = selector;
+    this.input.id = this.formname;
+    this.input.name = this.formname;
+    this.input.value = startVals;
+    if (this.schema.type === "array") {
+      this.input.multiple = true;
+      this.input.size = enumOptions.length > 10 ? 10 : enumOptions.length;
+
+      startVals.forEach(val => {
+        const option = Array.from(this.input.options).find(opt => opt.value === val);
+        if (option) option.selected = true;
       });
-
-      this.input = selector;
-      this.input.id = this.formname;
-      this.control = theme.getFormControl(
-        this.label,
-        this.input,
-        this.description,
-        this.infoButton,
-      );
-      console.log(this.control)
-
-      this.container.appendChild(this.control);
     }
+    this.control = theme.getFormControl(
+      this.label,
+      this.input,
+      this.description,
+      this.infoButton,
+    );
+
+    this.container.appendChild(this.control);
   }
 
   // Destroy the editor and remove all associated elements
   destroy() {
-    console.log("destroy plugin");
     if (this.label && this.label.parentNode)
       this.label.parentNode.removeChild(this.label);
     if (this.description && this.description.parentNode)
@@ -398,10 +399,26 @@ class TestEditor extends JSONEditor.AbstractEditor {
 globalThis.customEditorInterfaces = [
   {
     type: "string",
-    format: "test-editor",
+    format: "osc-project",
+    func: TestEditor,
+  },
+  {
+    type: "array",
+    format: "osc-themes",
+    func: TestEditor,
+  },
+  {
+    type: "array",
+    format: "osc-variables",
+    func: TestEditor,
+  },
+  {
+    type: "array",
+    format: "osc-missions",
     func: TestEditor,
   },
 ]
+
 globalThis.propertiesEnumPath = {
   "osc:themes": "/themes",
   "osc:missions": "/eo-missions",
