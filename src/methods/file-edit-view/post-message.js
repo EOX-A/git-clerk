@@ -33,9 +33,9 @@ export function addPostMessageEventMethod({
         }
       }
     }
-    if (event.data && event.data.type === "EDITOR_FILE_UPLOADING")
+    if (event.data && event.data.type === "ENABLE_LOADER_POSTMESSAGE")
       loaderInstance = loader.show();
-    if (event.data && event.data.type === "EDITOR_FILE_UPLOADED")
+    if (event.data && event.data.type === "DISABLE_LOADER_POSTMESSAGE")
       loaderInstance?.hide();
   });
 }

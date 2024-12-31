@@ -84,9 +84,6 @@ const updateFileDetails = async (cache = true) => {
         schemaMetaDetails.value.schema.allOf[1].properties[property];
       if (propertyAvailable) {
         let path = CUSTOM_EDITOR_INTERFACES[property].path;
-        if (path.startsWith("/")) {
-          path = path.substring(1);
-        }
         const folders = await getBranchFileStructure(session.value, path, true);
         const enumValues = folders.map((folder) => folder.path);
         if (propertyAvailable.items) {
