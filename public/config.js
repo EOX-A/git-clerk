@@ -459,6 +459,7 @@ class OSCEditor extends JSONEditor.AbstractEditor {
             editorInterface,
           );
         }
+
         content[this.key] = previousVal;
         this.jsoneditor.setValue(content);
 
@@ -466,6 +467,13 @@ class OSCEditor extends JSONEditor.AbstractEditor {
           this.input.scrollIntoView({ block: "center" });
           handleLoaderPostMessage(false);
         }, 300);
+      } else {
+        this.value =
+          this.schema.type === "array"
+            ? Array.from(e.target.selectedOptions).map((option) => option.value)
+            : e.target.value;
+
+        this.onChange(true);
       }
     });
 
