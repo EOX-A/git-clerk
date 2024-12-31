@@ -128,6 +128,41 @@ const handleFileUpload = async (file, editor, fileType, insertTemplate) => {
   handleLoaderPostMessage(false);
 };
 
+const fetchFileContent = async (filePath) => {
+  const token = await globalThis.ghConfig.config.auth;
+  const owner = globalThis.ghConfig.config.username;
+  const repo = globalThis.ghConfig.config.repo;
+
+  const response = await fetch(
+    `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`,
+    {
+      headers: {
+        Authorization: `token ${token}`,
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch file content from ${filePath}`);
+  }
+
+  const fileContent = await response.json();
+  const decodedContent = JSON.parse(atob(fileContent.content));
+
+  return decodedContent;
+};
+
+const handleFileContentUpdate = async (value, content, editorInterface) => {
+  const filename = editorInterface.file(value);
+  const fileContent = await fetchFileContent(filename);
+  const title = fileContent.title;
+
+  return editorInterface.operation.select(content, {
+    file: filename,
+    title: title,
+  });
+};
+
 const insertImageTool = {
   name: "Attach Image",
   action: (customFunction = (editor) => {
@@ -342,7 +377,6 @@ class OSCEditor extends JSONEditor.AbstractEditor {
     const theme = this.theme;
     const startVals = this.defaults.startVals[this.key];
     const editorInterface = globalThis.customEditorInterfaces[this.key];
-    console.log(startVals);
 
     // Create label and description elements if not in compact mode
     if (!options.compact)
@@ -388,48 +422,14 @@ class OSCEditor extends JSONEditor.AbstractEditor {
       });
     }
 
-    const fetchFileContent = async (filePath) => {
-      const token = await globalThis.ghConfig.config.auth;
-      const owner = globalThis.ghConfig.config.username;
-      const repo = globalThis.ghConfig.config.repo;
-
-      const response = await fetch(
-        `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`,
-        {
-          headers: {
-            Authorization: `token ${token}`,
-          },
-        },
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch file content from ${filePath}`);
-      }
-
-      const fileContent = await response.json();
-      const decodedContent = JSON.parse(atob(fileContent.content));
-      return decodedContent;
-    };
-
     this.input.addEventListener("change", async (e) => {
       let content = this.jsoneditor.getValue();
 
-      const handleFileContentUpdate = async (value) => {
-        const filename = editorInterface.file(value);
-        const fileContent = await fetchFileContent(filename);
-        const title = fileContent.title;
-
-        content = editorInterface.operation.select(content, {
-          file: filename,
-          title: title,
-        });
-        return filename;
-      };
-
-      if (
+      const isValidContentChange =
         content.type === editorInterface.operation.on.type &&
-        content["osc:type"] === editorInterface.operation.on["osc:type"]
-      ) {
+        content["osc:type"] === editorInterface.operation.on["osc:type"];
+
+      if (isValidContentChange) {
         handleLoaderPostMessage(true);
         if (this.schema.type === "array") {
           for (const val of previousVal) {
@@ -440,8 +440,12 @@ class OSCEditor extends JSONEditor.AbstractEditor {
           previousVal = Array.from(e.target.selectedOptions).map(
             (option) => option.value,
           );
-          for (let i = 0; i < previousVal.length; i++) {
-            await handleFileContentUpdate(previousVal[i]);
+          for (const val of previousVal) {
+            content = await handleFileContentUpdate(
+              val,
+              content,
+              editorInterface,
+            );
           }
         } else {
           if (previousVal)
@@ -449,7 +453,11 @@ class OSCEditor extends JSONEditor.AbstractEditor {
               file: editorInterface.file(previousVal),
             });
           previousVal = e.target.value;
-          await handleFileContentUpdate(previousVal);
+          content = await handleFileContentUpdate(
+            previousVal,
+            content,
+            editorInterface,
+          );
         }
         content[this.key] = previousVal;
         this.jsoneditor.setValue(content);
