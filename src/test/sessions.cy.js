@@ -1,3 +1,5 @@
+import "@/main.js";
+
 describe("Hello World Test", () => {
   it("should display Hello World", () => {
     cy.document().then((doc) => {

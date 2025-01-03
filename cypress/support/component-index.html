@@ -7,6 +7,13 @@
     <title>Components App</title>
   </head>
   <body>
+    <div id="app"></div>
     <div data-cy-root></div>
+    <script type="module">
+      globalThis.ghConfig = {
+        githubRepo: "",
+        githubAuthToken: () => new Promise((resolve) => resolve("")),
+      };
+    </script>
   </body>
 </html>
