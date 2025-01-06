@@ -10,7 +10,8 @@
     "lint": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "cypress": "cypress open"
+    "cypress": "cypress open",
+    "cypress:install": "cypress install"
   },
   "engines": {
     "node": ">=20.0.0"

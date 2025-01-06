@@ -32,7 +32,7 @@ const deleteSessionHandle = async () => {
     snackbar.value = await deleteBySessionNumber(deleteSession.value.number);
     deleteSession.value = false;
     loader.hide();
-    await callBack();
+    await props.callBack();
   }
 };
 
