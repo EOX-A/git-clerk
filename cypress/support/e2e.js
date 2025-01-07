@@ -107,6 +107,26 @@ beforeEach(() => {
 
   cy.intercept(
     {
+      method: "GET",
+      url: new RegExp(
+        `${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/${ghConfig.repo}/pulls/[^/]+`,
+      ),
+    },
+    { fixture: "pulls:get.json" },
+  ).as("pullsUpdate");
+
+  cy.intercept(
+    {
+      method: "GET",
+      url: new RegExp(
+        `${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/${ghConfig.repo}/pulls/[^/]+\\/reviews`,
+      ),
+    },
+    [],
+  ).as("pullsReviews");
+
+  cy.intercept(
+    {
       method: "DELETE",
       url: new RegExp(
         `${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/[^/]+\\/git/refs/[^/]+`,
@@ -114,4 +134,22 @@ beforeEach(() => {
     },
     { data: "dummy" },
   ).as("deleteRef");
+
+  cy.intercept(
+    {
+      method: "GET",
+      url: new RegExp(
+        `${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/${ghConfig.repo}/commits/[^/]+\\/check-runs`,
+      ),
+    },
+    {
+      total_count: 1,
+      check_runs: [
+        {
+          status: "completed",
+          conclusion: "cancelled",
+        },
+      ],
+    },
+  ).as("getCheckRuns");
 });

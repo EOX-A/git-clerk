@@ -12,6 +12,7 @@ const dummySession = {
 };
 
 let deleteSession = false;
+let reviewSession = false;
 
 describe("Sessions Related Tests", () => {
   before(() => {
@@ -27,10 +28,29 @@ describe("Sessions Related Tests", () => {
           tempData.items[0].closed_at = true;
           tempData.items[0].state = "closed";
           deleteSession = false;
+        } else if (reviewSession) {
+          tempData.items[1].draft = false;
+          reviewSession = false;
         }
         req.reply(tempData);
       },
     ).as("getSearchIssues");
+
+    cy.intercept(
+      {
+        method: "POST",
+        url: `${GITHUB_HOST}/graphql`,
+      },
+      {
+        data: {
+          markPullRequestReadyForReview: {
+            pullRequest: {
+              title: "dummy-title",
+            },
+          },
+        },
+      },
+    ).as("postGraphql");
   });
 
   it("Render sessions list", () => {
@@ -60,9 +80,26 @@ describe("Sessions Related Tests", () => {
     );
   });
 
+  it("Review a session", () => {
+    reviewSession = true;
+    cy.get(".sessions-view")
+      .eq(1)
+      .find(".v-btn .mdi-file-document-edit")
+      .click();
+    cy.get(".v-card-actions .v-btn.bg-success", { timeout: 30000 }).click();
+    cy.get(".sessions-view")
+      .eq(1)
+      .find("svg.octicon-git-pull-request")
+      .should("exist");
+    cy.get(".sessions-view").eq(1).find("i.text-green").should("exist");
+  });
+
   it("Create a new session", () => {
     cy.get(".navbar .v-btn").click();
     cy.get(".session-create-field .v-field__input").type(dummySession.title);
-    // cy.get(".session-create-field .v-btn").click();
+    cy.get(".session-create-field .v-btn").click();
+    cy.wait("@createPulls").then(() => {
+      cy.location("pathname", { timeout: 10000 }).should("eq", "/123");
+    });
   });
 });
