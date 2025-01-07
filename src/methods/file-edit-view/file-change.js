@@ -22,7 +22,9 @@ export function jsonSchemaFileChangeMethod({
     updatedFileContent.value = detail;
     debouncedPostMessage(message, "*");
     updateNavButtonConfig("Save", false);
-  } else updateNavButtonConfig();
+  } else {
+    updateNavButtonConfig();
+  }
 
   if (isEqual(updatedFileContent.value, fileContent.value))
     updateNavButtonConfig();
