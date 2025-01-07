@@ -422,24 +422,33 @@ class OSCEditor extends JSONEditor.AbstractEditor {
       });
     }
 
+    // Add an event listener for changes on the input element
     this.input.addEventListener("change", async (e) => {
+      // Retrieve the current content from the JSON editor
       let content = this.jsoneditor.getValue();
 
+      // Check if the content change is valid based on the editor interface's operation type
       const isValidContentChange =
         content.type === editorInterface.operation.on.type &&
         content["osc:type"] === editorInterface.operation.on["osc:type"];
 
       if (isValidContentChange) {
+        // Show loader while processing the change
         handleLoaderPostMessage(true);
+
+        // Handle changes for array type schema
         if (this.schema.type === "array") {
+          // Unselect previous values
           for (const val of previousVal) {
             content = editorInterface.operation.unselect(content, {
               file: editorInterface.file(val),
             });
           }
+          // Update previous values with the newly selected options
           previousVal = Array.from(e.target.selectedOptions).map(
             (option) => option.value,
           );
+          // Update content with the new selections
           for (const val of previousVal) {
             content = await handleFileContentUpdate(
               val,
@@ -448,11 +457,14 @@ class OSCEditor extends JSONEditor.AbstractEditor {
             );
           }
         } else {
+          // Handle changes for non-array type schema
           if (previousVal)
             content = editorInterface.operation.unselect(content, {
               file: editorInterface.file(previousVal),
             });
+          // Update previous value with the newly selected option
           previousVal = e.target.value;
+          // Update content with the new selection
           content = await handleFileContentUpdate(
             previousVal,
             content,
@@ -460,19 +472,23 @@ class OSCEditor extends JSONEditor.AbstractEditor {
           );
         }
 
+        // Set the updated content back to the JSON editor
         content[this.key] = previousVal;
         this.jsoneditor.setValue(content);
 
+        // Scroll the input into view and hide the loader after a delay
         setTimeout(() => {
           this.input.scrollIntoView({ block: "center" });
           handleLoaderPostMessage(false);
         }, 300);
       } else {
+        // If the content change is not valid, update the value directly
         this.value =
           this.schema.type === "array"
             ? Array.from(e.target.selectedOptions).map((option) => option.value)
             : e.target.value;
 
+        // Trigger the onChange event
         this.onChange(true);
       }
     });
