@@ -14,14 +14,17 @@ const dummySession = {
 let deleteSession = false;
 let reviewSession = false;
 
-describe("Sessions Related Tests", () => {
+describe("Session list related tests", () => {
   before(() => {
     cy.visit(E2E_URL);
   });
 
   beforeEach(() => {
     cy.intercept(
-      `${GITHUB_HOST}/search/issues?q=repo%3A${ghConfig.username}%2F${ghConfig.repo}%20is%3Apr%20author%3A${user.login}&per_page=10&page=1`,
+      {
+        method: "GET",
+        url: `${GITHUB_HOST}/search/issues?q=repo%3A${ghConfig.username}%2F${ghConfig.repo}%20is%3Apr%20author%3A${user.login}&per_page=10&page=1`,
+      },
       (req) => {
         let tempData = searchIssues;
         if (deleteSession) {

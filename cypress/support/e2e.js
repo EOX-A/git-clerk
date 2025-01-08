@@ -152,4 +152,28 @@ beforeEach(() => {
       ],
     },
   ).as("getCheckRuns");
+
+  cy.intercept(
+    {
+      method: "GET",
+      url: new RegExp(
+        `${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/${ghConfig.repo}/contents`,
+      ),
+    },
+    {
+      fixture: "contents:get.json",
+    },
+  ).as("getContents");
+
+  cy.intercept(
+    {
+      method: "GET",
+      url: new RegExp(
+        `${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/${ghConfig.repo}/pulls/[^/]+/files`,
+      ),
+    },
+    {
+      fixture: "files:get.json",
+    },
+  ).as("getFiles");
 });

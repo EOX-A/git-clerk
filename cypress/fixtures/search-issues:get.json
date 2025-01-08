@@ -2,8 +2,8 @@
   "total_count": 4,
   "items": [
     {
-      "url": "https://api.github.com/repos/ESA-EarthCODE/open-science-catalog-metadata-testing/issues/23",
-      "html_url": "https://github.com/ESA-EarthCODE/open-science-catalog-metadata-testing/pull/23",
+      "url": "https://api.github.com/repos/ESA-EarthCODE/Hello-World/issues/23",
+      "html_url": "https://github.com/ESA-EarthCODE/Hello-World/pull/23",
       "node_id": "PR_foo_bar_1",
       "number": 1,
       "title": "Foo: Bar 1",
@@ -18,8 +18,8 @@
       }
     },
     {
-      "url": "https://api.github.com/repos/ESA-EarthCODE/open-science-catalog-metadata-testing/issues/23",
-      "html_url": "https://github.com/ESA-EarthCODE/open-science-catalog-metadata-testing/pull/23",
+      "url": "https://api.github.com/repos/ESA-EarthCODE/Hello-World/issues/23",
+      "html_url": "https://github.com/ESA-EarthCODE/Hello-World/pull/23",
       "node_id": "PR_foo_bar_2",
       "number": 2,
       "title": "Foo: Bar 2",
@@ -34,8 +34,8 @@
       }
     },
     {
-      "url": "https://api.github.com/repos/ESA-EarthCODE/open-science-catalog-metadata-testing/issues/23",
-      "html_url": "https://github.com/ESA-EarthCODE/open-science-catalog-metadata-testing/pull/23",
+      "url": "https://api.github.com/repos/ESA-EarthCODE/Hello-World/issues/23",
+      "html_url": "https://github.com/ESA-EarthCODE/Hello-World/pull/23",
       "node_id": "PR_foo_bar_3",
       "number": 3,
       "title": "Foo: Bar 3",
@@ -50,8 +50,8 @@
       }
     },
     {
-      "url": "https://api.github.com/repos/ESA-EarthCODE/open-science-catalog-metadata-testing/issues/23",
-      "html_url": "https://github.com/ESA-EarthCODE/open-science-catalog-metadata-testing/pull/23",
+      "url": "https://api.github.com/repos/ESA-EarthCODE/Hello-World/issues/23",
+      "html_url": "https://github.com/ESA-EarthCODE/Hello-World/pull/23",
       "node_id": "PR_foo_bar_4",
       "number": 4,
       "title": "Foo: Bar 4",
