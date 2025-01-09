@@ -27,9 +27,7 @@ import {
 } from "../methods/file-edit-view";
 import { ActionTabFileEditor } from "@/components/file/index.js";
 import debounce from "lodash.debounce";
-// TODO: Remove this once we have a proper way to add custom editors
-import "../../../EOxElements/elements/jsonform/src/main";
-// import "@eox/jsonform";
+import "@eox/jsonform";
 import "@eox/drawtools";
 import "@eox/map";
 import { CUSTOM_EDITOR_INTERFACES } from "@/enums";

@@ -18,9 +18,7 @@ import {
   DuplicateFile,
 } from "@/components/file";
 import { encodeString, AUTOMATION } from "@/helpers/index.js";
-// TODO: Remove this once we have a proper way to add custom editors
-import "../../../EOxElements/elements/jsonform/src/main";
-// import "@eox/jsonform";
+import "@eox/jsonform";
 import Automation from "@/components/session/Automation.vue";
 
 const route = useRoute();
