@@ -361,6 +361,8 @@ globalThis.automation = [
   },
 ];
 
+// Example of how to build a custom editor can be found here:
+// https://github.com/json-editor/json-editor/blob/master/docs/custom-editor.html
 class OSCEditor extends JSONEditor.AbstractEditor {
   register() {
     super.register();
