@@ -264,6 +264,7 @@ globalThis.automation = [
         type: "edit",
         path: "/products/catalog.json",
         transform: (content, input) => {
+          console.log(content)
           content.links = [
             ...content.links,
             {

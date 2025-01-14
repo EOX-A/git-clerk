@@ -11,7 +11,7 @@
   "review_comment_url": "https://api.github.com/repos/octocat/Hello-World/pulls/comments{/number}",
   "comments_url": "https://api.github.com/repos/octocat/Hello-World/issues/1347/comments",
   "statuses_url": "https://api.github.com/repos/octocat/Hello-World/statuses/6dcb09b5b57875f334f61aebed695e2e4193db5e",
-  "number": 1347,
+  "number": 123,
   "state": "open",
   "locked": true,
   "title": "Amazing new feature",
@@ -87,7 +87,7 @@
   "active_lock_reason": "too heated",
   "created_at": "2011-01-26T19:01:12Z",
   "updated_at": "2011-01-26T19:01:12Z",
-  "closed_at": "2011-01-26T19:01:12Z",
+  "closed_at": false,
   "merged_at": "2011-01-26T19:01:12Z",
   "merge_commit_sha": "e5bd3914e2e596debea16f433f57875b5b90bcd6",
   "assignee": {
@@ -152,44 +152,8 @@
       "site_admin": true
     }
   ],
-  "requested_reviewers": [
-    {
-      "login": "other_user",
-      "id": 1,
-      "node_id": "MDQ6VXNlcjE=",
-      "avatar_url": "https://github.com/images/error/other_user_happy.gif",
-      "gravatar_id": "",
-      "url": "https://api.github.com/users/other_user",
-      "html_url": "https://github.com/other_user",
-      "followers_url": "https://api.github.com/users/other_user/followers",
-      "following_url": "https://api.github.com/users/other_user/following{/other_user}",
-      "gists_url": "https://api.github.com/users/other_user/gists{/gist_id}",
-      "starred_url": "https://api.github.com/users/other_user/starred{/owner}{/repo}",
-      "subscriptions_url": "https://api.github.com/users/other_user/subscriptions",
-      "organizations_url": "https://api.github.com/users/other_user/orgs",
-      "repos_url": "https://api.github.com/users/other_user/repos",
-      "events_url": "https://api.github.com/users/other_user/events{/privacy}",
-      "received_events_url": "https://api.github.com/users/other_user/received_events",
-      "type": "User",
-      "site_admin": false
-    }
-  ],
-  "requested_teams": [
-    {
-      "id": 1,
-      "node_id": "MDQ6VGVhbTE=",
-      "url": "https://api.github.com/teams/1",
-      "html_url": "https://github.com/orgs/github/teams/justice-league",
-      "name": "Justice League",
-      "slug": "justice-league",
-      "description": "A great team.",
-      "privacy": "closed",
-      "notification_setting": "notifications_enabled",
-      "permission": "admin",
-      "members_url": "https://api.github.com/teams/1/members{/member}",
-      "repositories_url": "https://api.github.com/teams/1/repos"
-    }
-  ],
+  "requested_reviewers": [],
+  "requested_teams": [],
   "head": {
     "label": "octocat:new-topic",
     "ref": "new-topic",

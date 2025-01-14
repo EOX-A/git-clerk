@@ -169,11 +169,31 @@ beforeEach(() => {
     {
       method: "GET",
       url: new RegExp(
-        `${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/${ghConfig.repo}/pulls/[^/]+/files`,
+        `${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/${ghConfig.repo}/contents/[^/]+`,
       ),
     },
     {
-      fixture: "files:get.json",
+      fixture: "content:get.json",
     },
-  ).as("getFiles");
+  ).as("getContent");
+
+  cy.intercept(
+    {
+      method: "PUT",
+      url: new RegExp(
+        `${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/${ghConfig.repo}/contents/[^/]+`,
+      ),
+    },
+    {},
+  ).as("putContent");
+
+  cy.intercept(
+    {
+      method: "DELETE",
+      url: new RegExp(
+        `${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/${ghConfig.repo}/contents/[^/]+`,
+      ),
+    },
+    {},
+  ).as("deleteContent");
 });

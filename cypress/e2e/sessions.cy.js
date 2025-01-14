@@ -9,6 +9,8 @@ const dummySession = {
   node_id: "PR_foo_bar_5",
   number: 5,
   title: "Foo: Bar 5",
+  draft: false,
+  state: "open",
 };
 
 let deleteSession = false;
