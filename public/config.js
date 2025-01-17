@@ -90,10 +90,11 @@ const handleFileUpload = async (file, editor, fileType, insertTemplate) => {
 
     const uploadData = await uploadResponse.json();
     const fileUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${uploadData.commit.sha}/${PATH_TO_UPLOAD}/${fileName}`;
+    const backupUrl = uploadData.content.download_url
 
     // Insert using provided template
     editor.codemirror.getDoc().setValue(
-      editor.codemirror.getDoc().getValue() + insertTemplate(fileUrl)
+      editor.codemirror.getDoc().getValue() + insertTemplate(fileUrl, backupUrl)
     );
 
   } catch (error) {
@@ -117,13 +118,12 @@ const insertImageTool = {
     let input = document.createElement('input');
     input.type = 'file';
     input.onchange = async e => {
-      console.log(globalThis.ghConfig);
       const file = e.target.files[0];
       await handleFileUpload(
         file, 
         editor, 
         'image',
-        (url) => `\n![](${url})`
+        (url, backupUrl) => `\n![](${url}${backupUrl ? ` "temp-backup-url=${backupUrl}"` : ""})`
       );
     };
     input.click();
@@ -138,13 +138,12 @@ const insertVideoTool = {
     let input = document.createElement('input');
     input.type = 'file';
     input.onchange = async e => {
-      console.log(globalThis.ghConfig);
       const file = e.target.files[0];
       await handleFileUpload(
         file, 
         editor, 
         'video',
-        (url) => `\n<video src="${url}" controls></video>`
+        (url, backupUrl) => `\n<video src="${url}" ${backupUrl ? `title="temp-backup-url=${backupUrl}"`: ""} controls></video>`
       );
     };
     input.click();
