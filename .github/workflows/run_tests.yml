@@ -44,7 +44,7 @@ jobs:
       - name: Install dependencies 👨🏻‍💻
         run: npm ci --prefer-offline --no-audit
 
-      - name: Cypress run
+      - name: Cypress run e2e tests 👀
         uses: cypress-io/github-action@v6
         with:
           start: npm run test:serve
