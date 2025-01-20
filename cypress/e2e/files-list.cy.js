@@ -89,9 +89,18 @@ describe("Files list related tests", () => {
   it("Duplicate a file", () => {
     duplicateFile = true;
     cy.get(".files-view").eq(0).find(".v-btn .mdi-content-copy").click();
-    cy.get(".files-view").eq(0).find(".v-field__input").type("products/");
-    cy.get(".files-view").eq(0).find(".v-field__input").type("foo2/");
-    cy.get(".files-view").eq(0).find(".v-field__input").type("collection.json");
+    cy.get(".files-view").eq(0).find(".v-field__input").type("products/", {
+      delay: 100,
+    });
+    cy.get(".files-view").eq(0).find(".v-field__input").type("foo2/", {
+      delay: 100,
+    });
+    cy.get(".files-view")
+      .eq(0)
+      .find(".v-field__input")
+      .type("collection.json", {
+        delay: 100,
+      });
     cy.get(".files-view")
       .eq(0)
       .find(".session-create-field .mdi-content-copy")
@@ -123,8 +132,12 @@ describe("Files list related tests", () => {
     cy.get("eox-jsonform#automation-form")
       .shadow()
       .within(() => {
-        cy.get(".je-indented-panel .form-control input").eq(0).type("foo3");
-        cy.get(".je-indented-panel .form-control input").eq(1).type("Foo");
+        cy.get(".je-indented-panel .form-control input").eq(0).type("foo3", {
+          delay: 100,
+        });
+        cy.get(".je-indented-panel .form-control input").eq(1).type("Foo", {
+          delay: 100,
+        });
         cy.get(".je-indented-panel .form-control input").eq(1).blur();
         isProductContent = true;
       });
@@ -152,8 +165,12 @@ describe("Files list related tests", () => {
     cy.get("eox-jsonform#automation-form")
       .shadow()
       .within(() => {
-        cy.get(".je-indented-panel .form-control input").eq(0).type("story1");
-        cy.get(".je-indented-panel .form-control input").eq(1).type("Story");
+        cy.get(".je-indented-panel .form-control input").eq(0).type("story1", {
+          delay: 100,
+        });
+        cy.get(".je-indented-panel .form-control input").eq(1).type("Story", {
+          delay: 100,
+        });
         cy.get(".je-indented-panel .form-control input").eq(1).blur();
         isNarrativeContent = true;
       });
@@ -162,7 +179,7 @@ describe("Files list related tests", () => {
       "eq",
       "/123/bmFycmF0aXZlcy9zdG9yeTEubWQ=",
     );
-    cy.get("iframe#previewFrame").should("be.visible");
+    cy.get("iframe#previewFrame", { timeout: 50000 }).should("be.visible");
     cy.get("iframe#previewFrame")
       .its("0.contentDocument")
       .find("h1")
@@ -174,7 +191,9 @@ describe("Files list related tests", () => {
   it("Add new manual content", () => {
     cy.get(".navbar .v-btn").click();
     cy.get(".v-list.button-list .v-list-item").eq(2).click();
-    cy.get(".session-create-field .v-field__input").type("manual-file.txt");
+    cy.get(".session-create-field .v-field__input").type("manual-file.txt", {
+      delay: 100,
+    });
     isManualContent = true;
     cy.get(".session-create-field .mdi-plus").click();
     cy.location("pathname", { timeout: 10000 }).should(
@@ -191,7 +210,12 @@ describe("Files list related tests", () => {
   it("Upload a file", () => {
     cy.get(".navbar .v-btn").click();
     cy.get(".v-list.button-list .v-list-item").eq(3).click();
-    cy.get(".create-file .session-create-field .v-field__input").type("hello/");
+    cy.get(".create-file .session-create-field .v-field__input").type(
+      "hello/",
+      {
+        delay: 100,
+      },
+    );
     cy.get('input[type="file"]').selectFile("cypress/fixtures/code.js", {
       force: true,
     });

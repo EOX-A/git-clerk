@@ -7,6 +7,8 @@
     "start": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
+    "test:start": "concurrently --kill-others \"npm run start\" \"npm run test\"",
+    "test": "cypress run --e2e --browser chrome",
     "lint": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -39,6 +41,7 @@
   "devDependencies": {
     "@eox/eslint-config": "^2.0.0",
     "@vitejs/plugin-vue": "^5.0.5",
+    "concurrently": "^9.1.2",
     "cypress": "^13.17.0",
     "eslint-plugin-vue": "^9.28.0",
     "vite": "^5.3.1"

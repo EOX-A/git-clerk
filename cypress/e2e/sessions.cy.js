@@ -101,7 +101,9 @@ describe("Session list related tests", () => {
 
   it("Create a new session", () => {
     cy.get(".navbar .v-btn").click();
-    cy.get(".session-create-field .v-field__input").type(dummySession.title);
+    cy.get(".session-create-field .v-field__input").type(dummySession.title, {
+      delay: 100,
+    });
     cy.get(".session-create-field .v-btn").click();
     cy.wait("@createPulls").then(() => {
       cy.location("pathname", { timeout: 10000 }).should("eq", "/123");

@@ -44,7 +44,7 @@ describe("File related tests", () => {
       .within(() => {
         cy.get('div[data-schemapath="root.title"] input')
           .clear()
-          .type("Foo Bar");
+          .type("Foo Bar", { delay: 100 });
         cy.get('div[data-schemapath="root.title"] input').blur();
         isProductContentChanged = true;
       });
@@ -71,7 +71,7 @@ describe("File related tests", () => {
   it("Load a narrative file", () => {
     isNarrativeContentChanged = true;
     cy.visit(E2E_URL + "/123/bmFycmF0aXZlcy9zdG9yeTEubWQ=");
-    cy.get("iframe#previewFrame").should("be.visible");
+    cy.get("iframe#previewFrame", { timeout: 50000 }).should("be.visible");
     cy.get("iframe#previewFrame")
       .its("0.contentDocument")
       .find("h1")
