@@ -71,7 +71,8 @@ describe("File related tests", () => {
   it("Load a narrative file", () => {
     isNarrativeContentChanged = true;
     cy.visit(E2E_URL + "/123/bmFycmF0aXZlcy9zdG9yeTEubWQ=");
-    cy.get("iframe#previewFrame", { timeout: 100000 }).should("be.visible");
+    cy.get("iframe#previewFrame").should("be.visible");
+    cy.wait(10000);
     cy.get("iframe#previewFrame")
       .its("0.contentDocument")
       .should("exist")
