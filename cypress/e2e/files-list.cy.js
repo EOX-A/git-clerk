@@ -179,7 +179,8 @@ describe("Files list related tests", () => {
       "eq",
       "/123/bmFycmF0aXZlcy9zdG9yeTEubWQ=",
     );
-    cy.get("iframe#previewFrame", { timeout: 50000 }).should("be.visible");
+    cy.wait(5000);
+    cy.get("iframe#previewFrame").should("be.visible");
     cy.get("iframe#previewFrame")
       .its("0.contentDocument")
       .find("h1")
