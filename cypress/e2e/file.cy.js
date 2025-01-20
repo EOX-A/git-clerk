@@ -1,11 +1,10 @@
-import { E2E_URL } from "../enums";
 import ghConfig from "../fixtures/gh-config.json";
 import { GITHUB_HOST_REGEX } from "../enums";
 import content from "../fixtures/content:get.json";
 
 describe("File related tests", () => {
   before(() => {
-    cy.visit(E2E_URL + "/123/cHJvZHVjdHMvZm9vL2NvbGxlY3Rpb24uanNvbg==");
+    cy.visit("/123/cHJvZHVjdHMvZm9vL2NvbGxlY3Rpb24uanNvbg==");
   });
 
   let isProductContentChanged = false;
@@ -70,7 +69,7 @@ describe("File related tests", () => {
 
   it("Load a narrative file", () => {
     isNarrativeContentChanged = true;
-    cy.visit(E2E_URL + "/123/bmFycmF0aXZlcy9zdG9yeTEubWQ=");
+    cy.visit("/123/bmFycmF0aXZlcy9zdG9yeTEubWQ=");
     cy.get("iframe#previewFrame").should("be.visible");
     cy.wait(5000);
     cy.get("iframe#previewFrame")
@@ -94,7 +93,7 @@ describe("File related tests", () => {
 
   it("Load a normal file", () => {
     isNormalContentChanged = true;
-    cy.visit(E2E_URL + "/123/Y29kZS5qcw==");
+    cy.visit("/123/Y29kZS5qcw==");
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {

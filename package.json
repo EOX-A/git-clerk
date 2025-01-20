@@ -7,12 +7,12 @@
     "start": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "test:serve": "VUE_APP_GITHUB_REPO=octocat/Hello-World VUE_APP_GITHUB_TOKEN=dummy-token npm run start",
-    "test": "concurrently \"npm run test:serve\" \"cypress run --e2e --browser chrome\"",
     "lint": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "cypress": "cypress open",
+    "test:serve": "VUE_APP_GITHUB_REPO=octocat/Hello-World VUE_APP_GITHUB_TOKEN=dummy-token npm run start",
+    "test": "node cypress/test.run.js",
+    "cypress": "node cypress/test.run.js --open",
     "cypress:install": "cypress install"
   },
   "engines": {

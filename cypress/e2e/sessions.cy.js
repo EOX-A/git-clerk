@@ -1,7 +1,7 @@
 import searchIssues from "../fixtures/search-issues:get.json";
 import ghConfig from "../fixtures/gh-config.json";
 import user from "../fixtures/user:get.json";
-import { GITHUB_HOST, E2E_URL } from "../enums";
+import { GITHUB_HOST } from "../enums";
 
 const dummySession = {
   url: "https://api.github.com/repos/",
@@ -18,7 +18,7 @@ let reviewSession = false;
 
 describe("Session list related tests", () => {
   before(() => {
-    cy.visit(E2E_URL);
+    cy.visit("/");
   });
 
   beforeEach(() => {

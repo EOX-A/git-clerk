@@ -44,16 +44,10 @@ jobs:
       - name: Install dependencies 👨🏻‍💻
         run: npm ci --prefer-offline --no-audit
 
-      # - name: Run e2e tests 👀
-      #   run: |
-      #     export CI_PATHS_CHANGED=$(git diff --name-only -r HEAD^1 HEAD)
-      #     npm run test:start
-
-      - name: Cypress run
-        uses: cypress-io/github-action@v6
-        with:
-          start: npm run test:serve
-          browser: chrome
+      - name: Run e2e tests 👀
+        run: |
+          export CI_PATHS_CHANGED=$(git diff --name-only -r HEAD^1 HEAD)
+          npm run test
 
       - name: Upload failed test screenshots 📷
         uses: actions/upload-artifact@v4
@@ -61,10 +55,3 @@ jobs:
         with:
           name: cypress-screenshots
           path: cypress/screenshots
-
-      - name: Upload failed test videos 📷
-        uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: cypress-videos
-          path: cypress/videos

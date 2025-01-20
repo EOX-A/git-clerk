@@ -1,4 +1,4 @@
-import { E2E_URL, GITHUB_HOST_REGEX } from "../enums";
+import { GITHUB_HOST_REGEX } from "../enums";
 import ghConfig from "../fixtures/gh-config.json";
 import files from "../fixtures/files:get.json";
 import content from "../fixtures/content:get.json";
@@ -13,7 +13,7 @@ const fileName = "products/foo2/collection.json";
 
 describe("Files list related tests", () => {
   before(() => {
-    cy.visit(E2E_URL + "/123");
+    cy.visit("/123");
   });
 
   beforeEach(() => {
@@ -110,7 +110,7 @@ describe("Files list related tests", () => {
       "eq",
       "/123/cHJvZHVjdHMvZm9vMi9jb2xsZWN0aW9uLmpzb24=",
     );
-    cy.visit(E2E_URL + "/123");
+    cy.visit("/123");
   });
 
   it("Delete a file", () => {
@@ -154,7 +154,7 @@ describe("Files list related tests", () => {
           "have.value",
           "Foo",
         );
-        cy.visit(E2E_URL + "/123");
+        cy.visit("/123");
         isProductContent = false;
       });
   });
@@ -185,7 +185,7 @@ describe("Files list related tests", () => {
       .its("0.contentDocument")
       .find("h1")
       .should("have.text", "Story");
-    cy.visit(E2E_URL + "/123");
+    cy.visit("/123");
     isNarrativeContent = false;
   });
 
@@ -205,7 +205,7 @@ describe("Files list related tests", () => {
       "have.text",
       "manual-file.txt",
     );
-    cy.visit(E2E_URL + "/123");
+    cy.visit("/123");
   });
 
   it("Upload a file", () => {
