@@ -21,6 +21,14 @@ serve.stdout.on("data", (data) => {
       },
       browser: "chrome",
     })
+      .then((results) => {
+        console.log("Cypress results:", results);
+        return results;
+      })
+      .catch((err) => {
+        console.error("Cypress error:", err);
+        throw err;
+      })
       .then(() => {
         serve.kill(); // Kill the serve process after tests complete
       })
