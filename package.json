@@ -7,7 +7,7 @@
     "start": "vite --host",
     "build": "vite build",
     "preview": "vite preview",
-    "test:start": "concurrently --kill-others \"npm run start\" \"npm run test\"",
+    "test:start": "concurrently --kill-others \"VUE_APP_GITHUB_REPO=octocat/Hello-World VUE_APP_GITHUB_TOKEN=dummy-token npm run start\" \"npm run test\"",
     "test": "cypress run --e2e --browser chrome",
     "lint": "eslint . --fix",
     "format": "prettier --write .",
