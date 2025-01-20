@@ -73,7 +73,8 @@ describe("File related tests", () => {
     cy.visit(E2E_URL + "/123/bmFycmF0aXZlcy9zdG9yeTEubWQ=");
     cy.get("iframe#previewFrame", { timeout: 100000 }).should("be.visible");
     cy.get("iframe#previewFrame")
-      .its("0.contentDocument").should("exist")
+      .its("0.contentDocument")
+      .should("exist")
       .find("h1")
       .should("have.text", "Story");
 
