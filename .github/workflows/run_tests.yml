@@ -47,7 +47,7 @@ jobs:
       - name: Run e2e tests 👀
         run: |
           export CI_PATHS_CHANGED=$(git diff --name-only -r HEAD^1 HEAD)
-          node cypress/test.run.js
+          npm run test
 
       # - name: Cypress run e2e tests 👀
       #   uses: cypress-io/github-action@v6
