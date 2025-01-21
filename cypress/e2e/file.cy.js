@@ -4,17 +4,6 @@ import content from "../fixtures/content:get.json";
 
 describe("File related tests", () => {
   before(() => {
-    cy.intercept(
-      {
-        method: "GET",
-        url: `${GITHUB_HOST}/user`,
-      },
-      (req) => {
-        req.reply({
-          fixture: "user:get.json",
-        });
-      },
-    ).as("getUser");
     cy.visit("/123/cHJvZHVjdHMvZm9vL2NvbGxlY3Rpb24uanNvbg==");
   });
 
@@ -48,6 +37,7 @@ describe("File related tests", () => {
   });
 
   it("Load OSC related files", () => {
+    cy.visit("/123/cHJvZHVjdHMvZm9vL2NvbGxlY3Rpb24uanNvbg==");
     cy.wait("@getContent");
     cy.get("eox-jsonform").should("exist");
     cy.get("eox-jsonform")
@@ -83,13 +73,19 @@ describe("File related tests", () => {
     isNarrativeContentChanged = true;
     cy.visit("/123/bmFycmF0aXZlcy9zdG9yeTEubWQ=");
     cy.wait("@getContent");
-    cy.get("iframe#previewFrame").should("exist");
-    cy.get("iframe#previewFrame").should("be.visible");
+
     cy.wait(5000);
+    cy.get("iframe#previewFrame").scrollIntoView();
     cy.get("iframe#previewFrame")
       .its("0.contentDocument")
-      .should("exist")
-      .find("h1")
+      .should("not.be.empty")
+      .its("body")
+      .as("body");
+    cy.get("@body")
+      .should("be.visible")
+      .should("not.be.empty")
+      .then(cy.wrap)
+      .find("h1", { timeout: 10000 })
       .should("have.text", "Story");
 
     cy.get("eox-jsonform").then(($jsonform) => {

@@ -181,11 +181,20 @@ describe("Files list related tests", () => {
       "/123/bmFycmF0aXZlcy9zdG9yeTEubWQ=",
     );
     cy.wait(5000);
-    cy.get("iframe#previewFrame").should("be.visible");
+
+    cy.get("iframe#previewFrame").scrollIntoView();
     cy.get("iframe#previewFrame")
       .its("0.contentDocument")
-      .find("h1")
+      .should("not.be.empty")
+      .its("body")
+      .as("body");
+    cy.get("@body")
+      .should("be.visible")
+      .should("not.be.empty")
+      .then(cy.wrap)
+      .find("h1", { timeout: 10000 })
       .should("have.text", "Story");
+
     cy.visit("/123");
     isNarrativeContent = false;
   });
