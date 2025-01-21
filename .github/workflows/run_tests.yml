@@ -52,7 +52,7 @@ jobs:
       - name: Cypress run e2e tests 👀
         uses: cypress-io/github-action@v6
         with:
-          start: npm run test:serve
+          start: npm run start
           browser: chrome
         env:
           VUE_APP_GITHUB_REPO: octocat/Hello-World
