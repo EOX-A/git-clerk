@@ -1,5 +1,5 @@
 import ghConfig from "../fixtures/gh-config.json";
-import { GITHUB_HOST_REGEX } from "../enums";
+import { GITHUB_HOST, GITHUB_HOST_REGEX } from "../enums";
 import content from "../fixtures/content:get.json";
 
 describe("File related tests", () => {
