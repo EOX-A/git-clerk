@@ -15,6 +15,18 @@ describe("File related tests", () => {
     cy.intercept(
       {
         method: "GET",
+        url: `${GITHUB_HOST}/user`,
+      },
+      (req) => {
+        req.reply({
+          fixture: "user:get.json",
+        });
+      },
+    ).as("getUser");
+
+    cy.intercept(
+      {
+        method: "GET",
         url: new RegExp(
           `${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/${ghConfig.repo}/contents/[^/]+`,
         ),
