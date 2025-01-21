@@ -3,10 +3,6 @@ import { GITHUB_HOST, GITHUB_HOST_REGEX } from "../enums";
 import content from "../fixtures/content:get.json";
 
 describe("File related tests", () => {
-  before(() => {
-    cy.visit("/123/cHJvZHVjdHMvZm9vL2NvbGxlY3Rpb24uanNvbg==");
-  });
-
   let isProductContentChanged = false;
   let isNarrativeContentChanged = false;
   let isNormalContentChanged = false;
@@ -37,7 +33,9 @@ describe("File related tests", () => {
   });
 
   it("Load OSC related files", () => {
+    cy.wait(1000);
     cy.visit("/123/cHJvZHVjdHMvZm9vL2NvbGxlY3Rpb24uanNvbg==");
+    cy.wait("@pullsUpdate");
     cy.wait("@getContent");
     cy.get("eox-jsonform").should("exist");
     cy.get("eox-jsonform")
@@ -72,6 +70,7 @@ describe("File related tests", () => {
   it("Load a narrative file", () => {
     isNarrativeContentChanged = true;
     cy.visit("/123/bmFycmF0aXZlcy9zdG9yeTEubWQ=");
+    cy.wait("@pullsUpdate");
     cy.wait("@getContent");
 
     cy.wait(5000);
@@ -90,15 +89,19 @@ describe("File related tests", () => {
       });
     });
 
-    cy.get("iframe#previewFrame")
-      .its("0.contentDocument")
-      .find("h2")
-      .should("have.text", "Hello World");
+    cy.get("eox-jsonform")
+      .shadow()
+      .within(() => {
+        cy.get("pre.CodeMirror-line span")
+          .eq(2)
+          .should("have.text", "Hello World");
+      });
   });
 
   it("Load a normal file", () => {
     isNormalContentChanged = true;
     cy.visit("/123/Y29kZS5qcw==");
+    cy.wait("@pullsUpdate");
     cy.wait("@getContent");
     cy.get("eox-jsonform").should("exist");
     cy.get("eox-jsonform")
