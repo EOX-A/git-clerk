@@ -19,9 +19,17 @@ import { GITHUB_HOST, GITHUB_HOST_REGEX } from "../enums";
 import ghConfig from "../fixtures/gh-config.json";
 
 beforeEach(() => {
-  cy.intercept("GET", `${GITHUB_HOST}/user`, {
-    fixture: "user:get.json",
-  }).as("getUser");
+  cy.intercept(
+    {
+      method: "GET",
+      url: `${GITHUB_HOST}/user`,
+    },
+    (req) => {
+      req.reply({
+        fixture: "user:get.json",
+      });
+    },
+  ).as("getUser");
 
   cy.intercept(
     "GET",
