@@ -18,7 +18,9 @@ import "./commands";
 import { GITHUB_HOST, GITHUB_HOST_REGEX } from "../enums";
 import ghConfig from "../fixtures/gh-config.json";
 
+// Set up intercepts for all API calls before each test
 beforeEach(() => {
+  // Intercept user info request
   cy.intercept(
     {
       method: "GET",
@@ -31,6 +33,7 @@ beforeEach(() => {
     },
   ).as("getUser");
 
+  // Intercept repository info request
   cy.intercept(
     "GET",
     new RegExp(`${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/[^/]+`),
@@ -39,6 +42,7 @@ beforeEach(() => {
     },
   ).as("getRepo");
 
+  // Intercept merge upstream request
   cy.intercept(
     "POST",
     new RegExp(
@@ -49,6 +53,7 @@ beforeEach(() => {
     },
   ).as("postMergeUpstream");
 
+  // Intercept git ref request
   cy.intercept(
     new RegExp(
       `${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/${ghConfig.repo}/git/ref/heads%2Fmain`,
@@ -56,6 +61,7 @@ beforeEach(() => {
     { object: { sha: "dummy-tree-sha" } },
   ).as("getRef");
 
+  // Intercept git commit request
   cy.intercept(
     new RegExp(
       `${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/${ghConfig.repo}/git/commits/[^/]+`,
@@ -63,6 +69,7 @@ beforeEach(() => {
     { tree: { sha: "dummy-sha" } },
   ).as("getCommit");
 
+  // Intercept create ref request
   cy.intercept(
     {
       method: "POST",
@@ -73,6 +80,7 @@ beforeEach(() => {
     { data: "dummy" },
   ).as("createRef");
 
+  // Intercept create commit request
   cy.intercept(
     {
       method: "POST",
@@ -83,6 +91,7 @@ beforeEach(() => {
     { sha: "dummy-sha" },
   ).as("createCommit");
 
+  // Intercept update ref request
   cy.intercept(
     {
       method: "PATCH",
@@ -93,6 +102,7 @@ beforeEach(() => {
     { data: "dummy" },
   ).as("updateRef");
 
+  // Intercept create pull request
   cy.intercept(
     {
       method: "POST",
@@ -103,6 +113,7 @@ beforeEach(() => {
     { number: 123 },
   ).as("createPulls");
 
+  // Intercept update pull request
   cy.intercept(
     {
       method: "PATCH",
@@ -113,6 +124,7 @@ beforeEach(() => {
     { fixture: "pulls:get.json" },
   ).as("pullsUpdate");
 
+  // Intercept get pull request
   cy.intercept(
     {
       method: "GET",
@@ -123,6 +135,7 @@ beforeEach(() => {
     { fixture: "pulls:get.json" },
   ).as("pullsUpdate");
 
+  // Intercept pull request reviews
   cy.intercept(
     {
       method: "GET",
@@ -133,6 +146,7 @@ beforeEach(() => {
     [],
   ).as("pullsReviews");
 
+  // Intercept delete ref request
   cy.intercept(
     {
       method: "DELETE",
@@ -143,6 +157,7 @@ beforeEach(() => {
     { data: "dummy" },
   ).as("deleteRef");
 
+  // Intercept check runs request
   cy.intercept(
     {
       method: "GET",
@@ -161,6 +176,7 @@ beforeEach(() => {
     },
   ).as("getCheckRuns");
 
+  // Intercept repository contents request
   cy.intercept(
     {
       method: "GET",
@@ -173,6 +189,7 @@ beforeEach(() => {
     },
   ).as("getContents");
 
+  // Intercept specific file content request
   cy.intercept(
     {
       method: "GET",
@@ -185,6 +202,7 @@ beforeEach(() => {
     },
   ).as("getContent");
 
+  // Intercept update file content request
   cy.intercept(
     {
       method: "PUT",
@@ -195,6 +213,7 @@ beforeEach(() => {
     {},
   ).as("putContent");
 
+  // Intercept delete file request
   cy.intercept(
     {
       method: "DELETE",

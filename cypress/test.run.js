@@ -22,7 +22,6 @@ serve.stdout.on("data", (data) => {
       browser: "chrome",
     })
       .then((results) => {
-        console.log("Cypress results:", results);
         return results;
       })
       .catch((err) => {

@@ -1,22 +1,27 @@
+// Import required dependencies and test data
 import { GITHUB_HOST_REGEX } from "../enums";
 import ghConfig from "../fixtures/gh-config.json";
 import files from "../fixtures/files:get.json";
 import content from "../fixtures/content:get.json";
 
+// State flags to control test behavior
 let duplicateFile = false;
 let isProductContent = false;
 let isNarrativeContent = false;
 let isManualContent = false;
 let isUploadFile = false;
 
+// Test file path constant
 const fileName = "products/foo2/collection.json";
 
 describe("Files list related tests", () => {
+  // Visit the session page before all tests
   before(() => {
     cy.visit("/123");
   });
 
   beforeEach(() => {
+    // Intercept GET request for files list
     cy.intercept(
       {
         method: "GET",
@@ -26,10 +31,12 @@ describe("Files list related tests", () => {
       },
       (req) => {
         let tempData = files;
+        // Add duplicate file if flag is set
         if (duplicateFile) {
           tempData.push(files[0]);
           tempData[tempData.length - 1].filename = fileName;
         }
+        // Add uploaded file if flag is set
         if (isUploadFile) {
           tempData.push({
             filename: "hello/code.js",
@@ -45,6 +52,7 @@ describe("Files list related tests", () => {
       },
     ).as("getFiles");
 
+    // Intercept GET request for file contents
     cy.intercept(
       {
         method: "GET",
@@ -54,6 +62,7 @@ describe("Files list related tests", () => {
       },
       (req) => {
         let tempContent = content;
+        // Modify content based on content type flags
         if (isProductContent) {
           tempContent.path = "products/foo3/collection.json";
           tempContent.content =
@@ -73,6 +82,7 @@ describe("Files list related tests", () => {
     ).as("getContent");
   });
 
+  // Test that files list renders correctly
   it("Render files list", () => {
     cy.wait("@getFiles");
     cy.get(".files-view", { timeout: 12000 }).should(
@@ -81,12 +91,14 @@ describe("Files list related tests", () => {
     );
   });
 
+  // Test that file titles match expected values
   it("Validate files list items with title name", () => {
     cy.get(".main-title").each((fileElement, index) => {
       cy.wrap(fileElement).should("have.text", files[index].filename);
     });
   });
 
+  // Test file duplication functionality
   it("Duplicate a file", () => {
     duplicateFile = true;
     cy.get(".files-view").eq(0).find(".v-btn .mdi-content-copy").click();
@@ -114,6 +126,7 @@ describe("Files list related tests", () => {
     cy.visit("/123");
   });
 
+  // Test file deletion functionality
   it("Delete a file", () => {
     cy.wait("@getFiles");
     cy.get(".files-view")
@@ -127,6 +140,7 @@ describe("Files list related tests", () => {
     cy.get(".files-view").should("have.length", files.length);
   });
 
+  // Test adding a new product
   it("Add new product", () => {
     cy.get(".navbar .v-btn").click();
     cy.get(".v-list.button-list .v-list-item").eq(0).click();
@@ -160,6 +174,7 @@ describe("Files list related tests", () => {
       });
   });
 
+  // Test adding a new narrative
   it("Add new narrative", () => {
     cy.get(".navbar .v-btn").click();
     cy.get(".v-list.button-list .v-list-item").eq(1).click();
@@ -194,6 +209,7 @@ describe("Files list related tests", () => {
     isNarrativeContent = false;
   });
 
+  // Test adding new manual content
   it("Add new manual content", () => {
     cy.get(".navbar .v-btn").click();
     cy.get(".v-list.button-list .v-list-item").eq(2).click();
@@ -213,6 +229,7 @@ describe("Files list related tests", () => {
     cy.visit("/123");
   });
 
+  // Test file upload functionality
   it("Upload a file", () => {
     cy.get(".navbar .v-btn").click();
     cy.get(".v-list.button-list .v-list-item").eq(3).click();
