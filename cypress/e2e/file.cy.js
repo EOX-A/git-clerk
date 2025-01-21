@@ -4,14 +4,6 @@ import content from "../fixtures/content:get.json";
 
 describe("File related tests", () => {
   before(() => {
-    cy.visit("/123/cHJvZHVjdHMvZm9vL2NvbGxlY3Rpb24uanNvbg==");
-  });
-
-  let isProductContentChanged = false;
-  let isNarrativeContentChanged = false;
-  let isNormalContentChanged = false;
-
-  beforeEach(() => {
     cy.intercept(
       {
         method: "GET",
@@ -23,7 +15,14 @@ describe("File related tests", () => {
         });
       },
     ).as("getUser");
+    cy.visit("/123/cHJvZHVjdHMvZm9vL2NvbGxlY3Rpb24uanNvbg==");
+  });
 
+  let isProductContentChanged = false;
+  let isNarrativeContentChanged = false;
+  let isNormalContentChanged = false;
+
+  beforeEach(() => {
     cy.intercept(
       {
         method: "GET",
