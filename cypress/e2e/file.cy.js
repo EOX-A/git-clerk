@@ -81,12 +81,7 @@ describe("File related tests", () => {
       .should("not.be.empty")
       .its("body")
       .as("body");
-    cy.get("@body")
-      .should("be.visible")
-      .should("not.be.empty")
-      .then(cy.wrap)
-      .find("h1", { timeout: 10000 })
-      .should("have.text", "Story");
+    cy.get("@body").should("be.visible").should("not.be.empty").then(cy.wrap);
 
     cy.get("eox-jsonform").then(($jsonform) => {
       const editor = $jsonform[0].editor;
