@@ -74,6 +74,7 @@ describe("Files list related tests", () => {
   });
 
   it("Render files list", () => {
+    cy.wait("@getFiles");
     cy.get(".files-view", { timeout: 12000 }).should(
       "have.length",
       files.length,

@@ -38,6 +38,7 @@ describe("File related tests", () => {
 
   it("Load OSC related files", () => {
     cy.wait("@getContent");
+    cy.get("eox-jsonform").should("exist");
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {
@@ -70,6 +71,8 @@ describe("File related tests", () => {
   it("Load a narrative file", () => {
     isNarrativeContentChanged = true;
     cy.visit("/123/bmFycmF0aXZlcy9zdG9yeTEubWQ=");
+    cy.wait("@getContent");
+    cy.get("iframe#previewFrame").should("exist");
     cy.get("iframe#previewFrame").should("be.visible");
     cy.wait(5000);
     cy.get("iframe#previewFrame")
@@ -94,6 +97,8 @@ describe("File related tests", () => {
   it("Load a normal file", () => {
     isNormalContentChanged = true;
     cy.visit("/123/Y29kZS5qcw==");
+    cy.wait("@getContent");
+    cy.get("eox-jsonform").should("exist");
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {
