@@ -9,7 +9,12 @@
     "preview": "vite preview",
     "lint": "eslint . --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:serve": "VUE_APP_GITHUB_REPO=octocat/Hello-World VUE_APP_GITHUB_TOKEN=dummy-token npm run start",
+    "test": "node cypress/test.run.js",
+    "test:ga": "cypress run --e2e --browser chrome",
+    "cypress": "node cypress/test.run.js --open",
+    "cypress:install": "cypress install"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -37,6 +42,8 @@
   "devDependencies": {
     "@eox/eslint-config": "^2.0.0",
     "@vitejs/plugin-vue": "^5.0.5",
+    "concurrently": "^9.1.2",
+    "cypress": "^13.17.0",
     "eslint-plugin-vue": "^9.28.0",
     "vite": "^5.3.1"
   }
