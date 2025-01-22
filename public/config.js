@@ -123,7 +123,7 @@ const insertImageTool = {
         file, 
         editor, 
         'image',
-        (url, backupUrl) => `\n![](${url}${backupUrl ? ` "temp-backup-url=${backupUrl}"` : ""})`
+        (url, backupUrl) => `\n<img src="${url}" ${backupUrl ? `data-fallback-src="${backupUrl}"` : ""} />`
       );
     };
     input.click();
@@ -143,7 +143,7 @@ const insertVideoTool = {
         file, 
         editor, 
         'video',
-        (url, backupUrl) => `\n<video src="${url}" ${backupUrl ? `title="temp-backup-url=${backupUrl}"`: ""} controls></video>`
+        (url, backupUrl) => `\n<video src="${url}" ${backupUrl ? `data-fallback-src="${backupUrl}"` : ""} controls></video>`
       );
     };
     input.click();
