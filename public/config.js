@@ -4,35 +4,38 @@ globalThis.ghConfig = {
   githubAuthToken: () => new Promise((resolve) => resolve("")),
 };
 
-const PATH_TO_UPLOAD = 'assets';
+const PATH_TO_UPLOAD = "assets";
 
 // Shared upload functionality
 const handleFileUpload = async (file, editor, fileType, insertTemplate) => {
   // Check if file is correct type
-  if (!file.type.startsWith(fileType + '/')) {
+  if (!file.type.startsWith(fileType + "/")) {
     alert(`Please select a ${fileType} file`);
     return;
   }
 
   // Check file size (10MB = 10 * 1024 * 1024 bytes)
   if (file.size > 10 * 1024 * 1024) {
-    alert('File size must be less than 10MB');
+    alert("File size must be less than 10MB");
     return;
   }
 
   // Create a FormData object to hold the file data
   const formData = new FormData();
-  formData.append('file', file);
+  formData.append("file", file);
 
-  window.parent.postMessage({
-    type: 'EDITOR_FILE_UPLOADING'
-  }, "*");
+  window.parent.postMessage(
+    {
+      type: "EDITOR_FILE_UPLOADING",
+    },
+    "*",
+  );
 
   // Convert file to base64
   const reader = new FileReader();
   const base64Promise = new Promise((resolve) => {
     reader.onload = () => {
-      const base64 = reader.result.split(',')[1];
+      const base64 = reader.result.split(",")[1];
       resolve(base64);
     };
   });
@@ -41,7 +44,7 @@ const handleFileUpload = async (file, editor, fileType, insertTemplate) => {
 
   try {
     // Get PR number from URL path
-    const pathParts = window.location.pathname.split('/');
+    const pathParts = window.location.pathname.split("/");
     const prNumber = pathParts[1]; // Get PR number like "62"
 
     // Get session details to get branch info
@@ -50,13 +53,16 @@ const handleFileUpload = async (file, editor, fileType, insertTemplate) => {
     const repo = globalThis.ghConfig.config.repo;
 
     // Get PR details to get branch ref
-    const prResponse = await fetch(`https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}`, {
-      headers: {
-        'Authorization': `token ${token}`,
-        'Accept': 'application/vnd.github.v3+json'
-      }
-    });
-    
+    const prResponse = await fetch(
+      `https://api.github.com/repos/${owner}/${repo}/pulls/${prNumber}`,
+      {
+        headers: {
+          Authorization: `token ${token}`,
+          Accept: "application/vnd.github.v3+json",
+        },
+      },
+    );
+
     if (!prResponse.ok) {
       throw new Error(`Failed to get PR details`);
     }
@@ -69,20 +75,26 @@ const handleFileUpload = async (file, editor, fileType, insertTemplate) => {
 
     // Upload file to branch
     const timestamp = Date.now();
-    const fileName = file.name.replace(/[^a-zA-Z0-9\s.-]/g, '').replace(/\s+/g, '-').replace(/\.([^.]*)$/, `-${timestamp}.$1`);
-    const uploadResponse = await fetch(`https://api.github.com/repos/${branchOwner}/${repoName}/contents/${PATH_TO_UPLOAD}/${fileName}`, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `token ${token}`,
-        'Accept': 'application/vnd.github.v3+json',
-        'Content-Type': 'application/json'
+    const fileName = file.name
+      .replace(/[^a-zA-Z0-9\s.-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/\.([^.]*)$/, `-${timestamp}.$1`);
+    const uploadResponse = await fetch(
+      `https://api.github.com/repos/${branchOwner}/${repoName}/contents/${PATH_TO_UPLOAD}/${fileName}`,
+      {
+        method: "PUT",
+        headers: {
+          Authorization: `token ${token}`,
+          Accept: "application/vnd.github.v3+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: `Upload ${fileType} ${file.name}`,
+          content: base64Content,
+          branch: branchRef,
+        }),
       },
-      body: JSON.stringify({
-        message: `Upload ${fileType} ${file.name}`,
-        content: base64Content,
-        branch: branchRef
-      })
-    });
+    );
 
     if (!uploadResponse.ok) {
       throw new Error(`Failed to upload ${fileType}`);
@@ -90,101 +102,110 @@ const handleFileUpload = async (file, editor, fileType, insertTemplate) => {
 
     const uploadData = await uploadResponse.json();
     const fileUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${uploadData.commit.sha}/${PATH_TO_UPLOAD}/${fileName}`;
-    const fallbackUrl = uploadData.content.download_url
+    const fallbackUrl = uploadData.content.download_url;
 
     // Insert using provided template
-    editor.codemirror.getDoc().setValue(
-      editor.codemirror.getDoc().getValue() + insertTemplate(fileUrl, fallbackUrl)
-    );
-
-  } catch (error) {
-    if(fileType === 'image') {
-      editor.codemirror.getDoc().setValue(
-        editor.codemirror.getDoc().getValue() + insertTemplate(reader.result)
+    editor.codemirror
+      .getDoc()
+      .setValue(
+        editor.codemirror.getDoc().getValue() +
+          insertTemplate(fileUrl, fallbackUrl),
       );
+  } catch (error) {
+    if (fileType === "image") {
+      editor.codemirror
+        .getDoc()
+        .setValue(
+          editor.codemirror.getDoc().getValue() + insertTemplate(reader.result),
+        );
     } else {
-      alert('Failed to upload file');
+      alert("Failed to upload file");
     }
   }
 
-  window.parent.postMessage({
-    type: 'EDITOR_FILE_UPLOADED'
-  }, "*");
+  window.parent.postMessage(
+    {
+      type: "EDITOR_FILE_UPLOADED",
+    },
+    "*",
+  );
 };
 
 const insertImageTool = {
   name: "Attach Image",
-  action: customFunction = (editor) => {
-    let input = document.createElement('input');
-    input.type = 'file';
-    input.onchange = async e => {
+  action: (customFunction = (editor) => {
+    let input = document.createElement("input");
+    input.type = "file";
+    input.onchange = async (e) => {
       const file = e.target.files[0];
       await handleFileUpload(
-        file, 
-        editor, 
-        'image',
-        (url, fallbackUrl) => `\n<img src="${url}" ${fallbackUrl ? `data-fallback-src="${fallbackUrl}"` : ""} />`
+        file,
+        editor,
+        "image",
+        (url, fallbackUrl) =>
+          `\n<img src="${url}" ${fallbackUrl ? `data-fallback-src="${fallbackUrl}"` : ""} />`,
       );
     };
     input.click();
-  },
+  }),
   className: "fa fa-image",
   title: "Attach Image",
 };
 
 const insertVideoTool = {
   name: "Attach Video",
-  action: customFunction = (editor) => {
-    let input = document.createElement('input');
-    input.type = 'file';
-    input.onchange = async e => {
+  action: (customFunction = (editor) => {
+    let input = document.createElement("input");
+    input.type = "file";
+    input.onchange = async (e) => {
       const file = e.target.files[0];
       await handleFileUpload(
-        file, 
-        editor, 
-        'video',
-        (url, fallbackUrl) => `\n<video src="${url}" ${fallbackUrl ? `data-fallback-src="${fallbackUrl}"` : ""} controls></video>`
+        file,
+        editor,
+        "video",
+        (url, fallbackUrl) =>
+          `\n<video src="${url}" ${fallbackUrl ? `data-fallback-src="${fallbackUrl}"` : ""} controls></video>`,
       );
     };
     input.click();
-  },
-  className: "fa fa-video-camera", 
+  }),
+  className: "fa fa-video-camera",
   title: "Attach Video",
 };
 
 const storytellingConfig = {
   output: "Story",
-    content: "## Sample Section",
-    schema: {
-      title: "git-clerk",
-      type: "object",
-      properties: {
-        Story: {
-          type: "string",
-          format: "markdown",
-          options: {
-            simplemde: {
-              toolbar: [
-                "bold",
-                "italic",
-                "strikethrough",
-                "heading",
-                "|",
-                "unordered-list",
-                "ordered-list",
-                "link",
-                "|",
-                insertImageTool,
-                insertVideoTool
-              ],
-              spellChecker: false,
-            },
+  content: "## Sample Section",
+  schema: {
+    title: "git-clerk",
+    type: "object",
+    properties: {
+      Story: {
+        type: "string",
+        format: "markdown",
+        options: {
+          simplemde: {
+            toolbar: [
+              "bold",
+              "italic",
+              "strikethrough",
+              "heading",
+              "|",
+              "unordered-list",
+              "ordered-list",
+              "link",
+              "|",
+              insertImageTool,
+              insertVideoTool,
+            ],
+            spellChecker: false,
           },
         },
       },
     },
-    preview: "/storytelling.html"
-}
+  },
+  preview: "/storytelling.html",
+};
 
 globalThis.schemaMap = [
   {
@@ -229,37 +250,38 @@ globalThis.schemaMap = [
   },
   {
     path: "/storytelling/<id>.md",
-    ...storytellingConfig
+    ...storytellingConfig,
   },
   {
     path: "/narratives/<id>.md",
-    ...storytellingConfig
+    ...storytellingConfig,
   },
-]
+];
 
 globalThis.automation = [
   {
     title: "Bootstrap Product",
-    description: "Bootstrap a new file with the correct folder structure and ID.",
+    description:
+      "Bootstrap a new file with the correct folder structure and ID.",
     inputSchema: {
       type: "object",
       properties: {
         id: {
           type: "string",
-          minLength: 1
+          minLength: 1,
         },
         title: {
           type: "string",
-          minLength: 1
-        }
+          minLength: 1,
+        },
       },
-      required: ["id", "title"]
+      required: ["id", "title"],
     },
     steps: [
       {
         type: "add",
         path: (input) => `/products/${input.id}/collection.json`,
-        content: (input) => ({ id: input.id, title: input.title })
+        content: (input) => ({ id: input.id, title: input.title }),
       },
       {
         type: "edit",
@@ -271,17 +293,17 @@ globalThis.automation = [
               rel: "child",
               href: `./${input.id}/collection.json`,
               type: "application/json",
-              title: input.title
+              title: input.title,
             },
-          ]
-          return content
-        }
+          ];
+          return content;
+        },
       },
       {
         type: "navigate",
-        path: (input) => `/products/${input.id}/collection.json`
-      }
-    ]
+        path: (input) => `/products/${input.id}/collection.json`,
+      },
+    ],
   },
   {
     title: "Create Narrative",
@@ -291,25 +313,25 @@ globalThis.automation = [
       properties: {
         id: {
           type: "string",
-          minLength: 1
+          minLength: 1,
         },
         title: {
           type: "string",
-          minLength: 1
-        }
+          minLength: 1,
+        },
       },
-      required: ["id", "title"]
+      required: ["id", "title"],
     },
     steps: [
       {
         type: "add",
         path: (input) => `/narratives/${input.id}.md`,
-        content: (input) => `# ${input.title}`
+        content: (input) => `# ${input.title}`,
       },
       {
         type: "navigate",
-        path: (input) => `/narratives/${input.id}.md`
-      }
-    ]
-  }
-]
+        path: (input) => `/narratives/${input.id}.md`,
+      },
+    ],
+  },
+];
