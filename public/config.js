@@ -90,11 +90,11 @@ const handleFileUpload = async (file, editor, fileType, insertTemplate) => {
 
     const uploadData = await uploadResponse.json();
     const fileUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${uploadData.commit.sha}/${PATH_TO_UPLOAD}/${fileName}`;
-    const backupUrl = uploadData.content.download_url
+    const fallbackUrl = uploadData.content.download_url
 
     // Insert using provided template
     editor.codemirror.getDoc().setValue(
-      editor.codemirror.getDoc().getValue() + insertTemplate(fileUrl, backupUrl)
+      editor.codemirror.getDoc().getValue() + insertTemplate(fileUrl, fallbackUrl)
     );
 
   } catch (error) {
@@ -123,7 +123,7 @@ const insertImageTool = {
         file, 
         editor, 
         'image',
-        (url, backupUrl) => `\n<img src="${url}" ${backupUrl ? `data-fallback-src="${backupUrl}"` : ""} />`
+        (url, fallbackUrl) => `\n<img src="${url}" ${fallbackUrl ? `data-fallback-src="${fallbackUrl}"` : ""} />`
       );
     };
     input.click();
@@ -143,7 +143,7 @@ const insertVideoTool = {
         file, 
         editor, 
         'video',
-        (url, backupUrl) => `\n<video src="${url}" ${backupUrl ? `data-fallback-src="${backupUrl}"` : ""} controls></video>`
+        (url, fallbackUrl) => `\n<video src="${url}" ${fallbackUrl ? `data-fallback-src="${fallbackUrl}"` : ""} controls></video>`
       );
     };
     input.click();
