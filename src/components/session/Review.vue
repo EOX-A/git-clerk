@@ -3,6 +3,7 @@ import { defineProps, inject, ref } from "vue";
 import Tooltip from "@/components/global/Tooltip.vue";
 import { useLoader } from "@/helpers/index.js";
 import { reviewBySessionNumber } from "@/api/index.js";
+import { watch } from "vue";
 
 const props = defineProps({
   session: {
@@ -41,6 +42,7 @@ const props = defineProps({
 });
 const snackbar = inject("set-snackbar");
 const reviewSession = ref(false);
+const disabled = ref(true);
 
 const error =
   props.text && props.session.draft && props.session.check?.success === false;
@@ -58,15 +60,18 @@ const reviewSessionHandle = async () => {
   }
 };
 
-const disabled =
-  !props.session.draft ||
-  props.session.state === "closed" ||
-  !props.session.check ||
-  !props.session.check.success;
+watch([props], ([newProps]) => {
+  disabled.value =
+    !newProps.session.draft ||
+    newProps.session.state === "closed" ||
+    !newProps.session.check ||
+    !newProps.session.check.success;
+});
 </script>
 
 <template>
   <Tooltip
+    v-if="props.tab"
     :text="
       error
         ? `${props.session.check.tooltip}: Cannot request for review`

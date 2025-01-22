@@ -14,6 +14,6 @@ const props = defineProps({
 
 <template>
   <GithubSession :url="session.html_url" />
-  <ReviewSession :session="session" :callBack="callBack" />
+  <ReviewSession :session="props.session" :callBack="callBack" />
   <DeleteSession :session="session" :callBack="callBack" />
 </template>

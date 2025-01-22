@@ -1,0 +1,68 @@
+[
+  {
+    "sha": "dummy-sha1",
+    "filename": "products/foo/collection.json",
+    "status": "modified",
+    "additions": 98,
+    "deletions": 66,
+    "changes": 164,
+    "blob_url": "https://github.com/octocat/Hello-World/blob/master/README.md",
+    "raw_url": "https://github.com/octocat/Hello-World/raw/master/README.md",
+    "contents_url": "https://api.github.com/repos/octocat/Hello-World/contents/README.md?ref=master"
+  },
+  {
+    "sha": "dummy-sha2",
+    "filename": "products/bar/collection.json",
+    "status": "modified",
+    "additions": 16,
+    "deletions": 45,
+    "changes": 61,
+    "blob_url": "https://github.com/octocat/Hello-World/blob/master/README.md",
+    "raw_url": "https://github.com/octocat/Hello-World/raw/master/README.md",
+    "contents_url": "https://api.github.com/repos/octocat/Hello-World/contents/README.md?ref=master"
+  },
+  {
+    "sha": "dummy-sha3",
+    "filename": "products/baz/collection.json",
+    "status": "modified",
+    "additions": 13,
+    "deletions": 1,
+    "changes": 14,
+    "blob_url": "https://github.com/octocat/Hello-World/blob/master/README.md",
+    "raw_url": "https://github.com/octocat/Hello-World/raw/master/README.md",
+    "contents_url": "https://api.github.com/repos/octocat/Hello-World/contents/README.md?ref=master"
+  },
+  {
+    "sha": "dummy-sha4",
+    "filename": "products/sds/collection.json",
+    "status": "added",
+    "additions": 4,
+    "deletions": 0,
+    "changes": 4,
+    "blob_url": "https://github.com/octocat/Hello-World/blob/master/README.md",
+    "raw_url": "https://github.com/octocat/Hello-World/raw/master/README.md",
+    "contents_url": "https://api.github.com/repos/octocat/Hello-World/contents/README.md?ref=master"
+  },
+  {
+    "sha": "dummy-sha5",
+    "filename": "products/sds/collection.json",
+    "status": "added",
+    "additions": 4,
+    "deletions": 0,
+    "changes": 4,
+    "blob_url": "https://github.com/octocat/Hello-World/blob/master/README.md",
+    "raw_url": "https://github.com/octocat/Hello-World/raw/master/README.md",
+    "contents_url": "https://api.github.com/repos/octocat/Hello-World/contents/README.md?ref=master"
+  },
+  {
+    "sha": "dummy-sha6",
+    "filename": "projects/foo/collection.json",
+    "status": "modified",
+    "additions": 13,
+    "deletions": 6,
+    "changes": 19,
+    "blob_url": "https://github.com/octocat/Hello-World/blob/master/README.md",
+    "raw_url": "https://github.com/octocat/Hello-World/raw/master/README.md",
+    "contents_url": "https://api.github.com/repos/octocat/Hello-World/contents/README.md?ref=master"
+  }
+]

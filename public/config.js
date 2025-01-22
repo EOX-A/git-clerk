@@ -1,4 +1,6 @@
 // config.js
+import "https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.js";
+
 globalThis.ghConfig = {
   githubRepo: "",
   githubAuthToken: () => new Promise((resolve) => resolve("")),
@@ -106,12 +108,14 @@ const handleFileUpload = async (file, editor, fileType, insertTemplate) => {
 
     const uploadData = await uploadResponse.json();
     const fileUrl = `https://raw.githubusercontent.com/${owner}/${repo}/${uploadData.commit.sha}/${PATH_TO_UPLOAD}/${fileName}`;
+    const fallbackUrl = uploadData.content.download_url;
 
     // Insert using provided template
     editor.codemirror
       .getDoc()
       .setValue(
-        editor.codemirror.getDoc().getValue() + insertTemplate(fileUrl),
+        editor.codemirror.getDoc().getValue() +
+          insertTemplate(fileUrl, fallbackUrl),
       );
   } catch (error) {
     if (fileType === "image") {
@@ -165,22 +169,28 @@ const handleFileContentUpdate = async (value, content, editorInterface) => {
 
 const insertImageTool = {
   name: "Attach Image",
-  action: (customFunction = (editor) => {
+  action: (editor) => {
     let input = document.createElement("input");
     input.type = "file";
     input.onchange = async (e) => {
       const file = e.target.files[0];
-      await handleFileUpload(file, editor, "image", (url) => `\n![](${url})`);
+      await handleFileUpload(
+        file,
+        editor,
+        "image",
+        (url, fallbackUrl) =>
+          `\n<img src="${url}" ${fallbackUrl ? `data-fallback-src="${fallbackUrl}"` : ""} />`,
+      );
     };
     input.click();
-  }),
+  },
   className: "fa fa-image",
   title: "Attach Image",
 };
 
 const insertVideoTool = {
   name: "Attach Video",
-  action: (customFunction = (editor) => {
+  action: (editor) => {
     let input = document.createElement("input");
     input.type = "file";
     input.onchange = async (e) => {
@@ -189,11 +199,12 @@ const insertVideoTool = {
         file,
         editor,
         "video",
-        (url) => `\n<video src="${url}" controls></video>`,
+        (url, fallbackUrl) =>
+          `\n<video src="${url}" ${fallbackUrl ? `data-fallback-src="${fallbackUrl}"` : ""} controls></video>`,
       );
     };
     input.click();
-  }),
+  },
   className: "fa fa-video-camera",
   title: "Attach Video",
 };
