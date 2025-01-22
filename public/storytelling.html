@@ -1,50 +1,56 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Preview</title>
     <style>
       #storytelling-preview eox-storytelling-editor {
         display: none;
       }
     </style>
-</head>
-<body>
-<eox-storytelling disable-autosave no-shadow show-editor id="storytelling-preview"></eox-storytelling>
-<script type="module">
-  import "https://unpkg.com/@eox/storytelling/dist/eox-storytelling.js";
-  import "https://unpkg.com/@eox/jsonform/dist/eox-jsonform.js";
-  import "https://unpkg.com/@eox/map/dist/eox-map.js";
-</script>
+  </head>
+  <body>
+    <eox-storytelling
+      disable-autosave
+      no-shadow
+      show-editor
+      id="storytelling-preview"
+    ></eox-storytelling>
+    <script type="module">
+      import "https://unpkg.com/@eox/storytelling/dist/eox-storytelling.js";
+      import "https://unpkg.com/@eox/jsonform/dist/eox-jsonform.js";
+      import "https://unpkg.com/@eox/map/dist/eox-map.js";
+    </script>
 
-<script>
-  let previousMarkdown;
-  // Listen for messages from parent
-  window.onload = function() {
-    window.addEventListener('message', function (event) {
-      if (event.data && event.data.type === "SCHEMA_DATA_EDITOR_UPDATE") {
-        const preview = document.querySelector("#storytelling-preview")
-        if(preview.markdown !== event.data.detail.Story) {
-          previousMarkdown = event.data.detail.Story
-          preview.markdown = previousMarkdown
-        }
-      }
-    });
-  }
-
-  // Send messages to parent
-  document.querySelector('#storytelling-preview')
-    .addEventListener('changed', (e) => {
-      if(previousMarkdown !== e.detail) {
-        const message = {
-          type: 'SCHEMA_DATA_PREVIEW_UPDATE',
-          detail: {
-            Story: e.detail
+    <script>
+      let previousMarkdown;
+      // Listen for messages from parent
+      window.onload = function () {
+        window.addEventListener("message", function (event) {
+          if (event.data && event.data.type === "SCHEMA_DATA_EDITOR_UPDATE") {
+            const preview = document.querySelector("#storytelling-preview");
+            if (preview.markdown !== event.data.detail.Story) {
+              previousMarkdown = event.data.detail.Story;
+              preview.markdown = previousMarkdown;
+            }
           }
-        };
+        });
+      };
 
-        window.parent.postMessage(message, "*");
-      }
-    });
-</script>
-</body>
+      // Send messages to parent
+      document
+        .querySelector("#storytelling-preview")
+        .addEventListener("changed", (e) => {
+          if (previousMarkdown !== e.detail) {
+            const message = {
+              type: "SCHEMA_DATA_PREVIEW_UPDATE",
+              detail: {
+                Story: e.detail,
+              },
+            };
+
+            window.parent.postMessage(message, "*");
+          }
+        });
+    </script>
+  </body>
 </html>
