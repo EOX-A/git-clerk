@@ -427,12 +427,14 @@ class OSCEditor extends JSONEditor.AbstractEditor {
       this.input.multiple = true;
       this.input.size = enumOptions.length > 10 ? 10 : enumOptions.length;
 
-      startVals.forEach((val) => {
-        const option = Array.from(this.input.options).find(
-          (opt) => opt.value === val,
-        );
-        if (option) option.selected = true;
-      });
+      if (startVals) {
+        startVals.forEach((val) => {
+          const option = Array.from(this.input.options).find(
+            (opt) => opt.value === val,
+          );
+          if (option) option.selected = true;
+        });
+      }
     }
 
     // Add an event listener for changes on the input element
