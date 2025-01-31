@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  packages: write
 
 env:
   IMAGE_NAME: ghcr.io/eox-a/git-clerk:${{ github.head_ref || github.ref_name }}
