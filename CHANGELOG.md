@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.2.0](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.1.0...git-clerk-v1.2.0) (2025-01-31)
+
+
+### Features
+
+* **ci:** Build docker image for tags ([#72](https://github.com/EOX-A/git-clerk/issues/72)) ([760a1cb](https://github.com/EOX-A/git-clerk/commit/760a1cbf0f684d97fd6a6a950902297176a69645))
+
+
+### Bug Fixes
+
+* Use temporary fallback src url for uploaded media in order to mitigate GH availability delay ([#69](https://github.com/EOX-A/git-clerk/issues/69)) ([32f88d9](https://github.com/EOX-A/git-clerk/commit/32f88d93d3e2d5c822dda6fffaf07b51a38c2b78))
+
 ## [1.1.0](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.0.0...git-clerk-v1.1.0) (2024-12-23)
 
 
