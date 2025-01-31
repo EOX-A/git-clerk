@@ -10,9 +10,6 @@ permissions:
   pull-requests: write
   packages: write
 
-env:
-  IMAGE_NAME: ghcr.io/eox-a/git-clerk:${{ github.head_ref || github.ref_name }}
-
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -38,11 +35,11 @@ jobs:
         run: npm run build --if-present
         if: ${{ fromJSON(steps.release.outputs.releases_created) }}
       - name: Build image 🔧
-        run: docker build -t $IMAGE_NAME .
+        run: docker build -t ghcr.io/eox-a/git-clerk:${{ steps.release.outputs.tag_name }} .
         if: ${{ fromJSON(steps.release.outputs.releases_created) }}
       - name: Login ghcr 🔧
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
         if: ${{ fromJSON(steps.release.outputs.releases_created) }}
       - name: Push ghcr 🚀
-        run: docker push $IMAGE_NAME
+        run: docker push ghcr.io/eox-a/git-clerk:${{ steps.release.outputs.tag_name }}
         if: ${{ fromJSON(steps.release.outputs.releases_created) }}
