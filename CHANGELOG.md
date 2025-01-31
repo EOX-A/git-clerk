@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.3](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.2.2...git-clerk-v1.2.3) (2025-01-31)
+
+
+### Bug Fixes
+
+* **ci:** Use tag_name output for tagging image ([#77](https://github.com/EOX-A/git-clerk/issues/77)) ([27b9f91](https://github.com/EOX-A/git-clerk/commit/27b9f9132e812b645fca0ff1d8099f42c869d909))
+
 ## [1.2.2](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.2.1...git-clerk-v1.2.2) (2025-01-31)
 
 
