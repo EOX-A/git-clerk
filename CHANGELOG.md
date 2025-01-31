@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.2.0...git-clerk-v1.2.1) (2025-01-31)
+
+
+### Bug Fixes
+
+* **ci:** Trigger image build on successful release ([#73](https://github.com/EOX-A/git-clerk/issues/73)) ([a43afc9](https://github.com/EOX-A/git-clerk/commit/a43afc9b284a418f93273fcf1bb24bf28e1dd8c9))
+
 ## [1.2.0](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.1.0...git-clerk-v1.2.0) (2025-01-31)
 
 
