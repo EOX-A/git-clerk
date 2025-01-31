@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.2.1...git-clerk-v1.2.2) (2025-01-31)
+
+
+### Bug Fixes
+
+* **ci:** Add permission to publish packages to workflow ([#75](https://github.com/EOX-A/git-clerk/issues/75)) ([4598bbd](https://github.com/EOX-A/git-clerk/commit/4598bbd9a95fc2c7fec03adb87e6cbba505f84e8))
+
 ## [1.2.1](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.2.0...git-clerk-v1.2.1) (2025-01-31)
 
 
