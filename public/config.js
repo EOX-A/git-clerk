@@ -443,9 +443,11 @@ class OSCEditor extends JSONEditor.AbstractEditor {
       let content = this.jsoneditor.getValue();
 
       // Check if the content change is valid based on the editor interface's operation type
-      const isValidContentChange =
-        content.type === editorInterface.operation.on.type &&
-        content["osc:type"] === editorInterface.operation.on["osc:type"];
+      const isValidContentChange = editorInterface.operation.on.some(
+        (operation) =>
+          content.type === operation.type &&
+          content["osc:type"] === operation["osc:type"],
+      );
 
       if (isValidContentChange) {
         // Show loader while processing the change
@@ -548,10 +550,16 @@ const unselectFunc = (content, { file }) => {
   return content;
 };
 
-const operationOn = {
-  type: "Collection",
-  "osc:type": "product",
-};
+const operationOn = [
+  {
+    type: "Collection",
+    "osc:type": "product",
+  },
+  {
+    type: "Collection",
+    "osc:type": "project",
+  },
+];
 
 const Operation = {
   on: operationOn,
