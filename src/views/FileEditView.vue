@@ -82,8 +82,22 @@ const updateFileDetails = async (cache = true) => {
         schemaMetaDetails.value.schema.allOf[1].properties[property];
       if (propertyAvailable) {
         let path = CUSTOM_EDITOR_INTERFACES[property].path;
-        const folders = await getBranchFileStructure(session.value, path, true);
-        const enumValues = folders.map((folder) => folder.path);
+        const catalog = await getFileDetails(
+          session.value,
+          `${path}/catalog.json`,
+          cache,
+        );
+        const links = JSON.parse(decodeString(catalog.content)).links;
+        const enumValues = links
+          .map((link) =>
+            link.rel === "child"
+              ? {
+                  value: link.href.split("/")[1],
+                  text: link.title,
+                }
+              : null,
+          )
+          .filter(Boolean);
         if (propertyAvailable.items) {
           propertyAvailable.items.enum = enumValues;
         } else {

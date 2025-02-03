@@ -412,8 +412,8 @@ class OSCEditor extends JSONEditor.AbstractEditor {
     const enumOptions = this.schema.enum || this.schema.items.enum || [];
     enumOptions.forEach((option) => {
       const optionElement = document.createElement("option");
-      optionElement.text = option;
-      optionElement.value = option.replace(`${editorInterface.path}/`, "");
+      optionElement.text = option.text;
+      optionElement.value = option.value;
       selector.appendChild(optionElement);
     });
 
