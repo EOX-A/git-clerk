@@ -35,10 +35,28 @@ beforeEach(() => {
 
   // Intercept repository info request
   cy.intercept(
-    "GET",
-    new RegExp(`${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/[^/]+`),
     {
-      fixture: "repo:get.json",
+      method: "GET",
+      url: new RegExp(
+        `${GITHUB_HOST_REGEX}\\/repos\\/[\\w-]+\\/${ghConfig.repo}`,
+      ),
+    },
+    (req) => {
+      if (
+        req.url.match(
+          new RegExp(
+            `${GITHUB_HOST_REGEX}\\/repos\\/[^/]+\\/${ghConfig.repo}/pulls/[^/]+`,
+          ),
+        )
+      ) {
+        req.reply({
+          fixture: "pulls:get.json",
+        });
+      } else {
+        req.reply({
+          fixture: "repo:get.json",
+        });
+      }
     },
   ).as("getRepo");
 

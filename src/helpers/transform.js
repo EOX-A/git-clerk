@@ -15,7 +15,7 @@ export function stringifyIfNeeded(value, oldContent) {
       const orderObject = (obj, oldObj) => {
         if (!obj || typeof obj !== "object") return obj;
 
-        const ordered = {};
+        const ordered = Array.isArray(obj) ? [] : {};
         getOrderedKeys(obj, oldObj).forEach((key) => {
           if (key in obj) {
             ordered[key] =

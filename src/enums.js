@@ -14,3 +14,5 @@ export const CHECK_STATUS = {
     success: false,
   },
 };
+
+export const CUSTOM_EDITOR_INTERFACES = globalThis.customEditorInterfaces || {};

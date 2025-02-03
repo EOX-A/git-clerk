@@ -138,6 +138,14 @@ export function initEOXJSONFormMethod(
     .je-textarea:focus {
       outline: none;
     }
+      
+    button[class*="json-editor-"],
+    button[class*="json-editor-"]:hover {
+      background-color: unset !important;
+      background: none !important;
+      box-shadow: unset !important;
+      padding: 0 !important;
+    }
     .je-textarea {
       background-image: linear-gradient(to right, #f5f5f5 30px, #ffffff 30px);
       background-size: 100% 24px;

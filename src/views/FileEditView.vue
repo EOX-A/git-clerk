@@ -3,6 +3,7 @@ import { inject, onMounted, onUnmounted, ref } from "vue";
 import {
   createAndUpdateFile,
   fetchSchemaFromURL,
+  getBranchFileStructure,
   getFileDetails,
   getSessionDetails,
 } from "@/api/index.js";
@@ -29,6 +30,7 @@ import debounce from "lodash.debounce";
 import "@eox/jsonform";
 import "@eox/drawtools";
 import "@eox/map";
+import { CUSTOM_EDITOR_INTERFACES } from "@/enums";
 
 const route = useRoute();
 const router = useRouter();
@@ -66,12 +68,44 @@ const updateFileDetails = async (cache = true) => {
   });
 
   const schemaDetails = getSchemaDetails("/" + filePath) || getFileSchema();
+
   const schema =
     schemaDetails.schema || (await fetchSchemaFromURL(schemaDetails.url));
+
   schemaMetaDetails.value = {
     ...schemaDetails,
     schema,
   };
+  if (schemaMetaDetails.value.schema.allOf) {
+    for (const property of Object.keys(CUSTOM_EDITOR_INTERFACES)) {
+      const propertyAvailable =
+        schemaMetaDetails.value.schema.allOf[1].properties[property];
+      if (propertyAvailable) {
+        let path = CUSTOM_EDITOR_INTERFACES[property].path;
+        const catalog = await getFileDetails(
+          session.value,
+          `${path}/catalog.json`,
+          cache,
+        );
+        const links = JSON.parse(decodeString(catalog.content)).links;
+        const enumValues = links
+          .map((link) =>
+            link.rel === "child"
+              ? {
+                  value: link.href.split("/")[1],
+                  text: link.title,
+                }
+              : null,
+          )
+          .filter(Boolean);
+        if (propertyAvailable.items) {
+          propertyAvailable.items.enum = enumValues;
+        } else {
+          propertyAvailable.enum = ["", ...enumValues];
+        }
+      }
+    }
+  }
 
   const fileDetails = await getFileDetails(session.value, filePath, cache);
   queryFileDetailsMethod(fileDetails, {
@@ -202,6 +236,7 @@ onUnmounted(() => {
           :unstyled="false"
           :class="previewURL ? 'with-preview' : ''"
           @change="onFileChange"
+          :customEditorInterfaces="Object.values(CUSTOM_EDITOR_INTERFACES)"
         ></eox-jsonform>
       </v-col>
       <v-col v-if="previewURL" class="file-preview">
@@ -235,7 +270,7 @@ onUnmounted(() => {
   margin-inline-end: 6px;
 }
 .file-editor.non-preview-height {
-  height: 95%;
+  min-height: 95%;
 }
 .file-editor .je-indented-panel .row {
   margin-top: 10px;
