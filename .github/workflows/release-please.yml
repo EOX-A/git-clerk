@@ -1,11 +1,15 @@
+name: Manage releases
+
 on:
   push:
     branches:
       - main
+
 permissions:
   contents: write
   pull-requests: write
-name: release-please
+  packages: write
+
 jobs:
   release-please:
     runs-on: ubuntu-latest
@@ -13,3 +17,29 @@ jobs:
       - name: Release Please! 🤖
         uses: googleapis/release-please-action@v4
         id: release
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+        # these if statements ensure that a publication only occurs when
+        # a new release is created:
+        if: ${{ fromJSON(steps.release.outputs.releases_created) }}
+      - name: Set up NPM 🔧
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+        if: ${{ fromJSON(steps.release.outputs.releases_created) }}
+      - name: Install dependencies 🔧
+        run: npm ci
+        if: ${{ fromJSON(steps.release.outputs.releases_created) }}
+      - name: Build package 🔧
+        run: npm run build --if-present
+        if: ${{ fromJSON(steps.release.outputs.releases_created) }}
+      - name: Build image 🔧
+        run: docker build -t ghcr.io/eox-a/git-clerk:${{ steps.release.outputs.tag_name }} .
+        if: ${{ fromJSON(steps.release.outputs.releases_created) }}
+      - name: Login ghcr 🔧
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+        if: ${{ fromJSON(steps.release.outputs.releases_created) }}
+      - name: Push ghcr 🚀
+        run: docker push ghcr.io/eox-a/git-clerk:${{ steps.release.outputs.tag_name }}
+        if: ${{ fromJSON(steps.release.outputs.releases_created) }}

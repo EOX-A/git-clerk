@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.2.3](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.2.2...git-clerk-v1.2.3) (2025-01-31)
+
+
+### Bug Fixes
+
+* **ci:** Use tag_name output for tagging image ([#77](https://github.com/EOX-A/git-clerk/issues/77)) ([27b9f91](https://github.com/EOX-A/git-clerk/commit/27b9f9132e812b645fca0ff1d8099f42c869d909))
+
+## [1.2.2](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.2.1...git-clerk-v1.2.2) (2025-01-31)
+
+
+### Bug Fixes
+
+* **ci:** Add permission to publish packages to workflow ([#75](https://github.com/EOX-A/git-clerk/issues/75)) ([4598bbd](https://github.com/EOX-A/git-clerk/commit/4598bbd9a95fc2c7fec03adb87e6cbba505f84e8))
+
+## [1.2.1](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.2.0...git-clerk-v1.2.1) (2025-01-31)
+
+
+### Bug Fixes
+
+* **ci:** Trigger image build on successful release ([#73](https://github.com/EOX-A/git-clerk/issues/73)) ([a43afc9](https://github.com/EOX-A/git-clerk/commit/a43afc9b284a418f93273fcf1bb24bf28e1dd8c9))
+
+## [1.2.0](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.1.0...git-clerk-v1.2.0) (2025-01-31)
+
+
+### Features
+
+* **ci:** Build docker image for tags ([#72](https://github.com/EOX-A/git-clerk/issues/72)) ([760a1cb](https://github.com/EOX-A/git-clerk/commit/760a1cbf0f684d97fd6a6a950902297176a69645))
+
+
+### Bug Fixes
+
+* Use temporary fallback src url for uploaded media in order to mitigate GH availability delay ([#69](https://github.com/EOX-A/git-clerk/issues/69)) ([32f88d9](https://github.com/EOX-A/git-clerk/commit/32f88d93d3e2d5c822dda6fffaf07b51a38c2b78))
+
 ## [1.1.0](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.0.0...git-clerk-v1.1.0) (2024-12-23)
 
 
