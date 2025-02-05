@@ -3,7 +3,6 @@ import { inject, onMounted, onUnmounted, ref } from "vue";
 import {
   createAndUpdateFile,
   fetchSchemaFromURL,
-  getBranchFileStructure,
   getFileDetails,
   getSessionDetails,
 } from "@/api/index.js";
@@ -137,6 +136,23 @@ const saveFile = async () => {
   );
 
   if (snackbar.value.status === "success") {
+    if (
+      Object.keys(CUSTOM_EDITOR_INTERFACES).some(
+        (key) => key in updatedFileContent.value,
+      )
+    ) {
+      for (let key in CUSTOM_EDITOR_INTERFACES) {
+        await CUSTOM_EDITOR_INTERFACES[key].operation.save(
+          updatedFileContent.value[key],
+          fileContent.value[key],
+          CUSTOM_EDITOR_INTERFACES[key],
+          filePath,
+          updatedFileContent.value.title,
+          session.value,
+          { createAndUpdateFile, getFileDetails, stringifyIfNeeded },
+        );
+      }
+    }
     await updateFileDetails(false);
     initEOXJSONFormMethod(jsonFormInstance, isSchemaBased, previewURL);
     updateNavButtonConfig();

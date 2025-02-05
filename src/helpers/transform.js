@@ -28,9 +28,9 @@ export function stringifyIfNeeded(value, oldContent) {
       };
 
       const orderedValue = orderObject(value, oldOrder);
-      return JSON.stringify(orderedValue, null, 2);
+      return JSON.stringify(orderedValue, null, 2) + "\n";
     } else {
-      return JSON.stringify(value, null, 2);
+      return JSON.stringify(value, null, 2) + "\n";
     }
   }
 

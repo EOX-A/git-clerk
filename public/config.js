@@ -561,10 +561,73 @@ const operationOn = [
   },
 ];
 
+const saveFunc = async (
+  newIds,
+  oldIds,
+  customEditorInterface,
+  childPath,
+  childTitle,
+  session,
+  { createAndUpdateFile, getFileDetails, stringifyIfNeeded },
+) => {
+  // Convert single ID strings to arrays for consistent handling
+  const newIdsArr = typeof newIds === "string" ? [newIds] : newIds;
+  const oldIdsArr = typeof oldIds === "string" ? [oldIds] : oldIds;
+
+  // Only proceed if the IDs have actually changed
+  if (newIdsArr && oldIdsArr && newIdsArr.toString() !== oldIdsArr.toString()) {
+    // Handle removed links - remove child link from files that are no longer selected
+    const removedIds = oldIdsArr.filter((id) => !newIdsArr.includes(id));
+    for (let id of removedIds) {
+      const path = customEditorInterface.file(id);
+      const fileDetails = await getFileDetails(session, path);
+      let content = JSON.parse(atob(fileDetails.content));
+      // Remove the link to this child from the file's links array
+      content.links = content.links.filter(
+        (link) => link.href !== `../../${childPath}`,
+      );
+      await createAndUpdateFile(
+        session,
+        path,
+        path,
+        stringifyIfNeeded(content, atob(fileDetails.content)),
+        fileDetails.sha,
+      );
+    }
+
+    // Handle added links - add child link to newly selected files
+    const addedIds = newIdsArr.filter((id) => !oldIdsArr.includes(id));
+    for (let id of addedIds) {
+      const path = customEditorInterface.file(id);
+      const fileDetails = await getFileDetails(session, path);
+      let content = JSON.parse(atob(fileDetails.content));
+      // Add a new child link to the file's links array
+      content.links = [
+        ...content.links,
+        {
+          rel: "child",
+          href: `../../${childPath}`,
+          type: "application/json",
+          title: childTitle,
+        },
+      ];
+
+      await createAndUpdateFile(
+        session,
+        path,
+        path,
+        stringifyIfNeeded(content, atob(fileDetails.content)),
+        fileDetails.sha,
+      );
+    }
+  }
+};
+
 const Operation = {
   on: operationOn,
   select: selectFunc,
   unselect: unselectFunc,
+  save: saveFunc,
 };
 
 globalThis.customEditorInterfaces = {
