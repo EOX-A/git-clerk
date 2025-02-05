@@ -137,6 +137,7 @@ const saveFile = async () => {
 
   if (snackbar.value.status === "success") {
     if (
+      typeof updatedFileContent.value !== "string" &&
       Object.keys(CUSTOM_EDITOR_INTERFACES).some(
         (key) => key in updatedFileContent.value,
       )

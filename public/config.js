@@ -572,7 +572,7 @@ const saveFunc = async (
 ) => {
   // Convert single ID strings to arrays for consistent handling
   const newIdsArr = typeof newIds === "string" ? [newIds] : newIds;
-  const oldIdsArr = typeof oldIds === "string" ? [oldIds] : oldIds;
+  const oldIdsArr = (typeof oldIds === "string" ? [oldIds] : oldIds) || [];
 
   // Only proceed if the IDs have actually changed
   if (newIdsArr && oldIdsArr && newIdsArr.toString() !== oldIdsArr.toString()) {
