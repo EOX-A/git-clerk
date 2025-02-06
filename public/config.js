@@ -8,6 +8,10 @@ globalThis.ghConfig = {
 
 const PATH_TO_UPLOAD = "assets";
 
+function decoderBase64ToUtf8(str) {
+  return decodeURIComponent(escape(atob(str)));
+}
+
 const handleLoaderPostMessage = (enable = true) => {
   window.parent.postMessage(
     {
@@ -151,7 +155,7 @@ const fetchFileContent = async (filePath) => {
   }
 
   const fileContent = await response.json();
-  const decodedContent = JSON.parse(atob(fileContent.content));
+  const decodedContent = JSON.parse(decoderBase64ToUtf8(fileContent.content));
 
   return decodedContent;
 };
@@ -429,10 +433,16 @@ class OSCEditor extends JSONEditor.AbstractEditor {
 
       if (startVals) {
         startVals.forEach((val) => {
-          const option = Array.from(this.input.options).find(
-            (opt) => opt.value === val,
-          );
-          if (option) option.selected = true;
+          Array.from(this.input.options).forEach((opt) => {
+            if (
+              opt.value ===
+              (editorInterface.customDataDecoder
+                ? editorInterface.customDataDecoder(val)
+                : val)
+            ) {
+              opt.selected = true;
+            }
+          });
         });
       }
     }
@@ -458,17 +468,25 @@ class OSCEditor extends JSONEditor.AbstractEditor {
           // Unselect previous values
           for (const val of previousVal) {
             content = editorInterface.operation.unselect(content, {
-              file: editorInterface.file(val),
+              file: editorInterface.file(
+                editorInterface.customDataDecoder
+                  ? editorInterface.customDataDecoder(val)
+                  : val,
+              ),
             });
           }
           // Update previous values with the newly selected options
-          previousVal = Array.from(e.target.selectedOptions).map(
-            (option) => option.value,
+          previousVal = Array.from(e.target.selectedOptions).map((option) =>
+            editorInterface.customDataEncoder
+              ? editorInterface.customDataEncoder(option.value)
+              : option.value,
           );
           // Update content with the new selections
           for (const val of previousVal) {
             content = await handleFileContentUpdate(
-              val,
+              editorInterface.customDataDecoder
+                ? editorInterface.customDataDecoder(val)
+                : val,
               content,
               editorInterface,
             );
@@ -571,8 +589,18 @@ const saveFunc = async (
   { createAndUpdateFile, getFileDetails, stringifyIfNeeded },
 ) => {
   // Convert single ID strings to arrays for consistent handling
-  const newIdsArr = typeof newIds === "string" ? [newIds] : newIds;
-  const oldIdsArr = (typeof oldIds === "string" ? [oldIds] : oldIds) || [];
+  const newIdsArr =
+    typeof newIds === "string"
+      ? [newIds]
+      : customEditorInterface.customDataDecoder
+        ? newIds.map(customEditorInterface.customDataDecoder)
+        : newIds;
+  const oldIdsArr =
+    (typeof oldIds === "string"
+      ? [oldIds]
+      : customEditorInterface.customDataDecoder
+        ? oldIds.map(customEditorInterface.customDataDecoder)
+        : oldIds) || [];
 
   // Only proceed if the IDs have actually changed
   if (newIdsArr && oldIdsArr && newIdsArr.toString() !== oldIdsArr.toString()) {
@@ -581,16 +609,17 @@ const saveFunc = async (
     for (let id of removedIds) {
       const path = customEditorInterface.file(id);
       const fileDetails = await getFileDetails(session, path);
-      let content = JSON.parse(atob(fileDetails.content));
+      let content = JSON.parse(decoderBase64ToUtf8(fileDetails.content));
       // Remove the link to this child from the file's links array
       content.links = content.links.filter(
         (link) => link.href !== `../../${childPath}`,
       );
+
       await createAndUpdateFile(
         session,
         path,
         path,
-        stringifyIfNeeded(content, atob(fileDetails.content)),
+        stringifyIfNeeded(content, decoderBase64ToUtf8(fileDetails.content)),
         fileDetails.sha,
       );
     }
@@ -600,7 +629,7 @@ const saveFunc = async (
     for (let id of addedIds) {
       const path = customEditorInterface.file(id);
       const fileDetails = await getFileDetails(session, path);
-      let content = JSON.parse(atob(fileDetails.content));
+      let content = JSON.parse(decoderBase64ToUtf8(fileDetails.content));
       // Add a new child link to the file's links array
       content.links = [
         ...content.links,
@@ -616,7 +645,7 @@ const saveFunc = async (
         session,
         path,
         path,
-        stringifyIfNeeded(content, atob(fileDetails.content)),
+        stringifyIfNeeded(content, decoderBase64ToUtf8(fileDetails.content)),
         fileDetails.sha,
       );
     }
@@ -639,13 +668,22 @@ globalThis.customEditorInterfaces = {
     file: (pathname) => `projects/${pathname}/collection.json`,
     operation: Operation,
   },
-  "osc:themes": {
+  themes: {
     type: "array",
     format: "osc-themes",
     func: OSCEditor,
     path: "themes",
     file: (pathname) => `themes/${pathname}/catalog.json`,
     operation: Operation,
+    customDataEncoder: (data) => ({
+      scheme: "https://github.com/stac-extensions/osc#theme",
+      concepts: [
+        {
+          id: data,
+        },
+      ],
+    }),
+    customDataDecoder: (data) => data.concepts[0].id,
   },
   "osc:missions": {
     type: "array",
