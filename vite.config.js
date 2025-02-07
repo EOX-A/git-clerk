@@ -17,7 +17,7 @@ export default ({ mode }) => {
         },
       }),
     ],
-    base: process.env.VITE_CLERK_BASE_URL || "/",
+    base: process.env.VITE_GIT_CLERK_BASE_URL || "/",
     server: {
       port: 3000,
     },
