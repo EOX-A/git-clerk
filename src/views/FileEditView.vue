@@ -29,7 +29,7 @@ import debounce from "lodash.debounce";
 import "@eox/jsonform";
 import "@eox/drawtools";
 import "@eox/map";
-import { CUSTOM_EDITOR_INTERFACES } from "@/enums";
+import { CUSTOM_EDITOR_INTERFACES, GENERATE_ENUMS } from "@/enums";
 
 const route = useRoute();
 const router = useRouter();
@@ -75,36 +75,13 @@ const updateFileDetails = async (cache = true) => {
     ...schemaDetails,
     schema,
   };
-  if (schemaMetaDetails.value.schema.allOf) {
-    for (const property of Object.keys(CUSTOM_EDITOR_INTERFACES)) {
-      const propertyAvailable =
-        schemaMetaDetails.value.schema.allOf[1].properties[property];
-      if (propertyAvailable) {
-        let path = CUSTOM_EDITOR_INTERFACES[property].path;
-        const catalog = await getFileDetails(
-          session.value,
-          `${path}/catalog.json`,
-          cache,
-        );
-        const links = JSON.parse(decodeString(catalog.content)).links;
-        const enumValues = links
-          .map((link) =>
-            link.rel === "child"
-              ? {
-                  value: link.href.split("/")[1],
-                  text: link.title,
-                }
-              : null,
-          )
-          .filter(Boolean);
-        if (propertyAvailable.items) {
-          propertyAvailable.items.enum = enumValues;
-        } else {
-          propertyAvailable.enum = ["", ...enumValues];
-        }
-      }
-    }
-  }
+
+  schemaMetaDetails.value = await GENERATE_ENUMS(
+    schemaMetaDetails.value,
+    session.value,
+    cache,
+    { getFileDetails },
+  );
 
   const fileDetails = await getFileDetails(session.value, filePath, cache);
   queryFileDetailsMethod(fileDetails, {

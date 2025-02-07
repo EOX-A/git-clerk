@@ -702,3 +702,43 @@ globalThis.customEditorInterfaces = {
     operation: Operation,
   },
 };
+
+globalThis.generateEnums = async (
+  schemaMetaDetails,
+  session,
+  cache,
+  { getFileDetails },
+) => {
+  if (schemaMetaDetails.schema.allOf) {
+    for (const property of Object.keys(globalThis.customEditorInterfaces)) {
+      const propertyAvailable =
+        schemaMetaDetails.schema.allOf[1].properties[property];
+      if (propertyAvailable) {
+        let path = globalThis.customEditorInterfaces[property].path;
+        const catalog = await getFileDetails(
+          session,
+          `${path}/catalog.json`,
+          cache,
+        );
+        const links = JSON.parse(decoderBase64ToUtf8(catalog.content)).links;
+        const enumValues = links
+          .map((link) =>
+            link.rel === "child"
+              ? {
+                  value: link.href.split("/")[1],
+                  text: link.title,
+                }
+              : null,
+          )
+          .filter(Boolean);
+        if (propertyAvailable.items) {
+          propertyAvailable.items.enum = enumValues;
+        } else {
+          propertyAvailable.enum = ["", ...enumValues];
+        }
+      }
+    }
+  }
+
+  return schemaMetaDetails;
+};
