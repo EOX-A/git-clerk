@@ -14,3 +14,5 @@ export const CHECK_STATUS = {
     success: false,
   },
 };
+
+export const BASE_PATH = globalThis.basePath || "/";
