@@ -14,3 +14,5 @@ export const CHECK_STATUS = {
     success: false,
   },
 };
+
+export const BASE_URL = import.meta.env.BASE_URL;

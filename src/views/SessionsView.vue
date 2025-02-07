@@ -13,6 +13,7 @@ import { ActionList } from "@/components/session";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import ListPagination from "@/components/global/ListPagination.vue";
 import EmptyState from "@/components/global/EmptyState.vue";
+import { BASE_URL } from "@/enums";
 
 const route = useRoute();
 const router = useRouter();
@@ -200,7 +201,7 @@ const onPageChange = async (newPage) => {
       v-else
       headline="No session started yet"
       icon="mdi-source-pull"
-      img="/img/session.svg"
+      :img="`${BASE_URL}/img/session.svg`"
       btn-text="Start New Session"
       description="Start a new session to share your ideas and propose updates."
       :init-func="createNewSessionClick"
