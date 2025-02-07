@@ -142,14 +142,21 @@ describe("Files list related tests", () => {
 
   // Test adding a new product
   it("Add new product", () => {
+    let location;
     cy.get(".navbar .v-btn").click();
     cy.get(".v-list.button-list .v-list-item").eq(0).click();
     cy.get("eox-jsonform#automation-form")
       .shadow()
       .within(() => {
-        cy.get(".je-indented-panel .form-control input").eq(0).type("foo3", {
-          delay: 100,
-        });
+        cy.get(
+          ".je-indented-panel .form-control input[name='root[id]']",
+        ).should("exist");
+        cy.get(".je-indented-panel .form-control input[name='root[id]']").then(
+          ($input) => {
+            location = btoa(`products/${$input.val()}/collection.json`);
+            cy.wrap(location).as("encodedPath");
+          },
+        );
         cy.get(".je-indented-panel .form-control input").eq(1).type("Foo", {
           delay: 100,
         });
@@ -158,10 +165,12 @@ describe("Files list related tests", () => {
       });
     cy.get(".v-card-actions button.bg-primary").click();
     cy.wait("@getContent");
-    cy.location("pathname", { timeout: 10000 }).should(
-      "eq",
-      "/123/cHJvZHVjdHMvZm9vMy9jb2xsZWN0aW9uLmpzb24=",
-    );
+    cy.get("@encodedPath").then((location) => {
+      cy.location("pathname", { timeout: 10000 }).should(
+        "eq",
+        "/123/" + location,
+      );
+    });
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {
