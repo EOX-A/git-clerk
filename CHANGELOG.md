@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.4](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.2.3...git-clerk-v1.2.4) (2025-02-07)
+
+
+### Bug Fixes
+
+* Deployment in subpath by setting BASE_URL ([#80](https://github.com/EOX-A/git-clerk/issues/80)) ([06bd9c3](https://github.com/EOX-A/git-clerk/commit/06bd9c3ce3979f47ce6fd020a07f527a968dcb0c))
+
 ## [1.2.3](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.2.2...git-clerk-v1.2.3) (2025-01-31)
 
 
