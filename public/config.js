@@ -269,6 +269,10 @@ globalThis.automation = [
         id: {
           type: "string",
           minLength: 1,
+          default: self.crypto.randomUUID(),
+          options: {
+            hidden: true,
+          },
         },
         title: {
           type: "string",
