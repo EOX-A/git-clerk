@@ -201,7 +201,7 @@ const onPageChange = async (newPage) => {
       v-else
       headline="No session started yet"
       icon="mdi-source-pull"
-      :img="`${BASE_URL}/img/session.svg`"
+      :img="`${BASE_URL}img/session.svg`"
       btn-text="Start New Session"
       description="Start a new session to share your ideas and propose updates."
       :init-func="createNewSessionClick"

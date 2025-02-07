@@ -184,7 +184,7 @@ const handleAutomationClose = () => {
     <v-empty-state
       v-else
       action-icon="mdi-pencil-plus"
-      :image="`${BASE_URL}/img/files.svg`"
+      :image="`${BASE_URL}img/files.svg`"
       text="No changes found in this session. You can start a new file to add updates."
       title="No changes found in this session"
       @click:action="addNewFileClick"

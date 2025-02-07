@@ -204,7 +204,7 @@ const storytellingConfig = {
       },
     },
   },
-  preview: "/storytelling.html",
+  preview: "storytelling.html",
 };
 
 globalThis.schemaMap = [
