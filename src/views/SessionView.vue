@@ -18,6 +18,7 @@ import {
   DuplicateFile,
 } from "@/components/file";
 import { encodeString, AUTOMATION } from "@/helpers/index.js";
+import { BASE_PATH } from "@/enums";
 import "@eox/jsonform";
 import Automation from "@/components/session/Automation.vue";
 
@@ -183,7 +184,7 @@ const handleAutomationClose = () => {
     <v-empty-state
       v-else
       action-icon="mdi-pencil-plus"
-      image="/img/files.svg"
+      :image="`${BASE_PATH}img/files.svg`"
       text="No changes found in this session. You can start a new file to add updates."
       title="No changes found in this session"
       @click:action="addNewFileClick"

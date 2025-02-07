@@ -4,6 +4,9 @@ globalThis.ghConfig = {
   githubAuthToken: () => new Promise((resolve) => resolve("")),
 };
 
+const BASE_PATH = "/";
+globalThis.basePath = BASE_PATH;
+
 const PATH_TO_UPLOAD = "assets";
 
 // Shared upload functionality
@@ -45,7 +48,7 @@ const handleFileUpload = async (file, editor, fileType, insertTemplate) => {
   try {
     // Get PR number from URL path
     const pathParts = window.location.pathname.split("/");
-    const prNumber = pathParts[1]; // Get PR number like "62"
+    const prNumber = pathParts.find((part) => !isNaN(part) && part.length > 0);
 
     // Get session details to get branch info
     const token = await globalThis.ghConfig.config.auth;
@@ -204,7 +207,7 @@ const storytellingConfig = {
       },
     },
   },
-  preview: "/storytelling.html",
+  preview: "storytelling.html",
 };
 
 globalThis.schemaMap = [
