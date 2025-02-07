@@ -4,6 +4,9 @@ globalThis.ghConfig = {
   githubAuthToken: () => new Promise((resolve) => resolve("")),
 };
 
+const BASE_PATH = "/";
+globalThis.basePath = BASE_PATH;
+
 const PATH_TO_UPLOAD = "assets";
 
 // Shared upload functionality

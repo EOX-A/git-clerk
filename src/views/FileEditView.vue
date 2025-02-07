@@ -26,7 +26,7 @@ import {
 } from "../methods/file-edit-view";
 import { ActionTabFileEditor } from "@/components/file/index.js";
 import debounce from "lodash.debounce";
-import { BASE_URL } from "@/enums";
+import { BASE_PATH } from "@/enums";
 import "@eox/jsonform";
 import "@eox/drawtools";
 import "@eox/map";
@@ -216,7 +216,7 @@ onUnmounted(() => {
         <iframe
           v-if="previewURL"
           id="previewFrame"
-          :src="`${BASE_URL}${previewURL}`"
+          :src="`${BASE_PATH}${previewURL}`"
           height="300"
         ></iframe>
       </v-col>
