@@ -1,5 +1,5 @@
 <script setup>
-import { inject, onMounted, onUnmounted, ref } from "vue";
+import { inject, onMounted, onUnmounted, ref, h } from "vue";
 import {
   createAndUpdateFile,
   fetchSchemaFromURL,
@@ -96,7 +96,16 @@ const updateFileDetails = async (cache = true) => {
 };
 
 const saveFile = async () => {
-  const loader = useLoader().show();
+  const loader = useLoader().show(
+    {},
+    {
+      after: h(
+        "h5",
+        { class: "loader-text", id: "loader-text" },
+        "Updating file...",
+      ),
+    },
+  );
   snackbar.value = await createAndUpdateFile(
     session.value,
     filePath,
@@ -136,6 +145,9 @@ const saveFile = async () => {
         }
       }
     }
+    const loaderEle = document.getElementById("loader-text");
+    loaderEle.innerText =
+      "Loading updated file... (It might take a few seconds)";
     await updateFileDetails(false);
     initEOXJSONFormMethod(jsonFormInstance, isSchemaBased, previewURL);
     updateNavButtonConfig();

@@ -607,10 +607,13 @@ const saveFunc = async (
 
   // Only proceed if the IDs have actually changed
   if (newIdsArr && oldIdsArr && newIdsArr.toString() !== oldIdsArr.toString()) {
+    const loaderEle = document.getElementById("loader-text");
+
     // Handle removed links - remove child link from files that are no longer selected
     const removedIds = oldIdsArr.filter((id) => !newIdsArr.includes(id));
     for (let id of removedIds) {
       const path = customEditorInterface.file(id);
+      loaderEle.innerText = `Removing child link from ${path}`;
       const fileDetails = await getFileDetails(session, path);
       if (fileDetails.status !== "error") {
         let content = JSON.parse(decoderBase64ToUtf8(fileDetails.content));
@@ -633,6 +636,7 @@ const saveFunc = async (
     const addedIds = newIdsArr.filter((id) => !oldIdsArr.includes(id));
     for (let id of addedIds) {
       const path = customEditorInterface.file(id);
+      loaderEle.innerText = `Adding child link to ${path}`;
       const fileDetails = await getFileDetails(session, path);
       if (fileDetails.status !== "error") {
         let content = JSON.parse(decoderBase64ToUtf8(fileDetails.content));
