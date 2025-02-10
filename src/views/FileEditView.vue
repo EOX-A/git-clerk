@@ -223,7 +223,7 @@ onUnmounted(() => {
 
   <div
     v-if="fileContent !== null && schemaMetaDetails.schema"
-    :class="`bg-white ${!previewURL && 'px-4 px-sm-12 py-4 py-sm-8 non-preview-height'} d-block file-editor ${schemaMetaDetails.generic && 'file-editor-code'}`"
+    :class="`bg-white d-block file-editor ${schemaMetaDetails.generic && 'file-editor-code'}`"
   >
     <div
       class="d-flex align-center align-self-center justify-center flex-column py-12"
@@ -239,31 +239,29 @@ onUnmounted(() => {
         >View Raw</router-link
       >
     </div>
-    <v-row v-else no-gutters :class="previewURL ? 'd-block d-sm-flex' : ''">
-      <v-col :cols="previewURL ? 3 : 12" class="overflow-x-auto">
+    <v-row v-else no-gutters class="fill-height overflow-hidden split">
+      <v-col
+        cols="12"
+        :md="previewURL ? 6 : 12"
+        class="fill-height overflow-x-auto overflow-y-scroll pa-4"
+      >
         <eox-jsonform
           :schema="schemaMetaDetails.schema"
           :value="fileContent"
-          :noShadow="false"
-          :unstyled="false"
-          :class="previewURL ? 'with-preview' : ''"
-          @change="onFileChange"
           :customEditorInterfaces="Object.values(CUSTOM_EDITOR_INTERFACES)"
+          @change="onFileChange"
         ></eox-jsonform>
       </v-col>
-      <v-col v-if="previewURL" class="file-preview">
-        <div class="preview-toolbar bg-secondary">
-          <p
-            class="text-uppercase font-weight-bold text-sm-body-2 text-blue-grey-darken-2 d-flex align-center ga-2 mx-3"
-          >
-            <v-icon icon="mdi-monitor-eye"></v-icon> PREVIEW
-          </p>
-        </div>
+      <v-col
+        v-if="previewURL"
+        cols="12"
+        md="6"
+        class="file-preview fill-height"
+      >
         <iframe
           v-if="previewURL"
           id="previewFrame"
           :src="`${BASE_PATH}${previewURL}`"
-          height="300"
         ></iframe>
       </v-col>
     </v-row>
@@ -281,22 +279,17 @@ onUnmounted(() => {
   font-size: 20px;
   margin-inline-end: 6px;
 }
-.file-editor.non-preview-height {
-  min-height: 95%;
+.file-editor {
+  --secondary-header-height: 80px;
+  height: calc(100% - var(--secondary-header-height));
+  position: relative;
 }
-.file-editor .je-indented-panel .row {
-  margin-top: 10px;
-  padding: 10px;
-}
-.file-editor:not(.file-editor-code) .je-indented-panel > div > div {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-.file-editor textarea.v-field__input {
-  padding: 10px;
-  height: 66vh;
-  background: #f6f6f6 !important;
+.file-editor .split {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 .file-preview iframe {
   box-sizing: border-box;
@@ -305,38 +298,6 @@ onUnmounted(() => {
   z-index: 0;
   word-wrap: break-word;
   width: 100%;
-  height: calc(100vh - 194px);
-}
-
-.file-preview {
-  width: 100%;
-  line-height: 0px;
-}
-
-.file-preview .preview-toolbar {
-  position: relative;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  -o-user-select: none;
-  user-select: none;
-  padding: 13.5px 10px;
-  border-top: 1px solid #ced4da;
-  border-left: 1px solid #ced4da;
-  border-right: 1px solid #ced4da;
-}
-
-.file-preview .preview-toolbar p {
-  letter-spacing: 0.25px !important;
-}
-
-.file-editor .with-preview {
-  width: 35vw;
-}
-
-@media (max-width: 600px) {
-  .file-editor .v-col-3 {
-    max-width: 100vw;
-  }
+  height: 100%;
 }
 </style>
