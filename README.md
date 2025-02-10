@@ -170,6 +170,40 @@ globalThis.automation = [
 ]
 ```
 
+### Custom Editor Interface
+
+Git Clerk uses `eox-jsonform` to render applications based on different JSON editor schemas. `eox-jsonform` contains editor interfaces for each of the primitive JSON types as well as a few other specialized ones. For those who need custom editor interfaces/inputs based on any custom format, they can easily build their own custom editor interface using `JSON Editor`'s `AbstractEditor` class inside `config.js`.
+
+```js
+globalThis.customEditorInterfaces = {
+  "some-format-key-name": {
+    type: "string", // Any data type for the custom editor
+    format: "any-custom-format", // Any custom format key
+    func: CustomEditorInterface, // Build any custom editor using `JSON Editor`'s `AbstractEditor` class
+    ... // Add any key values as per your business logic
+  },
+};
+```
+
+An example for this setup can be seen in [here](https://github.com/EOX-A/git-clerk/blob/bfa157a499ef488fe3b0ebf3215fb9368d552496/public/config.js#L680).
+
+### Generate Enums
+
+Sometimes input enums need to be dynamically fetched from an API or other data source to update the schema. `globalThis.generateEnums` inside `config.js` allows users to fetch dynamic enums according to their business logic and then return the updated schema.
+
+````js
+globalThis.generateEnums = async (
+  schemaMetaDetails,
+  session,
+  cache,
+  { getFileDetails },
+) => {
+  ... // Fetch dynamic enums based on the API and update the schemaMetaDetails
+  return schemaMetaDetails; // Return the updated schema based on the processing above
+}
+
+An example for this setup can be seen in [here](https://github.com/EOX-A/git-clerk/blob/bfa157a499ef488fe3b0ebf3215fb9368d552496/public/config.js#L724).
+
 ## Development
 
 ### Recommended IDE Setup
@@ -184,7 +218,7 @@ See [Vite Configuration Reference](https://vitejs.dev/config/).
 
 ```sh
 npm install
-```
+````
 
 #### Compile and Hot-Reload for Development
 
