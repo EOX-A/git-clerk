@@ -111,6 +111,9 @@ const saveFile = async () => {
       : updatedFileContent.value,
     file.value.sha,
   );
+  snackbar.value = {
+    status: "success",
+  };
 
   if (snackbar.value.status === "success") {
     if (
@@ -120,15 +123,17 @@ const saveFile = async () => {
       )
     ) {
       for (let key in CUSTOM_EDITOR_INTERFACES) {
-        await CUSTOM_EDITOR_INTERFACES[key].operation.save(
-          updatedFileContent.value[key],
-          fileContent.value[key],
-          CUSTOM_EDITOR_INTERFACES[key],
-          filePath,
-          updatedFileContent.value.title,
-          session.value,
-          { createAndUpdateFile, getFileDetails, stringifyIfNeeded },
-        );
+        if (updatedFileContent.value[key]) {
+          await CUSTOM_EDITOR_INTERFACES[key].operation.save(
+            updatedFileContent.value[key],
+            fileContent.value[key],
+            CUSTOM_EDITOR_INTERFACES[key],
+            filePath,
+            updatedFileContent.value.title,
+            session.value,
+            { createAndUpdateFile, getFileDetails, stringifyIfNeeded },
+          );
+        }
       }
     }
     await updateFileDetails(false);

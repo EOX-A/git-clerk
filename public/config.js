@@ -445,6 +445,8 @@ class OSCEditor extends JSONEditor.AbstractEditor {
           });
         });
       }
+    } else if (this.schema.type === "string") {
+      this.input.value = startVals ? startVals : "";
     }
 
     // Add an event listener for changes on the input element
@@ -499,12 +501,15 @@ class OSCEditor extends JSONEditor.AbstractEditor {
             });
           // Update previous value with the newly selected option
           previousVal = e.target.value;
+
           // Update content with the new selection
-          content = await handleFileContentUpdate(
-            previousVal,
-            content,
-            editorInterface,
-          );
+          if (previousVal) {
+            content = await handleFileContentUpdate(
+              previousVal,
+              content,
+              editorInterface,
+            );
+          }
         }
 
         // Set the updated content back to the JSON editor
@@ -589,18 +594,16 @@ const saveFunc = async (
   { createAndUpdateFile, getFileDetails, stringifyIfNeeded },
 ) => {
   // Convert single ID strings to arrays for consistent handling
-  const newIdsArr =
-    typeof newIds === "string"
-      ? [newIds]
-      : customEditorInterface.customDataDecoder
-        ? newIds.map(customEditorInterface.customDataDecoder)
-        : newIds;
-  const oldIdsArr =
-    (typeof oldIds === "string"
-      ? [oldIds]
-      : customEditorInterface.customDataDecoder
-        ? oldIds.map(customEditorInterface.customDataDecoder)
-        : oldIds) || [];
+  const newIdsArr = !Array.isArray(newIds)
+    ? [newIds]
+    : customEditorInterface.customDataDecoder
+      ? newIds.map(customEditorInterface.customDataDecoder)
+      : newIds;
+  const oldIdsArr = !Array.isArray(oldIds)
+    ? [oldIds]
+    : customEditorInterface.customDataDecoder
+      ? oldIds.map(customEditorInterface.customDataDecoder)
+      : oldIds;
 
   // Only proceed if the IDs have actually changed
   if (newIdsArr && oldIdsArr && newIdsArr.toString() !== oldIdsArr.toString()) {
@@ -609,19 +612,21 @@ const saveFunc = async (
     for (let id of removedIds) {
       const path = customEditorInterface.file(id);
       const fileDetails = await getFileDetails(session, path);
-      let content = JSON.parse(decoderBase64ToUtf8(fileDetails.content));
-      // Remove the link to this child from the file's links array
-      content.links = content.links.filter(
-        (link) => link.href !== `../../${childPath}`,
-      );
+      if (fileDetails.status !== "error") {
+        let content = JSON.parse(decoderBase64ToUtf8(fileDetails.content));
+        // Remove the link to this child from the file's links array
+        content.links = content.links.filter(
+          (link) => link.href !== `../../${childPath}`,
+        );
 
-      await createAndUpdateFile(
-        session,
-        path,
-        path,
-        stringifyIfNeeded(content, decoderBase64ToUtf8(fileDetails.content)),
-        fileDetails.sha,
-      );
+        await createAndUpdateFile(
+          session,
+          path,
+          path,
+          stringifyIfNeeded(content, decoderBase64ToUtf8(fileDetails.content)),
+          fileDetails.sha,
+        );
+      }
     }
 
     // Handle added links - add child link to newly selected files
@@ -629,25 +634,27 @@ const saveFunc = async (
     for (let id of addedIds) {
       const path = customEditorInterface.file(id);
       const fileDetails = await getFileDetails(session, path);
-      let content = JSON.parse(decoderBase64ToUtf8(fileDetails.content));
-      // Add a new child link to the file's links array
-      content.links = [
-        ...content.links,
-        {
-          rel: "child",
-          href: `../../${childPath}`,
-          type: "application/json",
-          title: childTitle,
-        },
-      ];
+      if (fileDetails.status !== "error") {
+        let content = JSON.parse(decoderBase64ToUtf8(fileDetails.content));
+        // Add a new child link to the file's links array
+        content.links = [
+          ...content.links,
+          {
+            rel: "child",
+            href: `../../${childPath}`,
+            type: "application/json",
+            title: childTitle,
+          },
+        ];
 
-      await createAndUpdateFile(
-        session,
-        path,
-        path,
-        stringifyIfNeeded(content, decoderBase64ToUtf8(fileDetails.content)),
-        fileDetails.sha,
-      );
+        await createAndUpdateFile(
+          session,
+          path,
+          path,
+          stringifyIfNeeded(content, decoderBase64ToUtf8(fileDetails.content)),
+          fileDetails.sha,
+        );
+      }
     }
   }
 };
@@ -734,7 +741,13 @@ globalThis.generateEnums = async (
         if (propertyAvailable.items) {
           propertyAvailable.items.enum = enumValues;
         } else {
-          propertyAvailable.enum = ["", ...enumValues];
+          propertyAvailable.enum = [
+            {
+              value: "",
+              text: "Select a value",
+            },
+            ...enumValues,
+          ];
         }
       }
     }
