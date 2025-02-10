@@ -191,7 +191,7 @@ An example for this setup can be seen in [here](https://github.com/EOX-A/git-cle
 
 Sometimes input enums need to be dynamically fetched from an API or other data source to update the schema. `globalThis.generateEnums` inside `config.js` allows users to fetch dynamic enums according to their business logic and then return the updated schema.
 
-````js
+```js
 globalThis.generateEnums = async (
   schemaMetaDetails,
   session,
@@ -201,6 +201,7 @@ globalThis.generateEnums = async (
   ... // Fetch dynamic enums based on the API and update the schemaMetaDetails
   return schemaMetaDetails; // Return the updated schema based on the processing above
 }
+```
 
 An example for this setup can be seen in [here](https://github.com/EOX-A/git-clerk/blob/bfa157a499ef488fe3b0ebf3215fb9368d552496/public/config.js#L724).
 
@@ -218,7 +219,7 @@ See [Vite Configuration Reference](https://vitejs.dev/config/).
 
 ```sh
 npm install
-````
+```
 
 #### Compile and Hot-Reload for Development
 
