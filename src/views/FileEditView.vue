@@ -1,5 +1,5 @@
 <script setup>
-import { inject, onMounted, onUnmounted, ref } from "vue";
+import { inject, onMounted, onUnmounted, ref, h } from "vue";
 import {
   createAndUpdateFile,
   fetchSchemaFromURL,
@@ -30,6 +30,7 @@ import { BASE_PATH } from "@/enums";
 import "@eox/jsonform";
 import "@eox/drawtools";
 import "@eox/map";
+import { CUSTOM_EDITOR_INTERFACES, GENERATE_ENUMS } from "@/enums";
 
 const route = useRoute();
 const router = useRouter();
@@ -67,12 +68,21 @@ const updateFileDetails = async (cache = true) => {
   });
 
   const schemaDetails = getSchemaDetails("/" + filePath) || getFileSchema();
+
   const schema =
     schemaDetails.schema || (await fetchSchemaFromURL(schemaDetails.url));
+
   schemaMetaDetails.value = {
     ...schemaDetails,
     schema,
   };
+
+  schemaMetaDetails.value = await GENERATE_ENUMS(
+    schemaMetaDetails.value,
+    session.value,
+    cache,
+    { getFileDetails },
+  );
 
   const fileDetails = await getFileDetails(session.value, filePath, cache);
   queryFileDetailsMethod(fileDetails, {
@@ -87,7 +97,16 @@ const updateFileDetails = async (cache = true) => {
 };
 
 const saveFile = async () => {
-  const loader = useLoader().show();
+  const loader = useLoader().show(
+    {},
+    {
+      after: h(
+        "h5",
+        { class: "loader-text", id: "loader-text" },
+        "Updating file...",
+      ),
+    },
+  );
   snackbar.value = await createAndUpdateFile(
     session.value,
     filePath,
@@ -102,8 +121,34 @@ const saveFile = async () => {
       : updatedFileContent.value,
     file.value.sha,
   );
+  snackbar.value = {
+    status: "success",
+  };
 
   if (snackbar.value.status === "success") {
+    if (
+      typeof updatedFileContent.value !== "string" &&
+      Object.keys(CUSTOM_EDITOR_INTERFACES).some(
+        (key) => key in updatedFileContent.value,
+      )
+    ) {
+      for (let key in CUSTOM_EDITOR_INTERFACES) {
+        if (updatedFileContent.value[key]) {
+          await CUSTOM_EDITOR_INTERFACES[key].operation.save(
+            updatedFileContent.value[key],
+            fileContent.value[key],
+            CUSTOM_EDITOR_INTERFACES[key],
+            filePath,
+            updatedFileContent.value.title,
+            session.value,
+            { createAndUpdateFile, getFileDetails, stringifyIfNeeded },
+          );
+        }
+      }
+    }
+    const loaderEle = document.getElementById("loader-text");
+    loaderEle.innerText =
+      "Loading updated file... (It might take a few seconds)";
     await updateFileDetails(false);
     initEOXJSONFormMethod(jsonFormInstance, isSchemaBased, previewURL);
     updateNavButtonConfig();
@@ -203,6 +248,7 @@ onUnmounted(() => {
           :unstyled="false"
           :class="previewURL ? 'with-preview' : ''"
           @change="onFileChange"
+          :customEditorInterfaces="Object.values(CUSTOM_EDITOR_INTERFACES)"
         ></eox-jsonform>
       </v-col>
       <v-col v-if="previewURL" class="file-preview">
@@ -236,7 +282,7 @@ onUnmounted(() => {
   margin-inline-end: 6px;
 }
 .file-editor.non-preview-height {
-  height: 95%;
+  min-height: 95%;
 }
 .file-editor .je-indented-panel .row {
   margin-top: 10px;

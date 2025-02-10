@@ -15,4 +15,6 @@ export const CHECK_STATUS = {
   },
 };
 
+export const CUSTOM_EDITOR_INTERFACES = globalThis.customEditorInterfaces || {};
+export const GENERATE_ENUMS = globalThis.generateEnums || (() => {});
 export const BASE_PATH = globalThis.basePath || "/";

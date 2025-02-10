@@ -15,7 +15,7 @@ export function stringifyIfNeeded(value, oldContent) {
       const orderObject = (obj, oldObj) => {
         if (!obj || typeof obj !== "object") return obj;
 
-        const ordered = {};
+        const ordered = Array.isArray(obj) ? [] : {};
         getOrderedKeys(obj, oldObj).forEach((key) => {
           if (key in obj) {
             ordered[key] =
@@ -28,9 +28,9 @@ export function stringifyIfNeeded(value, oldContent) {
       };
 
       const orderedValue = orderObject(value, oldOrder);
-      return JSON.stringify(orderedValue, null, 2);
+      return JSON.stringify(orderedValue, null, 2) + "\n";
     } else {
-      return JSON.stringify(value, null, 2);
+      return JSON.stringify(value, null, 2) + "\n";
     }
   }
 
