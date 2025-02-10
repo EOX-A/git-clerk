@@ -167,6 +167,11 @@ export async function sessionDetails(octokit, githubConfig, prNumber) {
 
     return response.data;
   } catch (error) {
+    if (error.status === 404) {
+      console.error(
+        "Either `basePath` is set incorrectly in config.js, or the session number does not exist.",
+      );
+    }
     return {
       text: error.message,
       status: "error",

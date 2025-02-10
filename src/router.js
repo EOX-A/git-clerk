@@ -3,9 +3,10 @@ import SessionsView from "@/views/SessionsView.vue";
 import SessionView from "@/views/SessionView.vue";
 import FileEditView from "@/views/FileEditView.vue";
 import NotFoundView from "@/views/NotFoundView.vue";
+import { BASE_PATH } from "@/enums";
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(BASE_PATH),
   routes: [
     {
       path: "/",
