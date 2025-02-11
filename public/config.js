@@ -312,7 +312,7 @@ globalThis.automation = [
         id: {
           type: "string",
           minLength: 1,
-          default: self.crypto.randomUUID(),
+          format: "uuid",
           options: {
             hidden: true,
           },
@@ -562,6 +562,31 @@ class OSCEditor extends JSONEditor.AbstractEditor {
   }
 }
 
+// Example of how to build a custom editor can be found here:
+// https://github.com/json-editor/json-editor/blob/master/docs/custom-editor.html
+class UUIDEditor extends JSONEditor.AbstractEditor {
+  register() {
+    super.register();
+  }
+
+  unregister() {
+    super.unregister();
+  }
+
+  build() {
+    super.build();
+    const startVals = this.defaults.startVals[this.key];
+    /* Set field to readonly */
+    this.disable(true);
+    if (!startVals) {
+      setTimeout(() => {
+        this.value = self.crypto.randomUUID();
+        this.onChange(true);
+      }, 100);
+    }
+  }
+}
+
 const selectFunc = (content, { file, title }) => {
   content.links = [
     ...content.links,
@@ -718,6 +743,11 @@ globalThis.customEditorInterfaces = {
     path: "variables",
     file: (pathname) => `variables/${pathname}/catalog.json`,
     operation: Operation,
+  },
+  id: {
+    type: "string",
+    format: "uuid",
+    func: UUIDEditor,
   },
 };
 
