@@ -84,11 +84,6 @@ const updateFileDetails = async (cache = true) => {
     { getFileDetails },
   );
 
-  schemaMetaDetails.value.schema.allOf[0].properties.id = {
-    ...schemaMetaDetails.value.schema.allOf[0].properties.id,
-    format: "uuid",
-  };
-
   const fileDetails = await getFileDetails(session.value, filePath, cache);
   queryFileDetailsMethod(fileDetails, {
     snackbar,
