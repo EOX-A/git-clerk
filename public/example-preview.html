@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Preview</title>
+  <style>
+    * {
+      font-family: sans-serif;
+    }
+    code {
+      background: whitesmoke;
+      padding: 4px 8px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Live preview example</h1>
+  <p>This is a simple example for a live preview, communicating with the frame via <code>postMessage</code></p>
+  <h2>Id (hidden)</h2>
+  <p>Content of <code>id</code>: <span id="id"></span></p>
+  <h2>Foo</h2>
+  <p>Content of <code>foo</code>: <span id="foo"></span></p>
+  <h2>Bar</h2>
+  <p>Togle <code>bar</code>: <button id="bar">toggle</button></p>
+  <script>
+    let dataCurrent;
+
+    // Listen for messages from parent
+    window.onload = function () {
+      window.addEventListener("message", function (event) {
+        if (event.data && event.data.type === "SCHEMA_DATA_EDITOR_UPDATE") {
+          dataCurrent = event.data.detail;
+          document.querySelector("#id").textContent = dataCurrent.id;
+          document.querySelector("#foo").textContent = dataCurrent.foo;
+        }
+      });
+    };
+
+    // Send messages to parent
+    document
+      .querySelector("#bar")
+      .addEventListener("click", () => {
+          const message = {
+            type: "SCHEMA_DATA_PREVIEW_UPDATE",
+            detail: {
+              ...dataCurrent,
+              bar: !dataCurrent.bar 
+            },
+          };
+
+          window.parent.postMessage(message, "*");
+      });
+  </script>
+</body>
+</html>
