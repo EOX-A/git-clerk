@@ -147,7 +147,7 @@ const onKeyDownPathName = async (event) => {
         updatedFilePath.value = updatedFilePathArr.value.join("/") + "/";
       }
     }
-  }
+  } else if (event.key === "Enter") await addOrEditFile();
 };
 
 const onPastePathName = (event) => {

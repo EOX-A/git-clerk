@@ -77,12 +77,14 @@ const updateFileDetails = async (cache = true) => {
     schema,
   };
 
-  schemaMetaDetails.value = await GENERATE_ENUMS(
-    schemaMetaDetails.value,
-    session.value,
-    cache,
-    { getFileDetails },
-  );
+  if (GENERATE_ENUMS) {
+    schemaMetaDetails.value = await GENERATE_ENUMS(
+      schemaMetaDetails.value,
+      session.value,
+      cache,
+      { getFileDetails },
+    );
+  }
 
   const fileDetails = await getFileDetails(session.value, filePath, cache);
   queryFileDetailsMethod(fileDetails, {
