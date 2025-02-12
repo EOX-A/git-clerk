@@ -1,4 +1,5 @@
 <script setup>
+import { CUSTOM_EDITOR_INTERFACES } from "@/enums";
 import { initEOXJSONFormMethod } from "@/methods/file-edit-view";
 import { handleAutomationMethod } from "@/methods/session-view";
 import { inject, ref, onMounted } from "vue";
@@ -42,6 +43,7 @@ onMounted(() => {
       <eox-jsonform
         id="automation-form"
         :schema="props.selectedAutomation.inputSchema"
+        :customEditorInterfaces="Object.values(CUSTOM_EDITOR_INTERFACES)"
       />
     </template>
 

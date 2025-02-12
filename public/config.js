@@ -312,7 +312,7 @@ globalThis.automation = [
         id: {
           type: "string",
           minLength: 1,
-          default: self.crypto.randomUUID(),
+          format: "uuid",
           options: {
             hidden: true,
           },
@@ -562,6 +562,77 @@ class OSCEditor extends JSONEditor.AbstractEditor {
   }
 }
 
+// Example of how to build a custom editor can be found here:
+// https://github.com/json-editor/json-editor/blob/master/docs/custom-editor.html
+class UUIDEditor extends JSONEditor.AbstractEditor {
+  register() {
+    super.register();
+  }
+
+  unregister() {
+    super.unregister();
+  }
+
+  build() {
+    const options = this.options;
+    const description = this.schema.description;
+    const theme = this.theme;
+    const startVals = this.defaults.startVals[this.key];
+
+    // Create label and description elements if not in compact mode
+    if (!options.compact)
+      this.header = this.label = theme.getFormInputLabel(
+        this.getTitle(),
+        this.isRequired(),
+      );
+    if (description)
+      this.description = theme.getFormInputDescription(
+        this.translateProperty(description),
+      );
+    if (options.infoText)
+      this.infoButton = theme.getInfoButton(
+        this.translateProperty(options.infoText),
+      );
+
+    /* Set field to readonly */
+    this.disable(true);
+
+    const input = document.createElement("input");
+    this.input = input;
+    this.input.type = "text";
+    this.input.id = this.formname;
+    this.input.name = this.formname;
+    this.input.value = startVals || self.crypto.randomUUID();
+
+    this.control = theme.getFormControl(
+      this.label,
+      this.input,
+      this.description,
+      this.infoButton,
+    );
+
+    this.container.appendChild(this.control);
+
+    if (!startVals) {
+      setTimeout(() => {
+        this.value = this.input.value;
+        this.onChange(true);
+      }, 100);
+    }
+  }
+
+  // Destroy the editor and remove all associated elements
+  destroy() {
+    if (this.label && this.label.parentNode)
+      this.label.parentNode.removeChild(this.label);
+    if (this.description && this.description.parentNode)
+      this.description.parentNode.removeChild(this.description);
+    if (this.input && this.input.parentNode)
+      this.input.parentNode.removeChild(this.input);
+    super.destroy();
+  }
+}
+
 const selectFunc = (content, { file, title }) => {
   content.links = [
     ...content.links,
@@ -718,6 +789,11 @@ globalThis.customEditorInterfaces = {
     path: "variables",
     file: (pathname) => `variables/${pathname}/catalog.json`,
     operation: Operation,
+  },
+  id: {
+    type: "string",
+    format: "uuid",
+    func: UUIDEditor,
   },
 };
 
