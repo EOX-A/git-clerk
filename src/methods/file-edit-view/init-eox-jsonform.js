@@ -59,7 +59,7 @@ export function initEOXJSONFormMethod(
 
       const bodySelector = `${mainDivClass} .row .EasyMDEContainer .CodeMirror`;
       shadowRoot.querySelector(bodySelector).style.height =
-        "calc(100vh - 194px)";
+        "calc(100vh - 275px)";
       shadowRoot.querySelector(bodySelector).style.borderRadius = "0px";
       shadowRoot.querySelector(bodySelector).style.backgroundColor = "#fafafa";
 
@@ -85,25 +85,6 @@ export function initEOXJSONFormMethod(
 
   style.textContent = `
     ${
-      isSchemaBased.value && !basic
-        ? `
-          ${mainDivClass} {
-            display: grid;
-            grid-template-columns: 1fr 1fr; /* Two equal columns */
-            gap: 20px 50px;
-          }
-          .je-indented-panel .row {
-            margin-top: 10px;
-            padding: 10px;
-          }
-          [data-schemapath*="spatial"] .je-indented-panel div,
-          [data-schemapath*="temporal"] .je-indented-panel div {
-            grid-template-columns: 1fr !important;
-          }
-        `
-        : ``
-    }
-    ${
       basic
         ? `
       form[data-theme="html"] .je-form-input-label {
@@ -119,21 +100,13 @@ export function initEOXJSONFormMethod(
     .je-textarea {
       font-family: 'Courier New', monospace;
       font-size: 14px;
-      font-weight: 500;
       line-height: 1.5;
-      padding: 12px;
-      tab-size: 2;
-      background-color: #ffffff;
-      color: #000000;
-      border: 1px solid #e0e0e0;
-      border-radius: 4px;
-      width: 100%;
       height: calc(100vh - 240px) !important;
-      resize: vertical;
       white-space: pre;
-      overflow-wrap: normal;
-      overflow-x: auto;
-      resize: none;
+      background-image: linear-gradient(to right, #f5f5f5 30px, #ffffff 30px);
+      background-size: 100% 24px;
+      background-repeat: repeat-y;
+      padding-left: 45px;
     }
     .je-textarea:focus {
       outline: none;
@@ -146,40 +119,19 @@ export function initEOXJSONFormMethod(
       box-shadow: unset !important;
       padding: 0 !important;
     }
-    .je-textarea {
-      background-image: linear-gradient(to right, #f5f5f5 30px, #ffffff 30px);
-      background-size: 100% 24px;
-      background-repeat: repeat-y;
-      padding-left: 45px;
-    }
     form[data-theme="html"] .je-indented-panel {
       border: none !important;
       padding: 0 !important;
       margin: 0 !important;
-    }
-    .je-indented-panel .row {
-      padding: 0 !important;
     }
     input[type="text"], input[type="url"], input[type="email"], input[type="password"], input[type="text"], input[type="number"], input[type="search"], input[type="tel"], select {
       padding: 10px !important;
       font-size: 16px;
       border: 1.5px solid #E0E4E6 !important;
     }
-    .EasyMDEContainer {
-      margin: 8px 0px;
-    }
-    .errmsg {
-      font-weight: 600;
-    }
-    .editor-statusbar {
-      display: none;
-    }
     @media (max-width: 600px) {
       .je-textarea {
         height: calc(100vh - 195px) !important;
-      }
-      .je-indented-panel > div > div:not(.je-child-editor-holder):not(.je-child-editor-holder *) {
-        display: block !important;
       }
     }
   `;
