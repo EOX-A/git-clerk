@@ -263,11 +263,7 @@ onUnmounted(() => {
         md="6"
         class="file-preview fill-height"
       >
-        <iframe
-          v-if="previewURL"
-          id="previewFrame"
-          :src="`${BASE_PATH}${previewURL}`"
-        ></iframe>
+        <iframe v-if="previewURL" id="previewFrame" :src="previewURL"></iframe>
       </v-col>
     </v-row>
   </div>
