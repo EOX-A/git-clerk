@@ -247,7 +247,7 @@ onUnmounted(() => {
       <v-col
         cols="12"
         :md="previewURL ? 6 : 12"
-        class="fill-height overflow-x-auto overflow-y-scroll pa-4"
+        class="fill-height overflow-x-auto overflow-y-scroll pa-4 pa-md-8"
       >
         <eox-jsonform
           :schema="schemaMetaDetails.schema"
