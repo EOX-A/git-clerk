@@ -67,7 +67,9 @@ const updateFileDetails = async (cache = true) => {
     navPaginationItems,
   });
 
-  const schemaDetails = getSchemaDetails("/" + filePath) || getFileSchema();
+  const schemaDetails =
+    getSchemaDetails("/" + filePath) ||
+    getFileSchema(filePath.split(".")[filePath.split(".").length - 1]);
 
   const schema =
     schemaDetails.schema || (await fetchSchemaFromURL(schemaDetails.url));
@@ -153,7 +155,7 @@ const saveFile = async () => {
     loaderEle.innerText =
       "Loading updated file... (It might take a few seconds)";
     await updateFileDetails(false);
-    initEOXJSONFormMethod(jsonFormInstance, isSchemaBased, previewURL);
+    initEOXJSONFormMethod(jsonFormInstance);
     updateNavButtonConfig();
   }
   loader.hide();
@@ -187,7 +189,7 @@ const onFileChange = (e) => {
 
 const resetContent = () => {
   jsonFormInstance.value.editor.setValue(fileContent.value);
-  initEOXJSONFormMethod(jsonFormInstance, isSchemaBased, previewURL);
+  initEOXJSONFormMethod(jsonFormInstance);
   updateNavButtonConfig();
 };
 
@@ -196,7 +198,7 @@ onMounted(async () => {
   updateNavButtonConfig();
   await updateFileDetails();
   if (file.value.encoding !== "none") {
-    initEOXJSONFormMethod(jsonFormInstance, isSchemaBased, previewURL);
+    initEOXJSONFormMethod(jsonFormInstance);
     if (isSchemaBased.value) {
       hideHiddenFieldsMethod(jsonFormInstance);
     }
@@ -204,7 +206,6 @@ onMounted(async () => {
       previewURL,
       updatedFileContent,
       jsonFormInstance,
-      isSchemaBased,
     });
   }
   loader.hide();
@@ -253,6 +254,7 @@ onUnmounted(() => {
           :value="fileContent"
           :customEditorInterfaces="Object.values(CUSTOM_EDITOR_INTERFACES)"
           @change="onFileChange"
+          class="d-block fill-height"
         ></eox-jsonform>
       </v-col>
       <v-col
