@@ -18,11 +18,16 @@ The configuration for git-clerk is done via the [config file](/public/config.js)
 
 ```js
 globalThis.ghConfig = {
-  githubRepo: "my-user/my-repo", // the target repository
-  githubAuthToken: () =>
-    new Promise((resolve) => resolve("ghp_myGithubAuthToken")), // an (async) function that returns the GitHub token for the authenticated user
+  // The target repository to create PRs against
+  githubRepo: "EOX-A/git-clerk-demo",
+  // The current user's GH token, either as string or (sync or asyn) function
+  // Example: githubAuthToken: () => "<github-token>"
+  // Example: githubAuthToken: () => new Promise((resolve) => fetch("<endpoint>").then(() => resolve(token))),
+  githubAuthToken: "ghp_myGithubAuthToken",
 };
 ```
+
+You can also set this GitHub config via an `.env` variable, by passing `GITCLERK_GITHUB_TOKEN` and `GITCLERK_GITHUB_REPO` see e.g. [.env.example](./.env.examle).
 
 ## Features
 

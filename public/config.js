@@ -2,12 +2,8 @@ import "https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoned
 
 // GitHub config
 globalThis.ghConfig = {
-  // Replace with the repository you want to do PRs against
-  githubRepo: "EOX-A/git-clerk-demo",
-  // Return the current user's GH token, either synchronously or asynchronously
-  // Example: githubAuthToken: () => "<github-token>"
-  // Example: githubAuthToken: () => new Promise((resolve) => fetch("<endpoint>").then(() => resolve(token))),
-  githubAuthToken: () => new Promise((resolve) => resolve("")),
+  githubRepo: undefined,
+  githubAuthToken: undefined,
 };
 
 // Base path at which the apps runs
