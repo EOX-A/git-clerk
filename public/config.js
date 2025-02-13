@@ -2,8 +2,8 @@ import "https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoned
 
 // GitHub config
 globalThis.ghConfig = {
-  githubRepo: "EOX-A/git-clerk-demo",
-  githubAuthToken: () => "<your-github-token-here>",
+  githubRepo: "",
+  githubAuthToken: () => new Promise((resolve) => resolve("")),
 };
 
 // Base path at which the apps runs
@@ -61,7 +61,7 @@ globalThis.schemaMap = [
     content: {
       foo: "Initial content for file creation",
     },
-    preview: "/example-preview.html",
+    preview: "example-preview.html",
   },
 ];
 
@@ -163,7 +163,7 @@ globalThis.generateEnums = async (
   cache,
   { getFileDetails },
 ) => {
-  if (schemaMetaDetails.path.includes("/foo/bar/")) {
+  if (schemaMetaDetails.path?.includes("/foo/bar/")) {
     const readme = await getFileDetails(session, "/README.md", cache);
     schemaMetaDetails.schema.properties.dynamicEnum.items.enum = [readme.path];
   }

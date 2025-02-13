@@ -6,8 +6,6 @@ import content from "../fixtures/content:get.json";
 
 // State flags to control test behavior
 let duplicateFile = false;
-let isProductContent = false;
-let isNarrativeContent = false;
 let isManualContent = false;
 let isUploadFile = false;
 
@@ -62,16 +60,6 @@ describe("Files list related tests", () => {
       },
       (req) => {
         let tempContent = content;
-        // Modify content based on content type flags
-        if (isProductContent) {
-          tempContent.path = "products/foo3/collection.json";
-          tempContent.content =
-            "ewogICJpZCI6ICJmb28zIiwKICAidGl0bGUiOiAiRm9vIiwKICAibGlua3MiOiBbXQp9";
-        }
-        if (isNarrativeContent) {
-          tempContent.path = "narratives/story1.md";
-          tempContent.content = "IyBTdG9yeQ==";
-        }
         if (isManualContent) {
           tempContent.path = "manual-file.txt";
           tempContent.content = "";
@@ -153,7 +141,7 @@ describe("Files list related tests", () => {
         ).should("exist");
         cy.get(".je-indented-panel .form-control input[name='root[id]']").then(
           ($input) => {
-            location = btoa(`products/${$input.val()}/collection.json`);
+            location = btoa(`foo/bar/${$input.val()}.json`);
             cy.wrap(location).as("encodedPath");
           },
         );
@@ -161,7 +149,6 @@ describe("Files list related tests", () => {
           delay: 100,
         });
         cy.get(".je-indented-panel .form-control input").eq(1).blur();
-        isProductContent = true;
       });
     cy.get(".v-card-actions button.bg-primary").click();
     cy.wait("@getContent");
@@ -174,38 +161,13 @@ describe("Files list related tests", () => {
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {
-        cy.get('div[data-schemapath="root.title"] input').should(
+        cy.get('div[data-schemapath="root.foo"] input').should(
           "have.value",
           "Foo",
         );
-        cy.visit("/123");
-        isProductContent = false;
       });
-  });
 
-  // Test adding a new narrative
-  it("Add new narrative", () => {
-    cy.get(".navbar .v-btn").click();
-    cy.get(".v-list.button-list .v-list-item").eq(1).click();
-    cy.get("eox-jsonform#automation-form")
-      .shadow()
-      .within(() => {
-        cy.get(".je-indented-panel .form-control input").eq(0).type("story1", {
-          delay: 100,
-        });
-        cy.get(".je-indented-panel .form-control input").eq(1).type("Story", {
-          delay: 100,
-        });
-        cy.get(".je-indented-panel .form-control input").eq(1).blur();
-        isNarrativeContent = true;
-      });
-    cy.get(".v-card-actions button.bg-primary").click();
-    cy.location("pathname", { timeout: 10000 }).should(
-      "eq",
-      "/123/bmFycmF0aXZlcy9zdG9yeTEubWQ=",
-    );
-
-    cy.wait(5000);
+    cy.wait(2000);
     cy.get("iframe#previewFrame").scrollIntoView();
     cy.get("iframe#previewFrame")
       .its("0.contentDocument")
@@ -215,13 +177,12 @@ describe("Files list related tests", () => {
     cy.get("@body").should("be.visible").should("not.be.empty").then(cy.wrap);
 
     cy.visit("/123");
-    isNarrativeContent = false;
   });
 
   // Test adding new manual content
   it("Add new manual content", () => {
     cy.get(".navbar .v-btn").click();
-    cy.get(".v-list.button-list .v-list-item").eq(2).click();
+    cy.get(".v-list.button-list .v-list-item").eq(1).click();
     cy.get(".session-create-field .v-field__input").type("manual-file.txt", {
       delay: 100,
     });
@@ -240,8 +201,9 @@ describe("Files list related tests", () => {
 
   // Test file upload functionality
   it("Upload a file", () => {
+    cy.wait(2000);
     cy.get(".navbar .v-btn").click();
-    cy.get(".v-list.button-list .v-list-item").eq(3).click();
+    cy.get(".v-list.button-list .v-list-item").eq(2).click();
     cy.get(".create-file .session-create-field .v-field__input").type(
       "hello/",
       {
