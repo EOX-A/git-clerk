@@ -61,7 +61,7 @@ globalThis.schemaMap = [
     content: {
       foo: "Initial content for file creation",
     },
-    preview: "example-preview.html",
+    preview: "/example-preview.html",
   },
 ];
 
