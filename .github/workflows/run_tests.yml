@@ -48,8 +48,8 @@ jobs:
         run: npm run test:serve &
         env:
           CI: true
-          VUE_APP_GITHUB_REPO: octocat/Hello-World
-          VUE_APP_GITHUB_TOKEN: dummy-token
+          GITCLERK_GITHUB_REPO: octocat/Hello-World
+          GITCLERK_GITHUB_TOKEN: dummy-token
 
       - name: Wait for server to be ready 💻
         run: npx wait-on http://localhost:3000

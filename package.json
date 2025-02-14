@@ -10,7 +10,7 @@
     "lint": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:serve": "VUE_APP_GITHUB_REPO=octocat/Hello-World VUE_APP_GITHUB_TOKEN=dummy-token npm run start",
+    "test:serve": "GITCLERK_GITHUB_REPO=octocat/Hello-World GITCLERK_GITHUB_TOKEN=dummy-token npm run start",
     "test": "node cypress/test.run.js",
     "test:ga": "cypress run --e2e --browser chrome",
     "cypress": "node cypress/test.run.js --open",
