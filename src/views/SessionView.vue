@@ -65,6 +65,10 @@ const updateDetails = async (cache = false) => {
     cache,
   );
   queryFilesListMethod(fileChanges, { snackbar, fileChangesList, totalPage });
+
+  if (session.value.state !== "closed") {
+    navButtonConfig.value.disabled = false;
+  }
 };
 
 onMounted(async () => {
@@ -93,6 +97,7 @@ onMounted(async () => {
       click: () => suggestion.func?.() || handleAutomationClick(suggestion),
       icon: suggestion.icon || "mdi-auto-fix",
     })),
+    disabled: true,
   };
 
   await updateDetails();
