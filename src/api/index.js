@@ -21,11 +21,33 @@ import {
 export async function initOctokit() {
   try {
     const config = globalThis.ghConfig;
-    const auth =
-      (await config.githubAuthToken()) || import.meta.env.VUE_APP_GITHUB_TOKEN;
-    const repo = config.githubRepo || import.meta.env.VUE_APP_GITHUB_REPO;
-    const username = repo.split("/")[0];
-    const repoName = repo.split("/")[1];
+    let configAuth;
+    let configRepo;
+
+    if (config) {
+      configAuth =
+        (config.githubAuthToken !== undefined &&
+          (config.githubAuthToken === "string"
+            ? config.githubAuthToken
+            : await config.githubAuthToken())) ||
+        import.meta.env.GITCLERK_GITHUB_TOKEN;
+      configRepo = config.githubRepo || import.meta.env.GITCLERK_GITHUB_REPO;
+    } else {
+      configAuth = import.meta.env.GITCLERK_GITHUB_TOKEN;
+      configRepo = import.meta.env.GITCLERK_GITHUB_REPO;
+    }
+
+    if (!configAuth) {
+      console.error("Missing ghConfig.githubAuthToken!");
+    }
+
+    if (!configRepo) {
+      console.error("Missing ghConfig.githubRepo!");
+    }
+
+    const auth = configAuth;
+    const username = configRepo.split("/")[0];
+    const repoName = configRepo.split("/")[1];
 
     globalThis.ghConfig = {
       ...config,
