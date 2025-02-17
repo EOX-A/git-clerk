@@ -16,7 +16,6 @@ export function addPostMessageEventMethod({
   previewURL,
   updatedFileContent,
   jsonFormInstance,
-  isSchemaBased,
 }) {
   const loader = useLoader();
   let loaderInstance = null;
@@ -29,7 +28,7 @@ export function addPostMessageEventMethod({
       if (previewURL.value) {
         if (!isEqual(updatedFileContent.value, event.data.detail)) {
           jsonFormInstance.value.editor.setValue(event.data.detail);
-          initEOXJSONFormMethod(jsonFormInstance, isSchemaBased, previewURL);
+          initEOXJSONFormMethod(jsonFormInstance);
         }
       }
     }

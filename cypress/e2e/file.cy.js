@@ -86,8 +86,8 @@ describe("File related tests", () => {
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {
-        cy.get(".je-indented-panel textarea").should(
-          "have.value",
+        cy.get(".je-indented-panel .ace_editor .ace_line").should(
+          "have.text",
           `console.log("Hello World");`,
         );
       });
@@ -103,7 +103,10 @@ describe("File related tests", () => {
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {
-        cy.get(".je-indented-panel textarea").should("have.value", file);
+        cy.get(".je-indented-panel .ace_editor .ace_line").should(
+          "have.text",
+          file,
+        );
       });
   });
 });

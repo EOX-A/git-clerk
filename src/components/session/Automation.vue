@@ -24,12 +24,7 @@ const handleAutomationSubmit = async () => {
 };
 
 onMounted(() => {
-  initEOXJSONFormMethod(
-    jsonFormInstance,
-    { value: true },
-    { value: false },
-    true,
-  );
+  initEOXJSONFormMethod(jsonFormInstance);
 });
 </script>
 

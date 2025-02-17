@@ -12,7 +12,7 @@ export function getSchemaDetails(inputPath) {
   return null;
 }
 
-export function getFileSchema() {
+export function getFileSchema(fileEnding = "textarea") {
   return {
     generic: true,
     schema: {
@@ -20,8 +20,12 @@ export function getFileSchema() {
       type: "object",
       properties: {
         file: {
+          title: "File contents",
           type: "string",
-          format: "textarea",
+          format: fileEnding,
+          options: {
+            resolver: "ace",
+          },
         },
       },
     },
