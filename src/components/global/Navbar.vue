@@ -56,6 +56,7 @@ const navPaginationItems = inject("set-nav-pagination-items");
             class="text-capitalize font-weight-medium"
             color="btn-primary"
             v-bind="props"
+            :disabled="navButtonConfig.disabled"
             >{{ navButtonConfig.text }}</v-btn
           >
         </template>
