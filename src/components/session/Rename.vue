@@ -26,6 +26,7 @@ const snackbar = inject("set-snackbar");
 const renameSession = ref(false);
 const renameSessionTitle = ref(props.session.title);
 const confirmRename = ref(false);
+const disabled = props.session.state === "closed";
 
 const renameSessionHandle = async () => {
   if (renameSession.value) {
@@ -34,16 +35,21 @@ const renameSessionHandle = async () => {
       renameSession.value.number,
       renameSessionTitle.value,
     );
-    renameSession.value = false;
     loader.hide();
+    renameSession.value = false;
     confirmRename.value = false;
     if (snackbar.value.status === "success") {
       await props.callBack();
+      closeRename();
     }
   }
 };
 
-const disabled = props.session.state === "closed";
+const closeRename = () => {
+  renameSession.value = false;
+  confirmRename.value = false;
+  renameSessionTitle.value = props.session.title;
+};
 </script>
 
 <template>
@@ -82,7 +88,6 @@ const disabled = props.session.state === "closed";
       label="Rename Session"
       hide-details
       variant="outlined"
-      :disabled="disabled"
       append-inner-icon="mdi-restart"
       @click:append-inner="renameSessionTitle = props.session.title"
       @keyup.enter="confirmRename = true"
@@ -101,7 +106,7 @@ const disabled = props.session.state === "closed";
     <v-btn
       variant="text"
       icon="mdi-close"
-      @click="renameSession = false"
+      @click="closeRename"
       class="px-1 rounded-circle"
     ></v-btn>
   </div>
