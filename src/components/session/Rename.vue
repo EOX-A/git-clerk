@@ -70,6 +70,7 @@ const disabled = props.session.state === "closed";
     :disabled="disabled"
     @click="renameSession = session"
     class="text-capitalize font-weight-medium d-none d-sm-flex"
+    id="rename-session-btn"
   ></v-btn>
 
   <div

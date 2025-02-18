@@ -3,8 +3,11 @@ import { GITHUB_HOST_REGEX } from "../enums";
 import ghConfig from "../fixtures/gh-config.json";
 import files from "../fixtures/files:get.json";
 import content from "../fixtures/content:get.json";
+import pullsData from "../fixtures/pulls:get.json";
 
 // State flags to control test behavior
+let sessionName = false;
+let sessionTitle = "Renamed Session";
 let duplicateFile = false;
 let isManualContent = false;
 let isUploadFile = false;
@@ -19,6 +22,27 @@ describe("Files list related tests", () => {
   });
 
   beforeEach(() => {
+    // Intercept GET request for pull request details
+    cy.intercept(
+      {
+        method: "GET",
+        url: `${GITHUB_HOST_REGEX}/repos/${ghConfig.username}/${ghConfig.repo}/pulls/123`,
+      },
+      (req) => {
+        let tempPulls = pullsData;
+        if (sessionName) {
+          tempPulls.title = sessionTitle;
+        }
+        req.reply({
+          statusCode: 200,
+          body: tempPulls,
+          headers: {
+            "content-type": "application/json",
+          },
+        });
+      },
+    ).as("getRepo");
+
     // Intercept GET request for files list
     cy.intercept(
       {
@@ -84,6 +108,23 @@ describe("Files list related tests", () => {
     cy.get(".main-title").each((fileElement, index) => {
       cy.wrap(fileElement).should("have.text", files[index].filename);
     });
+  });
+
+  it("Rename session", () => {
+    sessionName = true;
+    cy.get("#rename-session-btn").click();
+    cy.get(".rename-session-container .v-field__input")
+      .clear()
+      .type(sessionTitle, {
+        delay: 100,
+      });
+    cy.get(".rename-session-container .v-btn.bg-primary").click();
+    cy.get(".v-card-actions .v-btn.bg-success").click();
+    cy.wait("@getRepo");
+    cy.get(".v-breadcrumbs-item--disabled div").should(
+      "have.text",
+      sessionTitle,
+    );
   });
 
   // Test file duplication functionality
