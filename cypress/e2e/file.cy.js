@@ -5,8 +5,10 @@ import content from "../fixtures/content:get.json";
 
 describe("File related tests", () => {
   // Track content change states
+  const renamedSessionTitle = "renamed-file.txt";
   let isBootstrapFileChanged = false;
   let isNormalContentChanged = false;
+  let isRenameFile = false;
 
   beforeEach(() => {
     // Intercept GET requests for file contents
@@ -27,6 +29,9 @@ describe("File related tests", () => {
         // If normal content was changed, set base64 encoded console.log as content
         if (isNormalContentChanged) {
           tempContent.content = "Y29uc29sZS5sb2coIkhlbGxvIFdvcmxkIik7";
+        }
+        if (isRenameFile) {
+          tempContent.path = "renamed-file.txt";
         }
         req.reply(tempContent);
       },
@@ -108,5 +113,22 @@ describe("File related tests", () => {
           file,
         );
       });
+  });
+
+  it("Rename file", () => {
+    isRenameFile = true;
+    cy.get("#rename-file-btn").click();
+    cy.get(".rename-file-container .v-field__input")
+      .clear()
+      .type(renamedSessionTitle, {
+        delay: 100,
+      });
+    cy.get(".rename-file-container .v-btn.bg-primary").click();
+    cy.get(".v-card-actions .v-btn.bg-success").click();
+    cy.wait("@getContent");
+    cy.get(".v-breadcrumbs-item--disabled div").should(
+      "have.text",
+      renamedSessionTitle,
+    );
   });
 });

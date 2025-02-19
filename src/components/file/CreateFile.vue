@@ -207,11 +207,16 @@ const createFile = async (sha = null) => {
     "",
   );
 
+  const content = {
+    data: fileContent.value,
+    type: "string",
+  };
+
   snackbar.value = await createAndUpdateFile(
     props.session,
     fullFilePath,
     filePath.value,
-    fileContent.value,
+    content,
     sha,
   );
   if (snackbar.value.status === "success") {
