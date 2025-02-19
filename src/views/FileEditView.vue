@@ -111,11 +111,8 @@ const saveFile = async () => {
       ),
     },
   );
-  snackbar.value = await createAndUpdateFile(
-    session.value,
-    filePath,
-    file.value.name,
-    isSchemaBased.value
+  const content = {
+    data: isSchemaBased.value
       ? stringifyIfNeeded(
           schemaMetaDetails.value.output
             ? updatedFileContent.value[schemaMetaDetails.value.output]
@@ -123,6 +120,13 @@ const saveFile = async () => {
           decodeString(file.value.content),
         )
       : updatedFileContent.value,
+    type: "string",
+  };
+  snackbar.value = await createAndUpdateFile(
+    session.value,
+    filePath,
+    file.value.name,
+    content,
     file.value.sha,
   );
   snackbar.value = {
@@ -300,5 +304,9 @@ onUnmounted(() => {
   word-wrap: break-word;
   width: 100%;
   height: 100%;
+}
+.ace-tm {
+  border-radius: 10px;
+  border: #0000001c 2px solid;
 }
 </style>

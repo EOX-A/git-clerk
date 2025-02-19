@@ -144,7 +144,8 @@ export async function updateFile(
   sha,
 ) {
   try {
-    const base64Content = encodeString(content);
+    const base64Content =
+      content.type === "string" ? encodeString(content.data) : content.data;
 
     await octokit.rest.repos.createOrUpdateFileContents({
       owner,
