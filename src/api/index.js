@@ -7,6 +7,7 @@ import {
   checkStatus,
   sessionReviewStatus,
   sessionDetails,
+  renameSession,
 } from "@/api/session";
 import useOctokitStore from "@/stores/octokit";
 import {
@@ -91,6 +92,11 @@ export async function getSessionDetails(sessionNumber) {
 export async function deleteBySessionNumber(sessionNumber) {
   const { githubConfig, octokit } = useOctokitStore();
   return deleteSession(octokit, githubConfig, sessionNumber);
+}
+
+export async function renameBySessionNumber(sessionNumber, newName) {
+  const { githubConfig, octokit } = useOctokitStore();
+  return renameSession(octokit, githubConfig, sessionNumber, newName);
 }
 
 export async function reviewBySessionNumber(sessionNumber, pullRequestId) {

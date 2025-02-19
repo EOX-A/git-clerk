@@ -206,6 +206,27 @@ export async function deleteSession(octokit, githubConfig, prNumber) {
   }
 }
 
+export async function renameSession(octokit, githubConfig, prNumber, newName) {
+  try {
+    const response = await octokit.rest.pulls.update({
+      owner: githubConfig.username,
+      repo: githubConfig.repo,
+      pull_number: prNumber,
+      title: newName,
+    });
+
+    return {
+      text: `Successfully Renamed ${response.data.title} to ${newName}`,
+      status: "success",
+    };
+  } catch (error) {
+    return {
+      text: error.message,
+      status: "error",
+    };
+  }
+}
+
 export async function reviewSession(
   octokit,
   githubConfig,

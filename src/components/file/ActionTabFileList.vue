@@ -3,6 +3,7 @@ import {
   DeleteSession,
   ReviewSession,
   GithubSession,
+  RenameSession,
 } from "@/components/session/index.js";
 import { defineProps, inject } from "vue";
 import OctIcon from "@/components/global/OctIcon.vue";
@@ -21,11 +22,17 @@ const props = defineProps({
 <template>
   <div
     v-if="session"
-    class="bg-secondary px-0 px-sm-5 py-4 d-flex align-center ga-1 action-tab"
+    class="bg-secondary px-0 px-sm-5 py-4 d-flex align-center ga-1 action-tab position-relative"
     :class="{ 'flex-row-reverse': $vuetify?.display?.smAndDown }"
   >
     <GithubSession :url="props.session.html_url" tab size="x-large" />
     <DeleteSession
+      tab
+      size="x-large"
+      :session="props.session"
+      :callBack="props.updateDetails"
+    />
+    <RenameSession
       tab
       size="x-large"
       :session="props.session"
