@@ -20,7 +20,6 @@ export function jsonSchemaFileChangeMethod({
     debouncedPostMessage(message, "*", true);
   } else if (!isEqual(updatedFileContent.value, detail)) {
     updatedFileContent.value = detail;
-    debouncedPostMessage(message, "*");
     updateNavButtonConfig("Save", false);
   } else {
     updateNavButtonConfig("Save", false);
@@ -29,6 +28,7 @@ export function jsonSchemaFileChangeMethod({
   if (isEqual(updatedFileContent.value, fileContent.value))
     updateNavButtonConfig();
 
+  debouncedPostMessage(message, "*");
   hideHiddenFieldsMethod(jsonFormInstance);
 }
 
