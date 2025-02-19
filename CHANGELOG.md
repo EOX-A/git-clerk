@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.3.0](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.2.4...git-clerk-v1.3.0) (2025-02-19)
+
+
+### Features
+
+* Add session rename ([#97](https://github.com/EOX-A/git-clerk/issues/97)) ([63384e4](https://github.com/EOX-A/git-clerk/commit/63384e4918e65365ed406f7d3625d90585b37e13))
+* Dynamic enums and custom editors ([#67](https://github.com/EOX-A/git-clerk/issues/67)) ([7838ae5](https://github.com/EOX-A/git-clerk/commit/7838ae56f24cdcf97310c864ed4eec89eecae024))
+
+
+### Bug Fixes
+
+* Create file on enter, check if `GENERATE_ENUMS` ([#91](https://github.com/EOX-A/git-clerk/issues/91)) ([907fabd](https://github.com/EOX-A/git-clerk/commit/907fabd42e8ed39fc339e4413860b956d57b1d92))
+* Disabled Add/Edit button if session is closed/merged ([#96](https://github.com/EOX-A/git-clerk/issues/96)) ([3970646](https://github.com/EOX-A/git-clerk/commit/397064672aa77f02a285aded37eb50bd12dcd67b))
+* Improve config loading, rename env variables ([#95](https://github.com/EOX-A/git-clerk/issues/95)) ([0805e10](https://github.com/EOX-A/git-clerk/commit/0805e10f7c090d3e285e1aa1689c9127ca1d5af0))
+* Prevent premature change event trigger ([#98](https://github.com/EOX-A/git-clerk/issues/98)) ([9dc4b75](https://github.com/EOX-A/git-clerk/commit/9dc4b753752ece6e18d1baabf87c0d217298cd51))
+* **style:** Simplify file edit view and split scrolling containers ([#86](https://github.com/EOX-A/git-clerk/issues/86)) ([e3a68ec](https://github.com/EOX-A/git-clerk/commit/e3a68ec5dd3d1f79d0b0695dfabde6085192ef5c))
+* Use raw preview URL in order to be able to display files hosted elsewhere ([#93](https://github.com/EOX-A/git-clerk/issues/93)) ([6badcde](https://github.com/EOX-A/git-clerk/commit/6badcde381f87b8f26135066f96c327efe6a48e9))
+
 ## [1.2.4](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.2.3...git-clerk-v1.2.4) (2025-02-07)
 
 
