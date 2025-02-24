@@ -70,6 +70,7 @@ describe("File related tests", () => {
     });
     cy.get(".navbar .v-btn").click();
     cy.wait("@getContent");
+    cy.get("eox-jsonform").should("exist");
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {
