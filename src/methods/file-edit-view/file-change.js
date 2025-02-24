@@ -1,6 +1,8 @@
 import { decodeString, updateSchemaDefaults } from "@/helpers/index.js";
 import isEqual from "lodash.isequal";
 import { hideHiddenFieldsMethod } from "@/methods/file-edit-view/init-eox-jsonform.js";
+import { CUSTOM_EDITOR_INTERFACES } from "@/enums";
+let init = false;
 
 export function jsonSchemaFileChangeMethod({
   fileContent,
@@ -8,6 +10,7 @@ export function jsonSchemaFileChangeMethod({
   updatedFileContent,
   debouncedPostMessage,
   jsonFormInstance,
+  customInterfaces,
   updateNavButtonConfig,
 }) {
   const message = {
@@ -16,8 +19,12 @@ export function jsonSchemaFileChangeMethod({
   };
 
   if (!updatedFileContent.value) {
-    updatedFileContent.value = fileContent.value;
-    debouncedPostMessage(message, "*", true);
+    // Append key which is not present in the fileContent at beginning
+    updatedFileContent.value = { ...detail, ...fileContent.value };
+    fileContent.value = updatedFileContent.value;
+    jsonFormInstance.value.editor.setValue(updatedFileContent.value);
+    customInterfaces.value = Object.values(CUSTOM_EDITOR_INTERFACES);
+    init = true;
   } else if (!isEqual(updatedFileContent.value, detail)) {
     updatedFileContent.value = detail;
     updateNavButtonConfig("Save", false);
@@ -30,18 +37,5 @@ export function jsonSchemaFileChangeMethod({
 
   debouncedPostMessage(message, "*");
   hideHiddenFieldsMethod(jsonFormInstance);
-}
-
-export function genericFileChangeMethod({
-  updatedFileContent,
-  file,
-  detail,
-  updateNavButtonConfig,
-}) {
-  if (detail.file === decodeString(file.value.content)) {
-    updateNavButtonConfig();
-  } else {
-    updateNavButtonConfig("Save", false);
-  }
-  updatedFileContent.value = detail.file;
+  init = false;
 }

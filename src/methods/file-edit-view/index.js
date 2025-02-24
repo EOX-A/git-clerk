@@ -7,7 +7,4 @@ export {
   debouncePostMessageMethod,
   addPostMessageEventMethod,
 } from "./post-message.js";
-export {
-  jsonSchemaFileChangeMethod,
-  genericFileChangeMethod,
-} from "./file-change";
+export { jsonSchemaFileChangeMethod } from "./file-change";
