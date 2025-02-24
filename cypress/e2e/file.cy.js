@@ -50,7 +50,7 @@ describe("File related tests", () => {
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {
-        cy.get('div[data-schemapath="root.foo"] input').as("foo").clear();
+        cy.get('div[data-schemapath="root.foo"] input').eq(0).as("foo").clear();
         cy.get("@foo").type("Foo Bar", { delay: 100 });
         cy.get("@foo").blur();
         isBootstrapFileChanged = true;
