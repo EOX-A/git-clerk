@@ -30,21 +30,22 @@ export async function runAutomation(props, value, router) {
       );
 
     if (step.content) {
-      const content = stringifyIfNeeded(step.content(value));
+      const content = {
+        data: stringifyIfNeeded(step.content(value)),
+        type: "string",
+      };
 
       await createAndUpdateFile(session, path, path, content);
     } else if (step.transform) {
       const fileDetails = await getFileDetails(session, path);
       const existingContent = parseIfNeeded(decodeString(fileDetails.content));
       const transformedContent = step.transform(existingContent, value);
+      const content = {
+        data: stringifyIfNeeded(transformedContent),
+        type: "string",
+      };
 
-      await createAndUpdateFile(
-        session,
-        path,
-        path,
-        stringifyIfNeeded(transformedContent),
-        fileDetails.sha,
-      );
+      await createAndUpdateFile(session, path, path, content, fileDetails.sha);
     } else if (step.type === "navigate") {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       await router.push(`/${session.number}/${encodeString(path)}`);

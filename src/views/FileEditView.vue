@@ -111,11 +111,8 @@ const saveFile = async () => {
       ),
     },
   );
-  snackbar.value = await createAndUpdateFile(
-    session.value,
-    filePath,
-    file.value.name,
-    isSchemaBased.value
+  const content = {
+    data: isSchemaBased.value
       ? stringifyIfNeeded(
           schemaMetaDetails.value.output
             ? updatedFileContent.value[schemaMetaDetails.value.output]
@@ -123,6 +120,13 @@ const saveFile = async () => {
           decodeString(file.value.content),
         )
       : updatedFileContent.value,
+    type: "string",
+  };
+  snackbar.value = await createAndUpdateFile(
+    session.value,
+    filePath,
+    file.value.name,
+    content,
     file.value.sha,
   );
   snackbar.value = {

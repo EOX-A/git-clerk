@@ -1,5 +1,5 @@
 <script setup>
-import { DeleteFile } from "@/components/file/index.js";
+import { DeleteFile, RenameFile } from "@/components/file/index.js";
 import Tooltip from "@/components/global/Tooltip.vue";
 import { defineProps } from "vue";
 import { useRouter } from "vue-router";
@@ -25,7 +25,7 @@ const props = defineProps({
 
 <template>
   <div
-    class="bg-secondary px-0 px-sm-5 py-3 d-flex align-center ga-1 action-tab"
+    class="bg-secondary px-0 px-sm-5 py-3 d-flex align-center ga-1 position-relative action-tab"
   >
     <v-btn
       :href="file.html_url"
@@ -44,6 +44,7 @@ const props = defineProps({
       :session
       :callBack="() => router.push(`/${session.number}`)"
     />
+    <RenameFile text="Rename File" size="x-large" :file :session />
     <v-spacer></v-spacer>
     <Tooltip text="Reset Content">
       <v-btn

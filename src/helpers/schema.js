@@ -25,6 +25,7 @@ export function getFileSchema(fileEnding = "textarea") {
           format: fileEnding,
           options: {
             resolver: "ace",
+            titleHidden: true,
           },
         },
       },
