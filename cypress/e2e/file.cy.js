@@ -50,7 +50,9 @@ describe("File related tests", () => {
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {
-        cy.get('div[data-schemapath="root.foo"] input').eq(0).as("foo").clear();
+        cy.get('div[data-schemapath="root.foo"] input:not(.json-editor-opt-in)')
+          .as("foo")
+          .clear();
         cy.get("@foo").type("Foo Bar", { delay: 100 });
         cy.get("@foo").blur();
         isBootstrapFileChanged = true;
@@ -115,6 +117,7 @@ describe("File related tests", () => {
       });
   });
 
+  // Test renaming a file
   it("Rename file", () => {
     isRenameFile = true;
     cy.get("#rename-file-btn").click();
