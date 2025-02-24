@@ -302,4 +302,7 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
 }
+eox-jsonform {
+  overflow-y: auto;
+}
 </style>
