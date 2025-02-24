@@ -305,8 +305,4 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
 }
-.ace-tm {
-  border-radius: 10px;
-  border: #0000001c 2px solid;
-}
 </style>
