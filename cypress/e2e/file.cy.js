@@ -51,10 +51,9 @@ describe("File related tests", () => {
       .shadow()
       .within(() => {
         cy.get('div[data-schemapath="root.foo"] input:not(.json-editor-opt-in)')
-          .as("foo")
-          .clear();
-        cy.get("@foo").type("Foo Bar", { delay: 100 });
-        cy.get("@foo").blur();
+          .clear()
+          .type("Foo Bar", { delay: 100 });
+        cy.get('div[data-schemapath="root.foo"] input').blur();
         isBootstrapFileChanged = true;
       });
     cy.wait(2000);
