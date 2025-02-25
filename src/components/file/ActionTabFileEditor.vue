@@ -1,5 +1,10 @@
 <script setup>
-import { DeleteFile, RenameFile } from "@/components/file/index.js";
+import {
+  DeleteFile,
+  RenameFile,
+  PreviewBtn,
+  Github,
+} from "@/components/file/index.js";
 import Tooltip from "@/components/global/Tooltip.vue";
 import { defineProps } from "vue";
 import { useRouter } from "vue-router";
@@ -20,6 +25,9 @@ const props = defineProps({
     default: false,
   },
   resetContent: Function,
+  togglePreview: Function,
+  showPreview: Boolean,
+  previewURL: String,
 });
 </script>
 
@@ -27,24 +35,21 @@ const props = defineProps({
   <div
     class="bg-secondary px-0 px-sm-5 py-3 d-flex align-center ga-1 position-relative action-tab"
   >
-    <v-btn
-      :href="file.html_url"
-      target="_blank"
-      color="blue-grey-darken-4"
-      prepend-icon="mdi-github"
-      size="x-large"
-      variant="text"
-      text="Github"
-      class="text-capitalize font-weight-medium"
-    ></v-btn>
+    <Github :file="file" />
     <DeleteFile
       text="Delete File"
       size="x-large"
-      :file
-      :session
+      :file="file"
+      :session="session"
       :callBack="() => router.push(`/${session.number}`)"
     />
     <RenameFile text="Rename File" size="x-large" :file :session />
+    <v-divider v-if="previewURL" inset vertical></v-divider>
+    <PreviewBtn
+      :togglePreview="togglePreview"
+      :showPreview="showPreview"
+      :previewURL="previewURL"
+    />
     <v-spacer></v-spacer>
     <Tooltip text="Reset Content">
       <v-btn

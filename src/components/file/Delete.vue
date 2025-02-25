@@ -58,10 +58,10 @@ const deleteFileHandle = async () => {
   <Tooltip text="Delete File">
     <v-btn
       color="blue-grey-darken-4"
-      :icon="props.text ? false : 'mdi-delete-outline'"
+      :icon="$vuetify?.display?.smAndDown ? 'mdi-delete-outline' : false"
       prepend-icon="mdi-delete-outline"
       :size="props.size"
-      :text="props.text"
+      :text="$vuetify?.display?.smAndDown ? '' : props.text"
       variant="text"
       :disabled="props.file?.status === 'removed'"
       @click="deleteFile = props.file"

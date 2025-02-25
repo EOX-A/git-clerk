@@ -17,6 +17,7 @@ const vuetify = createVuetify({
           grey: "#8A969E",
           violet: "#6F42C1",
           "btn-primary": "#D6EEFF",
+          "light-secondary": "#CCD9E2",
         },
       },
     },
