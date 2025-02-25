@@ -21,12 +21,10 @@ import {
   hideHiddenFieldsMethod,
   debouncePostMessageMethod,
   jsonSchemaFileChangeMethod,
-  genericFileChangeMethod,
   addPostMessageEventMethod,
 } from "../methods/file-edit-view";
 import { ActionTabFileEditor } from "@/components/file/index.js";
 import debounce from "lodash.debounce";
-import { BASE_PATH } from "@/enums";
 import "@eox/jsonform";
 import "@eox/drawtools";
 import "@eox/map";
@@ -46,6 +44,7 @@ const jsonFormInstance = ref(null);
 const isSchemaBased = ref(false);
 const previewURL = ref(null);
 const schemaMetaDetails = ref(null);
+const customInterfaces = ref([]);
 
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
@@ -119,7 +118,7 @@ const saveFile = async () => {
             : updatedFileContent.value,
           decodeString(file.value.content),
         )
-      : updatedFileContent.value,
+      : updatedFileContent.value.file,
     type: "string",
   };
   snackbar.value = await createAndUpdateFile(
@@ -181,14 +180,14 @@ const onFileChange = (e) => {
     file,
     detail,
     fileContent,
+    customInterfaces,
     jsonFormInstance,
     updatedFileContent,
     debouncedPostMessage,
     updateNavButtonConfig,
   };
 
-  if (e.detail && isSchemaBased.value) jsonSchemaFileChangeMethod(props);
-  else genericFileChangeMethod(props);
+  jsonSchemaFileChangeMethod(props);
 };
 
 const resetContent = () => {
@@ -203,9 +202,7 @@ onMounted(async () => {
   await updateFileDetails();
   if (file.value.encoding !== "none") {
     initEOXJSONFormMethod(jsonFormInstance);
-    if (isSchemaBased.value) {
-      hideHiddenFieldsMethod(jsonFormInstance);
-    }
+    hideHiddenFieldsMethod(jsonFormInstance);
     addPostMessageEventMethod({
       previewURL,
       updatedFileContent,
@@ -255,8 +252,8 @@ onUnmounted(() => {
       >
         <eox-jsonform
           :schema="schemaMetaDetails.schema"
-          :value="fileContent"
-          :customEditorInterfaces="Object.values(CUSTOM_EDITOR_INTERFACES)"
+          :value="updatedFileContent"
+          :customEditorInterfaces="customInterfaces"
           @change="onFileChange"
           class="d-block fill-height"
         ></eox-jsonform>
@@ -304,5 +301,8 @@ onUnmounted(() => {
   word-wrap: break-word;
   width: 100%;
   height: 100%;
+}
+eox-jsonform {
+  overflow-y: auto;
 }
 </style>

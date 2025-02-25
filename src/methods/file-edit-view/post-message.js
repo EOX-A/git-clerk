@@ -3,12 +3,13 @@ import isEqual from "lodash.isequal";
 import { initEOXJSONFormMethod } from "@/methods/file-edit-view/init-eox-jsonform.js";
 
 export function debouncePostMessageMethod(message, origin, init = false) {
+  const data = JSON.parse(JSON.stringify(message));
   const previewFrame = document.getElementById("previewFrame");
   if (previewFrame && previewFrame.contentWindow) {
-    if (init)
-      previewFrame.onload = () =>
-        previewFrame.contentWindow.postMessage(message, origin);
-    previewFrame.contentWindow.postMessage(message, origin);
+    previewFrame.onload = () => {
+      previewFrame.contentWindow.postMessage(data, origin);
+    };
+    previewFrame.contentWindow.postMessage(data, origin);
   }
 }
 

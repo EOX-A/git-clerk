@@ -50,7 +50,7 @@ describe("File related tests", () => {
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {
-        cy.get('div[data-schemapath="root.foo"] input')
+        cy.get('div[data-schemapath="root.foo"] input:not(.json-editor-opt-in)')
           .clear()
           .type("Foo Bar", { delay: 100 });
         cy.get('div[data-schemapath="root.foo"] input').blur();
@@ -70,6 +70,7 @@ describe("File related tests", () => {
     });
     cy.get(".navbar .v-btn").click();
     cy.wait("@getContent");
+    cy.get("eox-jsonform").should("exist");
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {
@@ -115,6 +116,7 @@ describe("File related tests", () => {
       });
   });
 
+  // Test renaming a file
   it("Rename file", () => {
     isRenameFile = true;
     cy.get("#rename-file-btn").click();
