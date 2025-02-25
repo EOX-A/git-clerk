@@ -9,7 +9,7 @@ const props = defineProps({
 <template>
   <v-btn
     v-if="previewURL"
-    :color="showPreview ? 'light-secondary' : 'primary'"
+    :color="showPreview ? 'primary' : 'light-secondary'"
     :icon="
       $vuetify?.display?.smAndDown
         ? showPreview
