@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.4.0](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.3.0...git-clerk-v1.4.0) (2025-02-25)
+
+
+### Features
+
+* `hide-show` and `resize` preview ([#104](https://github.com/EOX-A/git-clerk/issues/104)) ([88d2e14](https://github.com/EOX-A/git-clerk/commit/88d2e14d2b9ff8d8dab9703b5bf3fed78177b569))
+* Rename file ([#100](https://github.com/EOX-A/git-clerk/issues/100)) ([3091d40](https://github.com/EOX-A/git-clerk/commit/3091d4004dfe96a48873684d5061998e7935be92))
+
+
+### Bug Fixes
+
+* Load config before asset bundle ([#99](https://github.com/EOX-A/git-clerk/issues/99)) ([7e26e03](https://github.com/EOX-A/git-clerk/commit/7e26e0368c08f79ec75a9afb82ef06cc71ea3f87))
+* Multiple changes to file viewer ([#102](https://github.com/EOX-A/git-clerk/issues/102)) ([f6096a5](https://github.com/EOX-A/git-clerk/commit/f6096a526f2e782a4b8f05a3c3270505a91e0b4c))
+
 ## [1.3.0](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.2.4...git-clerk-v1.3.0) (2025-02-19)
 
 
