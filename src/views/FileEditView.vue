@@ -45,6 +45,8 @@ const isSchemaBased = ref(false);
 const previewURL = ref(null);
 const schemaMetaDetails = ref(null);
 const customInterfaces = ref([]);
+const previewExpanded = ref(false);
+const showPreview = ref(window.innerWidth >= 960);
 
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
@@ -196,6 +198,11 @@ const resetContent = () => {
   updateNavButtonConfig();
 };
 
+const togglePreview = () => {
+  showPreview.value = !showPreview.value;
+  previewExpanded.value = false;
+};
+
 onMounted(async () => {
   const loader = useLoader().show();
   updateNavButtonConfig();
@@ -224,6 +231,9 @@ onUnmounted(() => {
     :session
     :reset
     :resetContent
+    :togglePreview
+    :showPreview
+    :previewURL
   />
 
   <div
@@ -247,8 +257,8 @@ onUnmounted(() => {
     <v-row v-else no-gutters class="fill-height overflow-hidden split">
       <v-col
         cols="12"
-        :md="previewURL ? 6 : 12"
-        class="fill-height overflow-x-auto overflow-y-scroll pa-4 pa-md-8"
+        :md="previewURL ? (showPreview ? 6 : 12) : 12"
+        :class="`fill-height overflow-x-auto overflow-y-scroll pa-4 pa-md-8 ${previewURL && previewExpanded ? 'd-none' : ''} ${$vuetify?.display?.smAndDown ? 'order-2' : 'order-1'}`"
       >
         <eox-jsonform
           :schema="schemaMetaDetails.schema"
@@ -261,9 +271,17 @@ onUnmounted(() => {
       <v-col
         v-if="previewURL"
         cols="12"
-        md="6"
-        class="file-preview fill-height"
+        :md="previewExpanded ? 12 : 6"
+        :class="`file-preview fill-height position-relative ${showPreview ? '' : 'd-none'} ${$vuetify?.display?.smAndDown ? 'order-1' : 'order-2'}`"
       >
+        <v-btn
+          class="resize-btn position-absolute text-black elevation-1 d-md-block d-none"
+          variant="flat"
+          color="secondary"
+          :icon="previewExpanded ? 'mdi-arrow-collapse' : 'mdi-arrow-expand'"
+          size="large"
+          @click="previewExpanded = !previewExpanded"
+        ></v-btn>
         <iframe v-if="previewURL" id="previewFrame" :src="previewURL"></iframe>
       </v-col>
     </v-row>
@@ -301,6 +319,11 @@ onUnmounted(() => {
   word-wrap: break-word;
   width: 100%;
   height: 100%;
+}
+.file-preview .v-btn {
+  top: 16px;
+  right: 16px;
+  color: black;
 }
 eox-jsonform {
   overflow-y: auto;

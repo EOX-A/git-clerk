@@ -38,15 +38,36 @@ describe("File related tests", () => {
     ).as("getContent");
   });
 
-  // Test loading and editing Bootstrap File
-  it("Load Bootstrap File", () => {
+  // Test resizing/hiding/showing the preview
+  it("Resize Preview", () => {
+    // Visit a file with a preview
     cy.wait(1000);
     cy.visit(
       "/123/Zm9vL2Jhci82MTFjNWQxNC03MDg3LTQ4MjAtYWNmNS02NDlhYWJjMjI0MjMuanNvbg==",
     );
+
+    // Wait for the file to load
     cy.wait("@pullsUpdate");
     cy.wait("@getContent");
+
+    // Check if the file is loaded
     cy.get("eox-jsonform").should("exist");
+
+    // Resize Preview test
+    cy.get(".resize-btn").click();
+    cy.get(".file-preview").should("have.class", "v-col-md-12");
+    cy.get(".resize-btn").click();
+    cy.get(".file-preview").should("have.class", "v-col-md-6");
+
+    // Hide/Show Preview test
+    cy.get(".hide-show-preview-btn").click();
+    cy.get(".file-preview").should("have.class", "d-none");
+    cy.get(".hide-show-preview-btn").click();
+  });
+
+  // Test loading and editing Bootstrap File
+  it("Load Bootstrap File", () => {
+    // Edit the file
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {
@@ -57,6 +78,8 @@ describe("File related tests", () => {
         isBootstrapFileChanged = true;
       });
     cy.wait(2000);
+
+    // Check if the preview is loaded
     cy.get("iframe#previewFrame").scrollIntoView();
     cy.get("iframe#previewFrame")
       .its("0.contentDocument")
@@ -65,15 +88,21 @@ describe("File related tests", () => {
       .as("body");
     cy.get("@body").should("be.visible").should("not.be.empty").then(cy.wrap);
     cy.get("@body").within(() => {
+      // Click on the button to open the preview
       cy.get("button").click();
       cy.get("#foo").should("have.text", "Foo Bar");
     });
+
+    // Click on the navbar button to save the file
     cy.get(".navbar .v-btn").click();
     cy.wait("@getContent");
+
+    // Check if the file is saved
     cy.get("eox-jsonform").should("exist");
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {
+        // Check if the file is saved
         cy.get('div[data-schemapath="root.foo"] input').should(
           "have.value",
           "Foo Bar",
@@ -84,20 +113,25 @@ describe("File related tests", () => {
 
   // Test loading and editing normal text/code files
   it("Load a normal file", () => {
+    // Visit a normal file
     isNormalContentChanged = true;
     cy.visit("/123/Y29kZS5qcw==");
     cy.wait("@pullsUpdate");
     cy.wait("@getContent");
+
+    // Check if the file is loaded
     cy.get("eox-jsonform").should("exist");
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {
+        // Check if the file is loaded
         cy.get(".je-indented-panel .ace_editor .ace_line").should(
           "have.text",
           `console.log("Hello World");`,
         );
       });
 
+    // Edit the file
     const file = `const foo = "bar";console.log(foo);`;
     cy.get("eox-jsonform").then(($jsonform) => {
       const editor = $jsonform[0].editor;
@@ -106,9 +140,11 @@ describe("File related tests", () => {
       });
     });
 
+    // Check if the file is saved
     cy.get("eox-jsonform")
       .shadow()
       .within(() => {
+        // Check if the file is saved
         cy.get(".je-indented-panel .ace_editor .ace_line").should(
           "have.text",
           file,
@@ -118,6 +154,7 @@ describe("File related tests", () => {
 
   // Test renaming a file
   it("Rename file", () => {
+    // Rename the file
     isRenameFile = true;
     cy.get("#rename-file-btn").click();
     cy.get(".rename-file-container .v-field__input")
@@ -125,9 +162,13 @@ describe("File related tests", () => {
       .type(renamedSessionTitle, {
         delay: 100,
       });
+
+    // Click on the navbar button to save the file
     cy.get(".rename-file-container .v-btn.bg-primary").click();
     cy.get(".v-card-actions .v-btn.bg-success").click();
     cy.wait("@getContent");
+
+    // Check if the file is renamed
     cy.get(".v-breadcrumbs-item--disabled div").should(
       "have.text",
       renamedSessionTitle,
