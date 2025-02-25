@@ -275,7 +275,7 @@ onUnmounted(() => {
         :class="`file-preview fill-height position-relative ${showPreview ? '' : 'd-none'} ${$vuetify?.display?.smAndDown ? 'order-1' : 'order-2'}`"
       >
         <v-btn
-          class="position-absolute text-black elevation-1 d-md-block d-none"
+          class="resize-btn position-absolute text-black elevation-1 d-md-block d-none"
           variant="flat"
           color="secondary"
           :icon="previewExpanded ? 'mdi-arrow-collapse' : 'mdi-arrow-expand'"
