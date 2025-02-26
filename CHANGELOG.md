@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.4.0...git-clerk-v1.4.1) (2025-02-26)
+
+
+### Bug Fixes
+
+* Github button text  ([#105](https://github.com/EOX-A/git-clerk/issues/105)) ([3fdc16f](https://github.com/EOX-A/git-clerk/commit/3fdc16ff4faa93da194b944a0099a00b5b9dcb66))
+
 ## [1.4.0](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.3.0...git-clerk-v1.4.0) (2025-02-25)
 
 
