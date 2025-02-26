@@ -18,7 +18,7 @@ const props = defineProps({
   },
   tooltip: {
     type: String,
-    default: "View Session",
+    default: "View this session on GitHub",
   },
 });
 </script>
