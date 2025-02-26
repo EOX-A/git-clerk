@@ -20,8 +20,8 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
-    "@eox/drawtools": "^0.13.2",
-    "@eox/jsonform": "^0.15.2",
+    "@eox/drawtools": "^0.14.0",
+    "@eox/jsonform": "^0.15.4",
     "@eox/map": "^1.19.0",
     "@primer/octicons": "^19.11.0",
     "axios": "^1.7.7",
