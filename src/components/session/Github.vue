@@ -14,11 +14,11 @@ const props = defineProps({
   },
   text: {
     type: String,
-    default: "Github",
+    default: "View Session",
   },
   tooltip: {
     type: String,
-    default: "Open in Github",
+    default: "View this session on GitHub",
   },
 });
 </script>
