@@ -16,7 +16,7 @@ const props = defineProps({
     prepend-icon="mdi-github"
     size="x-large"
     variant="text"
-    :text="$vuetify?.display?.smAndDown ? '' : 'Github'"
+    :text="$vuetify?.display?.smAndDown ? '' : 'View on Github'"
     class="text-capitalize font-weight-medium"
   ></v-btn>
 </template>
