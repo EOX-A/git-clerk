@@ -18,7 +18,6 @@ import {
 import {
   queryFileDetailsMethod,
   initEOXJSONFormMethod,
-  hideHiddenFieldsMethod,
   debouncePostMessageMethod,
   jsonSchemaFileChangeMethod,
   addPostMessageEventMethod,
@@ -209,7 +208,6 @@ onMounted(async () => {
   await updateFileDetails();
   if (file.value.encoding !== "none") {
     initEOXJSONFormMethod(jsonFormInstance);
-    hideHiddenFieldsMethod(jsonFormInstance);
     addPostMessageEventMethod({
       previewURL,
       updatedFileContent,
