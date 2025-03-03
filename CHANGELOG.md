@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.4.1...git-clerk-v1.4.2) (2025-03-03)
+
+
+### Bug Fixes
+
+* Remove unsed hideHiddenFieldsMethod func ([#110](https://github.com/EOX-A/git-clerk/issues/110)) ([3c9d566](https://github.com/EOX-A/git-clerk/commit/3c9d566967f1046b5f69f13bab570221d929ff9a))
+
 ## [1.4.1](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.4.0...git-clerk-v1.4.1) (2025-02-26)
 
 
