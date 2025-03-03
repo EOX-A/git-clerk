@@ -1,6 +1,5 @@
 import { decodeString, updateSchemaDefaults } from "@/helpers/index.js";
 import isEqual from "lodash.isequal";
-import { hideHiddenFieldsMethod } from "@/methods/file-edit-view/init-eox-jsonform.js";
 import { CUSTOM_EDITOR_INTERFACES } from "@/enums";
 let init = false;
 
@@ -36,6 +35,5 @@ export function jsonSchemaFileChangeMethod({
     updateNavButtonConfig();
 
   debouncedPostMessage(message, "*");
-  hideHiddenFieldsMethod(jsonFormInstance);
   init = false;
 }
