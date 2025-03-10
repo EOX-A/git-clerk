@@ -157,8 +157,6 @@ globalThis.automation = [
                 throw new Error("Failed to fetch content from URL");
               }
               content = await response.json();
-              console.log(content);
-              return content;
             } else if (content.match(/^[A-Za-z0-9+/=]+$/)) {
               content = decoderBase64ToUtf8(content);
             }
