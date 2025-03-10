@@ -3,8 +3,9 @@ import { CUSTOM_EDITOR_INTERFACES } from "@/enums";
 import { initEOXJSONFormMethod } from "@/methods/file-edit-view";
 import { handleAutomationMethod } from "@/methods/session-view";
 import { inject, ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import { useRouter, useRoute } from "vue-router";
 const snackbar = inject("set-snackbar");
+const route = useRoute();
 const router = useRouter();
 
 const props = defineProps({
@@ -16,6 +17,7 @@ const props = defineProps({
 });
 
 const jsonFormInstance = ref(null);
+const initValue = ref({});
 
 const handleAutomationSubmit = async () => {
   const validate = jsonFormInstance.value.editor.validate();
@@ -24,6 +26,12 @@ const handleAutomationSubmit = async () => {
 };
 
 onMounted(() => {
+  if (route.query.automation && props.selectedAutomation.hidden) {
+    initValue.value = Object.fromEntries(
+      Object.entries(route.query).filter(([key]) => key !== "automation"),
+    );
+    handleAutomationSubmit();
+  }
   initEOXJSONFormMethod(jsonFormInstance);
 });
 </script>
@@ -37,6 +45,7 @@ onMounted(() => {
     <template v-slot:text>
       <eox-jsonform
         id="automation-form"
+        :value="initValue"
         :schema="props.selectedAutomation.inputSchema"
         :customEditorInterfaces="Object.values(CUSTOM_EDITOR_INTERFACES)"
       />

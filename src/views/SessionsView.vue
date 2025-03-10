@@ -74,7 +74,14 @@ const createFile = async () => {
   loader.value.hide();
 
   if (snackbar.value.number) {
-    setTimeout(() => router.push(`/${snackbar.value.number}`), 750);
+    const params = Object.fromEntries(
+      Object.entries(route.query).filter(([key]) => key !== "session"),
+    );
+    const queryString = new URLSearchParams(params).toString();
+    const url = Boolean(queryString)
+      ? `/${snackbar.value.number}?${queryString}`
+      : `/${snackbar.value.number}`;
+    setTimeout(() => router.push(url), 750);
     clearInputCreateNewSession();
   }
 };
@@ -91,6 +98,11 @@ onMounted(async () => {
     click: createNewSessionClick,
   };
   navPaginationItems.value = [navPaginationItems.value[0]];
+
+  if (route.query.session && route.query.automation) {
+    newSessionName.value = route.query.session;
+    await createFile();
+  }
   await updateSessionsList(true);
 });
 

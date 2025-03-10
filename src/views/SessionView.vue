@@ -21,6 +21,7 @@ import { encodeString, AUTOMATION } from "@/helpers/index.js";
 import { BASE_PATH } from "@/enums";
 import "@eox/jsonform";
 import Automation from "@/components/session/Automation.vue";
+import find from "lodash/find";
 
 const route = useRoute();
 const router = useRouter();
@@ -73,7 +74,7 @@ const updateDetails = async (cache = false) => {
 
 onMounted(async () => {
   suggestionList.value = [
-    ...AUTOMATION,
+    ...AUTOMATION.filter((automation) => !automation.hidden),
     {
       title: "Add/Edit File Manually",
       description:
@@ -99,6 +100,11 @@ onMounted(async () => {
     })),
     disabled: true,
   };
+
+  if (route.query.automation) {
+    const automation = find(AUTOMATION, { id: route.query.automation });
+    if (automation) handleAutomationClick(automation);
+  }
 
   await updateDetails();
 });
@@ -250,7 +256,12 @@ const handleAutomationClose = () => {
   />
 
   <!-- Use the Automation component -->
-  <v-dialog v-model="automationDialog" max-width="500px">
+  <v-dialog
+    v-if="session"
+    :class="selectedAutomation?.hidden ? 'd-none' : ''"
+    v-model="automationDialog"
+    max-width="500px"
+  >
     <Automation
       :handleAutomationClose
       :updateDetails

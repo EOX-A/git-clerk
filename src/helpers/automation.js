@@ -30,8 +30,13 @@ export async function runAutomation(props, value, router) {
       );
 
     if (step.content) {
+      const initialContent =
+        step.content.constructor.name === "AsyncFunction"
+          ? await step.content(value)
+          : step.content(value);
+
       const content = {
-        data: stringifyIfNeeded(step.content(value)),
+        data: stringifyIfNeeded(initialContent),
         type: "string",
       };
 
@@ -39,7 +44,12 @@ export async function runAutomation(props, value, router) {
     } else if (step.transform) {
       const fileDetails = await getFileDetails(session, path);
       const existingContent = parseIfNeeded(decodeString(fileDetails.content));
-      const transformedContent = step.transform(existingContent, value);
+
+      const transformedContent =
+        step.transform.constructor.name === "AsyncFunction"
+          ? await step.transform(existingContent, value)
+          : step.transform(existingContent, value);
+
       const content = {
         data: stringifyIfNeeded(transformedContent),
         type: "string",

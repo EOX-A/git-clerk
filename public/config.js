@@ -1,5 +1,9 @@
 import "https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.js";
 
+function decoderBase64ToUtf8(str) {
+  return decodeURIComponent(escape(atob(str)));
+}
+
 // GitHub config
 globalThis.ghConfig = {
   githubRepo: undefined,
@@ -103,6 +107,71 @@ globalThis.automation = [
       {
         type: "navigate",
         path: (input) => `/foo/bar/${input.id}.json`,
+      },
+    ],
+  },
+  {
+    id: "add-file",
+    title: "Add new outside automation file",
+    description: "Add a new file to the current branch",
+    hidden: true,
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          minLength: 1,
+          default: self.crypto.randomUUID(),
+          options: {
+            hidden: true,
+          },
+        },
+        content: {
+          type: "string",
+          minLength: 1,
+        },
+      },
+      required: ["id", "content"],
+    },
+    steps: [
+      {
+        type: "add",
+        path: (input) => `/foo/${input.id}.json`,
+        content: async (input) => {
+          const isUrl = (str) => {
+            try {
+              new URL(str);
+              return true;
+            } catch {
+              return false;
+            }
+          };
+
+          let content = input.content;
+          let error = null;
+
+          try {
+            if (isUrl(content)) {
+              const response = await fetch(content);
+              if (!response.ok) {
+                throw new Error("Failed to fetch content from URL");
+              }
+              content = await response.json();
+              console.log(content);
+              return content;
+            } else if (content.match(/^[A-Za-z0-9+/=]+$/)) {
+              content = decoderBase64ToUtf8(content);
+            }
+          } catch (error) {
+            error = error;
+          }
+
+          return error || content;
+        },
+      },
+      {
+        type: "navigate",
+        path: (input) => `/foo/${input.id}.json`,
       },
     ],
   },
