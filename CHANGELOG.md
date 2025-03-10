@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0](https://github.com/EOX-A/git-clerk/compare/v1.4.1...v1.5.0) (2025-03-10)
+
+Tag versions: starting with `v1.5.0`, tags (and generated Docker images) will follow the schema `v<version>` (not anymore `git-clerk-v<version>`).
+
+### Bug Fixes
+
+* Remove unsed hideHiddenFieldsMethod func ([#110](https://github.com/EOX-A/git-clerk/issues/110)) ([3c9d566](https://github.com/EOX-A/git-clerk/commit/3c9d566967f1046b5f69f13bab570221d929ff9a))
+
 ## [1.4.1](https://github.com/EOX-A/git-clerk/compare/git-clerk-v1.4.0...git-clerk-v1.4.1) (2025-02-26)
 
 
