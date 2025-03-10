@@ -1,5 +1,3 @@
 {
-  ".": {
-    "include-component-in-tag": false
-  }
+  ".": "1.4.1"
 }
