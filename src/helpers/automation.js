@@ -29,33 +29,38 @@ export async function runAutomation(props, value, router) {
         loaderEle.textContent,
       );
 
-    if (step.content) {
-      const initialContent =
-        step.content.constructor.name === "AsyncFunction"
-          ? await step.content(value)
-          : step.content(value);
+    if (step.content || step.transform) {
+      let initialContent;
+      let sha;
+
+      if (step.content) {
+        initialContent =
+          step.content.constructor.name === "AsyncFunction"
+            ? await step.content(value)
+            : step.content(value);
+      } else {
+        const fileDetails = await getFileDetails(session, path);
+        const existingContent = parseIfNeeded(
+          decodeString(fileDetails.content),
+        );
+        sha = fileDetails.sha;
+
+        initialContent =
+          step.transform.constructor.name === "AsyncFunction"
+            ? await step.transform(existingContent, value)
+            : step.transform(existingContent, value);
+      }
+
+      if (initialContent instanceof Error) {
+        throw initialContent;
+      }
 
       const content = {
         data: stringifyIfNeeded(initialContent),
         type: "string",
       };
 
-      await createAndUpdateFile(session, path, path, content);
-    } else if (step.transform) {
-      const fileDetails = await getFileDetails(session, path);
-      const existingContent = parseIfNeeded(decodeString(fileDetails.content));
-
-      const transformedContent =
-        step.transform.constructor.name === "AsyncFunction"
-          ? await step.transform(existingContent, value)
-          : step.transform(existingContent, value);
-
-      const content = {
-        data: stringifyIfNeeded(transformedContent),
-        type: "string",
-      };
-
-      await createAndUpdateFile(session, path, path, content, fileDetails.sha);
+      await createAndUpdateFile(session, path, path, content, sha);
     } else if (step.type === "navigate") {
       await new Promise((resolve) => setTimeout(resolve, 1500));
       await router.push(`/${session.number}/${encodeString(path)}`);

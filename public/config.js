@@ -4,6 +4,32 @@ function decoderBase64ToUtf8(str) {
   return decodeURIComponent(escape(atob(str)));
 }
 
+function isBase64(str) {
+  // Regular expression to match base64 pattern
+  const base64Regex =
+    /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+
+  try {
+    if (!base64Regex.test(str)) return false;
+
+    const decoded = atob(str);
+    const encoded = btoa(decoded);
+
+    return encoded === str;
+  } catch (err) {
+    return false;
+  }
+}
+
+function isUrl(str) {
+  try {
+    new URL(str);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // GitHub config
 globalThis.ghConfig = {
   githubRepo: undefined,
@@ -138,15 +164,6 @@ globalThis.automation = [
         type: "add",
         path: (input) => `/foo/${input.id}.json`,
         content: async (input) => {
-          const isUrl = (str) => {
-            try {
-              new URL(str);
-              return true;
-            } catch {
-              return false;
-            }
-          };
-
           let content = input.content;
           let error = null;
 
@@ -157,11 +174,13 @@ globalThis.automation = [
                 throw new Error("Failed to fetch content from URL");
               }
               content = await response.json();
-            } else if (content.match(/^[A-Za-z0-9+/=]+$/)) {
+            } else if (isBase64(content)) {
               content = decoderBase64ToUtf8(content);
+            } else {
+              content = decodeURIComponent(content);
             }
-          } catch (error) {
-            error = error;
+          } catch (e) {
+            error = e;
           }
 
           return error || content;

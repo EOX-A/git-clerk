@@ -30,7 +30,9 @@ onMounted(() => {
     initValue.value = Object.fromEntries(
       Object.entries(route.query).filter(([key]) => key !== "automation"),
     );
-    handleAutomationSubmit();
+    setTimeout(() => {
+      handleAutomationSubmit();
+    }, 2000);
   }
   initEOXJSONFormMethod(jsonFormInstance);
 });
