@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/EOX-A/git-clerk/compare/v1.5.0...v1.5.1) (2025-03-11)
+
+
+### Features
+
+* Automation through outside URL ([#113](https://github.com/EOX-A/git-clerk/issues/113)) ([311fc36](https://github.com/EOX-A/git-clerk/commit/311fc36118409225eeeb330ac5ba762e0490f03e))
+
 ## [1.5.0](https://github.com/EOX-A/git-clerk/compare/v1.4.1...v1.5.0) (2025-03-10)
 
 Tag versions: starting with `v1.5.0`, tags (and generated Docker images) will follow the schema `v<version>` (not anymore `git-clerk-v<version>`).
