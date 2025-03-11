@@ -1,5 +1,35 @@
 import "https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.js";
 
+function decoderBase64ToUtf8(str) {
+  return decodeURIComponent(escape(atob(str)));
+}
+
+function isBase64(str) {
+  // Regular expression to match base64 pattern
+  const base64Regex =
+    /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+
+  try {
+    if (!base64Regex.test(str)) return false;
+
+    const decoded = atob(str);
+    const encoded = btoa(decoded);
+
+    return encoded === str;
+  } catch (err) {
+    return false;
+  }
+}
+
+function isUrl(str) {
+  try {
+    new URL(str);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // GitHub config
 globalThis.ghConfig = {
   githubRepo: undefined,
@@ -103,6 +133,62 @@ globalThis.automation = [
       {
         type: "navigate",
         path: (input) => `/foo/bar/${input.id}.json`,
+      },
+    ],
+  },
+  {
+    id: "add-file",
+    title: "Add new outside automation file",
+    description: "Add a new file to the current branch",
+    hidden: true,
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: {
+          type: "string",
+          minLength: 1,
+          default: self.crypto.randomUUID(),
+          options: {
+            hidden: true,
+          },
+        },
+        content: {
+          type: "string",
+          minLength: 1,
+        },
+      },
+      required: ["id", "content"],
+    },
+    steps: [
+      {
+        type: "add",
+        path: (input) => `/foo/${input.id}.json`,
+        content: async (input) => {
+          let content = input.content;
+          let error = null;
+
+          try {
+            if (isUrl(content)) {
+              const response = await fetch(content);
+              if (!response.ok) {
+                throw new Error("Failed to fetch content from URL");
+              }
+              content = await response.json();
+            } else if (isBase64(content)) {
+              content = decoderBase64ToUtf8(content);
+            } else {
+              content = decodeURIComponent(content);
+            }
+          } catch (e) {
+            error = e;
+          }
+
+          return error || content;
+        },
+      },
+      {
+        type: "navigate",
+        path: (input) => `/foo/${input.id}.json`,
       },
     ],
   },
