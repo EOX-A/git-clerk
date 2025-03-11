@@ -16,11 +16,6 @@ let isUploadFile = false;
 const fileName = "products/foo2/collection.json";
 
 describe("Files list related tests", () => {
-  // Visit the session page before all tests
-  before(() => {
-    cy.visit("/123");
-  });
-
   beforeEach(() => {
     // Intercept GET request for pull request details
     cy.intercept(
@@ -94,8 +89,51 @@ describe("Files list related tests", () => {
     ).as("getContent");
   });
 
+  it("Automation through url", () => {
+    let location;
+    cy.wait(1000);
+    cy.visit(
+      "?session=update%203d%20earth&automation=add-file&content=ewogICJpZCI6ICI2MTFjNWQxNC03MDg3LTQ4MjAtYWNmNS02NDlhYWJjMjI0MjMiLAogICJmb28iOiAiRm9vIiwKICAiYmFyIjogZmFsc2UsCiAgImN1c3RvbSI6ICIiCn0K",
+    );
+    cy.wait("@createPulls").then(() => {
+      cy.location("pathname", { timeout: 10000 }).should("eq", "/123");
+    });
+    cy.get("eox-jsonform#automation-form")
+      .shadow()
+      .within(() => {
+        cy.get(
+          ".je-indented-panel .form-control input[name='root[id]']",
+        ).should("exist");
+        cy.get(".je-indented-panel .form-control input[name='root[id]']").then(
+          ($input) => {
+            location = btoa(`foo/bar/${$input.val()}.json`);
+            cy.wrap(location).as("encodedPath");
+          },
+        );
+      });
+    cy.wait("@getContent", { timeout: 10000 });
+    cy.get("@encodedPath").then((location) => {
+      cy.location("pathname", { timeout: 10000 }).should((path) => {
+        expect(path).to.match(/^\/123\/[A-Za-z0-9+/=]+$/);
+      });
+    });
+
+    // Check if the file is loaded
+    cy.get("eox-jsonform").should("exist");
+    cy.get("eox-jsonform")
+      .shadow()
+      .within(() => {
+        // Check if the file is loaded
+        cy.get(".je-indented-panel .ace_editor .ace_line").should(
+          "have.text",
+          atob(content.content).replaceAll("\n", ""),
+        );
+      });
+  });
+
   // Test that files list renders correctly
   it("Render files list", () => {
+    cy.visit("/123");
     cy.wait("@getFiles");
     cy.get(".files-view", { timeout: 12000 }).should(
       "have.length",
