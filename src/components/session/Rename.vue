@@ -99,16 +99,10 @@ const closeRename = () => {
       size="x-large"
       variant="flat"
       @click="confirmRename = true"
-      class="text-capitalize font-weight-medium rounded-pill"
     >
       Rename
     </v-btn>
-    <v-btn
-      variant="text"
-      icon="mdi-close"
-      @click="closeRename"
-      class="px-1 rounded-circle"
-    ></v-btn>
+    <v-btn variant="text" icon="mdi-close" @click="closeRename"></v-btn>
   </div>
 
   <v-dialog v-model="confirmRename" width="auto">

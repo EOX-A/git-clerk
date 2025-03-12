@@ -26,7 +26,7 @@ const props = defineProps({
           ? 'Hide Preview'
           : 'Show Preview'
     "
-    class="hide-show-preview-btn text-capitalize font-weight-medium ml-5 rounded-pill"
+    class="hide-show-preview-btn ml-5"
     @click="togglePreview"
   ></v-btn>
 </template>
