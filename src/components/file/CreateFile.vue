@@ -258,7 +258,7 @@ watch([filePath, updatedFilePath], ([newFilePath, newUpdatedFilePath]) => {
     <v-row class="mr-0">
       <v-col cols="12" class="d-flex pr-0">
         <div
-          :class="`${props.pathSelector ? 'px-0 py-3 path-selector' : props.duplicateFile ? 'px-6 py-4 border-b-thin' : 'px-6 py-6 border-b-thin'} session-create-field d-flex w-100 align-center justify-center`"
+          :class="`${props.pathSelector ? 'px-0 py-3 path-selector' : props.duplicateFile ? 'px-6 py-4 border-b-thin' : 'px-6 py-6 border-b-thin'} session-create-field d-flex w-100 align-center justify-center ga-4`"
         >
           <v-combobox
             v-model="filePath"
@@ -289,29 +289,28 @@ watch([filePath, updatedFilePath], ([newFilePath, newUpdatedFilePath]) => {
                   v-slot:append
                 >
                   <div
-                    class="text-blue-accent-4 d-flex align-center ga-2 text-sm-body-2 font-weight-bold"
+                    class="text-primary d-flex align-center ga-2 text-sm-body-2 font-weight-bold"
                   >
-                    <p class="text-uppercase">Edit File</p>
+                    <p>Edit File</p>
                     <v-icon>mdi-open-in-new</v-icon>
                   </div>
                 </template>
               </v-list-item>
             </template>
           </v-combobox>
-          <div v-if="!props.pathSelector" class="d-flex align-center ga-2">
+          <div v-if="!props.pathSelector" class="d-flex align-center ga-4">
             <v-btn
-              @click="addOrEditFile"
-              :icon="props.duplicateFile ? 'mdi-content-copy' : 'mdi-plus'"
-              variant="flat"
+              :prepend-icon="
+                props.duplicateFile ? 'mdi-content-copy' : 'mdi-plus'
+              "
               color="primary"
-              size="large"
-            ></v-btn>
-            <v-btn
-              variant="text"
-              icon="mdi-close"
-              @click="close"
-              class="px-1 rounded-circle"
-            ></v-btn>
+              size="x-large"
+              variant="flat"
+              @click="addOrEditFile"
+            >
+              {{ props.duplicateFile ? "Duplicate" : "Create" }}
+            </v-btn>
+            <v-btn variant="text" icon="mdi-close" @click="close"></v-btn>
           </div>
         </div>
       </v-col>
@@ -319,86 +318,4 @@ watch([filePath, updatedFilePath], ([newFilePath, newUpdatedFilePath]) => {
   </div>
 </template>
 
-<style>
-.create-file
-  .v-input--density-default.v-input--plain-underlined
-  .v-input__prepend,
-.create-file .v-field__input {
-  padding: 0px;
-  margin: 0;
-}
-.create-file button {
-  border-radius: 6px;
-}
-.create-file
-  .v-input--density-default.v-input--plain-underlined
-  .v-input__prepend {
-  min-height: max(
-    var(--v-input-control-height, 56px),
-    1.5rem + var(--v-field-input-padding-top) +
-      var(--v-field-input-padding-bottom)
-  );
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-inline: 10px;
-}
-.create-file .v-field__append-inner {
-  display: none !important;
-}
-.create-file .v-input {
-  padding: 0px;
-}
-.create-file .v-combobox .v-field__input input::placeholder {
-  /* color: grey;
-  opacity: 0.5;
-  font-weight: 800; */
-  font-family: monospace;
-}
-/* Same as SessionsView.vue */
-/* TODO refactor */
-.session-create-field {
-  border-bottom: 1px solid #647078;
-}
-
-.session-create-field.path-selector {
-  border-bottom: none;
-}
-
-.session-create-field .v-field {
-  border-radius: 6px 0px 0px 6px;
-}
-
-.session-create-field.path-selector .v-field {
-  border-radius: 6px;
-}
-
-.session-create-field button {
-  border-radius: 0px 6px 6px 0px;
-}
-
-.session-create-field .v-label {
-  color: #6c757d;
-}
-
-.session-create-field .v-field__input {
-  padding-top: 10px;
-  padding-bottom: 10px;
-  color: #000000;
-}
-
-.session-create-field .v-field__append-inner .v-icon {
-  color: #6c757d;
-  cursor: pointer;
-}
-
-.session-create-field.v-text-field--outline {
-  background-color: white;
-  border-color: #d9d9d9;
-  box-shadow: none;
-}
-
-.session-create-field .v-field__outline {
-  border-color: transparent;
-}
-</style>
+<style></style>

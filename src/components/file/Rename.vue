@@ -118,7 +118,7 @@ const closeRename = () => {
       size="x-large"
       variant="flat"
       @click="confirmRename = true"
-      class="text-capitalize font-weight-medium rounded-pill"
+      class="text-capitalize"
     >
       Rename
     </v-btn>

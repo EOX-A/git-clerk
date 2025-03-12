@@ -22,7 +22,7 @@ const props = defineProps({
 <template>
   <div
     v-if="session"
-    class="bg-secondary px-0 px-sm-5 py-4 d-flex align-center ga-1 action-tab position-relative"
+    class="bg-surface-light px-0 px-sm-5 py-4 d-flex align-center ga-1 action-tab position-relative"
     :class="{ 'flex-row-reverse': $vuetify?.display?.smAndDown }"
   >
     <GithubSession :url="props.session.html_url" tab size="x-large" />
@@ -52,7 +52,7 @@ const props = defineProps({
       size="x-large"
       variant="flat"
       text="Pending Review"
-      class="text-capitalize font-weight-medium ml-5 d-none d-sm-flex"
+      class="ml-5 d-none d-sm-flex"
       disabled
     ></v-btn>
     <ReviewSession
@@ -71,14 +71,16 @@ const props = defineProps({
       class="ml-5"
     />
     <v-spacer></v-spacer>
-    <div
-      :class="`px-4 mx-5  session-icon d-flex align-center justify-center bg-${session.status.color} rounded-pill ga-2`"
+    <v-chip
+      :class="`mx-5 session-icon bg-${session.status.color} ga-2`"
+      size="large"
+      label
     >
-      <OctIcon :name="session.status.icon" />
+      <OctIcon :name="session.status.icon" class="v-icon--start" />
       <span class="text-capitalize font-weight-bold">{{
         session.status.state
       }}</span>
-    </div>
+    </v-chip>
   </div>
 </template>
 

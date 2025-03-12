@@ -119,7 +119,7 @@ const onPageChange = async (newPage) => {
       <v-col cols="12" class="d-flex">
         <!-- Custom styled text field -->
         <div
-          class="px-6 py-6 border-b-thin session-create-field d-flex w-100 align-center justify-center"
+          class="px-6 py-6 border-b-thin session-create-field d-flex w-100 align-center justify-center ga-4"
         >
           <v-text-field
             v-model="newSessionName"
@@ -132,12 +132,14 @@ const onPageChange = async (newPage) => {
             variant="outlined"
           />
           <v-btn
-            @click="createFile"
-            icon="mdi-plus"
-            variant="flat"
+            prepend-icon="mdi-plus"
             color="primary"
-            size="large"
-          ></v-btn>
+            size="x-large"
+            variant="flat"
+            @click="createFile"
+          >
+            Create
+          </v-btn>
         </div>
       </v-col>
     </v-row>
@@ -223,60 +225,4 @@ const onPageChange = async (newPage) => {
   <ListPagination v-if="sessions" :page :totalPage :onPageChange />
 </template>
 
-<style>
-.sessions-view.session-closed {
-  background: #f5f5f5;
-  opacity: 0.4;
-}
-
-.sessions-view.session-closed:hover {
-  background: white;
-  opacity: 1;
-}
-
-.sessions-view .octicon-file-diff {
-  width: 20px;
-  height: 20px;
-}
-
-.sessions-view .file-diff span {
-  line-height: 0.5;
-}
-
-.session-create-field {
-  border-bottom: 1px solid #647078;
-}
-
-.session-create-field .v-field {
-  border-radius: 6px 0px 0px 6px;
-}
-
-.session-create-field button {
-  border-radius: 0px 6px 6px 0px;
-}
-
-.session-create-field .v-label {
-  color: #6c757d;
-}
-
-.session-create-field .v-field__input {
-  padding-top: 10px;
-  padding-bottom: 10px;
-  color: #000000;
-}
-
-.session-create-field .v-field__append-inner .v-icon {
-  color: #6c757d;
-  cursor: pointer;
-}
-
-.session-create-field.v-text-field--outline {
-  background-color: white;
-  border-color: #d9d9d9;
-  box-shadow: none;
-}
-
-.session-create-field .v-field__outline {
-  border-color: transparent;
-}
-</style>
+<style></style>
