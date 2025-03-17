@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.2](https://github.com/EOX-A/git-clerk/compare/v1.5.1...v1.5.2) (2025-03-17)
+
+
+### Bug Fixes
+
+* On initial load not getting into watch function ([#117](https://github.com/EOX-A/git-clerk/issues/117)) ([b1e0597](https://github.com/EOX-A/git-clerk/commit/b1e05978a1401cd9d9c95a1f6fe6baaccb5584ba))
+
 ## [1.5.1](https://github.com/EOX-A/git-clerk/compare/v1.5.0...v1.5.1) (2025-03-11)
 
 
