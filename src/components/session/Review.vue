@@ -42,7 +42,7 @@ const props = defineProps({
 });
 const snackbar = inject("set-snackbar");
 const reviewSession = ref(false);
-const disabled = ref(true);
+const disabled = ref(checkDisableStatus(props));
 
 const error =
   props.text && props.session.draft && props.session.check?.success === false;
@@ -60,12 +60,18 @@ const reviewSessionHandle = async () => {
   }
 };
 
-watch([props], ([newProps]) => {
-  disabled.value =
+function checkDisableStatus(newProps) {
+  if (!newProps.session) return true;
+  return (
     !newProps.session.draft ||
     newProps.session.state === "closed" ||
     !newProps.session.check ||
-    !newProps.session.check.success;
+    !newProps.session.check.success
+  );
+}
+
+watch([props], ([newProps]) => {
+  disabled.value = checkDisableStatus(newProps);
 });
 </script>
 
