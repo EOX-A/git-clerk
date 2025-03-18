@@ -152,7 +152,7 @@ const onPageChange = async (newPage) => {
       v-for="session in sessions"
       :key="session.title"
       :title="session.title"
-      :class="`sessions-view py-4 border-b-thin ${session.state === 'closed' && 'session-closed'}`"
+      :class="`sessions-view bg-white py-4 border-b-thin ${session.state === 'closed' && 'session-closed'}`"
     >
       <template v-slot:title>
         <div class="d-flex align-start px-5">
@@ -225,4 +225,13 @@ const onPageChange = async (newPage) => {
   <ListPagination v-if="sessions" :page :totalPage :onPageChange />
 </template>
 
-<style></style>
+<style>
+.sessions-view.session-closed {
+  background: var(--v-bg-surface-light);
+  opacity: 0.4;
+}
+.sessions-view.session-closed:hover {
+  background: white;
+  opacity: 1;
+}
+</style>

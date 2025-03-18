@@ -268,12 +268,12 @@ watch([filePath, updatedFilePath], ([newFilePath, newUpdatedFilePath]) => {
             :placeholder="props.pathSelector ? 'my/new/path/' : 'file.txt'"
             :items="map(currPathDirStructure, 'name')"
             hide-details
-            color="primary"
+            color="surface-darker"
             variant="outlined"
           >
             <template #prepend-inner>
               <span
-                class="prepend text-mono font-weight-bold text-primary opacity-80 text-no-wrap"
+                class="prepend text-mono font-weight-bold text-surface-darker opacity-80 text-no-wrap"
                 >(root){{ updatedFilePath }}</span
               >
             </template>
@@ -317,5 +317,3 @@ watch([filePath, updatedFilePath], ([newFilePath, newUpdatedFilePath]) => {
     </v-row>
   </div>
 </template>
-
-<style></style>

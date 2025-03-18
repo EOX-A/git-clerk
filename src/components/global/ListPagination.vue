@@ -15,14 +15,14 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="text-center border-t-thin py-6 bg-background">
+  <div class="text-center border-t-thin py-6">
     <v-pagination
       v-model="props.page"
       :length="props.totalPage"
       @update:model-value="props.onPageChange"
       density="comfortable"
       total-visible="6"
-      color="primary"
+      color="surface-darker"
       next-icon="mdi-menu-right"
       prev-icon="mdi-menu-left"
     ></v-pagination>

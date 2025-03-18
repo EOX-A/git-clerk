@@ -5,7 +5,7 @@ const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 </script>
 <template>
-  <v-app-bar class="navbar" color="primary" app>
+  <v-app-bar class="navbar" color="surface-darker" app>
     <v-toolbar-title class="toolbar-title">
       <v-breadcrumbs :items="navPaginationItems">
         <template v-slot:divider>
@@ -38,8 +38,8 @@ const navPaginationItems = inject("set-nav-pagination-items");
         size="large"
         :prepend-icon="navButtonConfig.icon"
         variant="flat"
-        class="text-capitalize font-weight-medium"
-        color="btn-primary"
+        class="text-capitalize font-weight-bold"
+        color="white"
         :disabled="navButtonConfig.disabled"
         @click="navButtonConfig.click"
         >{{ navButtonConfig.text }}</v-btn
@@ -53,8 +53,8 @@ const navPaginationItems = inject("set-nav-pagination-items");
             size="large"
             :prepend-icon="navButtonConfig.icon"
             variant="flat"
-            class="text-capitalize font-weight-medium"
-            color="btn-primary"
+            class="text-capitalize font-weight-bold"
+            color="white"
             v-bind="props"
             :disabled="navButtonConfig.disabled"
             >{{ navButtonConfig.text }}</v-btn
@@ -91,8 +91,7 @@ const navPaginationItems = inject("set-nav-pagination-items");
 
 <style>
 .navbar .v-breadcrumbs-item.v-breadcrumbs-item--disabled {
-  color: #adddff;
-  opacity: 0.8;
+  opacity: 0.5;
 }
 .navbar .button-nav {
   margin-right: 20px;

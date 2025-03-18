@@ -311,7 +311,7 @@ onUnmounted(() => {
 }
 .file-preview iframe {
   box-sizing: border-box;
-  border: 1px solid #ced4da;
+  border: 1px solid rgb(var(--v-theme-surface-light), 1);
   font: inherit;
   z-index: 0;
   word-wrap: break-word;

@@ -17,7 +17,7 @@ const props = defineProps({
     <v-btn
       :href="file.html_url"
       target="_blank"
-      color="blue-grey-darken-4"
+      color="surface-darker"
       :icon="$vuetify?.display?.smAndDown ? 'mdi-github' : false"
       prepend-icon="mdi-github"
       size="x-large"

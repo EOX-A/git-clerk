@@ -72,14 +72,20 @@ const props = defineProps({
     />
     <v-spacer></v-spacer>
     <v-chip
-      :class="`mx-5 session-icon bg-${session.status.color} ga-2`"
+      class="mx-5 session-icon ga-2"
       size="large"
       label
+      :color="session.status.color"
+      variant="tonal"
     >
-      <OctIcon :name="session.status.icon" class="v-icon--start" />
-      <span class="text-capitalize font-weight-bold">{{
-        session.status.state
-      }}</span>
+      <OctIcon
+        :name="session.status.icon"
+        :class="`v-icon--start text-${session.status.color}`"
+      />
+      <span
+        :class="`text-${session.status.color} text-capitalize font-weight-bold`"
+        >{{ session.status.state }}</span
+      >
     </v-chip>
   </div>
 </template>

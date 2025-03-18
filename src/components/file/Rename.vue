@@ -79,7 +79,7 @@ const closeRename = () => {
 <template>
   <!-- Mobile -->
   <v-btn
-    color="blue-grey-darken-4"
+    color="surface-darker"
     icon="mdi-pencil-outline"
     :size="size"
     variant="text"
@@ -88,7 +88,7 @@ const closeRename = () => {
   ></v-btn>
   <!-- Non-mobile -->
   <v-btn
-    color="blue-grey-darken-4"
+    color="surface-darker"
     prepend-icon="mdi-pencil-outline"
     :size="size"
     :text="text"

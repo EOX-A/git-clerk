@@ -57,7 +57,8 @@ const deleteFileHandle = async () => {
 <template>
   <Tooltip text="Delete File">
     <v-btn
-      color="primary"
+      color="surface-darker"
+      prepend-icon="mdi-delete-outline"
       :icon="props.text ? false : 'mdi-delete-outline'"
       :size="props.size"
       :text="props.text"
