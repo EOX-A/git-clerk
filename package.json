@@ -23,7 +23,7 @@
     "@eox/drawtools": "^0.14.0",
     "@eox/jsonform": "^0.15.4",
     "@eox/map": "^1.19.0",
-    "@eox/ui": "^0.1.10",
+    "@eox/ui": "^0.1.11",
     "@primer/octicons": "^19.11.0",
     "axios": "^1.7.7",
     "dayjs": "^1.11.13",
