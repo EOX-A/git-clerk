@@ -20,12 +20,9 @@ let deleteSession = false;
 let reviewSession = false;
 
 describe("Session list related tests", () => {
-  // Visit the home page before all tests
-  before(() => {
-    cy.visit("/");
-  });
-
   beforeEach(() => {
+  // Visit the home page before all tests
+    cy.visit("/");
     // Intercept GET request for searching issues/PRs
     cy.intercept(
       {
