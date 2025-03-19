@@ -5,7 +5,7 @@ const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 </script>
 <template>
-  <v-app-bar class="navbar" color="surface-darker" app>
+  <v-app-bar class="navbar" color="primary" app>
     <v-toolbar-title class="toolbar-title">
       <v-breadcrumbs :items="navPaginationItems">
         <template v-slot:divider>
@@ -38,7 +38,7 @@ const navPaginationItems = inject("set-nav-pagination-items");
         size="large"
         :prepend-icon="navButtonConfig.icon"
         variant="flat"
-        class="text-capitalize font-weight-bold"
+        class="text-capitalize font-weight-medium"
         color="white"
         :disabled="navButtonConfig.disabled"
         @click="navButtonConfig.click"
@@ -53,7 +53,7 @@ const navPaginationItems = inject("set-nav-pagination-items");
             size="large"
             :prepend-icon="navButtonConfig.icon"
             variant="flat"
-            class="text-capitalize font-weight-bold"
+            class="text-capitalize font-weight-medium"
             color="white"
             v-bind="props"
             :disabled="navButtonConfig.disabled"

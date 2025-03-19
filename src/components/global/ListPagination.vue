@@ -22,7 +22,7 @@ const props = defineProps({
       @update:model-value="props.onPageChange"
       density="comfortable"
       total-visible="6"
-      color="surface-darker"
+      color="primary"
       next-icon="mdi-menu-right"
       prev-icon="mdi-menu-left"
     ></v-pagination>

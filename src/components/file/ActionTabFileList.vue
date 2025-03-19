@@ -72,7 +72,7 @@ const props = defineProps({
     />
     <v-spacer></v-spacer>
     <v-chip
-      class="mx-5 session-icon ga-2"
+      class="mx-5 pl-5 session-icon ga-2"
       size="large"
       label
       :color="session.status.color"

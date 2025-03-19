@@ -92,13 +92,20 @@ const disabled = props.session.state === "closed";
   <v-dialog v-model="deleteSession" width="auto">
     <v-card max-width="400" prepend-icon="mdi-alert" title="Delete Session">
       <template v-slot:text>
-        Are you sure you want to delete session:
-        <strong>{{ deleteSession.title }}</strong>
+        <p class="mt-8">
+          Are you sure you want to delete the session:
+          <strong>{{ deleteSession.title }}</strong>
+        </p>
       </template>
       <template v-slot:actions>
         <v-spacer></v-spacer>
-        <v-btn @click="deleteSession = false"> Cancel </v-btn>
-        <v-btn color="red" variant="flat" @click="deleteSessionHandle">
+        <v-btn size="large" @click="deleteSession = false"> Cancel </v-btn>
+        <v-btn
+          size="large"
+          color="red"
+          variant="flat"
+          @click="deleteSessionHandle"
+        >
           Delete
         </v-btn>
       </template>

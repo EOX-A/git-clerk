@@ -33,7 +33,7 @@ const duplicateFileClick = async (state) => {
 <template>
   <Tooltip text="Duplicate File">
     <v-btn
-      color="surface-darker"
+      color="primary"
       :icon="props.text ? false : 'mdi-content-copy'"
       :size="props.size"
       :text="props.text"

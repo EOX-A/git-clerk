@@ -275,7 +275,7 @@ onUnmounted(() => {
         <v-btn
           class="resize-btn position-absolute text-black elevation-1 d-md-block d-none"
           variant="flat"
-          color="secondary"
+          color="primary"
           :icon="previewExpanded ? 'mdi-arrow-collapse' : 'mdi-arrow-expand'"
           size="large"
           @click="previewExpanded = !previewExpanded"

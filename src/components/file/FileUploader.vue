@@ -120,7 +120,7 @@ const fileUpload = async () => {
     class="create-file"
   >
     <v-card class="bg-surface-light">
-      <v-toolbar color="surface-darker">
+      <v-toolbar color="primary">
         <v-toolbar-title class="text-white">Upload Files</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn
@@ -133,9 +133,7 @@ const fileUpload = async () => {
       <v-container class="pa-6">
         <v-card variant="flat" class="mx-auto bg-surface-light">
           <v-card-text>
-            <p
-              class="d-flex align-center ga-1 text-capitalize text-surface-darker"
-            >
+            <p class="d-flex align-center ga-1 text-capitalize text-primary">
               <strong>Session:</strong> {{ props.session.title }}
             </p>
             <CreateFile
@@ -159,7 +157,7 @@ const fileUpload = async () => {
               <div class="text-center">
                 <v-icon
                   size="64"
-                  color="surface-darker"
+                  color="primary"
                   icon="mdi-cloud-upload"
                 ></v-icon>
 

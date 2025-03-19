@@ -126,8 +126,10 @@ const onPageChange = async (newPage) => {
             label="Session Name"
             placeholder="Name your Session..."
             hide-details
-            append-inner-icon="mdi-close"
-            @click:append-inner="clearInputCreateNewSession"
+            :append-inner-icon="
+              newSessionName.length > 0 ? 'mdi-restart' : undefined
+            "
+            @click:append-inner="newSessionName = ''"
             @keydown="onKeyEnterCreateNewSession"
             variant="outlined"
           />
@@ -140,6 +142,11 @@ const onPageChange = async (newPage) => {
           >
             Create
           </v-btn>
+          <v-btn
+            variant="text"
+            icon="mdi-close"
+            @click="clearInputCreateNewSession"
+          ></v-btn>
         </div>
       </v-col>
     </v-row>

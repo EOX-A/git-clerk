@@ -9,6 +9,17 @@ const vuetify = createVuetify({
   components,
   directives,
   blueprint: eox,
+  theme: {
+    themes: {
+      light: {
+        dark: false,
+        colors: {
+          grey: `#8A969E`,
+          violet: "#6F42C1",
+        },
+      },
+    },
+  },
 });
 
 export default vuetify;

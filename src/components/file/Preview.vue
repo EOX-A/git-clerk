@@ -9,7 +9,7 @@ const props = defineProps({
 <template>
   <v-btn
     v-if="previewURL"
-    :color="showPreview ? 'primary' : 'light-secondary'"
+    :color="showPreview ? 'primary' : 'blue-grey-darken-4'"
     :icon="
       $vuetify?.display?.smAndDown
         ? showPreview
@@ -18,7 +18,7 @@ const props = defineProps({
         : false
     "
     :prepend-icon="showPreview ? 'mdi-eye-off' : 'mdi-eye'"
-    variant="flat"
+    :variant="showPreview ? 'flat' : 'text'"
     :text="
       $vuetify?.display?.smAndDown
         ? ''
@@ -26,6 +26,7 @@ const props = defineProps({
           ? 'Hide Preview'
           : 'Show Preview'
     "
+    size="x-large"
     class="hide-show-preview-btn ml-5"
     @click="togglePreview"
   ></v-btn>
