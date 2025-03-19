@@ -1,5 +1,4 @@
 import "vuetify/styles";
-import "@eox/ui/vuetify/style.css";
 import { eox } from "@eox/ui/vuetify/blueprint.js";
 import { createVuetify } from "vuetify";
 import * as components from "vuetify/components";
@@ -14,7 +13,7 @@ const vuetify = createVuetify({
       light: {
         dark: false,
         colors: {
-          grey: `#8A969E`,
+          grey: "#8A969E",
           violet: "#6F42C1",
         },
       },
