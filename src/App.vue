@@ -48,7 +48,3 @@ onMounted(async () => {
     </v-main>
   </v-app>
 </template>
-
-<style>
-@import "@eox/ui/vuetify/style.css";
-</style>
