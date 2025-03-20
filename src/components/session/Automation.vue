@@ -71,6 +71,6 @@ onMounted(() => {
 
 <style>
 .v-card-item {
-  background-color: #eef0f1;
+  background-color: rgb(var(--v-theme-surface-light), 1);
 }
 </style>

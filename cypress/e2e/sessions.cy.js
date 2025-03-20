@@ -20,12 +20,9 @@ let deleteSession = false;
 let reviewSession = false;
 
 describe("Session list related tests", () => {
-  // Visit the home page before all tests
-  before(() => {
-    cy.visit("/");
-  });
-
   beforeEach(() => {
+    // Visit the home page before all tests
+    cy.visit("/");
     // Intercept GET request for searching issues/PRs
     cy.intercept(
       {
@@ -86,7 +83,7 @@ describe("Session list related tests", () => {
   // Test session deletion functionality
   it("Delete a session", () => {
     deleteSession = true;
-    cy.get(".sessions-view").eq(0).find(".v-btn .mdi-delete-outline").click();
+    cy.get(".sessions-view").eq(1).find(".v-btn .mdi-delete-outline").click();
     cy.get(".v-card-actions .v-btn.bg-red").click();
     cy.wait("@getSearchIssues");
     cy.get(".session-closed .main-title").should(
@@ -99,7 +96,7 @@ describe("Session list related tests", () => {
   it("Review a session", () => {
     reviewSession = true;
     cy.get(".sessions-view")
-      .eq(1)
+      .eq(2)
       .find(".v-btn .mdi-file-document-edit")
       .click();
     cy.get(".v-card-actions .v-btn.bg-success", { timeout: 30000 }).click();
@@ -113,12 +110,12 @@ describe("Session list related tests", () => {
 
   // Test creating a new session
   it("Create a new session", () => {
-    cy.get(".navbar .v-btn").click();
+    cy.get("header .v-btn").click();
     cy.get(".session-create-field .v-field__input").type(dummySession.title, {
       delay: 100,
     });
-    cy.get(".session-create-field .v-btn").click();
-    cy.wait("@createPulls").then(() => {
+    cy.get(".session-create-field .v-btn.bg-primary").click();
+    cy.wait("@createPulls", { requestTimeout: 10000 }).then(() => {
       cy.location("pathname", { timeout: 10000 }).should("eq", "/123");
     });
   });

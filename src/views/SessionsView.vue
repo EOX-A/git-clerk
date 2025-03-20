@@ -119,24 +119,33 @@ const onPageChange = async (newPage) => {
       <v-col cols="12" class="d-flex">
         <!-- Custom styled text field -->
         <div
-          class="px-6 py-6 border-b-thin session-create-field d-flex w-100 align-center justify-center"
+          class="px-6 py-6 border-b-thin session-create-field d-flex w-100 align-center justify-center ga-4"
         >
           <v-text-field
             v-model="newSessionName"
             label="Session Name"
             placeholder="Name your Session..."
             hide-details
-            append-inner-icon="mdi-close"
-            @click:append-inner="clearInputCreateNewSession"
+            :append-inner-icon="
+              newSessionName.length > 0 ? 'mdi-restart' : undefined
+            "
+            @click:append-inner="newSessionName = ''"
             @keydown="onKeyEnterCreateNewSession"
             variant="outlined"
           />
           <v-btn
-            @click="createFile"
-            icon="mdi-plus"
-            variant="flat"
+            prepend-icon="mdi-plus"
             color="primary"
-            size="large"
+            size="x-large"
+            variant="flat"
+            @click="createFile"
+          >
+            Create
+          </v-btn>
+          <v-btn
+            variant="text"
+            icon="mdi-close"
+            @click="clearInputCreateNewSession"
           ></v-btn>
         </div>
       </v-col>
@@ -150,7 +159,7 @@ const onPageChange = async (newPage) => {
       v-for="session in sessions"
       :key="session.title"
       :title="session.title"
-      :class="`sessions-view py-4 border-b-thin ${session.state === 'closed' && 'session-closed'}`"
+      :class="`sessions-view bg-white py-4 border-b-thin ${session.state === 'closed' && 'session-closed'}`"
     >
       <template v-slot:title>
         <div class="d-flex align-start px-5">
@@ -225,58 +234,11 @@ const onPageChange = async (newPage) => {
 
 <style>
 .sessions-view.session-closed {
-  background: #f5f5f5;
+  background: var(--v-bg-surface-light);
   opacity: 0.4;
 }
-
 .sessions-view.session-closed:hover {
   background: white;
   opacity: 1;
-}
-
-.sessions-view .octicon-file-diff {
-  width: 20px;
-  height: 20px;
-}
-
-.sessions-view .file-diff span {
-  line-height: 0.5;
-}
-
-.session-create-field {
-  border-bottom: 1px solid #647078;
-}
-
-.session-create-field .v-field {
-  border-radius: 6px 0px 0px 6px;
-}
-
-.session-create-field button {
-  border-radius: 0px 6px 6px 0px;
-}
-
-.session-create-field .v-label {
-  color: #6c757d;
-}
-
-.session-create-field .v-field__input {
-  padding-top: 10px;
-  padding-bottom: 10px;
-  color: #000000;
-}
-
-.session-create-field .v-field__append-inner .v-icon {
-  color: #6c757d;
-  cursor: pointer;
-}
-
-.session-create-field.v-text-field--outline {
-  background-color: white;
-  border-color: #d9d9d9;
-  box-shadow: none;
-}
-
-.session-create-field .v-field__outline {
-  border-color: transparent;
 }
 </style>

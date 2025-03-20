@@ -19,7 +19,7 @@ const props = defineProps({
   },
   text: {
     type: String,
-    default: "Rename Session",
+    default: "Rename File",
   },
 });
 const snackbar = inject("set-snackbar");
@@ -79,7 +79,7 @@ const closeRename = () => {
 <template>
   <!-- Mobile -->
   <v-btn
-    color="blue-grey-darken-4"
+    color="primary"
     icon="mdi-pencil-outline"
     :size="size"
     variant="text"
@@ -104,10 +104,12 @@ const closeRename = () => {
   >
     <v-text-field
       v-model="renameFileTitle"
-      label="Rename Session"
+      label="Rename File"
       hide-details
       variant="outlined"
-      append-inner-icon="mdi-restart"
+      :append-inner-icon="
+        renameFileTitle !== props.file.name ? 'mdi-restart' : undefined
+      "
       @click:append-inner="renameFileTitle = props.file.name"
       @keyup.enter="confirmRename = true"
     ></v-text-field>
@@ -118,7 +120,7 @@ const closeRename = () => {
       size="x-large"
       variant="flat"
       @click="confirmRename = true"
-      class="text-capitalize font-weight-medium rounded-pill"
+      class="text-capitalize"
     >
       Rename
     </v-btn>
@@ -133,16 +135,17 @@ const closeRename = () => {
   <v-dialog v-model="confirmRename" width="auto">
     <v-card max-width="400" prepend-icon="mdi-alert" title="Rename Session">
       <template v-slot:text>
-        <div class="py-4">
-          Are you sure you want to rename file to
+        <p class="mt-8">
+          Are you sure you want to rename the file to
           <strong>{{ renameFileTitle }}</strong
           >?
-        </div>
+        </p>
       </template>
       <template v-slot:actions>
         <v-spacer></v-spacer>
         <v-btn
           class="text-capitalize font-weight-medium"
+          size="large"
           variant="text"
           @click="confirmRename = false"
         >
@@ -150,6 +153,7 @@ const closeRename = () => {
         </v-btn>
         <v-btn
           class="text-capitalize font-weight-medium"
+          size="large"
           color="success"
           variant="flat"
           @click="renameFileHandle"

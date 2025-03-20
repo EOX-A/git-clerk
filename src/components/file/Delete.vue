@@ -58,27 +58,33 @@ const deleteFileHandle = async () => {
   <Tooltip text="Delete File">
     <v-btn
       color="blue-grey-darken-4"
-      :icon="$vuetify?.display?.smAndDown ? 'mdi-delete-outline' : false"
       prepend-icon="mdi-delete-outline"
+      :icon="props.text ? false : 'mdi-delete-outline'"
       :size="props.size"
-      :text="$vuetify?.display?.smAndDown ? '' : props.text"
+      :text="props.text"
       variant="text"
       :disabled="props.file?.status === 'removed'"
       @click="deleteFile = props.file"
-      class="text-capitalize font-weight-medium"
     ></v-btn>
   </Tooltip>
 
   <v-dialog v-model="deleteFile" width="auto">
     <v-card max-width="400" prepend-icon="mdi-alert" title="Delete File">
       <template v-slot:text>
-        Are you sure you want to delete the file:
-        <strong>{{ deleteFile.title }}</strong>
+        <p class="mt-8">
+          Are you sure you want to delete the file:
+          <strong>{{ deleteFile.title }}</strong>
+        </p>
       </template>
       <template v-slot:actions>
         <v-spacer></v-spacer>
-        <v-btn @click="deleteFile = false"> Cancel </v-btn>
-        <v-btn color="red" variant="flat" @click="deleteFileHandle">
+        <v-btn size="large" @click="deleteFile = false"> Cancel </v-btn>
+        <v-btn
+          size="large"
+          color="red"
+          variant="flat"
+          @click="deleteFileHandle"
+        >
           Delete
         </v-btn>
       </template>

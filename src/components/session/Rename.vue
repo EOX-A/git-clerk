@@ -88,7 +88,9 @@ const closeRename = () => {
       label="Rename Session"
       hide-details
       variant="outlined"
-      append-inner-icon="mdi-restart"
+      :append-inner-icon="
+        renameSessionTitle !== props.session.title ? 'mdi-restart' : undefined
+      "
       @click:append-inner="renameSessionTitle = props.session.title"
       @keyup.enter="confirmRename = true"
     ></v-text-field>
@@ -99,30 +101,25 @@ const closeRename = () => {
       size="x-large"
       variant="flat"
       @click="confirmRename = true"
-      class="text-capitalize font-weight-medium rounded-pill"
     >
       Rename
     </v-btn>
-    <v-btn
-      variant="text"
-      icon="mdi-close"
-      @click="closeRename"
-      class="px-1 rounded-circle"
-    ></v-btn>
+    <v-btn variant="text" icon="mdi-close" @click="closeRename"></v-btn>
   </div>
 
   <v-dialog v-model="confirmRename" width="auto">
     <v-card max-width="400" prepend-icon="mdi-alert" title="Rename Session">
       <template v-slot:text>
-        <div class="py-4">
-          Are you sure you want to rename session to
+        <p class="mt-8">
+          Are you sure you want to rename the session to
           <strong>{{ renameSessionTitle }}</strong
           >?
-        </div>
+        </p>
       </template>
       <template v-slot:actions>
         <v-spacer></v-spacer>
         <v-btn
+          size="large"
           class="text-capitalize font-weight-medium"
           variant="text"
           @click="confirmRename = false"
@@ -130,6 +127,7 @@ const closeRename = () => {
           Cancel
         </v-btn>
         <v-btn
+          size="large"
           class="text-capitalize font-weight-medium"
           color="success"
           variant="flat"

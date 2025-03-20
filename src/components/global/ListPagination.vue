@@ -15,7 +15,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="text-center border-t-thin py-6 bg-background">
+  <div class="text-center border-t-thin py-6">
     <v-pagination
       v-model="props.page"
       :length="props.totalPage"

@@ -135,13 +135,20 @@ watch([props], ([newProps]) => {
       title="Request Review Session"
     >
       <template v-slot:text>
-        Are you sure you want to request this session for review:
-        <strong>{{ reviewSession.title }}</strong>
+        <p class="mt-8">
+          Are you sure you want to request this session for review:
+          <strong>{{ reviewSession.title }}</strong>
+        </p>
       </template>
       <template v-slot:actions>
         <v-spacer></v-spacer>
-        <v-btn @click="reviewSession = false"> Cancel </v-btn>
-        <v-btn color="success" variant="flat" @click="reviewSessionHandle">
+        <v-btn size="large" @click="reviewSession = false"> Cancel </v-btn>
+        <v-btn
+          size="large"
+          color="success"
+          variant="flat"
+          @click="reviewSessionHandle"
+        >
           Request
         </v-btn>
       </template>

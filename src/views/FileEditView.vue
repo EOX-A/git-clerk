@@ -275,7 +275,7 @@ onUnmounted(() => {
         <v-btn
           class="resize-btn position-absolute text-black elevation-1 d-md-block d-none"
           variant="flat"
-          color="secondary"
+          color="primary"
           :icon="previewExpanded ? 'mdi-arrow-collapse' : 'mdi-arrow-expand'"
           size="large"
           @click="previewExpanded = !previewExpanded"
@@ -311,7 +311,7 @@ onUnmounted(() => {
 }
 .file-preview iframe {
   box-sizing: border-box;
-  border: 1px solid #ced4da;
+  border: 1px solid rgb(var(--v-theme-surface-light), 1);
   font: inherit;
   z-index: 0;
   word-wrap: break-word;

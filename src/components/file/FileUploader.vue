@@ -119,20 +119,21 @@ const fileUpload = async () => {
     fullscreen
     class="create-file"
   >
-    <v-card>
+    <v-card class="bg-surface-light">
       <v-toolbar color="primary">
-        <v-toolbar-title>Upload Files</v-toolbar-title>
+        <v-toolbar-title class="text-white">Upload Files</v-toolbar-title>
         <v-spacer></v-spacer>
         <v-btn
           icon="mdi-close"
           class="rounded-circle"
+          color="white"
           @click="props.close"
         ></v-btn>
       </v-toolbar>
       <v-container class="pa-6">
-        <v-card variant="flat" color="secondary" class="mx-auto">
+        <v-card variant="flat" class="mx-auto bg-surface-light">
           <v-card-text>
-            <p class="d-flex align-center ga-1 text-capitalize">
+            <p class="d-flex align-center ga-1 text-capitalize text-primary">
               <strong>Session:</strong> {{ props.session.title }}
             </p>
             <CreateFile
@@ -250,11 +251,8 @@ const fileUpload = async () => {
 </template>
 
 <style scoped>
-.v-card {
-  background-color: #f6f6f6 !important;
-}
 .upload-area {
-  border: 2px solid #e0e4e6;
+  border: 2px solid rgb(var(--v-theme-primary), 0.1);
   transition: all 0.3s ease;
   padding: 8rem;
 }
@@ -265,7 +263,7 @@ const fileUpload = async () => {
 }
 
 .upload-area:hover {
-  background-color: rgb(var(--v-theme-secondary));
+  background-color: rgb(var(--v-theme-primary), 0.1);
   cursor: pointer;
 }
 </style>

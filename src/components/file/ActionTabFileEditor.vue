@@ -33,7 +33,7 @@ const props = defineProps({
 
 <template>
   <div
-    class="bg-secondary px-0 px-sm-5 py-3 d-flex align-center ga-1 position-relative action-tab"
+    class="bg-surface-light px-0 px-sm-5 py-3 d-flex align-center ga-1 position-relative action-tab"
   >
     <Github :file="file" />
     <DeleteFile

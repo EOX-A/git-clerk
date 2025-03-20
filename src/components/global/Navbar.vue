@@ -39,7 +39,7 @@ const navPaginationItems = inject("set-nav-pagination-items");
         :prepend-icon="navButtonConfig.icon"
         variant="flat"
         class="text-capitalize font-weight-medium"
-        color="btn-primary"
+        color="white"
         :disabled="navButtonConfig.disabled"
         @click="navButtonConfig.click"
         >{{ navButtonConfig.text }}</v-btn
@@ -54,7 +54,7 @@ const navPaginationItems = inject("set-nav-pagination-items");
             :prepend-icon="navButtonConfig.icon"
             variant="flat"
             class="text-capitalize font-weight-medium"
-            color="btn-primary"
+            color="white"
             v-bind="props"
             :disabled="navButtonConfig.disabled"
             >{{ navButtonConfig.text }}</v-btn
@@ -91,8 +91,7 @@ const navPaginationItems = inject("set-nav-pagination-items");
 
 <style>
 .navbar .v-breadcrumbs-item.v-breadcrumbs-item--disabled {
-  color: #adddff;
-  opacity: 0.8;
+  opacity: 0.5;
 }
 .navbar .button-nav {
   margin-right: 20px;
