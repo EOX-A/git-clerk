@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/EOX-A/git-clerk/compare/v1.5.2...v1.6.0) (2025-03-20)
+
+
+### Features
+
+* Apply new styling, harmonize ui elements ([#116](https://github.com/EOX-A/git-clerk/issues/116)) ([481c252](https://github.com/EOX-A/git-clerk/commit/481c25239447a481e4471820749d629318106c26))
+
 ## [1.5.2](https://github.com/EOX-A/git-clerk/compare/v1.5.1...v1.5.2) (2025-03-17)
 
 
