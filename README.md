@@ -175,6 +175,15 @@ globalThis.automation = [
 ]
 ```
 
+Automations can also be triggered via url query parameters. For this, the automation requires an additional `id` parameter which is referenced by the `automation` query parameter.
+
+The automation can either be triggered within a session, or, additionally, a `session` parameter can be passed in order to create a new session in this name.
+
+All other query parameters (except `automation` and `session`) are passed as key-value pairs into the automation input (and thus can further be used in automation steps).
+
+Example:
+`https://my-git-clerk-instance.com?session=My New Session&automation=automation-id&field1=value-field1&field2=value-field2`
+
 ### Custom Editor Interface
 
 Git Clerk uses `eox-jsonform` to render applications based on different JSON editor schemas. `eox-jsonform` contains editor interfaces for each of the primitive JSON types as well as a few other specialized ones. For those who need custom editor interfaces/inputs based on any custom format, they can easily build their own custom editor interface using `JSON Editor`'s `AbstractEditor` class inside `config.js`.
