@@ -46,6 +46,7 @@ globalThis.schemaMap = [
     schema: {
       title: "FooBar editor",
       type: "object",
+      required: ["foo"],
       properties: {
         id: {
           type: "string",
@@ -57,6 +58,7 @@ globalThis.schemaMap = [
           title: "Foo",
           type: "string",
           description: "Simple string input",
+          minLength: 7,
           options: {
             inputAttributes: {
               placeholder: "Type something...",
