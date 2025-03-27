@@ -34,6 +34,9 @@ export function jsonSchemaFileChangeMethod({
   if (isEqual(updatedFileContent.value, fileContent.value))
     updateNavButtonConfig();
 
+  if (jsonFormInstance.value.editor.validate().length > 0)
+    updateNavButtonConfig("Save", true);
+
   debouncedPostMessage(message, "*");
   init = false;
 }
