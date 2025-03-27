@@ -6,7 +6,6 @@ import {
 } from "@/helpers";
 import { createAndUpdateFile, getFileDetails } from "@/api";
 
-export const AUTOMATION = globalThis.automation || [];
 const getLoaderMsg = (type, path, currentMsg) => {
   const messages = {
     add: "Creating File",

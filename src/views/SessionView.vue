@@ -17,8 +17,8 @@ import {
   FileUploader,
   DuplicateFile,
 } from "@/components/file";
-import { encodeString, AUTOMATION } from "@/helpers/index.js";
-import { BASE_PATH } from "@/enums";
+import { encodeString } from "@/helpers/index.js";
+import { BASE_PATH, AUTOMATION } from "@/enums";
 import "@eox/jsonform";
 import Automation from "@/components/session/Automation.vue";
 import find from "lodash/find";

@@ -1,4 +1,4 @@
-export const SCHEMA_MAP = globalThis.schemaMap || [];
+import { SCHEMA_MAP } from "@/enums";
 
 export function getSchemaDetails(inputPath) {
   for (const schema of SCHEMA_MAP) {

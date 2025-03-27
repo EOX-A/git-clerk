@@ -10,4 +10,4 @@ export { default as isValidFormJSON } from "./is-valid-form-json";
 export { default as updateSchemaDefaults } from "./update-schema-default";
 export { getSchemaDetails, getFileSchema } from "./schema";
 export { stringifyIfNeeded, parseIfNeeded } from "./transform";
-export { AUTOMATION, runAutomation } from "./automation";
+export { runAutomation } from "./automation";
