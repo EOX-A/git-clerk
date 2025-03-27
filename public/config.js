@@ -262,5 +262,5 @@ globalThis.gitClerkConfig = {
   schemaMap,
   automation,
   customEditorInterfaces,
-  generateEnums
+  generateEnums,
 };
