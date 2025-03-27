@@ -31,16 +31,16 @@ function isUrl(str) {
 }
 
 // GitHub config
-globalThis.ghConfig = {
+const ghConfig = {
   githubRepo: undefined,
   githubAuthToken: undefined,
 };
 
 // Base path at which the apps runs
-globalThis.basePath = "/";
+const basePath = "/";
 
 // Define JSON schemas for specific file paths
-globalThis.schemaMap = [
+const schemaMap = [
   {
     path: "/foo/bar/<id>.json",
     schema: {
@@ -96,7 +96,7 @@ globalThis.schemaMap = [
 ];
 
 // Define automations to perform multiple steps for the user
-globalThis.automation = [
+const automation = [
   {
     title: "Bootstrap File",
     description:
@@ -233,7 +233,7 @@ class MyEditor extends JSONEditor.AbstractEditor {
 }
 
 // Custom editor is used for fields with the format "custom-input"
-globalThis.customEditorInterfaces = {
+const customEditorInterfaces = {
   "custom-input": {
     type: "string",
     format: "custom-input",
@@ -243,7 +243,7 @@ globalThis.customEditorInterfaces = {
 
 // Get file details of file in the same branch and use details of it
 // to populate an enum field
-globalThis.generateEnums = async (
+const generateEnums = async (
   schemaMetaDetails,
   session,
   cache,
@@ -254,4 +254,13 @@ globalThis.generateEnums = async (
     schemaMetaDetails.schema.properties.dynamicEnum.items.enum = [readme.path];
   }
   return schemaMetaDetails;
+};
+
+globalThis.gitClerkConfig = {
+  ghConfig,
+  basePath,
+  schemaMap,
+  automation,
+  customEditorInterfaces,
+  generateEnums
 };
