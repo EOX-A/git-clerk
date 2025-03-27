@@ -52,6 +52,11 @@ export async function createSession(octokit, githubConfig, prName) {
     } catch (error) {
       if (error.status === 404) {
         fork = await octokit.rest.repos.createFork({ owner, repo });
+        if (fork.name !== repo) {
+          throw new Error(
+            "Already a fork from original repo exist in your account.",
+          );
+        }
         loaderText.innerText = "Creating fork repo...";
 
         // Wait for fork creation to be available and try 3 times
