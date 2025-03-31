@@ -17,7 +17,7 @@ As soon as the user starts a new "Session" (PR), a fork for the target repositor
 The configuration for git-clerk is done via the [config file](/public/config.js). In its most basic form, the config looks like this:
 
 ```js
-globalThis.ghConfig = {
+const ghConfig = {
   // The target repository to create PRs against
   githubRepo: "EOX-A/git-clerk-demo",
   // The current user's GH token, either as string or (sync or asyn) function
@@ -25,6 +25,11 @@ globalThis.ghConfig = {
   // Example: githubAuthToken: () => new Promise((resolve) => fetch("<endpoint>").then(() => resolve(token))),
   githubAuthToken: "ghp_myGithubAuthToken",
 };
+
+globalThis.gitClerkConfig = {
+  ghConfig,
+  ...
+}
 ```
 
 You can also set this GitHub config via an `.env` variable, by passing `GITCLERK_GITHUB_TOKEN` and `GITCLERK_GITHUB_REPO` see e.g. [.env.example](./.env.examle).
@@ -38,7 +43,7 @@ With the `schemaMap`, one can configure which file paths are associated with whi
 #### `schema` and `url`
 
 ```js
-globalThis.schemaMap = [
+const schemaMap = [
   {
     path: "/folder-a/file.json",
     schema: {
@@ -57,6 +62,11 @@ globalThis.schemaMap = [
   },
   [...]
 ]
+
+globalThis.gitClerkConfig = {
+  schemaMap,
+  ...
+}
 ```
 
 In this example, editing the file `/folder-a/file.json` loads the corresponding JSON schema passed via the `schema` property, whereas editing a file with the pattern `/folder-a/<id>/file.json` loads the corresponding JSON schema `https://my-schema-site.com/schemas/folder-a/schema.json`.
@@ -66,7 +76,7 @@ In this example, editing the file `/folder-a/file.json` loads the corresponding 
 Additionally to providing a JSON schema, the form can also be autofilled with initial content:
 
 ```js
-globalThis.schemaMap = [
+const schemaMap = [
   {
     path: "/folder-a/file.json",
     schema: {
@@ -84,6 +94,11 @@ globalThis.schemaMap = [
   },
   [...]
 ]
+
+globalThis.gitClerkConfig = {
+  schemaMap,
+  ...
+}
 ```
 
 In this example, the generated form will automatically fill the value "bar" into the `foo` field.
@@ -93,7 +108,7 @@ In this example, the generated form will automatically fill the value "bar" into
 By default, the entire JSON structure is stored (commited) as a JSON file. But one can also specify a specific property which should be stored in the file instead. This is handy when e.g. editing markdown or yaml files:
 
 ```js
-globalThis.schemaMap = [
+const schemaMap = [
   {
     path: "/folder-a/file.md",
     schema: {
@@ -110,6 +125,11 @@ globalThis.schemaMap = [
   },
   [...]
 ]
+
+globalThis.gitClerkConfig = {
+  schemaMap,
+  ...
+}
 ```
 
 In this example, the markdown content of `foo` is commited as file `file.md`.
@@ -125,7 +145,7 @@ An example for this setup can be seen in [here](https://github.com/EOX-A/git-cle
 Sometimes, multiple edits need to be done together (e.g. creating a file in the correct folder structure, putting initial content in that file, and referencing this file in a third file). To make users' lives easier, git-clerk offers automations:
 
 ```js
-globalThis.automation = [
+const automation = [
   {
     title: "Bootstrap Product", // displayed in the UI as button
     description: "Bootstrap a new file with the correct folder structure and ID.", // displayed in the UI as description for this automation
@@ -173,6 +193,11 @@ globalThis.automation = [
   },
   [...]
 ]
+
+globalThis.gitClerkConfig = {
+  automation,
+  ...
+}
 ```
 
 Automations can also be triggered via url query parameters. For this, the automation requires an additional `id` parameter which is referenced by the `automation` query parameter.
@@ -189,7 +214,7 @@ Example:
 Git Clerk uses `eox-jsonform` to render applications based on different JSON editor schemas. `eox-jsonform` contains editor interfaces for each of the primitive JSON types as well as a few other specialized ones. For those who need custom editor interfaces/inputs based on any custom format, they can easily build their own custom editor interface using `JSON Editor`'s `AbstractEditor` class inside `config.js`.
 
 ```js
-globalThis.customEditorInterfaces = {
+const customEditorInterfaces = {
   "some-format-key-name": {
     type: "string", // Any data type for the custom editor
     format: "any-custom-format", // Any custom format key
@@ -197,16 +222,21 @@ globalThis.customEditorInterfaces = {
     ... // Add any key values as per your business logic
   },
 };
+
+globalThis.gitClerkConfig = {
+  customEditorInterfaces,
+  ...
+}
 ```
 
 An example for this setup can be seen in [here](https://github.com/EOX-A/git-clerk/blob/bfa157a499ef488fe3b0ebf3215fb9368d552496/public/config.js#L680).
 
 ### Generate Enums
 
-Sometimes input enums need to be dynamically fetched from an API or other data source to update the schema. `globalThis.generateEnums` inside `config.js` allows users to fetch dynamic enums according to their business logic and then return the updated schema.
+Sometimes input enums need to be dynamically fetched from an API or other data source to update the schema. `globalThis.gitClerkConfig.generateEnums` inside `config.js` allows users to fetch dynamic enums according to their business logic and then return the updated schema.
 
 ```js
-globalThis.generateEnums = async (
+const generateEnums = async (
   schemaMetaDetails,
   session,
   cache,
@@ -214,6 +244,11 @@ globalThis.generateEnums = async (
 ) => {
   ... // Fetch dynamic enums based on the API and update the schemaMetaDetails
   return schemaMetaDetails; // Return the updated schema based on the processing above
+}
+
+globalThis.gitClerkConfig = {
+  generateEnums,
+  ...
 }
 ```
 
