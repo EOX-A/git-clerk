@@ -18,10 +18,11 @@ import {
   fileDetails,
   schemaFromURL,
 } from "@/api/file";
+import { GIT_CLERK_CONFIG } from "@/enums";
 
 export async function initOctokit() {
   try {
-    const config = globalThis.ghConfig;
+    const config = globalThis.ghConfig || GIT_CLERK_CONFIG.ghConfig;
     let configAuth;
     let configRepo;
 
@@ -54,6 +55,7 @@ export async function initOctokit() {
       ...config,
       config: { auth, username, repo: repoName },
     };
+    globalThis.gitClerkConfig.ghConfig = globalThis.ghConfig;
 
     const octokit = new Octokit({ auth });
 

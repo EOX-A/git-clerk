@@ -1,46 +1,24 @@
-import "https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/dist/jsoneditor.js";
+/**
+ * Example config file showing all functionalities of git-clerk
+ * It includes all configuration options, plus some helper functions
+ * 
+ * Please refer to README.md for documentation of available configuration options
+ */
 
-function decoderBase64ToUtf8(str) {
-  return decodeURIComponent(escape(atob(str)));
-}
-
-function isBase64(str) {
-  // Regular expression to match base64 pattern
-  const base64Regex =
-    /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
-
-  try {
-    if (!base64Regex.test(str)) return false;
-
-    const decoded = atob(str);
-    const encoded = btoa(decoded);
-
-    return encoded === str;
-  } catch (err) {
-    return false;
-  }
-}
-
-function isUrl(str) {
-  try {
-    new URL(str);
-    return true;
-  } catch {
-    return false;
-  }
-}
+// Importing JSONEditor.AbstractEditor for Custom editor "MyEditor" (see below)
+import { AbstractEditor } from "https://cdn.jsdelivr.net/npm/@json-editor/json-editor@latest/src/editor.js/+esm";
 
 // GitHub config
-globalThis.ghConfig = {
+const ghConfig = {
   githubRepo: undefined,
   githubAuthToken: undefined,
 };
 
 // Base path at which the apps runs
-globalThis.basePath = "/";
+const basePath = "/";
 
 // Define JSON schemas for specific file paths
-globalThis.schemaMap = [
+const schemaMap = [
   {
     path: "/foo/bar/<id>.json",
     schema: {
@@ -96,7 +74,7 @@ globalThis.schemaMap = [
 ];
 
 // Define automations to perform multiple steps for the user
-globalThis.automation = [
+const automation = [
   {
     title: "Bootstrap File",
     description:
@@ -167,6 +145,36 @@ globalThis.automation = [
           let content = input.content;
           let error = null;
 
+          function decoderBase64ToUtf8(str) {
+            return decodeURIComponent(escape(atob(str)));
+          }
+
+          function isBase64(str) {
+            // Regular expression to match base64 pattern
+            const base64Regex =
+              /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/;
+
+            try {
+              if (!base64Regex.test(str)) return false;
+
+              const decoded = atob(str);
+              const encoded = btoa(decoded);
+
+              return encoded === str;
+            } catch (err) {
+              return false;
+            }
+          }
+
+          function isUrl(str) {
+            try {
+              new URL(str);
+              return true;
+            } catch {
+              return false;
+            }
+          }
+
           try {
             if (isUrl(content)) {
               const response = await fetch(content);
@@ -197,7 +205,7 @@ globalThis.automation = [
 // Custom editor
 // Example of how to build a custom editor can be found here:
 // https://github.com/json-editor/json-editor/blob/master/docs/custom-editor.html
-class MyEditor extends JSONEditor.AbstractEditor {
+class MyEditor extends AbstractEditor {
   register() {
     super.register();
   }
@@ -233,7 +241,7 @@ class MyEditor extends JSONEditor.AbstractEditor {
 }
 
 // Custom editor is used for fields with the format "custom-input"
-globalThis.customEditorInterfaces = {
+const customEditorInterfaces = {
   "custom-input": {
     type: "string",
     format: "custom-input",
@@ -243,7 +251,7 @@ globalThis.customEditorInterfaces = {
 
 // Get file details of file in the same branch and use details of it
 // to populate an enum field
-globalThis.generateEnums = async (
+const generateEnums = async (
   schemaMetaDetails,
   session,
   cache,
@@ -254,4 +262,13 @@ globalThis.generateEnums = async (
     schemaMetaDetails.schema.properties.dynamicEnum.items.enum = [readme.path];
   }
   return schemaMetaDetails;
+};
+
+globalThis.gitClerkConfig = {
+  ghConfig,
+  basePath,
+  schemaMap,
+  automation,
+  customEditorInterfaces,
+  generateEnums,
 };
