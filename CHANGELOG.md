@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.7.0](https://github.com/EOX-A/git-clerk/compare/v1.6.0...v1.7.0) (2025-04-01)
+
+
+### Features
+
+* Unified all the `globalThis` git clerk related config to `globalThis.gitClerkConfig` ([#123](https://github.com/EOX-A/git-clerk/issues/123)) ([b023e20](https://github.com/EOX-A/git-clerk/commit/b023e2042cd6384992bd97dbb903ddb805598034))
+
+
+### Bug Fixes
+
+* Toast message when a duplicate fork from same origin account exist ([#122](https://github.com/EOX-A/git-clerk/issues/122)) ([3bcb0e3](https://github.com/EOX-A/git-clerk/commit/3bcb0e31d52a92204a58f37b93623bda9d2241be))
+
 ## [1.6.0](https://github.com/EOX-A/git-clerk/compare/v1.5.2...v1.6.0) (2025-03-20)
 
 
