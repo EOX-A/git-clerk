@@ -14,22 +14,17 @@ As soon as the user starts a new "Session" (PR), a fork for the target repositor
 
 ## Configuration
 
-The configuration for git-clerk is done via the [config file](/public/config.js). In its most basic form, the config looks like this:
+The configuration for git-clerk is done via the [config file](/public/config.js) by setting `globalThis.gitClerkConfig`. In its most basic form, the config looks like this:
 
 ```js
-const ghConfig = {
+globalThis.gitClerkConfig = {
   // The target repository to create PRs against
   githubRepo: "EOX-A/git-clerk-demo",
-  // The current user's GH token, either as string or (sync or asyn) function
+  // The current user's GH token, either as string or (sync or async) function
   // Example: githubAuthToken: () => "<github-token>"
   // Example: githubAuthToken: () => new Promise((resolve) => fetch("<endpoint>").then(() => resolve(token))),
   githubAuthToken: "ghp_myGithubAuthToken",
 };
-
-globalThis.gitClerkConfig = {
-  ghConfig,
-  ...
-}
 ```
 
 You can also set this GitHub config via an `.env` variable, by passing `GITCLERK_GITHUB_TOKEN` and `GITCLERK_GITHUB_REPO` see e.g. [.env.example](./.env.examle).
@@ -43,30 +38,29 @@ With the `schemaMap`, one can configure which file paths are associated with whi
 #### `schema` and `url`
 
 ```js
-const schemaMap = [
-  {
-    path: "/folder-a/file.json",
-    schema: {
-      title: "my-schema",
-      type: "object",
-      properties: {
-        foo: {
-          type: "string"
+globalThis.gitClerkConfig = {
+  [...]
+  schemaMap: [
+    {
+      path: "/folder-a/file.json",
+      schema: {
+        title: "my-schema",
+        type: "object",
+        properties: {
+          foo: {
+            type: "string"
+          }
         }
       }
-    }
-  },
-  {
-    path: "/folder-a/<id>/file.json",
-    url: "https://my-schema-site.com/schemas/folder-a/schema.json",
-  },
+    },
+    {
+      path: "/folder-a/<id>/file.json",
+      url: "https://my-schema-site.com/schemas/folder-a/schema.json",
+    },
+    [...]
+  ],
   [...]
-]
-
-globalThis.gitClerkConfig = {
-  schemaMap,
-  ...
-}
+};
 ```
 
 In this example, editing the file `/folder-a/file.json` loads the corresponding JSON schema passed via the `schema` property, whereas editing a file with the pattern `/folder-a/<id>/file.json` loads the corresponding JSON schema `https://my-schema-site.com/schemas/folder-a/schema.json`.
@@ -76,29 +70,28 @@ In this example, editing the file `/folder-a/file.json` loads the corresponding 
 Additionally to providing a JSON schema, the form can also be autofilled with initial content:
 
 ```js
-const schemaMap = [
-  {
-    path: "/folder-a/file.json",
-    schema: {
-      title: "my-schema",
-      type: "object",
-      properties: {
-        foo: {
-          type: "string"
+globalThis.gitClerkConfig = {
+  [...]
+  schemaMap: [
+    {
+      path: "/folder-a/file.json",
+      schema: {
+        title: "my-schema",
+        type: "object",
+        properties: {
+          foo: {
+            type: "string"
+          }
         }
+      },
+      content: {
+        foo: "bar"
       }
     },
-    content: {
-      foo: "bar"
-    }
-  },
+    [...]
+  ],
   [...]
-]
-
-globalThis.gitClerkConfig = {
-  schemaMap,
-  ...
-}
+};
 ```
 
 In this example, the generated form will automatically fill the value "bar" into the `foo` field.
@@ -108,28 +101,27 @@ In this example, the generated form will automatically fill the value "bar" into
 By default, the entire JSON structure is stored (commited) as a JSON file. But one can also specify a specific property which should be stored in the file instead. This is handy when e.g. editing markdown or yaml files:
 
 ```js
-const schemaMap = [
-  {
-    path: "/folder-a/file.md",
-    schema: {
-      title: "my-schema",
-      type: "object",
-      properties: {
-        foo: {
-          type: "string",
-          format: "markdown"
-        }
-      }
-    },
-    output: "foo"
-  },
-  [...]
-]
-
 globalThis.gitClerkConfig = {
-  schemaMap,
-  ...
-}
+  [...]
+  schemaMap: [
+    {
+      path: "/folder-a/file.md",
+      schema: {
+        title: "my-schema",
+        type: "object",
+        properties: {
+          foo: {
+            type: "string",
+            format: "markdown"
+          }
+        }
+      },
+      output: "foo"
+    },
+    [...]
+  ],
+  [...]
+};
 ```
 
 In this example, the markdown content of `foo` is commited as file `file.md`.
@@ -145,59 +137,58 @@ An example for this setup can be seen in [here](https://github.com/EOX-A/git-cle
 Sometimes, multiple edits need to be done together (e.g. creating a file in the correct folder structure, putting initial content in that file, and referencing this file in a third file). To make users' lives easier, git-clerk offers automations:
 
 ```js
-const automation = [
-  {
-    title: "Bootstrap Product", // displayed in the UI as button
-    description: "Bootstrap a new file with the correct folder structure and ID.", // displayed in the UI as description for this automation
-    inputSchema: { // the input form when the user selects this automation
-      type: "object",
-      properties: {
-        id: {
-          type: "string",
-          minLength: 1
-        },
-        title: {
-          type: "string",
-          minLength: 1
-        }
-      },
-      required: ["id", "title"]
-    },
-    steps: [ // the steps the automation will perform
-      {
-        type: "add", // add a file
-        path: (input) => `/products/${input.id}/collection.json`, // references the above defined form output property "id"
-        content: (input) => ({ id: input.id, title: input.title }) // sets the content of the added file, referencing "id" and "title" from the form
-      },
-      {
-        type: "edit", // edits an existing file
-        path: "/products/catalog.json",
-        transform: (content, input) => { // transforms the content of an existing file
-          content.links = [
-            ...content.links,
-            {
-              rel: "child",
-              href: `./${input.id}/collection.json`,
-              type: "application/json",
-              title: input.title
-            },
-          ]
-          return content
-        }
-      },
-      {
-        type: "navigate", // navigates to the specified file and opens the editing view
-        path: (input) => `/products/${input.id}/collection.json`
-      }
-    ]
-  },
-  [...]
-]
-
 globalThis.gitClerkConfig = {
-  automation,
-  ...
-}
+  [...]
+  automation: [
+    {
+      title: "Bootstrap Product", // displayed in the UI as button
+      description: "Bootstrap a new file with the correct folder structure and ID.", // displayed in the UI as description for this automation
+      inputSchema: { // the input form when the user selects this automation
+        type: "object",
+        properties: {
+          id: {
+            type: "string",
+            minLength: 1
+          },
+          title: {
+            type: "string",
+            minLength: 1
+          }
+        },
+        required: ["id", "title"]
+      },
+      steps: [ // the steps the automation will perform
+        {
+          type: "add", // add a file
+          path: (input) => `/products/${input.id}/collection.json`, // references the above defined form output property "id"
+          content: (input) => ({ id: input.id, title: input.title }) // sets the content of the added file, referencing "id" and "title" from the form
+        },
+        {
+          type: "edit", // edits an existing file
+          path: "/products/catalog.json",
+          transform: (content, input) => { // transforms the content of an existing file
+            content.links = [
+              ...content.links,
+              {
+                rel: "child",
+                href: `./${input.id}/collection.json`,
+                type: "application/json",
+                title: input.title
+              },
+            ]
+            return content
+          }
+        },
+        {
+          type: "navigate", // navigates to the specified file and opens the editing view
+          path: (input) => `/products/${input.id}/collection.json`
+        }
+      ]
+    },
+    [...]
+  ],
+  [...]
+};
 ```
 
 Automations can also be triggered via url query parameters. For this, the automation requires an additional `id` parameter which is referenced by the `automation` query parameter.
@@ -214,19 +205,18 @@ Example:
 Git Clerk uses `eox-jsonform` to render applications based on different JSON editor schemas. `eox-jsonform` contains editor interfaces for each of the primitive JSON types as well as a few other specialized ones. For those who need custom editor interfaces/inputs based on any custom format, they can easily build their own custom editor interface using `JSON Editor`'s `AbstractEditor` class inside `config.js`.
 
 ```js
-const customEditorInterfaces = {
-  "some-format-key-name": {
-    type: "string", // Any data type for the custom editor
-    format: "any-custom-format", // Any custom format key
-    func: CustomEditorInterface, // Build any custom editor using `JSON Editor`'s `AbstractEditor` class
-    ... // Add any key values as per your business logic
-  },
-};
-
 globalThis.gitClerkConfig = {
-  customEditorInterfaces,
-  ...
-}
+  [...]
+  customEditorInterfaces: {
+    "some-format-key-name": {
+      type: "string", // Any data type for the custom editor
+      format: "any-custom-format", // Any custom format key
+      func: CustomEditorInterface, // Build any custom editor using `JSON Editor`'s `AbstractEditor` class
+      ... // Add any key values as per your business logic
+    },
+  },
+  [...]
+};
 ```
 
 An example for this setup can be seen in [here](https://github.com/EOX-A/git-clerk/blob/bfa157a499ef488fe3b0ebf3215fb9368d552496/public/config.js#L680).
@@ -236,20 +226,19 @@ An example for this setup can be seen in [here](https://github.com/EOX-A/git-cle
 Sometimes input enums need to be dynamically fetched from an API or other data source to update the schema. `globalThis.gitClerkConfig.generateEnums` inside `config.js` allows users to fetch dynamic enums according to their business logic and then return the updated schema.
 
 ```js
-const generateEnums = async (
-  schemaMetaDetails,
-  session,
-  cache,
-  { getFileDetails },
-) => {
-  ... // Fetch dynamic enums based on the API and update the schemaMetaDetails
-  return schemaMetaDetails; // Return the updated schema based on the processing above
-}
-
 globalThis.gitClerkConfig = {
-  generateEnums,
-  ...
-}
+  [...]
+  generateEnums: async (
+    schemaMetaDetails,
+    session,
+    cache,
+    { getFileDetails },
+  ) => {
+    ... // Fetch dynamic enums based on the API and update the schemaMetaDetails
+    return schemaMetaDetails; // Return the updated schema based on the processing above
+  },
+  [...]
+};
 ```
 
 An example for this setup can be seen in [here](https://github.com/EOX-A/git-clerk/blob/bfa157a499ef488fe3b0ebf3215fb9368d552496/public/config.js#L724).
@@ -273,7 +262,7 @@ npm install
 #### Compile and Hot-Reload for Development
 
 ```sh
-npm run dev
+npm start
 ```
 
 #### Compile and Minify for Production
