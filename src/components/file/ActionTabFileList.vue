@@ -4,6 +4,7 @@ import {
   ReviewSession,
   GithubSession,
   RenameSession,
+  DeployedPreview,
 } from "@/components/session/index.js";
 import { defineProps, inject } from "vue";
 import OctIcon from "@/components/global/OctIcon.vue";
@@ -70,19 +71,11 @@ const props = defineProps({
       :callBack="props.updateDetails"
       class="ml-5"
     />
-
-    <v-btn
-      v-if="session.deployedPreviewLink"
-      target="_blank"
-      variant="outlined"
-      color="black"
-      prepend-icon="mdi-arrow-top-right"
+    <DeployedPreview
+      :url="props.session.deployedPreviewLink"
+      tab
       size="x-large"
-      :href="session.deployedPreviewLink"
-      class="border-black border-md border-opacity-100"
-    >
-      Deployed Preview
-    </v-btn>
+    />
     <v-spacer></v-spacer>
     <v-chip
       class="mx-5 pl-5 session-icon ga-2"
