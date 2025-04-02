@@ -28,3 +28,7 @@ export const SCHEMA_MAP =
   globalThis.schemaMap || GIT_CLERK_CONFIG.schemaMap || [];
 export const AUTOMATION =
   globalThis.automation || GIT_CLERK_CONFIG.automation || [];
+export const DEPLOYED_PREVIEW_LINK =
+  globalThis.deployedPreviewLink ||
+  GIT_CLERK_CONFIG.deployedPreviewLink ||
+  (() => null);

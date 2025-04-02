@@ -22,7 +22,7 @@ const props = defineProps({
 <template>
   <div
     v-if="session"
-    class="bg-surface-light px-0 px-sm-5 py-4 d-flex align-center ga-1 action-tab position-relative"
+    class="bg-surface-light px-0 px-sm-5 py-4 d-flex align-center ga-2 action-tab position-relative"
     :class="{ 'flex-row-reverse': $vuetify?.display?.smAndDown }"
   >
     <GithubSession :url="props.session.html_url" tab size="x-large" />
@@ -70,6 +70,19 @@ const props = defineProps({
       :callBack="props.updateDetails"
       class="ml-5"
     />
+
+    <v-btn
+      v-if="session.deployedPreviewLink"
+      target="_blank"
+      variant="outlined"
+      color="black"
+      prepend-icon="mdi-arrow-top-right"
+      size="x-large"
+      :href="session.deployedPreviewLink"
+      class="border-black border-md border-opacity-100"
+    >
+      Deployed Preview
+    </v-btn>
     <v-spacer></v-spacer>
     <v-chip
       class="mx-5 pl-5 session-icon ga-2"
