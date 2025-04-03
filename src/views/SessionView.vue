@@ -11,6 +11,12 @@ import OctIcon from "@/components/global/OctIcon.vue";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import ListPagination from "@/components/global/ListPagination.vue";
 import { ActionTabSession } from "@/components/session";
+import {
+  DeleteFile,
+  CreateFile,
+  FileUploader,
+  DuplicateFile,
+} from "@/components/file";
 import { encodeString } from "@/helpers/index.js";
 import { BASE_PATH, AUTOMATION } from "@/enums";
 import "@eox/jsonform";

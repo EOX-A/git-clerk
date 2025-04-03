@@ -11,7 +11,7 @@ const props = defineProps({
     type: Object,
     default: {},
   },
-  updateDetails: Function,
+  callBack: Function,
 });
 </script>
 
@@ -21,12 +21,12 @@ const props = defineProps({
     tab
     size="x-large"
     :session="props.session"
-    :callBack="props.updateDetails"
+    :callBack="props.callBack"
   />
   <RenameSession
     tab
     size="x-large"
     :session="props.session"
-    :callBack="props.updateDetails"
+    :callBack="props.callBack"
   />
 </template>

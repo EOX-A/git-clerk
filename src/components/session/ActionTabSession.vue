@@ -20,7 +20,7 @@ const props = defineProps({
 });
 
 const enableSessionActionList = computed(() => {
-  return width.value <= 1440;
+  return width.value <= 1280;
 });
 </script>
 
