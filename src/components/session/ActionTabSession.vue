@@ -31,6 +31,7 @@ const props = defineProps({
           size="x-large"
           text="Session"
           color="blue-grey-darken-4"
+          id="session-action-menu"
         ></v-btn>
       </template>
       <v-list>

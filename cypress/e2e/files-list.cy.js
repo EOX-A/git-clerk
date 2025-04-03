@@ -150,6 +150,7 @@ describe("Files list related tests", () => {
 
   it("Rename session", () => {
     sessionName = true;
+    cy.get("#session-action-menu").click();
     cy.get("#rename-session-btn").click();
     cy.get(".rename-session-container .v-field__input")
       .clear()
@@ -196,6 +197,7 @@ describe("Files list related tests", () => {
   // Test file deletion functionality
   it("Delete a file", () => {
     cy.wait("@getFiles");
+    cy.get("#session-action-menu").click();
     cy.get(".files-view")
       .eq(files.length - 1)
       .find(".v-btn .mdi-delete-outline")
