@@ -243,6 +243,23 @@ globalThis.gitClerkConfig = {
 
 An example for this setup can be seen in [here](https://github.com/EOX-A/git-clerk/blob/bfa157a499ef488fe3b0ebf3215fb9368d552496/public/config.js#L724).
 
+### Deployed Preview Link
+
+Git Clerk allows you to configure a custom preview link for your sessions/PRs. This can be useful if you have preview deployments set up for your sessions. You can configure this by adding a `deployedPreviewLink` function to your config that returns the preview URL:
+
+```js
+globalThis.gitClerkConfig = {
+  [...]
+  deployedPreviewLink: (sessionDetail) => {
+    const { number } = sessionDetail;
+    return `https://deploy-preview-url.com/${number}/preview.html`;
+  }
+  [...]
+};
+```
+
+An example for this setup can be seen in [here](https://github.com/EOX-A/git-clerk/blob/31bf8b16b5749f55c072bedd16e5eb68ae715f15/public/config.js#L267).
+
 ## Development
 
 ### Recommended IDE Setup

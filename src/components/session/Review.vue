@@ -61,7 +61,7 @@ const reviewSessionHandle = async () => {
 };
 
 function checkDisableStatus(newProps) {
-  if (!newProps.session) return true;
+  if (!newProps.session || newProps.session.changed_files === 0) return true;
   return (
     !newProps.session.draft ||
     newProps.session.state === "closed" ||
@@ -86,14 +86,14 @@ watch([props], ([newProps]) => {
   >
     <v-btn
       :color="props.color"
-      :icon="props.tab ? false : 'mdi-file-document-edit'"
+      :icon="$vuetify.display.mdAndUp ? false : 'mdi-file-document-edit'"
       prepend-icon="mdi-file-document-edit"
       :size="props.size"
       :text="props.text"
       :variant="props.variant"
       :disabled="disabled"
       @click="reviewSession = props.session"
-      :class="`text-capitalize font-weight-medium ${props.class} d-none d-sm-flex`"
+      :class="`text-capitalize font-weight-medium ${props.class}`"
     >
       <template v-if="error" v-slot:append>
         <v-icon

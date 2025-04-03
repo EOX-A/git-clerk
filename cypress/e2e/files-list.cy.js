@@ -150,6 +150,7 @@ describe("Files list related tests", () => {
 
   it("Rename session", () => {
     sessionName = true;
+    cy.get("#session-action-menu").click();
     cy.get("#rename-session-btn").click();
     cy.get(".rename-session-container .v-field__input")
       .clear()
@@ -196,6 +197,7 @@ describe("Files list related tests", () => {
   // Test file deletion functionality
   it("Delete a file", () => {
     cy.wait("@getFiles");
+    cy.get("#session-action-menu").click();
     cy.get(".files-view")
       .eq(files.length - 1)
       .find(".v-btn .mdi-delete-outline")
@@ -300,5 +302,19 @@ describe("Files list related tests", () => {
       .eq(files.length)
       .find(".main-title")
       .should("have.text", "hello/code.js");
+  });
+
+  // Test to check if deployed preview link exists
+  it("Check preview link exists", () => {
+    cy.window().then((win) => {
+      expect(win.gitClerkConfig).to.exist;
+      cy.get("#deployed-preview-btn").should(($btn) => {
+        if (win.gitClerkConfig.deployedPreviewLink)
+          expect($btn.attr("href")).to.equal(
+            win.gitClerkConfig.deployedPreviewLink(pullsData),
+          );
+        else expect($btn).to.not.exist;
+      });
+    });
   });
 });

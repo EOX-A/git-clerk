@@ -1,7 +1,7 @@
 /**
  * Example config file showing all functionalities of git-clerk
  * It includes all configuration options, plus some helper functions
- * 
+ *
  * Please refer to README.md for documentation of available configuration options
  */
 
@@ -264,6 +264,11 @@ const generateEnums = async (
   return schemaMetaDetails;
 };
 
+const deployedPreviewLink = (sessionDetail) => {
+  const { number, base } = sessionDetail;
+  return `https://github.com/${base.repo.owner.login}/${base.repo.name}/pull/${number}`;
+};
+
 globalThis.gitClerkConfig = {
   ghConfig,
   basePath,
@@ -271,4 +276,5 @@ globalThis.gitClerkConfig = {
   automation,
   customEditorInterfaces,
   generateEnums,
+  deployedPreviewLink,
 };

@@ -1,4 +1,8 @@
-import { getCheckStatus, getSessionReviewStatus } from "@/api/index.js";
+import {
+  getCheckStatus,
+  getSessionReviewStatus,
+  getSessionDetails,
+} from "@/api/index.js";
 import { CHECK_STATUS } from "@/enums.js";
 
 export default async function checkStatusMethod(
@@ -8,7 +12,8 @@ export default async function checkStatusMethod(
 ) {
   for (const [index, session] of sessions.value.entries()) {
     if (currPage === updatedPage.value) {
-      const check = await getCheckStatus(session.number);
+      const sessionDetails = await getSessionDetails(session.number);
+      const check = await getCheckStatus(sessionDetails.head.sha);
       const requestedChanges = await getSessionReviewStatus(session.number);
 
       if (currPage === updatedPage.value && sessions.value) {
@@ -16,6 +21,7 @@ export default async function checkStatusMethod(
           ...session,
           requested_changes: requestedChanges,
           check: CHECK_STATUS[check],
+          changed_files: sessionDetails.changed_files,
         };
       }
     }
