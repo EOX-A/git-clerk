@@ -87,6 +87,7 @@ const enableSessionActionList = computed(() => {
       class="ml-5"
     />
     <DeployedPreview
+      v-if="props.session.deployedPreviewLink"
       :url="props.session.deployedPreviewLink"
       tab
       size="x-large"

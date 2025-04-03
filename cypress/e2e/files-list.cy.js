@@ -301,4 +301,18 @@ describe("Files list related tests", () => {
       .find(".main-title")
       .should("have.text", "hello/code.js");
   });
+
+  // Test to check if deployed preview link exists
+  it("Check preview link exists", () => {
+    cy.window().then((win) => {
+      expect(win.gitClerkConfig).to.exist;
+      cy.get("#deployed-preview-btn").should(($btn) => {
+        if (win.gitClerkConfig.deployedPreviewLink)
+          expect($btn.attr("href")).to.equal(
+            win.gitClerkConfig.deployedPreviewLink(pullsData),
+          );
+        else expect($btn).to.not.exist;
+      });
+    });
+  });
 });

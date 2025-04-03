@@ -35,6 +35,7 @@ const props = defineProps({
     :size="size"
     variant="outlined"
     class="d-flex d-md-none border-black border-md border-opacity-100"
+    id="deployed-preview-btn"
   ></v-btn>
   <!-- Non-mobile -->
   <v-btn
@@ -47,6 +48,7 @@ const props = defineProps({
     :text="text"
     variant="outlined"
     class="text-capitalize font-weight-medium d-none d-md-flex border-black border-md border-opacity-100"
+    id="deployed-preview-btn"
   ></v-btn>
 
   <!-- Tab = false -->
@@ -58,6 +60,7 @@ const props = defineProps({
     prepend-icon="mdi-arrow-top-right"
     :title="props.tooltip"
     class="d-flex d-sm-none"
+    id="deployed-preview-btn"
   ></v-list-item>
   <!-- Non-mobile -->
   <Tooltip :text="props.tooltip">
@@ -70,6 +73,7 @@ const props = defineProps({
       :size="size"
       variant="text"
       class="d-none d-sm-flex"
+      id="deployed-preview-btn"
     ></v-btn>
   </Tooltip>
 </template>
