@@ -54,17 +54,6 @@ const closeRename = () => {
 
 <template>
   <!-- Tab = true -->
-  <!-- Mobile -->
-  <v-btn
-    v-if="tab"
-    color="blue-grey-darken-4"
-    icon="mdi-pencil-outline"
-    :size="size"
-    variant="text"
-    :disabled="disabled"
-    @click="renameSession = session"
-    class="d-flex d-sm-none"
-  ></v-btn>
   <!-- Non-mobile -->
   <v-btn
     v-if="tab"
@@ -75,7 +64,7 @@ const closeRename = () => {
     variant="text"
     :disabled="disabled"
     @click="renameSession = session"
-    class="text-capitalize font-weight-medium d-none d-sm-flex"
+    class="text-capitalize font-weight-medium d-flex"
     id="rename-session-btn"
   ></v-btn>
 

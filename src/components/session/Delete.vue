@@ -41,18 +41,6 @@ const disabled = props.session.state === "closed";
 
 <template>
   <!-- Tab = true -->
-  <!-- Mobile -->
-  <v-btn
-    v-if="tab"
-    color="blue-grey-darken-4"
-    icon="mdi-delete-outline"
-    :size="size"
-    variant="text"
-    :disabled="disabled"
-    @click="deleteSession = session"
-    class="d-flex d-sm-none"
-  ></v-btn>
-  <!-- Non-mobile -->
   <v-btn
     v-if="tab"
     color="blue-grey-darken-4"
@@ -62,7 +50,7 @@ const disabled = props.session.state === "closed";
     variant="text"
     :disabled="disabled"
     @click="deleteSession = session"
-    class="text-capitalize font-weight-medium d-none d-sm-flex"
+    class="text-capitalize font-weight-medium d-flex"
   ></v-btn>
 
   <!-- Tab = false -->

@@ -1,5 +1,6 @@
 import { RequestError } from "octokit";
 import { querySession } from "@/helpers";
+import { DEPLOYED_PREVIEW_LINK } from "@/enums";
 
 export default function querySessionDetailsMethod(sessionDetails, props) {
   if (sessionDetails instanceof RequestError) {
@@ -9,7 +10,10 @@ export default function querySessionDetailsMethod(sessionDetails, props) {
     };
     props.navPaginationItems.value = [props.navPaginationItems.value[0]];
   } else {
-    props.session.value = querySession(sessionDetails);
+    props.session.value = {
+      ...querySession(sessionDetails),
+      deployedPreviewLink: DEPLOYED_PREVIEW_LINK(sessionDetails),
+    };
     props.navPaginationItems.value = [
       props.navPaginationItems.value[0],
       {

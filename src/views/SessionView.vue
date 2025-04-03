@@ -10,13 +10,7 @@ import {
 import OctIcon from "@/components/global/OctIcon.vue";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import ListPagination from "@/components/global/ListPagination.vue";
-import {
-  DeleteFile,
-  ActionTabFileList,
-  CreateFile,
-  FileUploader,
-  DuplicateFile,
-} from "@/components/file";
+import { ActionTabSession } from "@/components/session";
 import { encodeString } from "@/helpers/index.js";
 import { BASE_PATH, AUTOMATION } from "@/enums";
 import "@eox/jsonform";
@@ -134,7 +128,7 @@ const handleAutomationClose = () => {
     :open="addNewFileDialog"
     :session
   />
-  <ActionTabFileList :session :updateDetails />
+  <ActionTabSession :session :updateDetails />
 
   <v-list class="py-0">
     <!-- file's list -->

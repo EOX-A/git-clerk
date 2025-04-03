@@ -1,15 +1,15 @@
 <script setup>
 import {
-  DeleteSession,
   ReviewSession,
-  GithubSession,
-  RenameSession,
   DeployedPreview,
+  ActionSessions,
 } from "@/components/session/index.js";
-import { defineProps, inject } from "vue";
+import { defineProps, inject, computed } from "vue";
+import { useDisplay } from "vuetify";
 import OctIcon from "@/components/global/OctIcon.vue";
 
 const snackbar = inject("set-snackbar");
+const { width } = useDisplay();
 
 const props = defineProps({
   session: {
@@ -18,24 +18,37 @@ const props = defineProps({
   },
   updateDetails: Function,
 });
+
+const enableSessionActionList = computed(() => {
+  return width.value <= 1440;
+});
 </script>
 
 <template>
   <div
     v-if="session"
     class="bg-surface-light px-0 px-sm-5 py-4 d-flex align-center ga-2 action-tab position-relative"
-    :class="{ 'flex-row-reverse': $vuetify?.display?.smAndDown }"
   >
-    <GithubSession :url="props.session.html_url" tab size="x-large" />
-    <DeleteSession
-      tab
-      size="x-large"
-      :session="props.session"
-      :callBack="props.updateDetails"
-    />
-    <RenameSession
-      tab
-      size="x-large"
+    <v-menu v-if="enableSessionActionList" :close-on-content-click="false">
+      <template v-slot:activator="{ props }">
+        <v-btn
+          v-bind="props"
+          prepend-icon="mdi-dots-vertical"
+          variant="text"
+          size="x-large"
+          text="Sessions"
+          color="blue-grey-darken-4"
+        ></v-btn>
+      </template>
+      <v-list>
+        <ActionSessions
+          :session="props.session"
+          :callBack="props.updateDetails"
+        />
+      </v-list>
+    </v-menu>
+    <ActionSessions
+      v-else
       :session="props.session"
       :callBack="props.updateDetails"
     />
@@ -43,12 +56,14 @@ const props = defineProps({
       v-if="props.session.state !== 'closed'"
       inset
       vertical
-      class="d-none d-sm-flex"
     ></v-divider>
     <v-btn
       v-if="!props.session.draft && props.session.state !== 'closed'"
       target="_blank"
       color="primary"
+      :icon="
+        $vuetify.display.mdAndUp ? false : 'mdi-dots-horizontal-circle-outline'
+      "
       prepend-icon="mdi-dots-horizontal-circle-outline"
       size="x-large"
       variant="flat"
@@ -78,7 +93,7 @@ const props = defineProps({
     />
     <v-spacer></v-spacer>
     <v-chip
-      class="mx-5 pl-5 session-icon ga-2"
+      class="mx-5 pl-5 session-icon ga-2 d-sm-flex d-none"
       size="large"
       label
       :color="session.status.color"

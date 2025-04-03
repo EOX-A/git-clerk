@@ -33,8 +33,8 @@ const props = defineProps({
     color="blue-grey-darken-4"
     icon="mdi-arrow-top-right"
     :size="size"
-    variant="text"
-    class="d-flex d-sm-none"
+    variant="outlined"
+    class="d-flex d-md-none border-black border-md border-opacity-100"
   ></v-btn>
   <!-- Non-mobile -->
   <v-btn
@@ -46,7 +46,7 @@ const props = defineProps({
     :size="size"
     :text="text"
     variant="outlined"
-    class="text-capitalize font-weight-medium d-none d-sm-flex border-black border-md border-opacity-100"
+    class="text-capitalize font-weight-medium d-none d-md-flex border-black border-md border-opacity-100"
   ></v-btn>
 
   <!-- Tab = false -->
