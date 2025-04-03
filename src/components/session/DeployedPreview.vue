@@ -1,9 +1,16 @@
 <script setup>
-import { defineProps } from "vue";
-import Tooltip from "@/components/global/Tooltip.vue";
+import { defineProps, ref, watch } from "vue";
 
 const props = defineProps({
   url: String,
+  files: {
+    type: Number,
+    default: 0,
+  },
+  state: {
+    type: String,
+    default: "open",
+  },
   tab: {
     type: Boolean,
     default: false,
@@ -21,10 +28,21 @@ const props = defineProps({
     default: "View deployed preview",
   },
 });
+
+const disabled = ref(checkDisableStatus(props));
+
+function checkDisableStatus(newProps) {
+  return Boolean(
+    newProps.files === 0 || !newProps.url || newProps.state === "closed",
+  );
+}
+
+watch([props], ([newProps]) => {
+  disabled.value = checkDisableStatus(newProps);
+});
 </script>
 
 <template>
-  <!-- Tab = true -->
   <!-- Mobile -->
   <v-btn
     v-if="tab"
@@ -36,6 +54,7 @@ const props = defineProps({
     variant="outlined"
     class="d-flex d-md-none border-black border-md border-opacity-100"
     id="deployed-preview-btn"
+    :disabled="disabled"
   ></v-btn>
   <!-- Non-mobile -->
   <v-btn
@@ -49,31 +68,6 @@ const props = defineProps({
     variant="outlined"
     class="text-capitalize font-weight-medium d-none d-md-flex border-black border-md border-opacity-100"
     id="deployed-preview-btn"
+    :disabled="disabled"
   ></v-btn>
-
-  <!-- Tab = false -->
-  <!-- Mobile -->
-  <v-list-item
-    v-if="!tab"
-    :href="url"
-    target="_blank"
-    prepend-icon="mdi-arrow-top-right"
-    :title="props.tooltip"
-    class="d-flex d-sm-none"
-    id="deployed-preview-btn"
-  ></v-list-item>
-  <!-- Non-mobile -->
-  <Tooltip :text="props.tooltip">
-    <v-btn
-      v-if="!tab"
-      :href="url"
-      target="_blank"
-      color="blue-grey-darken-4"
-      icon="mdi-arrow-top-right"
-      :size="size"
-      variant="text"
-      class="d-none d-sm-flex"
-      id="deployed-preview-btn"
-    ></v-btn>
-  </Tooltip>
 </template>

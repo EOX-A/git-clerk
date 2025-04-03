@@ -61,7 +61,7 @@ const reviewSessionHandle = async () => {
 };
 
 function checkDisableStatus(newProps) {
-  if (!newProps.session) return true;
+  if (!newProps.session || newProps.session.changed_files === 0) return true;
   return (
     !newProps.session.draft ||
     newProps.session.state === "closed" ||

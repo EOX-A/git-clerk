@@ -4,12 +4,8 @@ import {
   DeployedPreview,
   ActionSessions,
 } from "@/components/session/index.js";
-import { defineProps, inject, computed } from "vue";
-import { useDisplay } from "vuetify";
+import { defineProps } from "vue";
 import OctIcon from "@/components/global/OctIcon.vue";
-
-const snackbar = inject("set-snackbar");
-const { width } = useDisplay();
 
 const props = defineProps({
   session: {
@@ -18,10 +14,6 @@ const props = defineProps({
   },
   updateDetails: Function,
 });
-
-const enableSessionActionList = computed(() => {
-  return width.value <= 1280;
-});
 </script>
 
 <template>
@@ -29,14 +21,15 @@ const enableSessionActionList = computed(() => {
     v-if="session"
     class="bg-surface-light px-0 px-sm-5 py-4 d-flex align-center ga-2 action-tab position-relative"
   >
-    <v-menu v-if="enableSessionActionList" :close-on-content-click="false">
+    <v-menu :close-on-content-click="false">
       <template v-slot:activator="{ props }">
         <v-btn
           v-bind="props"
           prepend-icon="mdi-dots-vertical"
+          append-icon="mdi-chevron-down"
           variant="text"
           size="x-large"
-          text="Sessions"
+          text="Session"
           color="blue-grey-darken-4"
         ></v-btn>
       </template>
@@ -47,16 +40,7 @@ const enableSessionActionList = computed(() => {
         />
       </v-list>
     </v-menu>
-    <ActionSessions
-      v-else
-      :session="props.session"
-      :callBack="props.updateDetails"
-    />
-    <v-divider
-      v-if="props.session.state !== 'closed'"
-      inset
-      vertical
-    ></v-divider>
+    <v-divider inset vertical></v-divider>
     <v-btn
       v-if="!props.session.draft && props.session.state !== 'closed'"
       target="_blank"
@@ -72,11 +56,7 @@ const enableSessionActionList = computed(() => {
       disabled
     ></v-btn>
     <ReviewSession
-      v-else-if="
-        props.session.draft &&
-        props.session.check &&
-        props.session.state !== 'closed'
-      "
+      v-else-if="props.session.draft && props.session.check"
       tab
       text="Submit for Review"
       size="x-large"
@@ -87,8 +67,9 @@ const enableSessionActionList = computed(() => {
       class="ml-5"
     />
     <DeployedPreview
-      v-if="props.session.deployedPreviewLink"
       :url="props.session.deployedPreviewLink"
+      :files="props.session.changed_files"
+      :state="props.session.state"
       tab
       size="x-large"
     />

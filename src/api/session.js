@@ -267,18 +267,8 @@ export async function reviewSession(
   }
 }
 
-export async function checkStatus(octokit, githubConfig, sessionNumber) {
+export async function checkStatus(octokit, githubConfig, sha) {
   try {
-    const {
-      data: {
-        head: { sha },
-      },
-    } = await octokit.rest.pulls.get({
-      owner: githubConfig.username,
-      repo: githubConfig.repo,
-      pull_number: sessionNumber,
-    });
-
     const response = await octokit.rest.checks.listForRef({
       owner: githubConfig.username,
       repo: githubConfig.repo,
