@@ -78,7 +78,7 @@ onMounted(async () => {
     {
       title: "Add/Edit File Manually",
       description:
-        "Create a file by entering the file path and details manually.",
+        "Create or edit a file by entering the file path and details manually.",
       icon: "mdi-plus",
       func: () => addNewFileClick(true),
     },
