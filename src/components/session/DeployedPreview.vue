@@ -2,10 +2,9 @@
 import { defineProps, ref, watch } from "vue";
 
 const props = defineProps({
-  url: String,
-  files: {
-    type: Number,
-    default: 0,
+  session: {
+    type: Object,
+    default: {},
   },
   state: {
     type: String,
@@ -33,7 +32,10 @@ const disabled = ref(checkDisableStatus(props));
 
 function checkDisableStatus(newProps) {
   return Boolean(
-    newProps.files === 0 || !newProps.url || newProps.state === "closed",
+    newProps.session.changed_files === 0 ||
+      newProps.session.commits < 2 ||
+      !newProps.session.deployedPreviewLink ||
+      newProps.state === "closed",
   );
 }
 
@@ -46,7 +48,7 @@ watch([props], ([newProps]) => {
   <!-- Mobile -->
   <v-btn
     v-if="tab"
-    :href="url"
+    :href="session.deployedPreviewLink"
     target="_blank"
     color="blue-grey-darken-4"
     icon="mdi-arrow-top-right"
@@ -59,7 +61,7 @@ watch([props], ([newProps]) => {
   <!-- Non-mobile -->
   <v-btn
     v-if="tab"
-    :href="url"
+    :href="session.deployedPreviewLink"
     target="_blank"
     color="blue-grey-darken-4"
     prepend-icon="mdi-arrow-top-right"

@@ -34,7 +34,7 @@ const props = defineProps({
           id="session-action-menu"
         ></v-btn>
       </template>
-      <v-list>
+      <v-list class="pa-0">
         <ActionSessions
           :session="props.session"
           :callBack="props.updateDetails"
@@ -68,8 +68,8 @@ const props = defineProps({
       class="ml-5"
     />
     <DeployedPreview
-      :url="props.session.deployedPreviewLink"
-      :files="props.session.changed_files"
+      v-if="props.session.deployedPreviewLink"
+      :session="props.session"
       :state="props.session.state"
       tab
       size="x-large"

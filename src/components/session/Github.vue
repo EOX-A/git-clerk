@@ -28,6 +28,8 @@ const props = defineProps({
   <!-- Non-mobile -->
   <v-btn
     v-if="tab"
+    rounded="0"
+    block
     :href="url"
     target="_blank"
     color="blue-grey-darken-4"
@@ -35,7 +37,7 @@ const props = defineProps({
     :size="size"
     :text="text"
     variant="text"
-    class="text-capitalize font-weight-medium d-flex"
+    class="text-capitalize font-weight-medium d-flex justify-start"
   ></v-btn>
 
   <!-- Tab = false -->

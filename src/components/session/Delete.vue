@@ -43,6 +43,8 @@ const disabled = props.session.state === "closed";
   <!-- Tab = true -->
   <v-btn
     v-if="tab"
+    rounded="0"
+    block
     color="blue-grey-darken-4"
     prepend-icon="mdi-delete-outline"
     :size="size"
@@ -50,7 +52,7 @@ const disabled = props.session.state === "closed";
     variant="text"
     :disabled="disabled"
     @click="deleteSession = session"
-    class="text-capitalize font-weight-medium d-flex"
+    class="text-capitalize font-weight-medium d-flex justify-start"
   ></v-btn>
 
   <!-- Tab = false -->

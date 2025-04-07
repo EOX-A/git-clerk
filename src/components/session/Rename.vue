@@ -57,6 +57,8 @@ const closeRename = () => {
   <!-- Non-mobile -->
   <v-btn
     v-if="tab"
+    rounded="0"
+    block
     color="blue-grey-darken-4"
     prepend-icon="mdi-pencil-outline"
     :size="size"
@@ -64,7 +66,7 @@ const closeRename = () => {
     variant="text"
     :disabled="disabled"
     @click="renameSession = session"
-    class="text-capitalize font-weight-medium d-flex"
+    class="text-capitalize font-weight-medium d-flex justify-start"
     id="rename-session-btn"
   ></v-btn>
 
