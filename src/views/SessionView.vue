@@ -201,7 +201,7 @@ const handleAutomationClose = () => {
       @click:action="addNewFileClick"
       class="my-16 py-16 empty-state"
     >
-      <template v-slot:actions>
+      <template v-slot:actions v-if="!session.closed_at">
         <v-container class="pa-4 pt-10">
           <v-row class="justify-center">
             <!-- Dynamic automation buttons -->
