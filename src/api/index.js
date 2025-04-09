@@ -106,9 +106,9 @@ export async function reviewBySessionNumber(sessionNumber, pullRequestId) {
   return reviewSession(octokit, githubConfig, sessionNumber, pullRequestId);
 }
 
-export async function getCheckStatus(sessionNumber) {
+export async function getCheckStatus(sha) {
   const { githubConfig, octokit } = useOctokitStore();
-  return checkStatus(octokit, githubConfig, sessionNumber);
+  return checkStatus(octokit, githubConfig, sha);
 }
 
 export async function getSessionReviewStatus(sessionNumber) {

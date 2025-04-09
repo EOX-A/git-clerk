@@ -25,20 +25,11 @@ const props = defineProps({
 
 <template>
   <!-- Tab = true -->
-  <!-- Mobile -->
-  <v-btn
-    v-if="tab"
-    :href="url"
-    target="_blank"
-    color="blue-grey-darken-4"
-    icon="mdi-github"
-    :size="size"
-    variant="text"
-    class="d-flex d-sm-none"
-  ></v-btn>
   <!-- Non-mobile -->
   <v-btn
     v-if="tab"
+    rounded="0"
+    block
     :href="url"
     target="_blank"
     color="blue-grey-darken-4"
@@ -46,7 +37,7 @@ const props = defineProps({
     :size="size"
     :text="text"
     variant="text"
-    class="text-capitalize font-weight-medium d-none d-sm-flex"
+    class="text-capitalize font-weight-medium d-flex justify-start"
   ></v-btn>
 
   <!-- Tab = false -->
