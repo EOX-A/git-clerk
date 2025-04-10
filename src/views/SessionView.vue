@@ -196,7 +196,13 @@ const handleAutomationClose = () => {
       v-else
       action-icon="mdi-pencil-plus"
       :image="`${BASE_PATH}img/files.svg`"
-      text="No changes found in this session. You can start a new file to add updates."
+      :text="`No changes found in this session.
+        ${
+          !session.closed_at
+            ? 'You can start a new file to add updates.'
+            : 'You can start a new session to add updates.'
+        }
+      `"
       title="No changes found in this session"
       @click:action="addNewFileClick"
       class="my-16 py-16 empty-state"
