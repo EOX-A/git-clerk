@@ -79,20 +79,22 @@ onMounted(async () => {
       title: "Add/Edit File Manually",
       description:
         "Create or edit a file by entering the file path and details manually.",
-      icon: "mdi-plus",
+      icon: "mdi-pencil-plus-outline",
       func: () => addNewFileClick(true),
+      manual: true,
     },
     {
       title: "Upload Files",
       description: "Upload files from your computer.",
       icon: "mdi-upload",
       func: () => (uploadFilesDialog.value = true),
+      manual: true,
     },
   ];
 
   navButtonConfig.value = {
-    text: "Add/Edit File",
-    icon: "mdi-pencil-plus",
+    text: "Files",
+    icon: "mdi-pencil-outline",
     list: suggestionList.value.map((suggestion) => ({
       ...suggestion,
       click: () => suggestion.func?.() || handleAutomationClick(suggestion),

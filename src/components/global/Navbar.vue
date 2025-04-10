@@ -3,6 +3,7 @@ import { inject } from "vue";
 
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
+import Tooltip from "@/components/global/Tooltip.vue";
 </script>
 <template>
   <v-app-bar class="navbar" color="primary" app>
@@ -57,32 +58,61 @@ const navPaginationItems = inject("set-nav-pagination-items");
             color="white"
             v-bind="props"
             :disabled="navButtonConfig.disabled"
-            >{{ navButtonConfig.text }}</v-btn
           >
+            {{ navButtonConfig.text }}
+            <v-icon
+              v-if="navButtonConfig.list"
+              size="x-large"
+              class="ml-1"
+              icon="mdi-menu-down"
+            ></v-icon>
+          </v-btn>
         </template>
-        <v-list class="pa-2 button-list" density="compact">
-          <v-list-item
-            v-for="(item, index) in navButtonConfig.list"
-            :prepend-icon="item.icon"
-            :title="item.title"
-            :key="index"
-            @click="item.click"
-            class="rounded-lg m-0"
-            color="grey-lighten-4"
-            active-color="grey-lighten-3"
-            hover
-          >
-            <template v-slot:prepend>
-              <v-icon size="20">
-                {{ item.icon }}
-              </v-icon>
-            </template>
-            <template v-slot:title>
-              <span class="text-body-2 font-weight-regular">{{
-                item.title
-              }}</span>
-            </template>
-          </v-list-item>
+        <v-list class="pa-0 button-list" density="compact">
+          <template :key="index" v-for="(item, index) in navButtonConfig.list">
+            <v-divider
+              thickness="1"
+              class="mx-3"
+              v-if="
+                item.manual &&
+                index > 0 &&
+                !navButtonConfig.list[index - 1].manual
+              "
+            ></v-divider>
+            <v-list-item
+              :title="item.title"
+              @click="item.click"
+              class="m-0 py-3"
+              active-color="grey-lighten-3"
+              hover
+            >
+              <template v-slot:title>
+                <div class="d-flex align-center ga-3">
+                  <v-icon
+                    :icon="item.icon"
+                    color="surface-darker"
+                    class="opacity-100 flex items-end justify-center"
+                    size="20"
+                  >
+                  </v-icon>
+                  <span class="text-surface-darker opacity-100 text-body-2">{{
+                    item.title
+                  }}</span>
+                </div>
+              </template>
+              <template v-if="item.description && !item.manual" v-slot:append>
+                <Tooltip location="bottom" :text="item.description">
+                  <v-icon
+                    icon="mdi-information-outline"
+                    color="surface-darker ml-4"
+                    class="opacity-100"
+                    size="20"
+                  >
+                  </v-icon>
+                </Tooltip>
+              </template>
+            </v-list-item>
+          </template>
         </v-list>
       </v-menu>
     </v-col>

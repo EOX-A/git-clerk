@@ -76,7 +76,7 @@ const schemaMap = [
 // Define automations to perform multiple steps for the user
 const automation = [
   {
-    title: "Bootstrap File",
+    title: "Initialise Bootstrap File",
     description:
       "Bootstrap a new file with a pre-defined folder structure and ID.",
     inputSchema: {
