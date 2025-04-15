@@ -5,6 +5,7 @@ export async function sessionsList(
   octokit,
   githubConfig,
   currPage,
+  sessionSelectedState,
   cache,
   creator,
 ) {
@@ -12,23 +13,105 @@ export async function sessionsList(
     // TODO: Remove once next level (file editor view) is amde
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
-    const response = await octokit.rest.search.issuesAndPullRequests({
-      q: `repo:${githubConfig.username}/${githubConfig.repo} is:pr author:${creator}`,
-      per_page: 10,
-      page: currPage,
+    const query = `
+      query($queryString: String!, $perPage: Int!) {
+        search(query: $queryString, type: ISSUE, first: $perPage, after: null) {
+          pageInfo {
+            hasNextPage
+            endCursor
+            hasPreviousPage
+            startCursor
+          }
+    			issueCount
+          nodes {
+            ... on PullRequest {
+              id
+              title
+              url
+              state
+              number
+              changedFiles
+              createdAt
+              updatedAt
+              isDraft
+              author {
+                login
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const response = await octokit.graphql(query, {
+      queryString: `repo:${githubConfig.username}/${githubConfig.repo} is:pr author:${creator} state:${sessionSelectedState}`,
+      perPage: 10,
+      currentPage: currPage,
       headers: {
         ...(cache ? {} : { "If-None-Match": "" }),
       },
     });
 
-    const totalPages = getTotalPages(response.headers.link) || currPage;
+    const hasNextPage = response.search.pageInfo.hasNextPage;
+    const items = response.search.nodes.map((node) => {
+      return {
+        ...node,
+        draft: node.isDraft,
+        state: node.state.toLowerCase(),
+        changed_files: node.changedFiles,
+        created_at: node.createdAt,
+        updated_at: node.updatedAt,
+      };
+    });
+    const totalPages = hasNextPage ? currPage + 1 : currPage;
 
     return {
-      data: response.data.items,
+      data: items,
       total: totalPages,
       curr: currPage,
-      next: totalPages === currPage ? null : currPage + 1,
+      next: hasNextPage ? currPage + 1 : null,
       prev: currPage > 1 ? currPage - 1 : null,
+    };
+  } catch (error) {
+    return error;
+  }
+}
+
+export async function numberOfOpenClosedSessions(
+  octokit,
+  githubConfig,
+  cache,
+  creator,
+) {
+  try {
+    const query = `
+      query($queryString: String!) {
+        search(query: $queryString, type: ISSUE, first: 1, after: null) {
+    			issueCount
+        }
+      }
+    `;
+
+    const openResponse = await octokit.graphql(query, {
+      queryString: `repo:${githubConfig.username}/${githubConfig.repo} is:pr author:${creator} state:open`,
+      headers: {
+        ...(cache ? {} : { "If-None-Match": "" }),
+      },
+    });
+
+    const closedResponse = await octokit.graphql(query, {
+      queryString: `repo:${githubConfig.username}/${githubConfig.repo} is:pr author:${creator} state:closed`,
+      headers: {
+        ...(cache ? {} : { "If-None-Match": "" }),
+      },
+    });
+
+    const openCount = openResponse.search.issueCount;
+    const closedCount = closedResponse.search.issueCount;
+
+    return {
+      open: openCount,
+      closed: closedCount,
     };
   } catch (error) {
     return error;

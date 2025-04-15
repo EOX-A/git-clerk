@@ -1,7 +1,11 @@
 <script setup>
 import OctIcon from "@/components/global/OctIcon.vue";
 import { h, inject, onMounted, ref } from "vue";
-import { getSessionsList, createSessionByName } from "@/api/index.js";
+import {
+  getSessionsList,
+  createSessionByName,
+  getNumberOfOpenClosedSessions,
+} from "@/api/index.js";
 import {
   querySessionsListMethod,
   checkStatusMethod,
@@ -9,7 +13,7 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import Tooltip from "@/components/global/Tooltip.vue";
 import { useLoader } from "@/helpers/index.js";
-import { ActionList } from "@/components/session";
+import { ActionList, ActionTabSessions } from "@/components/session";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import ListPagination from "@/components/global/ListPagination.vue";
 import EmptyState from "@/components/global/EmptyState.vue";
@@ -23,6 +27,8 @@ const totalPage = ref(0);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
 const deleteSession = ref(false);
 const reviewSession = ref(false);
+const sessionSelectedState = ref("open");
+const numberOfOpenClosedSessions = ref(null);
 const createNewSession = ref(false);
 const newSessionName = ref("");
 const loader = ref({});
@@ -34,9 +40,21 @@ const navPaginationItems = inject("set-nav-pagination-items");
 const updateSessionsList = async (cache = false) => {
   sessions.value = null;
   window.scrollTo({ top: 0 });
-  const sessionsList = await getSessionsList(page.value, cache);
+  const sessionsList = await getSessionsList(
+    page.value,
+    sessionSelectedState.value,
+    cache,
+  );
+  numberOfOpenClosedSessions.value = await getNumberOfOpenClosedSessions(cache);
+  const currSessionState = sessionSelectedState.value;
   querySessionsListMethod(sessionsList, { snackbar, sessions, totalPage });
-  checkStatusMethod(sessions, sessionsList.curr, page);
+  checkStatusMethod(
+    sessions,
+    sessionsList.curr,
+    page,
+    currSessionState,
+    sessionSelectedState,
+  );
 };
 
 const createNewSessionClick = () => {
@@ -111,6 +129,13 @@ const onPageChange = async (newPage) => {
   await router.push({ query: { ...route.query, page: newPage } });
   await updateSessionsList(true);
 };
+
+const changeSessionState = async (newState) => {
+  if (sessionSelectedState.value !== newState) {
+    sessionSelectedState.value = newState;
+    await updateSessionsList(true);
+  }
+};
 </script>
 
 <template>
@@ -152,6 +177,12 @@ const onPageChange = async (newPage) => {
     </v-row>
   </div>
 
+  <ActionTabSessions
+    :sessionSelectedState="sessionSelectedState"
+    :changeSessionState="changeSessionState"
+    :numberOfOpenClosedSessions="numberOfOpenClosedSessions"
+  />
+
   <v-list class="py-0">
     <!-- Session's list -->
     <v-list-item
@@ -159,7 +190,7 @@ const onPageChange = async (newPage) => {
       v-for="session in sessions"
       :key="session.title"
       :title="session.title"
-      :class="`sessions-view bg-white py-4 border-b-thin ${session.state === 'closed' && 'session-closed'}`"
+      :class="`sessions-view bg-white py-4 border-b-thin`"
     >
       <template v-slot:title>
         <div class="d-flex align-start px-5">
@@ -216,7 +247,7 @@ const onPageChange = async (newPage) => {
     </v-list-item>
 
     <!-- Placeholder for session's list -->
-    <ListPlaceholder v-else-if="sessions === null" />
+    <ListPlaceholder :button="3" v-else-if="sessions === null" />
 
     <EmptyState
       v-else
@@ -231,14 +262,3 @@ const onPageChange = async (newPage) => {
 
   <ListPagination v-if="sessions" :page :totalPage :onPageChange />
 </template>
-
-<style>
-.sessions-view.session-closed {
-  background: var(--v-bg-surface-light);
-  opacity: 0.4;
-}
-.sessions-view.session-closed:hover {
-  background: white;
-  opacity: 1;
-}
-</style>

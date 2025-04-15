@@ -8,6 +8,7 @@ import {
   sessionReviewStatus,
   sessionDetails,
   renameSession,
+  numberOfOpenClosedSessions,
 } from "@/api/session";
 import useOctokitStore from "@/stores/octokit";
 import {
@@ -75,12 +76,27 @@ export async function getLoginData() {
   return data;
 }
 
-export async function getSessionsList(currPage, cache) {
+export async function getSessionsList(
+  currPage,
+  sessionSelectedState = "open",
+  cache,
+) {
   const { githubConfig, githubUserData, octokit } = useOctokitStore();
   return sessionsList(
     octokit,
     githubConfig,
     currPage,
+    sessionSelectedState,
+    cache,
+    githubUserData.login,
+  );
+}
+
+export async function getNumberOfOpenClosedSessions(cache) {
+  const { githubConfig, githubUserData, octokit } = useOctokitStore();
+  return numberOfOpenClosedSessions(
+    octokit,
+    githubConfig,
     cache,
     githubUserData.login,
   );
