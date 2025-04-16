@@ -39,7 +39,7 @@ const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 
 const updateSessionsList = async (cache = false) => {
-  sessions.value = null; 
+  sessions.value = null;
   window.scrollTo({ top: 0 });
   const sessionsList = await getSessionsList(
     pageInfo.value,
@@ -47,11 +47,11 @@ const updateSessionsList = async (cache = false) => {
     sessionSelectedState.value,
     cache,
   );
-  cursorPosition.value = null
+  cursorPosition.value = null;
   numberOfOpenClosedSessions.value = await getNumberOfOpenClosedSessions(cache);
   const currSessionState = sessionSelectedState.value;
   querySessionsListMethod(sessionsList, { snackbar, sessions, pageInfo });
-  const currPath = route.path
+  const currPath = route.path;
   checkStatusMethod(
     sessions,
     sessionsList.pageInfo,
@@ -59,7 +59,7 @@ const updateSessionsList = async (cache = false) => {
     currSessionState,
     sessionSelectedState,
     currPath,
-    route
+    route,
   );
 };
 

@@ -13,7 +13,7 @@ export default async function checkStatusMethod(
   currSessionState,
   sessionSelectedState,
   currPath,
-  route
+  route,
 ) {
   for (const [index, session] of sessions.value.entries()) {
     if (
