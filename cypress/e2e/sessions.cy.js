@@ -3,6 +3,50 @@ import searchIssues from "../fixtures/search-issues:get.json";
 import ghConfig from "../fixtures/gh-config.json";
 import user from "../fixtures/user:get.json";
 import { GITHUB_HOST } from "../enums";
+import sessionsList from "../fixtures/sessions-list:graphql.json";
+import openCount from "../fixtures/open-count:graphql.json";
+import closeCount from "../fixtures/closed-count:graphql.json";
+
+const mockQuery = {
+  issueCount: `
+      query($queryString: String!) {
+        search(query: $queryString, type: ISSUE, first: 1, after: null) {
+    			issueCount
+        }
+      }
+    `,
+  closed: `repo:${ghConfig.username}/${ghConfig.repo} is:pr author:${user.login} state:closed`,
+  open: `repo:${ghConfig.username}/${ghConfig.repo} is:pr author:${user.login} state:open`,
+  sessionList: `
+      query($queryString: String!, $perPage: Int!, $after: String, $before: String) {
+        search(query: $queryString, type: ISSUE, first: $perPage, before: $before, after: $after) {
+          pageInfo {
+            hasNextPage
+            endCursor
+            hasPreviousPage
+            startCursor
+          }
+    			issueCount
+          nodes {
+            ... on PullRequest {
+              id
+              title
+              url
+              state
+              number
+              changedFiles
+              createdAt
+              updatedAt
+              isDraft
+              author {
+                login
+              }
+            }
+          }
+        }
+      }
+    `,
+};
 
 // Define a dummy session object for testing
 const dummySession = {
@@ -21,8 +65,6 @@ let reviewSession = false;
 
 describe("Session list related tests", () => {
   beforeEach(() => {
-    // Visit the home page before all tests
-    cy.visit("/");
     // Intercept GET request for searching issues/PRs
     cy.intercept(
       {
@@ -50,23 +92,65 @@ describe("Session list related tests", () => {
         method: "POST",
         url: `${GITHUB_HOST}/graphql`,
       },
-      {
-        data: {
-          markPullRequestReadyForReview: {
-            pullRequest: {
-              title: "dummy-title",
+      (req) => {
+        if (
+          req.body.query === mockQuery.sessionList &&
+          req.body.variables.queryString === mockQuery.open
+        ) {
+          let tempData = sessionsList;
+          if (deleteSession) {
+            tempData.search.nodes.shift();
+          } else if (reviewSession) {
+            tempData.search.nodes[1].isDraft = false;
+            reviewSession = false;
+          }
+          req.reply({
+            data: tempData,
+          });
+        } else if (
+          req.body.query === mockQuery.issueCount &&
+          req.body.variables.queryString === mockQuery.open
+        ) {
+          let tempData = openCount;
+          if (deleteSession) {
+            tempData.search.issueCount = 3;
+          }
+          req.reply({
+            data: tempData,
+          });
+        } else if (
+          req.body.query === mockQuery.issueCount &&
+          req.body.variables.queryString === mockQuery.closed
+        ) {
+          let tempData = closeCount;
+          if (deleteSession) {
+            tempData.search.issueCount = 1;
+            deleteSession = false;
+          }
+          req.reply({
+            data: tempData,
+          });
+        } else {
+          req.reply({
+            data: {
+              markPullRequestReadyForReview: {
+                pullRequest: {
+                  title: "dummy-title",
+                },
+              },
             },
-          },
-        },
+          });
+        }
       },
     ).as("postGraphql");
   });
 
   // Test that sessions list renders correctly
   it("Render sessions list", () => {
+    cy.visit("/");
     cy.get(".sessions-view", { timeout: 12000 }).should(
       "have.length",
-      searchIssues.total_count,
+      sessionsList.search.issueCount,
     );
   });
 
@@ -75,7 +159,7 @@ describe("Session list related tests", () => {
     cy.get(".main-title").each((titleElement, index) => {
       cy.wrap(titleElement).should(
         "have.text",
-        searchIssues.items[index].title,
+        sessionsList.search.nodes[index].title,
       );
     });
   });
@@ -83,12 +167,14 @@ describe("Session list related tests", () => {
   // Test session deletion functionality
   it("Delete a session", () => {
     deleteSession = true;
-    cy.get(".sessions-view").eq(1).find(".v-btn .mdi-delete-outline").click();
+    cy.get(".sessions-view").eq(0).find(".v-btn .mdi-delete-outline").click();
     cy.get(".v-card-actions .v-btn.bg-red").click();
-    cy.wait("@getSearchIssues");
-    cy.get(".session-closed .main-title").should(
+    cy.wait("@postGraphql");
+    cy.wait("@postGraphql");
+    cy.wait("@postGraphql");
+    cy.get(".closed-session-chip").should(
       "have.text",
-      searchIssues.items[0].title,
+      closeCount.search.issueCount + 1,
     );
   });
 
@@ -96,10 +182,13 @@ describe("Session list related tests", () => {
   it("Review a session", () => {
     reviewSession = true;
     cy.get(".sessions-view")
-      .eq(2)
+      .eq(1)
       .find(".v-btn .mdi-file-document-edit")
       .click();
     cy.get(".v-card-actions .v-btn.bg-success", { timeout: 30000 }).click();
+    cy.wait("@postGraphql");
+    cy.wait("@postGraphql");
+    cy.wait("@postGraphql");
     // Verify review indicators appear
     cy.get(".sessions-view")
       .eq(1)

@@ -9,7 +9,7 @@ import {
 } from "@/methods/session-view/index.js";
 import OctIcon from "@/components/global/OctIcon.vue";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
-import ListPagination from "@/components/global/ListPagination.vue";
+import OffsetPagination from "@/components/global/OffsetPagination.vue";
 import { ActionTabSession } from "@/components/session";
 import {
   DeleteFile,
@@ -254,7 +254,7 @@ const handleAutomationClose = () => {
     </v-empty-state>
   </v-list>
 
-  <ListPagination v-if="fileChangesList" :page :totalPage :onPageChange />
+  <OffsetPagination v-if="fileChangesList" :page :totalPage :onPageChange />
 
   <FileUploader
     :open="uploadFilesDialog"

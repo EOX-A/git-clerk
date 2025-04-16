@@ -1,0 +1,64 @@
+{
+  "search": {
+    "pageInfo": {
+      "hasNextPage": true,
+      "endCursor": "Y3Vyc29yOjEw",
+      "hasPreviousPage": false,
+      "startCursor": "Y3Vyc29yOjE="
+    },
+    "issueCount": 4,
+    "nodes": [
+      {
+        "id": "PR_foo_bar_1",
+        "title": "Foo: Bar 1",
+        "url": "https://api.github.com/repos/ESA-EarthCODE/Hello-World/issues/23",
+        "state": "OPEN",
+        "number": 1,
+        "changedFiles": 0,
+        "createdAt": "2024-12-23T06:07:57Z",
+        "updatedAt": "2024-12-23T06:07:57Z",
+        "isDraft": true,
+        "closedAt": null,
+        "author": {
+          "login": "srijitcoder"
+        }
+      },
+      {
+        "id": "PR_foo_bar_2",
+        "title": "Foo: Bar 2",
+        "url": "https://api.github.com/repos/ESA-EarthCODE/Hello-World/issues/23",
+        "state": "OPEN",
+        "number": 2,
+        "changedFiles": 1,
+        "createdAt": "2024-12-24T07:07:57Z",
+        "updatedAt": "2024-12-24T07:07:57Z",
+        "isDraft": true,
+        "closedAt": null
+      },
+      {
+        "id": "PR_foo_bar_3",
+        "title": "Foo: Bar 3",
+        "url": "https://api.github.com/repos/ESA-EarthCODE/Hello-World/issues/23",
+        "state": "OPEN",
+        "number": 3,
+        "changedFiles": 6,
+        "createdAt": "2024-12-25T08:07:57Z",
+        "updatedAt": "2024-12-25T08:07:57Z",
+        "isDraft": true,
+        "closedAt": null
+      },
+      {
+        "id": "PR_foo_bar_4",
+        "title": "Foo: Bar 4",
+        "url": "https://api.github.com/repos/ESA-EarthCODE/Hello-World/issues/23",
+        "state": "OPEN",
+        "number": 4,
+        "changedFiles": 2,
+        "createdAt": "2024-12-25T08:07:57Z",
+        "updatedAt": "2024-12-25T08:07:57Z",
+        "isDraft": true,
+        "closedAt": null
+      }
+    ]
+  }
+}
