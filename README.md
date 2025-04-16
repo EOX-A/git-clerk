@@ -51,6 +51,9 @@ globalThis.gitClerkConfig = {
             type: "string"
           }
         }
+      },
+      jsonform: {
+        options: {} // jsonform options
       }
     },
     {

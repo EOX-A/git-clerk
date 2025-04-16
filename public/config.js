@@ -69,6 +69,12 @@ const schemaMap = [
     content: {
       foo: "Initial content for file creation",
     },
+    jsonform: {
+      options: {
+        disable_edit_json: false,
+        disable_properties: false,
+      },
+    },
     preview: "/example-preview.html",
   },
 ];
