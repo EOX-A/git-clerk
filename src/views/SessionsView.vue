@@ -15,7 +15,7 @@ import Tooltip from "@/components/global/Tooltip.vue";
 import { useLoader } from "@/helpers/index.js";
 import { ActionList, ActionTabSessions } from "@/components/session";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
-import ListPagination from "@/components/global/ListPagination.vue";
+import CursorPagination from "@/components/global/CursorPagination.vue";
 import EmptyState from "@/components/global/EmptyState.vue";
 import { BASE_PATH } from "@/enums";
 
@@ -23,8 +23,9 @@ const route = useRoute();
 const router = useRouter();
 
 const sessions = ref(null);
-const totalPage = ref(0);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
+const pageInfo = ref(null);
+const cursorPosition = ref(null);
 const deleteSession = ref(false);
 const reviewSession = ref(false);
 const sessionSelectedState = ref("open");
@@ -38,22 +39,27 @@ const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 
 const updateSessionsList = async (cache = false) => {
-  sessions.value = null;
+  sessions.value = null; 
   window.scrollTo({ top: 0 });
   const sessionsList = await getSessionsList(
-    page.value,
+    pageInfo.value,
+    cursorPosition.value,
     sessionSelectedState.value,
     cache,
   );
+  cursorPosition.value = null
   numberOfOpenClosedSessions.value = await getNumberOfOpenClosedSessions(cache);
   const currSessionState = sessionSelectedState.value;
-  querySessionsListMethod(sessionsList, { snackbar, sessions, totalPage });
+  querySessionsListMethod(sessionsList, { snackbar, sessions, pageInfo });
+  const currPath = route.path
   checkStatusMethod(
     sessions,
-    sessionsList.curr,
-    page,
+    sessionsList.pageInfo,
+    pageInfo,
     currSessionState,
     sessionSelectedState,
+    currPath,
+    route
   );
 };
 
@@ -124,9 +130,8 @@ onMounted(async () => {
   await updateSessionsList(true);
 });
 
-const onPageChange = async (newPage) => {
-  page.value = newPage;
-  await router.push({ query: { ...route.query, page: newPage } });
+const onPageChange = async (newCursor) => {
+  cursorPosition.value = newCursor;
   await updateSessionsList(true);
 };
 
@@ -181,6 +186,7 @@ const changeSessionState = async (newState) => {
     :sessionSelectedState="sessionSelectedState"
     :changeSessionState="changeSessionState"
     :numberOfOpenClosedSessions="numberOfOpenClosedSessions"
+    :sessions="sessions"
   />
 
   <v-list class="py-0">
@@ -260,5 +266,5 @@ const changeSessionState = async (newState) => {
     />
   </v-list>
 
-  <ListPagination v-if="sessions" :page :totalPage :onPageChange />
+  <CursorPagination v-if="sessions" :pageInfo :onPageChange />
 </template>

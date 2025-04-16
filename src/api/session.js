@@ -4,7 +4,8 @@ import slugify from "slugify";
 export async function sessionsList(
   octokit,
   githubConfig,
-  currPage,
+  pageInfo,
+  cursorPosition,
   sessionSelectedState,
   cache,
   creator,
@@ -14,8 +15,8 @@ export async function sessionsList(
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const query = `
-      query($queryString: String!, $perPage: Int!) {
-        search(query: $queryString, type: ISSUE, first: $perPage, after: null) {
+      query($queryString: String!, $perPage: Int!, $after: String, $before: String) {
+        search(query: $queryString, type: ISSUE, first: $perPage, before: $before, after: $after) {
           pageInfo {
             hasNextPage
             endCursor
@@ -46,13 +47,13 @@ export async function sessionsList(
     const response = await octokit.graphql(query, {
       queryString: `repo:${githubConfig.username}/${githubConfig.repo} is:pr author:${creator} state:${sessionSelectedState}`,
       perPage: 10,
-      currentPage: currPage,
+      after: cursorPosition === "endCursor" ? pageInfo?.endCursor : null,
+      before: cursorPosition === "startCursor" ? pageInfo?.startCursor : null,
       headers: {
         ...(cache ? {} : { "If-None-Match": "" }),
       },
     });
 
-    const hasNextPage = response.search.pageInfo.hasNextPage;
     const items = response.search.nodes.map((node) => {
       return {
         ...node,
@@ -63,14 +64,10 @@ export async function sessionsList(
         updated_at: node.updatedAt,
       };
     });
-    const totalPages = hasNextPage ? currPage + 1 : currPage;
 
     return {
       data: items,
-      total: totalPages,
-      curr: currPage,
-      next: hasNextPage ? currPage + 1 : null,
-      prev: currPage > 1 ? currPage - 1 : null,
+      pageInfo: response.search.pageInfo,
     };
   } catch (error) {
     return error;

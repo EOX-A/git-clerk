@@ -77,7 +77,8 @@ export async function getLoginData() {
 }
 
 export async function getSessionsList(
-  currPage,
+  pageInfo,
+  cursorPosition,
   sessionSelectedState = "open",
   cache,
 ) {
@@ -85,7 +86,8 @@ export async function getSessionsList(
   return sessionsList(
     octokit,
     githubConfig,
-    currPage,
+    pageInfo,
+    cursorPosition,
     sessionSelectedState,
     cache,
     githubUserData.login,

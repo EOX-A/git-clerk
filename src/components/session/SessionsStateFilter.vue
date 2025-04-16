@@ -2,6 +2,10 @@
 import { defineProps } from "vue";
 
 const props = defineProps({
+  sessions: {
+    type: Array,
+    default: null,
+  },
   numberOfOpenClosedSessions: {
     type: Object,
     default: null,
@@ -21,6 +25,7 @@ const props = defineProps({
     text="Open"
     color="blue-grey-darken-4"
     id="session-action-menu"
+    :disabled="!props.sessions"
     @click="changeSessionState('open')"
   >
     <template v-slot:append>
@@ -41,6 +46,7 @@ const props = defineProps({
     text="Closed"
     color="blue-grey-darken-4"
     id="session-action-menu"
+    :disabled="!props.sessions"
     @click="changeSessionState('closed')"
   >
     <template v-slot:append>
