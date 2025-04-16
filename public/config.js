@@ -71,7 +71,8 @@ const schemaMap = [
     },
     jsonform: {
       options: {
-        show_opt_in: false,
+        disable_edit_json: false,
+        disable_properties: false,
       },
     },
     preview: "/example-preview.html",
