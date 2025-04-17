@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.1](https://github.com/EOX-A/git-clerk/compare/v1.8.0...v1.8.1) (2025-04-17)
+
+
+### Bug Fixes
+
+* `globalThis.gitClerkConfig` creation including `ghConfig` ([#143](https://github.com/EOX-A/git-clerk/issues/143)) ([229fef9](https://github.com/EOX-A/git-clerk/commit/229fef9d9bf86be02cdb8e96687c736618ca5cde))
+
 ## [1.8.0](https://github.com/EOX-A/git-clerk/compare/v1.7.0...v1.8.0) (2025-04-16)
 
 
