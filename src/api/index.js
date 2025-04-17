@@ -29,7 +29,8 @@ export async function initOctokit() {
     if (config) {
       configAuth =
         (config.githubAuthToken !== undefined &&
-          (config.githubAuthToken === "string"
+          (typeof config.githubAuthToken === "string" ||
+          config.githubAuthToken instanceof String
             ? config.githubAuthToken
             : await config.githubAuthToken())) ||
         import.meta.env.GITCLERK_GITHUB_TOKEN;
