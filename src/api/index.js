@@ -55,6 +55,7 @@ export async function initOctokit() {
       ...config,
       config: { auth, username, repo: repoName },
     };
+    if (!globalThis.gitClerkConfig) globalThis.gitClerkConfig = {};
     globalThis.gitClerkConfig.ghConfig = globalThis.ghConfig;
 
     const octokit = new Octokit({ auth });
