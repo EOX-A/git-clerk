@@ -1,6 +1,7 @@
 <script setup>
 import { defineProps } from "vue";
 import SessionsStateFilter from "./SessionsStateFilter.vue";
+import ActionTab from "@/components/global/ActionTab.vue";
 
 const props = defineProps({
   sessions: {
@@ -20,14 +21,12 @@ const props = defineProps({
 </script>
 
 <template>
-  <div
-    class="bg-surface-light px-0 px-sm-5 py-4 d-flex align-center ga-4 action-tab position-relative"
-  >
+  <ActionTab>
     <SessionsStateFilter
       :sessions="sessions"
       :numberOfOpenClosedSessions="numberOfOpenClosedSessions"
       :sessionSelectedState="sessionSelectedState"
       :changeSessionState="changeSessionState"
     />
-  </div>
+  </ActionTab>
 </template>

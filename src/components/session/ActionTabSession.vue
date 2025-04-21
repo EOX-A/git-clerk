@@ -6,7 +6,7 @@ import {
 } from "@/components/session/index.js";
 import { defineProps } from "vue";
 import OctIcon from "@/components/global/OctIcon.vue";
-
+import ActionTab from "@/components/global/ActionTab.vue";
 const props = defineProps({
   session: {
     type: Object,
@@ -17,10 +17,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <div
-    v-if="session"
-    class="bg-surface-light px-0 px-sm-5 py-4 d-flex align-center ga-2 action-tab position-relative"
-  >
+  <ActionTab v-if="session">
     <v-menu :close-on-content-click="false">
       <template v-slot:activator="{ props }">
         <v-btn
@@ -91,20 +88,10 @@ const props = defineProps({
         >{{ session.status.state }}</span
       >
     </v-chip>
-  </div>
+  </ActionTab>
 </template>
 
 <style>
-.action-tab .v-btn__content {
-  font-size: 16px;
-}
-.action-tab .v-btn--disabled.v-btn--variant-flat .v-btn__overlay {
-  opacity: 0;
-}
-.action-tab .v-btn__prepend {
-  font-size: 20px;
-  margin-inline-end: 6px;
-}
 .session-icon {
   height: 40px;
   line-height: 0px;

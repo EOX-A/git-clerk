@@ -93,10 +93,7 @@ describe("Session list related tests", () => {
         url: `${GITHUB_HOST}/graphql`,
       },
       (req) => {
-        if (
-          req.body.query === mockQuery.sessionList &&
-          req.body.variables.queryString === mockQuery.open
-        ) {
+        const handleSessionList = () => {
           let tempData = sessionsList;
           if (deleteSession) {
             tempData.search.nodes.shift();
@@ -104,43 +101,49 @@ describe("Session list related tests", () => {
             tempData.search.nodes[1].isDraft = false;
             reviewSession = false;
           }
-          req.reply({
-            data: tempData,
-          });
-        } else if (
-          req.body.query === mockQuery.issueCount &&
-          req.body.variables.queryString === mockQuery.open
-        ) {
+          return { data: tempData };
+        };
+
+        const handleOpenIssueCount = () => {
           let tempData = openCount;
           if (deleteSession) {
             tempData.search.issueCount = 3;
           }
-          req.reply({
-            data: tempData,
-          });
-        } else if (
-          req.body.query === mockQuery.issueCount &&
-          req.body.variables.queryString === mockQuery.closed
-        ) {
+          return { data: tempData };
+        };
+
+        const handleClosedIssueCount = () => {
           let tempData = closeCount;
           if (deleteSession) {
             tempData.search.issueCount = 1;
             deleteSession = false;
           }
-          req.reply({
-            data: tempData,
-          });
-        } else {
-          req.reply({
-            data: {
-              markPullRequestReadyForReview: {
-                pullRequest: {
-                  title: "dummy-title",
-                },
+          return { data: tempData };
+        };
+
+        const defaultResponse = {
+          data: {
+            markPullRequestReadyForReview: {
+              pullRequest: {
+                title: "dummy-title",
               },
             },
-          });
-        }
+          },
+        };
+
+        const response =
+          req.body.query === mockQuery.sessionList &&
+          req.body.variables.queryString === mockQuery.open
+            ? handleSessionList()
+            : req.body.query === mockQuery.issueCount &&
+                req.body.variables.queryString === mockQuery.open
+              ? handleOpenIssueCount()
+              : req.body.query === mockQuery.issueCount &&
+                  req.body.variables.queryString === mockQuery.closed
+                ? handleClosedIssueCount()
+                : defaultResponse;
+
+        req.reply(response);
       },
     ).as("postGraphql");
   });
