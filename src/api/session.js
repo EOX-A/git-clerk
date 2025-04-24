@@ -62,6 +62,7 @@ export async function sessionsList(
         changed_files: node.changedFiles,
         created_at: node.createdAt,
         updated_at: node.updatedAt,
+        html_url: node.url,
       };
     });
 
