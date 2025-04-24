@@ -21,6 +21,10 @@ const props = defineProps({
     default: "View this session on GitHub",
   },
 });
+
+const redirectToGithub = () => {
+  window.open(props.url, "_blank");
+};
 </script>
 
 <template>
@@ -30,7 +34,7 @@ const props = defineProps({
     v-if="tab"
     rounded="0"
     block
-    :href="url"
+    @click="redirectToGithub"
     target="_blank"
     color="blue-grey-darken-4"
     prepend-icon="mdi-github"
@@ -44,7 +48,7 @@ const props = defineProps({
   <!-- Mobile -->
   <v-list-item
     v-if="!tab"
-    :href="url"
+    @click="redirectToGithub"
     target="_blank"
     prepend-icon="mdi-github"
     :title="props.tooltip"
@@ -54,7 +58,7 @@ const props = defineProps({
   <Tooltip :text="props.tooltip">
     <v-btn
       v-if="!tab"
-      :href="url"
+      @click="redirectToGithub"
       target="_blank"
       color="blue-grey-darken-4"
       icon="mdi-github"

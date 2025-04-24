@@ -57,6 +57,13 @@ html {
   margin-top: 3px;
 }
 
+.main-title {
+  font-weight: 400;
+  transition: font-weight 0.1s ease;
+  min-width: 0;
+  display: inline-block;
+}
+
 @media (max-width: 600px) {
   .sessions-view.v-list-item--density-default:not(
       .v-list-item--nav

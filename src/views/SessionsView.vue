@@ -12,7 +12,7 @@ import {
 } from "@/methods/sessions-view";
 import { useRoute, useRouter } from "vue-router";
 import Tooltip from "@/components/global/Tooltip.vue";
-import { useLoader } from "@/helpers/index.js";
+import { useLoader, preventListItemClick } from "@/helpers/index.js";
 import { ActionList, ActionTabSessions } from "@/components/session";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import CursorPagination from "@/components/global/CursorPagination.vue";
@@ -25,6 +25,7 @@ const router = useRouter();
 const sessions = ref(null);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
 const pageInfo = ref(null);
+const hover = ref(null);
 const cursorPosition = ref(null);
 const deleteSession = ref(false);
 const reviewSession = ref(false);
@@ -193,10 +194,14 @@ const changeSessionState = async (newState) => {
     <!-- Session's list -->
     <v-list-item
       v-if="sessions && sessions.length"
-      v-for="session in sessions"
+      v-for="(session, index) in sessions"
       :key="session.title"
       :title="session.title"
-      :class="`sessions-view bg-white py-4 border-b-thin`"
+      class="sessions-view bg-white py-4 border-b-thin"
+      @mouseenter="hover = index"
+      @mouseleave="hover = null"
+      :to="`/${session.number}`"
+      @click.native.capture="preventListItemClick"
     >
       <template v-slot:title>
         <div class="d-flex align-start px-5">
@@ -205,12 +210,12 @@ const changeSessionState = async (newState) => {
           </v-icon>
           <div class="ml-4">
             <div class="d-flex align-center ga-3">
-              <router-link
-                :to="`/${session.number}`"
+              <div
                 class="main-title text-black"
+                :class="{ 'font-weight-bold': hover === index }"
               >
                 {{ session.title }}
-              </router-link>
+              </div>
               <Tooltip
                 location="right"
                 v-if="session.check && !session.check.success"

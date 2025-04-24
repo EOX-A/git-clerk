@@ -15,10 +15,10 @@ defineProps({
 </script>
 
 <template>
-  <div class="d-none d-sm-flex">
+  <div class="d-none d-sm-flex action-list">
     <Actions :session="session" :callBack="callBack" />
   </div>
-  <div class="d-flex d-sm-none">
+  <div class="d-flex d-sm-none action-list">
     <v-menu :close-on-content-click="false">
       <template v-slot:activator="{ props }">
         <v-btn
