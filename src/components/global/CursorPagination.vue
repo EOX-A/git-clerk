@@ -13,7 +13,7 @@ const props = defineProps({
 <template>
   <div
     v-if="props.pageInfo"
-    class="text-center border-t-thin py-6 d-flex justify-center align-center ga-2"
+    class="text-center border-t-thin py-6 d-flex justify-center align-center ga-4"
   >
     <v-btn
       :disabled="!props.pageInfo.hasPreviousPage"
@@ -24,9 +24,6 @@ const props = defineProps({
       variant="tonal"
     >
     </v-btn>
-    <v-icon color="primary" size="small" class="opacity-20"
-      >mdi-dots-horizontal</v-icon
-    >
     <v-btn
       :disabled="!props.pageInfo.hasNextPage"
       @click="props.onPageChange('endCursor')"

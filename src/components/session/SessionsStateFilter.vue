@@ -19,7 +19,7 @@ const props = defineProps({
 </script>
 <template>
   <v-btn
-    prepend-icon="mdi-lock-open-variant-outline"
+    prepend-icon="mdi-source-pull"
     :variant="sessionSelectedState === 'open' ? 'tonal' : 'text'"
     size="x-large"
     text="Open"
@@ -40,7 +40,7 @@ const props = defineProps({
   </v-btn>
 
   <v-btn
-    prepend-icon="mdi-lock-outline"
+    prepend-icon="mdi-check-circle-outline"
     :variant="sessionSelectedState === 'closed' ? 'tonal' : 'text'"
     size="x-large"
     text="Closed"
