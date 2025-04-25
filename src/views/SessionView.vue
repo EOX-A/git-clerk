@@ -17,7 +17,7 @@ import {
   FileUploader,
   DuplicateFile,
 } from "@/components/file";
-import { encodeString } from "@/helpers/index.js";
+import { encodeString, preventListItemClick } from "@/helpers/index.js";
 import { BASE_PATH, AUTOMATION } from "@/enums";
 import "@eox/jsonform";
 import Automation from "@/components/session/Automation.vue";
@@ -33,7 +33,7 @@ const totalPage = ref(0);
 const addNewFileDialog = ref(false);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
 const uploadFilesDialog = ref(false);
-
+const hover = ref(null);
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
@@ -142,10 +142,18 @@ const handleAutomationClose = () => {
     <!-- file's list -->
     <v-list-item
       v-if="fileChangesList && fileChangesList.length"
-      v-for="file in fileChangesList"
+      v-for="(file, index) in fileChangesList"
       :key="file.title"
       :title="file.title"
       class="files-view py-4 border-b-thin"
+      @mouseenter="hover = index"
+      @mouseleave="hover = null"
+      @click.native.capture="preventListItemClick"
+      :to="
+        !session.closed_at
+          ? `/${session.number}/${encodeString(file.title)}`
+          : null
+      "
     >
       <template v-slot:title>
         <div class="d-flex align-start px-5">
@@ -154,17 +162,14 @@ const handleAutomationClose = () => {
           </v-icon>
           <div class="ml-4">
             <div class="d-flex align-center ga-3">
-              <router-link
-                :to="
-                  !session.closed_at
-                    ? `/${session.number}/${encodeString(file.title)}`
-                    : null
-                "
-                :disabled="session.closed_at"
-                :class="`main-title text-black ${session.closed_at && 'no-hover-link'}`"
+              <div
+                class="main-title text-black"
+                :class="{
+                  'font-weight-bold': hover === index && !session.closed_at,
+                }"
               >
                 {{ file.title }}
-              </router-link>
+              </div>
             </div>
             <div class="v-list-item-subtitle d-flex align-center pt-2 ga-2">
               <span class="text-green-darken-1 font-weight-bold"
@@ -185,8 +190,10 @@ const handleAutomationClose = () => {
       </template>
 
       <template v-slot:append v-if="!session.closed_at">
-        <DuplicateFile :file :session :callBack="updateDetails" />
-        <DeleteFile :file :session :callBack="updateDetails" />
+        <div class="action-list d-flex align-center">
+          <DuplicateFile :file :session :callBack="updateDetails" />
+          <DeleteFile :file :session :callBack="updateDetails" />
+        </div>
       </template>
     </v-list-item>
 
@@ -285,9 +292,5 @@ const handleAutomationClose = () => {
   width: 12px;
   height: 12px;
   border: 1px solid white;
-}
-.no-hover-link:hover {
-  text-decoration: none !important;
-  font-weight: 400 !important;
 }
 </style>
