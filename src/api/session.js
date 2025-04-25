@@ -152,10 +152,22 @@ export async function createSession(octokit, githubConfig, prName) {
       number: res.data.number,
     };
   } catch (error) {
-    return {
-      text: error.message.replaceAll("Reference", "Session"),
-      status: "error",
-    };
+    if (error.status === 422 && error.response?.url?.includes("/refs")) {
+      const match = prName.match(/\((\d+)\)$/);
+      let newPrName;
+      if (match) {
+        const num = parseInt(match[1]) + 1;
+        newPrName = prName.replace(/\(\d+\)$/, `(${num})`);
+      } else {
+        newPrName = `${prName} (1)`;
+      }
+      return createSession(octokit, githubConfig, newPrName);
+    } else {
+      return {
+        text: error.message,
+        status: "error",
+      };
+    }
   }
 }
 
