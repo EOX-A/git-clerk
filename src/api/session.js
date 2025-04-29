@@ -16,7 +16,7 @@ export async function sessionsList(
 
     const query = `
       query($queryString: String!, $perPage: Int!, $after: String, $before: String) {
-        search(query: $queryString, type: ISSUE, first: $perPage, before: $before, after: $after) {
+        search(query: $queryString, type: ISSUE, last: $perPage, before: $before, after: $after) {
           pageInfo {
             hasNextPage
             endCursor
@@ -47,7 +47,12 @@ export async function sessionsList(
     const response = await octokit.graphql(query, {
       queryString: `repo:${githubConfig.username}/${githubConfig.repo} is:pr author:${creator} state:${sessionSelectedState}`,
       perPage: 10,
-      after: cursorPosition === "endCursor" ? pageInfo?.endCursor : null,
+      after:
+        cursorPosition === "endCursor"
+          ? pageInfo?.endCursor
+          : cursorPosition === "startCursor" || cursorPosition === null
+            ? null
+            : cursorPosition,
       before: cursorPosition === "startCursor" ? pageInfo?.startCursor : null,
       headers: {
         ...(cache ? {} : { "If-None-Match": "" }),
