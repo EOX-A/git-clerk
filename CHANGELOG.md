@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.8.1](https://github.com/EOX-A/git-clerk/compare/v1.8.0...v1.8.1) (2025-04-17)
+
+
+### Bug Fixes
+
+* `globalThis.gitClerkConfig` creation including `ghConfig` ([#143](https://github.com/EOX-A/git-clerk/issues/143)) ([229fef9](https://github.com/EOX-A/git-clerk/commit/229fef9d9bf86be02cdb8e96687c736618ca5cde))
+
+## [1.8.0](https://github.com/EOX-A/git-clerk/compare/v1.7.0...v1.8.0) (2025-04-16)
+
+
+### Features
+
+* Override jsonform options ([#142](https://github.com/EOX-A/git-clerk/issues/142)) ([60d547e](https://github.com/EOX-A/git-clerk/commit/60d547e02b3e3242f10725720f6912f24971a543))
+* Support preview deployment link  ([#126](https://github.com/EOX-A/git-clerk/issues/126)) ([b592771](https://github.com/EOX-A/git-clerk/commit/b5927713719edf42dbfdef2b7b0b668029079e1b))
+
+
+### Bug Fixes
+
+* Enhanced Add/Edit file button ([#137](https://github.com/EOX-A/git-clerk/issues/137)) ([f32b172](https://github.com/EOX-A/git-clerk/commit/f32b172ef2f33aa87d7ce5f1f72b41bdcbb3a647))
+* Hidden add automation hidden for closed sessions without any file changes ([#133](https://github.com/EOX-A/git-clerk/issues/133)) ([9a10176](https://github.com/EOX-A/git-clerk/commit/9a101764de0490435a13fbeb21cf45e72fb213ee))
+
 ## [1.7.0](https://github.com/EOX-A/git-clerk/compare/v1.6.0...v1.7.0) (2025-04-01)
 
 

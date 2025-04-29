@@ -18,7 +18,12 @@ const getLoaderMsg = (type, path, currentMsg) => {
 export async function runAutomation(props, value, router) {
   const loaderEle = document.getElementById("loader-text");
   for (const step of props.selectedAutomation.steps) {
-    let path = typeof step.path === "function" ? step.path(value) : step.path;
+    let path =
+      typeof step.path === "function"
+        ? step.path.constructor.name === "AsyncFunction"
+          ? await step.path(value)
+          : step.path(value)
+        : step.path;
     if (path.startsWith("/")) path = path.substring(1);
     const session = props.session;
     if (loaderEle)

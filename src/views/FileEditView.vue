@@ -262,6 +262,7 @@ onUnmounted(() => {
           :schema="schemaMetaDetails.schema"
           :value="updatedFileContent"
           :customEditorInterfaces="customInterfaces"
+          :options="schemaMetaDetails.jsonform?.options || {}"
           @change="onFileChange"
           class="d-block fill-height"
         ></eox-jsonform>
