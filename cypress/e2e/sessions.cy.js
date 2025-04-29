@@ -19,7 +19,7 @@ const mockQuery = {
   open: `repo:${ghConfig.username}/${ghConfig.repo} is:pr author:${user.login} state:open`,
   sessionList: `
       query($queryString: String!, $perPage: Int!, $after: String, $before: String) {
-        search(query: $queryString, type: ISSUE, first: $perPage, before: $before, after: $after) {
+        search(query: $queryString, type: ISSUE, last: $perPage, before: $before, after: $after) {
           pageInfo {
             hasNextPage
             endCursor
