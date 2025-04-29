@@ -33,6 +33,8 @@ const numberOfOpenClosedSessions = ref(null);
 const createNewSession = ref(false);
 const newSessionName = ref("");
 const loader = ref({});
+const currentPage = ref(1);
+const cursorHistory = ref([]);
 
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
@@ -41,12 +43,28 @@ const navPaginationItems = inject("set-nav-pagination-items");
 const updateSessionsList = async (cache = false) => {
   sessions.value = null;
   window.scrollTo({ top: 0 });
+
   const sessionsList = await getSessionsList(
     pageInfo.value,
     cursorPosition.value,
     sessionSelectedState.value,
     cache,
   );
+
+  if (sessionsList.pageInfo) {
+    if (!pageInfo.value) {
+      cursorHistory.value.push(sessionsList.pageInfo.startCursor);
+      cursorHistory.value.push(sessionsList.pageInfo.endCursor);
+    } else {
+      if (
+        !cursorHistory.value.includes(sessionsList.pageInfo.endCursor) &&
+        sessionsList.pageInfo.hasNextPage
+      ) {
+        cursorHistory.value.push(sessionsList.pageInfo.endCursor);
+      }
+    }
+  }
+
   cursorPosition.value = null;
   numberOfOpenClosedSessions.value = await getNumberOfOpenClosedSessions(cache);
   const currSessionState = sessionSelectedState.value;
@@ -131,15 +149,32 @@ onMounted(async () => {
 });
 
 const onPageChange = async (newCursor) => {
-  cursorPosition.value = newCursor;
+  if (newCursor === "startCursor") {
+    cursorPosition.value = newCursor;
+    currentPage.value = currentPage.value - 1;
+  } else if (newCursor === "endCursor") {
+    cursorPosition.value = newCursor;
+    currentPage.value = currentPage.value + 1;
+  } else {
+    cursorPosition.value =
+      newCursor === 1 ? null : cursorHistory.value[newCursor - 1];
+    currentPage.value = newCursor;
+  }
   await updateSessionsList(true);
 };
 
 const changeSessionState = async (newState) => {
   if (sessionSelectedState.value !== newState) {
     sessionSelectedState.value = newState;
-    await updateSessionsList(true);
+    await resetWholeState();
   }
+};
+
+const resetWholeState = async () => {
+  cursorHistory.value = []; // Reset cursor history when changing state
+  currentPage.value = 1;
+  pageInfo.value = null;
+  await updateSessionsList(true);
 };
 </script>
 
@@ -190,70 +225,71 @@ const changeSessionState = async (newState) => {
   />
 
   <v-list class="py-0">
-    <!-- Session's list -->
-    <v-list-item
-      v-if="sessions && sessions.length"
-      v-for="session in sessions"
-      :key="session.title"
-      :title="session.title"
-      :class="`sessions-view bg-white py-4 border-b-thin`"
-    >
-      <template v-slot:title>
-        <div class="d-flex align-start px-5">
-          <v-icon :color="session.status.color" class="pr-icon opacity-100">
-            <OctIcon :name="session.status.icon" />
-          </v-icon>
-          <div class="ml-4">
-            <div class="d-flex align-center ga-3">
-              <router-link
-                :to="`/${session.number}`"
-                class="main-title text-black"
-              >
-                {{ session.title }}
-              </router-link>
-              <Tooltip
-                location="right"
-                v-if="session.check && !session.check.success"
-                :text="session.check.tooltip"
-              >
-                <v-icon
-                  :color="session.check.color"
-                  size="23"
-                  :icon="session.check.icon"
-                ></v-icon>
-              </Tooltip>
-              <Tooltip
-                location="right"
-                v-if="session.requested_changes"
-                text="Requested Changes"
-              >
-                <v-icon color="red" class="file-diff">
-                  <OctIcon name="file-diff" />
-                </v-icon>
-              </Tooltip>
-            </div>
-            <div class="v-list-item-subtitle d-flex align-center pt-2 ga-3">
-              <span class="d-none d-sm-flex">Changes made on: </span>
-              <div class="d-flex align-center">
-                <v-icon>mdi-calendar-blank-outline</v-icon>
-                <span class="text-black px-1">{{ session.date }}</span>
+    <template v-if="sessions">
+      <!-- Session's list -->
+      <v-list-item
+        v-for="session in sessions"
+        :key="session.title"
+        :title="session.title"
+        :class="`sessions-view bg-white py-4 border-b-thin`"
+      >
+        <template v-slot:title>
+          <div class="d-flex align-start px-5">
+            <v-icon :color="session.status.color" class="pr-icon opacity-100">
+              <OctIcon :name="session.status.icon" />
+            </v-icon>
+            <div class="ml-4">
+              <div class="d-flex align-center ga-3">
+                <router-link
+                  :to="`/${session.number}`"
+                  class="main-title text-black"
+                >
+                  {{ session.title }}
+                </router-link>
+                <Tooltip
+                  location="right"
+                  v-if="session.check && !session.check.success"
+                  :text="session.check.tooltip"
+                >
+                  <v-icon
+                    :color="session.check.color"
+                    size="23"
+                    :icon="session.check.icon"
+                  ></v-icon>
+                </Tooltip>
+                <Tooltip
+                  location="right"
+                  v-if="session.requested_changes"
+                  text="Requested Changes"
+                >
+                  <v-icon color="red" class="file-diff">
+                    <OctIcon name="file-diff" />
+                  </v-icon>
+                </Tooltip>
               </div>
-              <div class="d-flex align-center">
-                <v-icon>mdi-clock-time-five-outline</v-icon>
-                <span class="text-black px-1">{{ session.time }}</span>
+              <div class="v-list-item-subtitle d-flex align-center pt-2 ga-3">
+                <span class="d-none d-sm-flex">Changes made on: </span>
+                <div class="d-flex align-center">
+                  <v-icon>mdi-calendar-blank-outline</v-icon>
+                  <span class="text-black px-1">{{ session.date }}</span>
+                </div>
+                <div class="d-flex align-center">
+                  <v-icon>mdi-clock-time-five-outline</v-icon>
+                  <span class="text-black px-1">{{ session.time }}</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </template>
+        </template>
 
-      <template v-slot:append>
-        <ActionList :session="session" :callBack="updateSessionsList" />
-      </template>
-    </v-list-item>
+        <template v-slot:append>
+          <ActionList :session="session" :callBack="resetWholeState" />
+        </template>
+      </v-list-item>
+    </template>
 
     <!-- Placeholder for session's list -->
-    <ListPlaceholder :button="3" v-else-if="sessions === null" />
+    <ListPlaceholder v-else-if="sessions === null" :button="3" />
 
     <EmptyState
       v-else
@@ -266,5 +302,11 @@ const changeSessionState = async (newState) => {
     />
   </v-list>
 
-  <CursorPagination v-if="sessions" :pageInfo :onPageChange />
+  <CursorPagination
+    v-if="sessions"
+    :pageInfo="pageInfo"
+    :onPageChange="onPageChange"
+    :currentPage="currentPage"
+    :cursorHistory="cursorHistory"
+  />
 </template>
