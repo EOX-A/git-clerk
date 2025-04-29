@@ -8,7 +8,7 @@ import {
 import Tooltip from "@/components/global/Tooltip.vue";
 import { defineProps } from "vue";
 import { useRouter } from "vue-router";
-
+import ActionTab from "@/components/global/ActionTab.vue";
 const router = useRouter();
 
 const props = defineProps({
@@ -32,9 +32,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <div
-    class="bg-surface-light px-0 px-sm-5 py-3 d-flex align-center ga-1 position-relative action-tab"
-  >
+  <ActionTab>
     <Github :file="file" />
     <DeleteFile
       text="Delete File"
@@ -61,5 +59,5 @@ const props = defineProps({
         @click="resetContent"
       ></v-btn>
     </Tooltip>
-  </div>
+  </ActionTab>
 </template>

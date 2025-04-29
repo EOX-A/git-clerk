@@ -155,10 +155,3 @@ watch([props], ([newProps]) => {
     </v-card>
   </v-dialog>
 </template>
-
-<style>
-.action-tab .v-btn--disabled.v-btn--variant-flat .v-btn__prepend,
-.action-tab .v-btn--disabled.v-btn--variant-flat .v-btn__content {
-  opacity: 0.5 !important;
-}
-</style>

@@ -8,7 +8,7 @@ export default function querySessionsListMethod(sessionsList, props) {
       status: "error",
     };
     props.sessions.value = [];
-    props.totalPage.value = 0;
+    props.pageInfo.value = null;
   } else {
     let sessions = [];
     sessionsList.data.forEach((session) =>
@@ -16,6 +16,6 @@ export default function querySessionsListMethod(sessionsList, props) {
     );
 
     props.sessions.value = sessions;
-    props.totalPage.value = sessionsList.total;
+    props.pageInfo.value = sessionsList.pageInfo;
   }
 }
