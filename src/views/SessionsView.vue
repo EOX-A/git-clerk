@@ -52,16 +52,12 @@ const updateSessionsList = async (cache = false) => {
   );
 
   if (sessionsList.pageInfo) {
+    const { startCursor, endCursor, hasNextPage } = sessionsList.pageInfo;
+
     if (!pageInfo.value) {
-      cursorHistory.value.push(sessionsList.pageInfo.startCursor);
-      cursorHistory.value.push(sessionsList.pageInfo.endCursor);
-    } else {
-      if (
-        !cursorHistory.value.includes(sessionsList.pageInfo.endCursor) &&
-        sessionsList.pageInfo.hasNextPage
-      ) {
-        cursorHistory.value.push(sessionsList.pageInfo.endCursor);
-      }
+      cursorHistory.value.push(startCursor, endCursor);
+    } else if (!cursorHistory.value.includes(endCursor) && hasNextPage) {
+      cursorHistory.value.push(endCursor);
     }
   }
 
@@ -149,16 +145,19 @@ onMounted(async () => {
 });
 
 const onPageChange = async (newCursor) => {
-  if (newCursor === "startCursor") {
-    cursorPosition.value = newCursor;
-    currentPage.value = currentPage.value - 1;
-  } else if (newCursor === "endCursor") {
-    cursorPosition.value = newCursor;
-    currentPage.value = currentPage.value + 1;
-  } else {
-    cursorPosition.value =
-      newCursor === 1 ? null : cursorHistory.value[newCursor - 1];
-    currentPage.value = newCursor;
+  switch (newCursor) {
+    case "startCursor":
+      cursorPosition.value = newCursor;
+      currentPage.value--;
+      break;
+    case "endCursor":
+      cursorPosition.value = newCursor;
+      currentPage.value++;
+      break;
+    default:
+      cursorPosition.value =
+        newCursor === 1 ? null : cursorHistory.value[newCursor - 1];
+      currentPage.value = newCursor;
   }
   await updateSessionsList(true);
 };
