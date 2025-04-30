@@ -11,3 +11,4 @@ export { default as updateSchemaDefaults } from "./update-schema-default";
 export { getSchemaDetails, getFileSchema } from "./schema";
 export { stringifyIfNeeded, parseIfNeeded } from "./transform";
 export { runAutomation } from "./automation";
+export { default as preventListItemClick } from "./prevent-list-item-click";
