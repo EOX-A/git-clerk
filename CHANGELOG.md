@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.8.2](https://github.com/EOX-A/git-clerk/compare/v1.8.1...v1.8.2) (2025-04-30)
+
+
+### Features
+
+* Added open/closed filter ([#138](https://github.com/EOX-A/git-clerk/issues/138)) ([c73d3d8](https://github.com/EOX-A/git-clerk/commit/c73d3d8a41e32c9b809e2bbbc1e356224cdcc344))
+* Handle duplicate PR titles ([#150](https://github.com/EOX-A/git-clerk/issues/150)) ([a411c8b](https://github.com/EOX-A/git-clerk/commit/a411c8b4bca8b2e99c442bed30950651b2b044af))
+* List entire line clickable  ([#145](https://github.com/EOX-A/git-clerk/issues/145)) ([730bfcf](https://github.com/EOX-A/git-clerk/commit/730bfcf4a1413fdba8fe10790487da3bc2fdf730))
+
+
+### Bug Fixes
+
+* Async path ([#148](https://github.com/EOX-A/git-clerk/issues/148)) ([16b43ce](https://github.com/EOX-A/git-clerk/commit/16b43ceb6cdce8fd504f8d5a69cffbbc946dde0f))
+
 ## [1.8.1](https://github.com/EOX-A/git-clerk/compare/v1.8.0...v1.8.1) (2025-04-17)
 
 
