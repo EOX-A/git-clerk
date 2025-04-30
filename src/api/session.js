@@ -121,6 +121,30 @@ export async function numberOfOpenClosedSessions(
   }
 }
 
+async function numberOfSessionBasedOnTitle(octokit, githubConfig, prName) {
+  try {
+    const query = `
+    query($queryString: String!) {
+      search(query: $queryString, type: ISSUE, last: 1) {
+        issueCount
+        nodes {
+          ... on PullRequest {
+            title
+          }
+        }
+      }
+    }
+  `;
+
+    const response = await octokit.graphql(query, {
+      queryString: `repo:${githubConfig.username}/${githubConfig.repo} in:title '${prName}' is:pr`,
+    });
+    return response.search.issueCount;
+  } catch (error) {
+    return error;
+  }
+}
+
 export async function createSession(octokit, githubConfig, prName) {
   const { username: owner, repo } = githubConfig;
   const username = (await octokit.rest.users.getAuthenticated()).data.login;
@@ -239,15 +263,21 @@ export async function createSession(octokit, githubConfig, prName) {
     };
   } catch (error) {
     if (error.status === 422 && error.response?.url?.includes("/refs")) {
-      const match = prName.match(/\((\d+)\)$/);
-      let newPrName;
-      if (match) {
-        const num = parseInt(match[1]) + 1;
-        newPrName = prName.replace(/\(\d+\)$/, `(${num})`);
+      const numberOfSession = await numberOfSessionBasedOnTitle(
+        octokit,
+        githubConfig,
+        `${prName} (`,
+      );
+
+      if (numberOfSession.message) {
+        return {
+          text: numberOfSession.message,
+          status: "error",
+        };
       } else {
-        newPrName = `${prName} (1)`;
+        const newSessionName = `${prName} (${numberOfSession + 1})`;
+        return createSession(octokit, githubConfig, newSessionName);
       }
-      return createSession(octokit, githubConfig, newPrName);
     } else {
       return {
         text: error.message,
