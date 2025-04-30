@@ -288,16 +288,6 @@ onUnmounted(() => {
 </template>
 
 <style>
-.action-tab .v-btn__content {
-  font-size: 16px;
-}
-.action-tab .v-btn--disabled.v-btn--variant-flat .v-btn__overlay {
-  opacity: 0;
-}
-.action-tab .v-btn__prepend {
-  font-size: 20px;
-  margin-inline-end: 6px;
-}
 .file-editor {
   --secondary-header-height: 80px;
   height: calc(100% - var(--secondary-header-height));

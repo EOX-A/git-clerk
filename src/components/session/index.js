@@ -6,3 +6,5 @@ export { default as RenameSession } from "./Rename.vue";
 export { default as DeployedPreview } from "./DeployedPreview.vue";
 export { default as ActionTabSession } from "./ActionTabSession.vue";
 export { default as ActionSessions } from "./ActionSessions.vue";
+export { default as ActionTabSessions } from "./ActionTabSessions.vue";
+export { default as SessionsStateFilter } from "./SessionsStateFilter.vue";
