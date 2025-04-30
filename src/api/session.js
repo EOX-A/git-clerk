@@ -127,11 +127,6 @@ async function numberOfSessionBasedOnTitle(octokit, githubConfig, prName) {
     query($queryString: String!) {
       search(query: $queryString, type: ISSUE, last: 1) {
         issueCount
-        nodes {
-          ... on PullRequest {
-            title
-          }
-        }
       }
     }
   `;
