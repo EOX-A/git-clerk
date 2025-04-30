@@ -276,16 +276,9 @@ const resetWholeState = async () => {
                   <v-icon>mdi-calendar-blank-outline</v-icon>
                   <span class="text-black px-1">{{ session.date }}</span>
                 </div>
-                <div class="v-list-item-subtitle d-flex align-center pt-2 ga-3">
-                  <span class="d-none d-sm-flex">Changes made on: </span>
-                  <div class="d-flex align-center">
-                    <v-icon>mdi-calendar-blank-outline</v-icon>
-                    <span class="text-black px-1">{{ session.date }}</span>
-                  </div>
-                  <div class="d-flex align-center">
-                    <v-icon>mdi-clock-time-five-outline</v-icon>
-                    <span class="text-black px-1">{{ session.time }}</span>
-                  </div>
+                <div class="d-flex align-center">
+                  <v-icon>mdi-clock-time-five-outline</v-icon>
+                  <span class="text-black px-1">{{ session.time }}</span>
                 </div>
               </div>
             </div>
