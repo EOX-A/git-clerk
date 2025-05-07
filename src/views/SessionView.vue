@@ -22,7 +22,7 @@ import { BASE_PATH, AUTOMATION } from "@/enums";
 import "@eox/jsonform";
 import Automation from "@/components/session/Automation.vue";
 import find from "lodash/find";
-
+import { FileBrowserDrawer } from "@/components/file-browser";
 const route = useRoute();
 const router = useRouter();
 const sessionNumber = route.params.sessionNumber;
@@ -129,6 +129,7 @@ const handleAutomationClose = () => {
 </script>
 
 <template>
+  <FileBrowserDrawer v-if="session" :session="session" />
   <CreateFile
     v-if="session && addNewFileClick"
     :updateDetails

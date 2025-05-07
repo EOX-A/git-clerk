@@ -18,6 +18,7 @@ import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import CursorPagination from "@/components/global/CursorPagination.vue";
 import EmptyState from "@/components/global/EmptyState.vue";
 import { BASE_PATH } from "@/enums";
+import { FileBrowserDrawer } from "@/components/file-browser";
 
 const route = useRoute();
 const router = useRouter();
@@ -178,6 +179,7 @@ const resetWholeState = async () => {
 </script>
 
 <template>
+  <FileBrowserDrawer />
   <div v-if="createNewSession" class="d-flex justify-center bg-white">
     <v-row>
       <v-col cols="12" class="d-flex">
