@@ -3,6 +3,7 @@ import { inject } from "vue";
 
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
+const fileBrowserDrawer = inject("set-file-browser-drawer");
 import Tooltip from "@/components/global/Tooltip.vue";
 </script>
 <template>
@@ -32,6 +33,16 @@ import Tooltip from "@/components/global/Tooltip.vue";
         </template>
       </v-breadcrumbs>
     </v-toolbar-title>
+
+    <v-btn
+      size="large"
+      prepend-icon="mdi-file-find"
+      variant="tonal"
+      class="text-capitalize font-weight-medium"
+      color="white"
+      @click="fileBrowserDrawer = true"
+      >Browse Files</v-btn
+    >
 
     <v-col class="button-nav flex-grow-0">
       <v-btn

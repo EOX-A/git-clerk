@@ -9,6 +9,7 @@ import {
   sessionDetails,
   renameSession,
   numberOfOpenClosedSessions,
+  repoDetails,
 } from "@/api/session";
 import useOctokitStore from "@/stores/octokit";
 import {
@@ -76,6 +77,11 @@ export async function initOctokit() {
 
 export async function getLoginData() {
   return data;
+}
+
+export async function getRepoDetails() {
+  const { githubConfig, githubUserData, octokit } = useOctokitStore();
+  return repoDetails(octokit, githubConfig, githubUserData);
 }
 
 export async function getSessionsList(
@@ -182,7 +188,7 @@ export async function getFileDetails(session, filePath, cache = true) {
 }
 
 export async function getBranchFileStructure(session, path, noFiles = false) {
-  const { githubConfig, octokit } = useOctokitStore();
+  const { githubConfig, octokit, githubUserData } = useOctokitStore();
   const { head } = session;
 
   return branchFileStructure(

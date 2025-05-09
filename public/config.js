@@ -82,6 +82,35 @@ const schemaMap = [
 // Define automations to perform multiple steps for the user
 const automation = [
   {
+    title: "Create Dataset",
+    description:
+      "Initialize a new dataset submission in the correct folder and with the correct file ending",
+    inputSchema: {
+      type: "object",
+      properties: {
+        title: {
+          title: "Data Title",
+          type: "string",
+          minLength: 1,
+        },
+      },
+      required: ["title"],
+    },
+    steps: [
+      {
+        type: "add",
+        path: (input) => `/collections/${input.title}.json`,
+        content: (input) => ({
+          Name: input.title,
+        }),
+      },
+      {
+        type: "navigate",
+        path: (input) => `/collections/${input.title}.json`,
+      },
+    ],
+  },
+  {
     title: "Initialise Bootstrap File",
     description:
       "Bootstrap a new file with a pre-defined folder structure and ID.",
@@ -284,3 +313,13 @@ globalThis.gitClerkConfig = {
   generateEnums,
   deployedPreviewLink,
 };
+
+setTimeout(() => {
+  const styleSheet = document.createElement("style");
+  styleSheet.textContent = `
+    .resize-btn {
+      top: 50px !important; //change value as per need
+    }
+  `;
+  document.head.appendChild(styleSheet);
+}, 1000);
