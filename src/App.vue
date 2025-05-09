@@ -38,7 +38,7 @@ onMounted(async () => {
     <Navbar />
     <v-main>
       <template v-if="isOctokitInitialised">
-        <RouterView />
+        <RouterView :key="$route.fullPath" />
       </template>
       <v-snackbar
         v-model="snackbar"

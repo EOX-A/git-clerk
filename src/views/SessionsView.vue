@@ -12,8 +12,16 @@ import {
 } from "@/methods/sessions-view";
 import { useRoute, useRouter } from "vue-router";
 import Tooltip from "@/components/global/Tooltip.vue";
-import { useLoader, preventListItemClick } from "@/helpers/index.js";
-import { ActionList, ActionTabSessions } from "@/components/session";
+import {
+  useLoader,
+  preventListItemClick,
+  createSession,
+} from "@/helpers/index.js";
+import {
+  ActionList,
+  ActionTabSessions,
+  CreateSession,
+} from "@/components/session";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import CursorPagination from "@/components/global/CursorPagination.vue";
 import EmptyState from "@/components/global/EmptyState.vue";
@@ -91,45 +99,6 @@ const clearInputCreateNewSession = () => {
   newSessionName.value = "";
 };
 
-const createFile = async () => {
-  if (!newSessionName.value) {
-    snackbar.value = {
-      text: "Session name is empty. Please provide a session name.",
-      status: "error",
-    };
-    return;
-  }
-  loader.value = useLoader().show(
-    {},
-    {
-      after: h(
-        "h5",
-        { class: "loader-text", id: "loader-text" },
-        "Checking fork branch present in your profile...",
-      ),
-    },
-  );
-  snackbar.value = await createSessionByName(newSessionName.value);
-  loader.value.hide();
-
-  if (snackbar.value.number) {
-    const params = Object.fromEntries(
-      Object.entries(route.query).filter(([key]) => key !== "session"),
-    );
-    const queryString = new URLSearchParams(params).toString();
-    const url = Boolean(queryString)
-      ? `/${snackbar.value.number}?${queryString}`
-      : `/${snackbar.value.number}`;
-    setTimeout(() => router.push(url), 750);
-    clearInputCreateNewSession();
-  }
-};
-
-const onKeyEnterCreateNewSession = async (event) => {
-  if (event.key === "Escape") clearInputCreateNewSession();
-  else if (event.key === "Enter") await createFile();
-};
-
 onMounted(async () => {
   navButtonConfig.value = {
     text: "Start New Session",
@@ -140,7 +109,16 @@ onMounted(async () => {
 
   if (route.query.session && route.query.automation) {
     newSessionName.value = route.query.session;
-    await createFile();
+    await createSession(
+      {
+        newSessionName,
+        snackbar,
+        loader,
+      },
+      router,
+      route,
+      clearInputCreateNewSession,
+    );
   }
   await updateSessionsList(true);
 });
@@ -180,43 +158,10 @@ const resetWholeState = async () => {
 
 <template>
   <FileBrowserDrawer />
-  <div v-if="createNewSession" class="d-flex justify-center bg-white">
-    <v-row>
-      <v-col cols="12" class="d-flex">
-        <!-- Custom styled text field -->
-        <div
-          class="px-6 py-6 border-b-thin session-create-field d-flex w-100 align-center justify-center ga-4"
-        >
-          <v-text-field
-            v-model="newSessionName"
-            label="Session Name"
-            placeholder="Name your Session..."
-            hide-details
-            :append-inner-icon="
-              newSessionName.length > 0 ? 'mdi-restart' : undefined
-            "
-            @click:append-inner="newSessionName = ''"
-            @keydown="onKeyEnterCreateNewSession"
-            variant="outlined"
-          />
-          <v-btn
-            prepend-icon="mdi-plus"
-            color="primary"
-            size="x-large"
-            variant="flat"
-            @click="createFile"
-          >
-            Create
-          </v-btn>
-          <v-btn
-            variant="text"
-            icon="mdi-close"
-            @click="clearInputCreateNewSession"
-          ></v-btn>
-        </div>
-      </v-col>
-    </v-row>
-  </div>
+  <CreateSession
+    :createNewSession="createNewSession"
+    :clearInput="clearInputCreateNewSession"
+  />
 
   <ActionTabSessions
     :sessionSelectedState="sessionSelectedState"
