@@ -8,6 +8,7 @@ export default async function createSession(
   route,
   clearInput,
   filePath,
+  noRedirectCallback,
 ) {
   if (!props.newSessionName.value) {
     props.snackbar.value = {
@@ -39,9 +40,14 @@ export default async function createSession(
     const url = Boolean(queryString)
       ? `/${sessionNumber}?${queryString}`
       : `/${sessionNumber}${filePathToOpen ? `/${filePathToOpen}` : ""}`;
-    setTimeout(() => {
-      router.push(url);
-      clearInput();
-    }, 750);
+
+    if (!noRedirectCallback) {
+      setTimeout(() => {
+        router.push(url);
+        clearInput();
+      }, 750);
+    } else {
+      noRedirectCallback(sessionNumber);
+    }
   }
 }

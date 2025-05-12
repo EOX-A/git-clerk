@@ -3,12 +3,10 @@ import { Actions } from "./";
 import { getBranchFileStructure, getRepoDetails } from "@/api/index.js";
 import { ref, onMounted, watch, inject } from "vue";
 import useOctokitStore from "@/stores/octokit";
-import { preventListItemClick, encodeString } from "@/helpers/index.js";
-import { useRouter } from "vue-router";
+import { preventListItemClick } from "@/helpers/index.js";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
-import CreateSession from "@/components/session/CreateSession.vue";
+import { Edit, AddFile } from "./";
 
-const router = useRouter();
 const fileBrowserDrawer = inject("set-file-browser-drawer");
 
 const updatedFilePath = ref("/");
@@ -16,8 +14,9 @@ const updatedFilePathArr = ref([]);
 const currPathDirStructure = ref([]);
 const repoDetails = ref(null);
 const hover = ref(null);
-const editFile = ref(null);
-const editInNewSession = ref(false);
+const updateInNewSession = ref(false);
+
+const selectedOperation = ref(null);
 const { githubConfig, octokit, githubUserData } = useOctokitStore();
 
 const props = defineProps({
@@ -43,7 +42,7 @@ onMounted(async () => {
         },
       },
     };
-    editInNewSession.value = true;
+    updateInNewSession.value = true;
   }
   updatedFilePathArr.value = [""];
 });
@@ -66,17 +65,6 @@ const goToPath = (index) => {
   updatedFilePath.value = updatedFilePathArr.value.join("/") + "/";
 };
 
-const filePath = () => {
-  return encodeString(
-    (updatedFilePath.value + editFile.value.name).replace("/", ""),
-  );
-};
-
-const redirectToFileEdit = () => {
-  router.push(`/${props.session.number}/${filePath()}`);
-  fileBrowserDrawer.value = false;
-};
-
 const onSelect = (item) => {
   if (item.type === "dir") {
     if (item.name === "...") {
@@ -85,12 +73,11 @@ const onSelect = (item) => {
       updateFilePath(`${item.name}/`);
     }
   } else {
-    editFile.value = item;
+    selectedOperation.value = {
+      type: "edit",
+      meta: item,
+    };
   }
-};
-
-const clearInput = () => {
-  fileBrowserDrawer.value = false;
 };
 
 watch(updatedFilePathArr, async (newPathArr) => {
@@ -110,9 +97,20 @@ watch(updatedFilePathArr, async (newPathArr) => {
         ]
       : data;
 });
+
+const addFile = () => {
+  selectedOperation.value = {
+    type: "add",
+    meta: null,
+  };
+};
 </script>
 <template>
-  <Actions :updatedFilePathArr="updatedFilePathArr" :goToPath="goToPath" />
+  <Actions
+    :addFile="addFile"
+    :updatedFilePathArr="updatedFilePathArr"
+    :goToPath="goToPath"
+  />
   <v-list class="py-0">
     <!-- file's list -->
     <v-list-item
@@ -167,46 +165,24 @@ watch(updatedFilePathArr, async (newPathArr) => {
       v-else-if="currPathDirStructure.length === 0"
     />
     <v-dialog
-      v-model="editFile"
-      @update:modelValue="editInNewSession = session ? false : true"
+      v-model="selectedOperation"
+      @update:modelValue="updateInNewSession = session ? false : true"
       width="auto"
       style="z-index: 999999"
     >
-      <v-card max-width="400" prepend-icon="mdi-pencil" title="Edit File">
-        <template v-slot:text>
-          <div v-if="editInNewSession">
-            <p class="py-6">
-              Create a new session to edit <strong>{{ editFile.name }}</strong
-              >. Please provide a name for the new session.
-            </p>
-            <CreateSession
-              :createNewSession="editInNewSession"
-              :fromFileBrowser="true"
-              :filePath="filePath"
-              :clearInput="clearInput"
-            />
-          </div>
-          <div v-else>
-            <p class="py-6">
-              Do you want to edit <strong>{{ editFile.name }}</strong> in a
-              <strong>new session</strong> or <strong>current session</strong>?
-            </p>
-            <div class="d-flex align-center justify-center ga-3">
-              <v-btn size="large" variant="tonal" @click="redirectToFileEdit">
-                Current Session
-              </v-btn>
-              <v-btn
-                size="large"
-                color="primary"
-                variant="flat"
-                @click="editInNewSession = true"
-              >
-                New Session
-              </v-btn>
-            </div>
-          </div>
-        </template>
-      </v-card>
+      <Edit
+        v-if="selectedOperation && selectedOperation.type === 'edit'"
+        :updatedFilePath="updatedFilePath"
+        :selectedOperation="selectedOperation"
+        :session="session"
+      />
+      <AddFile
+        v-if="selectedOperation && selectedOperation.type === 'add'"
+        :updatedFilePath="updatedFilePath"
+        :selectedOperation="selectedOperation"
+        :session="session"
+        :repoDetails="repoDetails"
+      />
     </v-dialog>
   </v-list>
 </template>

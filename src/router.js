@@ -3,7 +3,10 @@ import SessionsView from "@/views/SessionsView.vue";
 import SessionView from "@/views/SessionView.vue";
 import FileEditView from "@/views/FileEditView.vue";
 import NotFoundView from "@/views/NotFoundView.vue";
-import { BASE_PATH } from "@/enums";
+import FileBrowserView from "@/views/FileBrowserView.vue";
+import { BASE_PATH, VIEWING_MODE } from "@/enums";
+
+let firstLoad = true;
 
 const router = createRouter({
   history: createWebHistory(BASE_PATH),
@@ -12,6 +15,11 @@ const router = createRouter({
       path: "/",
       name: "sessions",
       component: SessionsView,
+    },
+    {
+      path: "/file-browser",
+      name: "file-browser",
+      component: FileBrowserView,
     },
     {
       path: "/:sessionNumber([a-zA-Z0-9-]+)",
@@ -29,6 +37,15 @@ const router = createRouter({
       component: NotFoundView,
     },
   ],
+});
+
+router.beforeEach((to, from, next) => {
+  if (to.path === "/" && VIEWING_MODE === "file-browser" && firstLoad) {
+    next("/file-browser");
+  } else {
+    next();
+  }
+  firstLoad = false;
 });
 
 export default router;

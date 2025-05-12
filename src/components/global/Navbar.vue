@@ -1,15 +1,37 @@
 <script setup>
-import { inject } from "vue";
+import { inject, computed, ref } from "vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 const fileBrowserDrawer = inject("set-file-browser-drawer");
+import { VIEWING_MODE } from "@/enums";
+
 import Tooltip from "@/components/global/Tooltip.vue";
+
+const isFileBrowserMode = computed(() => {
+  return VIEWING_MODE === "file-browser";
+});
+
+const isFileBrowser = computed(() => {
+  return router.currentRoute.value.path === "/file-browser";
+});
+
+const fileBrowserItem = ref([
+  {
+    title: "File Browser",
+    disabled: false,
+    to: { path: "/file-browser" },
+  },
+]);
 </script>
 <template>
   <v-app-bar class="navbar" color="primary" app>
     <v-toolbar-title class="toolbar-title">
-      <v-breadcrumbs :items="navPaginationItems">
+      <v-breadcrumbs
+        :items="isFileBrowser ? fileBrowserItem : navPaginationItems"
+      >
         <template v-slot:divider>
           <v-icon icon="mdi-chevron-right"></v-icon>
         </template>
@@ -36,12 +58,12 @@ import Tooltip from "@/components/global/Tooltip.vue";
 
     <v-btn
       size="large"
-      prepend-icon="mdi-file-find"
+      :prepend-icon="isFileBrowser ? 'mdi-source-pull' : 'mdi-file-find'"
       variant="tonal"
       class="text-capitalize font-weight-medium"
       color="white"
-      @click="fileBrowserDrawer = true"
-      >Browse Files</v-btn
+      @click="isFileBrowser ? router.push('/') : (fileBrowserDrawer = true)"
+      >{{ isFileBrowser ? "All Sessions" : "Browse Files" }}</v-btn
     >
 
     <v-col class="button-nav flex-grow-0">

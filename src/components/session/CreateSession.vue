@@ -16,6 +16,10 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  noRedirectCallback: {
+    type: Function,
+    default: () => {},
+  },
   clearInput: {
     type: Function,
     default: () => {},
@@ -41,6 +45,7 @@ const create = async () => {
     route,
     props.clearInput,
     props.filePath,
+    props.noRedirectCallback,
   );
 };
 

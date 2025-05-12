@@ -10,6 +10,10 @@ const props = defineProps({
     type: Function,
     default: () => {},
   },
+  addFile: {
+    type: Function,
+    default: () => {},
+  },
 });
 </script>
 <template>
@@ -36,5 +40,27 @@ const props = defineProps({
         </span>
       </v-hover>
     </v-chip>
+
+    <v-menu attach location="bottom">
+      <template v-slot:activator="{ props }">
+        <v-btn
+          color="primary"
+          variant="flat"
+          v-bind="props"
+          class="ml-2"
+          prepend-icon="mdi-plus"
+        >
+          Add File
+        </v-btn>
+      </template>
+      <v-list density="compact">
+        <v-list-item
+          prepend-icon="mdi-file-plus-outline"
+          title="Add file here"
+          @click="addFile"
+        />
+        <v-list-item prepend-icon="mdi-upload" title="Upload file here" />
+      </v-list>
+    </v-menu>
   </ActionTab>
 </template>
