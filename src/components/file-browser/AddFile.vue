@@ -29,6 +29,10 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+  resetOperation: {
+    type: Function,
+    default: () => {},
+  },
 });
 
 const addNewSessionNumber = (newSessionNumber) => {
@@ -78,6 +82,7 @@ const createFile = async () => {
   loader.hide();
   if (snackbar.value.status === "success") {
     fileBrowserDrawer.value = false;
+    props.resetOperation();
     await router.push(`/${sessionNumber.value}/${encodeString(fullFilePath)}`);
   }
 };
@@ -103,7 +108,6 @@ const createFile = async () => {
           variant="outlined"
         />
         <v-btn
-          prepend-icon="mdi-plus"
           color="primary"
           size="large"
           variant="flat"

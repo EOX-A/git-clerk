@@ -18,7 +18,6 @@ const props = defineProps({
   },
   noRedirectCallback: {
     type: Function,
-    default: () => {},
   },
   clearInput: {
     type: Function,
@@ -104,7 +103,6 @@ const onKeyEnter = async (event) => {
     </v-row>
     <v-btn
       v-if="fromFileBrowser"
-      prepend-icon="mdi-plus"
       color="primary"
       size="large"
       variant="flat"
@@ -112,7 +110,7 @@ const onKeyEnter = async (event) => {
       class="mt-4"
       block
     >
-      Create
+      Create New Session
     </v-btn>
   </div>
 </template>

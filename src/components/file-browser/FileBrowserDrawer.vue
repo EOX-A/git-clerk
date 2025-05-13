@@ -3,10 +3,18 @@ import { inject } from "vue";
 import { FileBrowser } from "./";
 const fileBrowserDrawer = inject("set-file-browser-drawer");
 
+import { useDisplay } from "vuetify";
+
+const { width } = useDisplay();
+
 const props = defineProps({
   session: {
     type: Object,
     default: null,
+  },
+  updateDetails: {
+    type: Function,
+    default: () => {},
   },
 });
 </script>
@@ -16,21 +24,9 @@ const props = defineProps({
     v-model="fileBrowserDrawer"
     temporary
     location="right"
-    width="800"
+    :width="width"
     class="file-browser-drawer"
   >
-    <FileBrowser :session="session" />
+    <FileBrowser :session="session" :updateDetails="updateDetails" />
   </v-navigation-drawer>
 </template>
-
-<style scoped>
-.file-browser-drawer {
-  z-index: 999999 !important;
-  top: 0 !important;
-  height: 100% !important;
-}
-
-.v-navigation-drawer__scrim {
-  z-index: 99999 !important;
-}
-</style>

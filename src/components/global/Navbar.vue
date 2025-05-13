@@ -10,10 +10,6 @@ import { VIEWING_MODE } from "@/enums";
 
 import Tooltip from "@/components/global/Tooltip.vue";
 
-const isFileBrowserMode = computed(() => {
-  return VIEWING_MODE === "file-browser";
-});
-
 const isFileBrowser = computed(() => {
   return router.currentRoute.value.path === "/file-browser";
 });
@@ -25,6 +21,11 @@ const fileBrowserItem = ref([
     to: { path: "/file-browser" },
   },
 ]);
+
+const click = () => {
+  navButtonConfig.value.click();
+  fileBrowserDrawer.value = false;
+};
 </script>
 <template>
   <v-app-bar class="navbar" color="primary" app>
@@ -58,12 +59,26 @@ const fileBrowserItem = ref([
 
     <v-btn
       size="large"
-      :prepend-icon="isFileBrowser ? 'mdi-source-pull' : 'mdi-file-find'"
+      :prepend-icon="
+        isFileBrowser || fileBrowserDrawer === true
+          ? 'mdi-source-pull'
+          : 'mdi-folder-open'
+      "
       variant="tonal"
       class="text-capitalize font-weight-medium"
       color="white"
-      @click="isFileBrowser ? router.push('/') : (fileBrowserDrawer = true)"
-      >{{ isFileBrowser ? "All Sessions" : "Browse Files" }}</v-btn
+      @click="
+        isFileBrowser
+          ? router.push('/')
+          : (fileBrowserDrawer = !fileBrowserDrawer)
+      "
+      >{{
+        isFileBrowser
+          ? "View Sessions"
+          : fileBrowserDrawer === true
+            ? "View Session"
+            : "Browse Files"
+      }}</v-btn
     >
 
     <v-col class="button-nav flex-grow-0">
@@ -75,7 +90,7 @@ const fileBrowserItem = ref([
         class="text-capitalize font-weight-medium"
         color="white"
         :disabled="navButtonConfig.disabled"
-        @click="navButtonConfig.click"
+        @click="click"
         >{{ navButtonConfig.text }}</v-btn
       >
       <v-menu
@@ -90,6 +105,7 @@ const fileBrowserItem = ref([
             class="text-capitalize font-weight-medium"
             color="white"
             v-bind="props"
+            @click="fileBrowserDrawer = false"
             :disabled="navButtonConfig.disabled"
           >
             {{ navButtonConfig.text }}

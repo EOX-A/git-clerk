@@ -5,7 +5,7 @@ import { ref, onMounted, watch, inject } from "vue";
 import useOctokitStore from "@/stores/octokit";
 import { preventListItemClick } from "@/helpers/index.js";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
-import { Edit, AddFile } from "./";
+import { EditFile, AddFile, UploadFiles } from "./";
 
 const fileBrowserDrawer = inject("set-file-browser-drawer");
 
@@ -17,12 +17,16 @@ const hover = ref(null);
 const updateInNewSession = ref(false);
 
 const selectedOperation = ref(null);
-const { githubConfig, octokit, githubUserData } = useOctokitStore();
+const { githubConfig } = useOctokitStore();
 
 const props = defineProps({
   session: {
     type: Object,
     default: null,
+  },
+  updateDetails: {
+    type: Function,
+    default: () => {},
   },
 });
 
@@ -80,9 +84,19 @@ const onSelect = (item) => {
   }
 };
 
-watch(updatedFilePathArr, async (newPathArr) => {
+const resetOperation = (fullReset = true) => {
+  selectedOperation.value = null;
+  if (fullReset) {
+    updatedFilePath.value = "/";
+    updatedFilePathArr.value = [];
+    currPathDirStructure.value = [];
+    repoDetails.value = null;
+  }
+};
+
+const fetchDirStructure = async (pathArr) => {
   currPathDirStructure.value = [];
-  const currPath = newPathArr.join("/").replace("/", "");
+  const currPath = pathArr.join("/").replace("/", "");
 
   const data = await getBranchFileStructure(repoDetails.value, currPath, false);
   currPathDirStructure.value =
@@ -96,18 +110,26 @@ watch(updatedFilePathArr, async (newPathArr) => {
           ...data,
         ]
       : data;
+};
+
+watch(updatedFilePathArr, async (newPathArr) => {
+  await fetchDirStructure(newPathArr);
 });
 
-const addFile = () => {
+watch(fileBrowserDrawer, async (newFileBrowserDrawer) => {
+  await fetchDirStructure(updatedFilePathArr.value);
+});
+
+const handleOperation = (operation) => {
   selectedOperation.value = {
-    type: "add",
+    type: operation,
     meta: null,
   };
 };
 </script>
 <template>
   <Actions
-    :addFile="addFile"
+    :handleOperation="handleOperation"
     :updatedFilePathArr="updatedFilePathArr"
     :goToPath="goToPath"
   />
@@ -170,11 +192,12 @@ const addFile = () => {
       width="auto"
       style="z-index: 999999"
     >
-      <Edit
+      <EditFile
         v-if="selectedOperation && selectedOperation.type === 'edit'"
         :updatedFilePath="updatedFilePath"
         :selectedOperation="selectedOperation"
         :session="session"
+        :resetOperation="resetOperation"
       />
       <AddFile
         v-if="selectedOperation && selectedOperation.type === 'add'"
@@ -182,6 +205,16 @@ const addFile = () => {
         :selectedOperation="selectedOperation"
         :session="session"
         :repoDetails="repoDetails"
+        :resetOperation="resetOperation"
+      />
+      <UploadFiles
+        v-if="selectedOperation && selectedOperation.type === 'upload'"
+        :updatedFilePath="updatedFilePath"
+        :selectedOperation="selectedOperation"
+        :session="session"
+        :repoDetails="repoDetails"
+        :updateDetails="updateDetails"
+        :resetOperation="resetOperation"
       />
     </v-dialog>
   </v-list>

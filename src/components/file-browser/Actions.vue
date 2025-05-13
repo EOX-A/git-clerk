@@ -10,14 +10,14 @@ const props = defineProps({
     type: Function,
     default: () => {},
   },
-  addFile: {
+  handleOperation: {
     type: Function,
     default: () => {},
   },
 });
 </script>
 <template>
-  <ActionTab>
+  <ActionTab class="action-tab-file-browser position-sticky top-0">
     <v-icon icon="mdi-folder-open" class="text-blue" />
     <v-chip class="text-mono w-100 rounded-pill font-weight-bold">
       <v-hover
@@ -57,10 +57,20 @@ const props = defineProps({
         <v-list-item
           prepend-icon="mdi-file-plus-outline"
           title="Add file here"
-          @click="addFile"
+          @click="handleOperation('add')"
         />
-        <v-list-item prepend-icon="mdi-upload" title="Upload file here" />
+        <v-list-item
+          prepend-icon="mdi-upload"
+          title="Upload file here"
+          @click="handleOperation('upload')"
+        />
       </v-list>
     </v-menu>
   </ActionTab>
 </template>
+
+<style scoped>
+.action-tab-file-browser {
+  z-index: 1;
+}
+</style>

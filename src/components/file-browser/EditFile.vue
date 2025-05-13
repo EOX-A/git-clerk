@@ -24,6 +24,10 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+  resetOperation: {
+    type: Function,
+    default: () => {},
+  },
 });
 
 const filePath = () => {
@@ -42,6 +46,7 @@ const clearInput = () => {
 const currentSession = () => {
   router.push(`/${props.session.number}/${filePath()}`);
   fileBrowserDrawer.value = false;
+  props.resetOperation();
 };
 
 onMounted(() => {

@@ -129,7 +129,11 @@ const handleAutomationClose = () => {
 </script>
 
 <template>
-  <FileBrowserDrawer v-if="session" :session="session" />
+  <FileBrowserDrawer
+    v-if="session"
+    :updateDetails="updateDetails"
+    :session="session"
+  />
   <CreateFile
     v-if="session && addNewFileClick"
     :updateDetails
