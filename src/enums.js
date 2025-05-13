@@ -32,3 +32,5 @@ export const DEPLOYED_PREVIEW_LINK =
   globalThis.deployedPreviewLink ||
   GIT_CLERK_CONFIG.deployedPreviewLink ||
   (() => null);
+export const VIEWING_MODE =
+  globalThis.viewingMode || GIT_CLERK_CONFIG.viewingMode || "session";
