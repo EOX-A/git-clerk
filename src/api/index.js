@@ -188,7 +188,7 @@ export async function getFileDetails(session, filePath, cache = true) {
 }
 
 export async function getBranchFileStructure(session, path, noFiles = false) {
-  const { githubConfig, octokit, githubUserData } = useOctokitStore();
+  const { githubConfig, octokit } = useOctokitStore();
   const { head } = session;
 
   return branchFileStructure(

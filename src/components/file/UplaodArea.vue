@@ -199,7 +199,7 @@ const fileUpload = async () => {
       Clear All
     </v-btn>
     <v-btn
-      class="text-capitalize font-weight-medium"
+      class="text-capitalize font-weight-medium upload-file-btn"
       color="primary"
       variant="flat"
       @click="fileUpload"

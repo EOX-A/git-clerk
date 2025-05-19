@@ -107,7 +107,7 @@ const onKeyEnter = async (event) => {
       size="large"
       variant="flat"
       @click="create"
-      class="mt-4"
+      class="mt-4 session-create-btn"
       block
     >
       Create New Session

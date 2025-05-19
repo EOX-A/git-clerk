@@ -95,6 +95,7 @@ const resetOperation = (fullReset = true) => {
 };
 
 const fetchDirStructure = async (pathArr) => {
+  if (!repoDetails.value) return;
   currPathDirStructure.value = [];
   const currPath = pathArr.join("/").replace("/", "");
 

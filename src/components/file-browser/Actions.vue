@@ -47,7 +47,7 @@ const props = defineProps({
           color="primary"
           variant="flat"
           v-bind="props"
-          class="ml-2"
+          class="ml-2 add-file-btn"
           prepend-icon="mdi-plus"
         >
           Add File

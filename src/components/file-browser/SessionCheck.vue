@@ -20,7 +20,12 @@ const newSessionHandler = () => {
       <slot></slot>
     </p>
     <div class="d-flex align-center justify-center ga-3">
-      <v-btn size="large" variant="tonal" @click="currentSessionHandler">
+      <v-btn
+        size="large"
+        class="current-session-btn"
+        variant="tonal"
+        @click="currentSessionHandler"
+      >
         Current Session
       </v-btn>
       <v-btn
@@ -28,6 +33,7 @@ const newSessionHandler = () => {
         color="primary"
         variant="flat"
         @click="newSessionHandler"
+        class="new-session-btn"
       >
         New Session
       </v-btn>

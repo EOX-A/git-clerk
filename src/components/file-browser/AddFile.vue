@@ -106,11 +106,13 @@ const createFile = async () => {
           label="File Name"
           placeholder="File Name"
           variant="outlined"
+          class="add-file-field"
         />
         <v-btn
           color="primary"
           size="large"
           variant="flat"
+          class="add-file-button"
           block
           @click="createFile"
         >
