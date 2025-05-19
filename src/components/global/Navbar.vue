@@ -65,7 +65,7 @@ const click = () => {
           : 'mdi-folder-open'
       "
       variant="tonal"
-      class="text-capitalize font-weight-medium"
+      class="session-file-btn text-capitalize font-weight-medium"
       color="white"
       @click="
         isFileBrowser
@@ -87,7 +87,7 @@ const click = () => {
         size="large"
         :prepend-icon="navButtonConfig.icon"
         variant="flat"
-        class="text-capitalize font-weight-medium"
+        class="text-capitalize font-weight-medium action-button"
         color="white"
         :disabled="navButtonConfig.disabled"
         @click="click"
@@ -102,7 +102,7 @@ const click = () => {
             size="large"
             :prepend-icon="navButtonConfig.icon"
             variant="flat"
-            class="text-capitalize font-weight-medium"
+            class="text-capitalize font-weight-medium action-button"
             color="white"
             v-bind="props"
             @click="fileBrowserDrawer = false"

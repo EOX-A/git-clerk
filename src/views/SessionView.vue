@@ -150,7 +150,7 @@ const handleAutomationClose = () => {
       v-for="(file, index) in fileChangesList"
       :key="file.title"
       :title="file.title"
-      class="files-view py-4 border-b-thin"
+      class="files-view files-list py-4 border-b-thin"
       @mouseenter="hover = index"
       @mouseleave="hover = null"
       @click.native.capture="preventListItemClick"
@@ -168,7 +168,7 @@ const handleAutomationClose = () => {
           <div class="ml-4">
             <div class="d-flex align-center ga-3">
               <div
-                class="main-title text-black"
+                class="main-title file-title text-black"
                 :class="{
                   'font-weight-bold': hover === index && !session.closed_at,
                 }"

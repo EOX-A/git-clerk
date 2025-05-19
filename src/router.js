@@ -40,7 +40,12 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-  if (to.path === "/" && VIEWING_MODE === "file-browser" && firstLoad) {
+  if (
+    to.path === "/" &&
+    VIEWING_MODE === "file-browser" &&
+    firstLoad &&
+    !to.query.automation
+  ) {
     next("/file-browser");
   } else {
     next();

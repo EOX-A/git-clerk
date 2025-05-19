@@ -191,7 +191,7 @@ const resetWholeState = async () => {
             <div class="ml-4">
               <div class="d-flex align-center ga-3">
                 <div
-                  class="main-title text-black"
+                  class="main-title session-title text-black"
                   :class="{ 'font-weight-bold': hover === index }"
                 >
                   {{ session.title }}
