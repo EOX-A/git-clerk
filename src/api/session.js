@@ -140,6 +140,20 @@ async function numberOfSessionBasedOnTitle(octokit, githubConfig, prName) {
   }
 }
 
+export async function repoDetails(octokit, githubConfig, githubUserData) {
+  const { repo } = githubConfig;
+  const { login: owner } = githubUserData;
+  try {
+    const response = await octokit.rest.repos.get({
+      owner,
+      repo,
+    });
+    return response.data;
+  } catch (error) {
+    return null;
+  }
+}
+
 export async function createSession(octokit, githubConfig, prName) {
   const { username: owner, repo } = githubConfig;
   const username = (await octokit.rest.users.getAuthenticated()).data.login;

@@ -108,7 +108,7 @@ export async function branchFileStructure(
     const { data } = await octokit.rest.repos.getContent({
       owner,
       repo,
-      ref,
+      ...(ref ? { ref } : {}),
       path,
       headers: {
         "If-None-Match": "",
@@ -120,9 +120,21 @@ export async function branchFileStructure(
         continue;
       }
 
-      dirStructure.push({
-        ...item,
-        icon: item.type === "dir" ? "folder" : "file",
+      if (item.type === "dir") {
+        dirStructure.push({
+          ...item,
+          icon: "folder",
+        });
+      } else {
+        dirStructure.push({
+          ...item,
+          icon: "file",
+        });
+      }
+      dirStructure.sort((a, b) => {
+        if (a.type === "dir" && b.type !== "dir") return -1;
+        if (a.type !== "dir" && b.type === "dir") return 1;
+        return a.name.localeCompare(b.name);
       });
     }
 

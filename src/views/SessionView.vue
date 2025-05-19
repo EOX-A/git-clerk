@@ -22,7 +22,7 @@ import { BASE_PATH, AUTOMATION } from "@/enums";
 import "@eox/jsonform";
 import Automation from "@/components/session/Automation.vue";
 import find from "lodash/find";
-
+import { FileBrowserDrawer } from "@/components/file-browser";
 const route = useRoute();
 const router = useRouter();
 const sessionNumber = route.params.sessionNumber;
@@ -129,6 +129,11 @@ const handleAutomationClose = () => {
 </script>
 
 <template>
+  <FileBrowserDrawer
+    v-if="session"
+    :updateDetails="updateDetails"
+    :session="session"
+  />
   <CreateFile
     v-if="session && addNewFileClick"
     :updateDetails
@@ -145,7 +150,7 @@ const handleAutomationClose = () => {
       v-for="(file, index) in fileChangesList"
       :key="file.title"
       :title="file.title"
-      class="files-view py-4 border-b-thin"
+      class="files-view files-list py-4 border-b-thin"
       @mouseenter="hover = index"
       @mouseleave="hover = null"
       @click.native.capture="preventListItemClick"
@@ -163,7 +168,7 @@ const handleAutomationClose = () => {
           <div class="ml-4">
             <div class="d-flex align-center ga-3">
               <div
-                class="main-title text-black"
+                class="main-title file-title text-black"
                 :class="{
                   'font-weight-bold': hover === index && !session.closed_at,
                 }"

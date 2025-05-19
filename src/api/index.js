@@ -9,6 +9,7 @@ import {
   sessionDetails,
   renameSession,
   numberOfOpenClosedSessions,
+  repoDetails,
 } from "@/api/session";
 import useOctokitStore from "@/stores/octokit";
 import {
@@ -76,6 +77,11 @@ export async function initOctokit() {
 
 export async function getLoginData() {
   return data;
+}
+
+export async function getRepoDetails() {
+  const { githubConfig, githubUserData, octokit } = useOctokitStore();
+  return repoDetails(octokit, githubConfig, githubUserData);
 }
 
 export async function getSessionsList(
@@ -231,6 +237,11 @@ export async function createAndUpdateMultipleFiles(session, path, files, sha) {
     const arrayBuffer = await file.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
 
+    const content = {
+      data: bytes,
+      type: "string",
+    };
+
     const result = await updateFile(
       octokit,
       githubConfig,
@@ -239,7 +250,7 @@ export async function createAndUpdateMultipleFiles(session, path, files, sha) {
       head.ref,
       fullFilePath,
       fileName,
-      { bytes },
+      content,
       sha,
     );
 

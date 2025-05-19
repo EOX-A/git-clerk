@@ -275,6 +275,8 @@ const deployedPreviewLink = (sessionDetail) => {
   return `https://github.com/${base.repo.owner.login}/${base.repo.name}/pull/${number}`;
 };
 
+const viewingMode = "file-browser";
+
 globalThis.gitClerkConfig = {
   ghConfig,
   basePath,
@@ -283,4 +285,5 @@ globalThis.gitClerkConfig = {
   customEditorInterfaces,
   generateEnums,
   deployedPreviewLink,
+  viewingMode,
 };
