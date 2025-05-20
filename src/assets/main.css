@@ -78,3 +78,12 @@ html {
 .z-index {
   z-index: 1;
 }
+
+.driver-popover .driver-popover-close-btn {
+  right: 8px;
+  top: 2px;
+}
+
+.driver-popover .driver-popover-arrow {
+  display: none;
+}

@@ -40,6 +40,7 @@ const cursorHistory = ref([]);
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
+const tourConfig = inject("set-tour-config");
 
 const updateSessionsList = async (cache = false) => {
   sessions.value = null;
@@ -142,6 +143,49 @@ onMounted(async () => {
     await createFile();
   }
   await updateSessionsList(true);
+
+  tourConfig.value = {
+    showProgress: true,
+    steps: [
+      {
+        element: "#primary-action-btn",
+        popover: {
+          title: "Start a new session",
+          description:
+            "Allows you to create a new session to share your ideas and propose updates.",
+        },
+      },
+      {
+        element: ".open-session-filter",
+        popover: {
+          title: "Check open sessions",
+          description: "Shows all the sessions that are currently open.",
+        },
+      },
+      {
+        element: ".closed-session-filter",
+        popover: {
+          title: "Check closed sessions",
+          description: "Shows all the sessions that are currently closed.",
+        },
+      },
+      {
+        element: ".sessions-view:first-child",
+        popover: {
+          title: "View each session",
+          description: "Click on a session to view the details of the session.",
+        },
+      },
+      {
+        element: ".sessions-view:first-child .v-list-item__append",
+        popover: {
+          title: "Action buttons for each session",
+          description:
+            "Run different actions on each session like deleting, requesting review or open in github.",
+        },
+      },
+    ],
+  };
 });
 
 const onPageChange = async (newCursor) => {
