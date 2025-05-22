@@ -50,6 +50,6 @@ onMounted(async () => {
       >
       </v-snackbar>
     </v-main>
-    <eox-tour show-every-time v-if="tourConfig" :config="tourConfig" />
+    <eox-tour v-if="tourConfig" :config="tourConfig" />
   </v-app>
 </template>
