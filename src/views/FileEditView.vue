@@ -14,6 +14,7 @@ import {
   getSchemaDetails,
   stringifyIfNeeded,
   useLoader,
+  getTourConfig,
 } from "@/helpers/index.js";
 import {
   queryFileDetailsMethod,
@@ -50,6 +51,7 @@ const showPreview = ref(window.innerWidth >= 960);
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
+const tourConfig = inject("set-tour-config");
 
 const debouncedPostMessage = debounce(debouncePostMessageMethod, 500);
 
@@ -215,6 +217,11 @@ onMounted(async () => {
     });
   }
   loader.hide();
+
+  const isPreviewExists = Boolean(previewURL.value);
+  const tourID = isPreviewExists ? "file-edit-preview" : "file-edit";
+
+  tourConfig.value = getTourConfig(tourID, { isPreviewExists });
 });
 
 onUnmounted(() => {
@@ -259,6 +266,7 @@ onUnmounted(() => {
         :class="`fill-height overflow-x-auto overflow-y-scroll pa-4 pa-md-8 ${previewURL && previewExpanded ? 'd-none' : ''} ${$vuetify?.display?.smAndDown ? 'order-2' : 'order-1'}`"
       >
         <eox-jsonform
+          id="file-editor-form"
           :schema="schemaMetaDetails.schema"
           :value="updatedFileContent"
           :customEditorInterfaces="customInterfaces"
@@ -269,11 +277,13 @@ onUnmounted(() => {
       </v-col>
       <v-col
         v-if="previewURL"
+        id="preview-frame"
         cols="12"
         :md="previewExpanded ? 12 : 6"
         :class="`file-preview fill-height position-relative ${showPreview ? '' : 'd-none'} ${$vuetify?.display?.smAndDown ? 'order-1' : 'order-2'}`"
       >
         <v-btn
+          id="preview-expand-btn"
           class="resize-btn position-absolute text-black elevation-1 d-md-block d-none"
           variant="flat"
           color="primary"

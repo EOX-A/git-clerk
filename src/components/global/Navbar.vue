@@ -52,6 +52,7 @@ import Tooltip from "@/components/global/Tooltip.vue";
       >
         <template v-slot:activator="{ props }">
           <v-btn
+            id="primary-action-menu-btn"
             size="large"
             :prepend-icon="navButtonConfig.icon"
             variant="flat"

@@ -33,15 +33,17 @@ const props = defineProps({
 
 <template>
   <ActionTab>
-    <Github :file="file" />
-    <DeleteFile
-      text="Delete File"
-      size="x-large"
-      :file="file"
-      :session="session"
-      :callBack="() => router.push(`/${session.number}`)"
-    />
-    <RenameFile text="Rename File" size="x-large" :file :session />
+    <div id="file-actions" class="d-flex align-center justify-center">
+      <Github :file="file" />
+      <DeleteFile
+        text="Delete File"
+        size="x-large"
+        :file="file"
+        :session="session"
+        :callBack="() => router.push(`/${session.number}`)"
+      />
+      <RenameFile text="Rename File" size="x-large" :file :session />
+    </div>
     <v-divider v-if="previewURL" inset vertical></v-divider>
     <PreviewBtn
       :togglePreview="togglePreview"

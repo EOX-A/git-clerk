@@ -2,6 +2,10 @@
 import { defineProps, ref, watch } from "vue";
 
 const props = defineProps({
+  id: {
+    type: String,
+    default: "",
+  },
   session: {
     type: Object,
     default: {},
@@ -46,30 +50,30 @@ watch([props], ([newProps]) => {
 
 <template>
   <!-- Mobile -->
-  <v-btn
-    v-if="tab"
-    :href="session.deployedPreviewLink"
-    target="_blank"
-    color="blue-grey-darken-4"
-    icon="mdi-arrow-top-right"
-    :size="size"
-    variant="outlined"
-    class="d-flex d-md-none border-black border-md border-opacity-100"
-    id="deployed-preview-btn"
-    :disabled="disabled"
-  ></v-btn>
-  <!-- Non-mobile -->
-  <v-btn
-    v-if="tab"
-    :href="session.deployedPreviewLink"
-    target="_blank"
-    color="blue-grey-darken-4"
-    prepend-icon="mdi-arrow-top-right"
-    :size="size"
-    :text="text"
-    variant="outlined"
-    class="text-capitalize font-weight-medium d-none d-md-flex border-black border-md border-opacity-100"
-    id="deployed-preview-btn"
-    :disabled="disabled"
-  ></v-btn>
+  <div :id="id">
+    <v-btn
+      v-if="tab"
+      :href="session.deployedPreviewLink"
+      target="_blank"
+      color="blue-grey-darken-4"
+      icon="mdi-arrow-top-right"
+      :size="size"
+      variant="outlined"
+      class="d-flex d-md-none border-black border-md border-opacity-100"
+      :disabled="disabled"
+    ></v-btn>
+    <!-- Non-mobile -->
+    <v-btn
+      v-if="tab"
+      :href="session.deployedPreviewLink"
+      target="_blank"
+      color="blue-grey-darken-4"
+      prepend-icon="mdi-arrow-top-right"
+      :size="size"
+      :text="text"
+      variant="outlined"
+      class="text-capitalize font-weight-medium d-none d-md-flex border-black border-md border-opacity-100"
+      :disabled="disabled"
+    ></v-btn>
+  </div>
 </template>

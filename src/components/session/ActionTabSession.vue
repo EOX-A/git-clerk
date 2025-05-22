@@ -41,6 +41,7 @@ const props = defineProps({
     <v-divider inset vertical></v-divider>
     <v-btn
       v-if="!props.session.draft && props.session.state !== 'closed'"
+      id="review-btn"
       target="_blank"
       color="primary"
       :icon="
@@ -54,6 +55,7 @@ const props = defineProps({
       disabled
     ></v-btn>
     <ReviewSession
+      id="review-btn"
       v-else-if="props.session.draft && props.session.check"
       tab
       text="Submit for Review"
@@ -69,6 +71,7 @@ const props = defineProps({
       :session="props.session"
       :state="props.session.state"
       tab
+      id="deployed-preview-btn"
       size="x-large"
     />
     <v-spacer></v-spacer>
