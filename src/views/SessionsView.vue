@@ -12,7 +12,11 @@ import {
 } from "@/methods/sessions-view";
 import { useRoute, useRouter } from "vue-router";
 import Tooltip from "@/components/global/Tooltip.vue";
-import { useLoader, preventListItemClick } from "@/helpers/index.js";
+import {
+  useLoader,
+  preventListItemClick,
+  getTourConfig,
+} from "@/helpers/index.js";
 import { ActionList, ActionTabSessions } from "@/components/session";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import CursorPagination from "@/components/global/CursorPagination.vue";
@@ -40,6 +44,7 @@ const cursorHistory = ref([]);
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
+const tourConfig = inject("set-tour-config");
 
 const updateSessionsList = async (cache = false) => {
   sessions.value = null;
@@ -142,6 +147,11 @@ onMounted(async () => {
     await createFile();
   }
   await updateSessionsList(true);
+
+  const isEmpty = sessions.value && sessions.value.length === 0;
+  const tourID = isEmpty ? "sessions-view-empty" : "sessions-view";
+
+  tourConfig.value = getTourConfig(tourID, { isEmpty });
 });
 
 const onPageChange = async (newCursor) => {
@@ -306,7 +316,7 @@ const resetWholeState = async () => {
   </v-list>
 
   <CursorPagination
-    v-if="sessions"
+    v-if="sessions && sessions.length"
     :pageInfo="pageInfo"
     :onPageChange="onPageChange"
     :currentPage="currentPage"

@@ -9,6 +9,7 @@ const props = defineProps({
 <template>
   <v-btn
     v-if="previewURL"
+    id="preview-toggle-btn"
     :color="showPreview ? 'primary' : 'blue-grey-darken-4'"
     :icon="
       $vuetify?.display?.smAndDown

@@ -17,7 +17,11 @@ import {
   FileUploader,
   DuplicateFile,
 } from "@/components/file";
-import { encodeString, preventListItemClick } from "@/helpers/index.js";
+import {
+  encodeString,
+  preventListItemClick,
+  getTourConfig,
+} from "@/helpers/index.js";
 import { BASE_PATH, AUTOMATION } from "@/enums";
 import "@eox/jsonform";
 import Automation from "@/components/session/Automation.vue";
@@ -37,6 +41,7 @@ const hover = ref(null);
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
+const tourConfig = inject("set-tour-config");
 
 const automationDialog = ref(false);
 const selectedAutomation = ref(null);
@@ -109,6 +114,11 @@ onMounted(async () => {
   }
 
   await updateDetails();
+
+  const isEmpty = fileChangesList.value && fileChangesList.value.length === 0;
+  const tourID = isEmpty ? "session-view-empty" : "session-view";
+
+  tourConfig.value = getTourConfig(tourID, { isEmpty });
 });
 
 const onPageChange = async (newPage) => {
@@ -218,7 +228,7 @@ const handleAutomationClose = () => {
     >
       <template v-slot:actions v-if="!session.closed_at">
         <v-container class="pa-4 pt-10">
-          <v-row class="justify-center">
+          <v-row class="justify-center" id="file-actions">
             <!-- Dynamic automation buttons -->
             <v-col
               v-for="(automation, index) in suggestionList"
@@ -261,7 +271,12 @@ const handleAutomationClose = () => {
     </v-empty-state>
   </v-list>
 
-  <OffsetPagination v-if="fileChangesList" :page :totalPage :onPageChange />
+  <OffsetPagination
+    v-if="fileChangesList && fileChangesList.length"
+    :page
+    :totalPage
+    :onPageChange
+  />
 
   <FileUploader
     :open="uploadFilesDialog"

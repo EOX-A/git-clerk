@@ -6,6 +6,10 @@ import { reviewBySessionNumber } from "@/api/index.js";
 import { watch } from "vue";
 
 const props = defineProps({
+  id: {
+    type: String,
+    default: "",
+  },
   session: {
     type: Object,
     default: {},
@@ -94,6 +98,7 @@ watch([props], ([newProps]) => {
       :disabled="disabled"
       @click="reviewSession = props.session"
       :class="`text-capitalize font-weight-medium ${props.class}`"
+      :id="id"
     >
       <template v-if="error" v-slot:append>
         <v-icon
