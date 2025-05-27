@@ -141,7 +141,7 @@ const handleOperation = (operation) => {
       v-for="(item, index) in currPathDirStructure"
       :key="item.name"
       :title="item.name"
-      class="files-view py-4 border-b-thin"
+      class="files-view files-browse-list py-4 border-b-thin"
       @mouseenter="hover = index"
       @mouseleave="hover = null"
       @click.native.capture="preventListItemClick"

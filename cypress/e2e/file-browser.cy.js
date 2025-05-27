@@ -70,7 +70,7 @@ describe("File browser related tests", () => {
   it("Render files list", () => {
     cy.visit("/123");
     cy.get(".navbar .v-btn.session-file-btn").click();
-    cy.get(".files-view", { timeout: 12000 }).should(
+    cy.get(".files-browse-list", { timeout: 12000 }).should(
       "have.length",
       contents.length,
     );
@@ -100,7 +100,7 @@ describe("File browser related tests", () => {
   it("Edit existing file", () => {
     editSession = true;
     cy.get(".navbar .v-btn.session-file-btn").click();
-    cy.get(".files-view").eq(6).click();
+    cy.get(".files-browse-list").eq(6).click();
     cy.get(".current-session-btn").click();
     cy.location("pathname", { timeout: 10000 }).should(
       "eq",
