@@ -151,7 +151,6 @@ describe("Session list related tests", () => {
   // Test that sessions list renders correctly
   it("Render sessions list", () => {
     cy.visit("/");
-    cy.get(".navbar .v-btn.session-file-btn").click();
     cy.get(".sessions-view", { timeout: 12000 }).should(
       "have.length",
       sessionsList.search.issueCount,
