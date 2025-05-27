@@ -6,21 +6,8 @@ const router = useRouter();
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 const fileBrowserDrawer = inject("set-file-browser-drawer");
-import { VIEWING_MODE } from "@/enums";
 
 import Tooltip from "@/components/global/Tooltip.vue";
-
-const isFileBrowser = computed(() => {
-  return router.currentRoute.value.path === "/file-browser";
-});
-
-const fileBrowserItem = ref([
-  {
-    title: "File Browser",
-    disabled: false,
-    to: { path: "/file-browser" },
-  },
-]);
 
 const click = () => {
   navButtonConfig.value.click();
@@ -30,9 +17,7 @@ const click = () => {
 <template>
   <v-app-bar class="navbar" color="primary" app>
     <v-toolbar-title class="toolbar-title">
-      <v-breadcrumbs
-        :items="isFileBrowser ? fileBrowserItem : navPaginationItems"
-      >
+      <v-breadcrumbs :items="navPaginationItems">
         <template v-slot:divider>
           <v-icon icon="mdi-chevron-right"></v-icon>
         </template>
@@ -45,11 +30,13 @@ const click = () => {
             icon="mdi-folder-outline"
             size="x-large"
             class="text-h5"
+            @click="fileBrowserDrawer = !fileBrowserDrawer"
           />
           <div
             v-else
             class="d-flex align-center text-truncate"
             :style="$vuetify.display.smAndDown ? 'max-width: 50px' : ''"
+            @click="fileBrowserDrawer = !fileBrowserDrawer"
           >
             {{ item.title }}
           </div>
@@ -60,25 +47,13 @@ const click = () => {
     <v-btn
       size="large"
       :prepend-icon="
-        isFileBrowser || fileBrowserDrawer === true
-          ? 'mdi-source-pull'
-          : 'mdi-folder-open'
+        fileBrowserDrawer === true ? 'mdi-source-pull' : 'mdi-folder-open'
       "
       variant="tonal"
       class="session-file-btn text-capitalize font-weight-medium"
       color="white"
-      @click="
-        isFileBrowser
-          ? router.push('/')
-          : (fileBrowserDrawer = !fileBrowserDrawer)
-      "
-      >{{
-        isFileBrowser
-          ? "View Sessions"
-          : fileBrowserDrawer === true
-            ? "View Session"
-            : "Browse Files"
-      }}</v-btn
+      @click="fileBrowserDrawer = !fileBrowserDrawer"
+      >{{ fileBrowserDrawer === true ? "View Session" : "Browse Files" }}</v-btn
     >
 
     <v-col class="button-nav flex-grow-0">

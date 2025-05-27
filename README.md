@@ -31,20 +31,6 @@ You can also set this GitHub config via an `.env` variable, by passing `GITCLERK
 
 ## Features
 
-### Viewing Mode
-
-Git clerks allow users to set their main `viewingMode` as `file-browser` or `session`
-
-```js
-globalThis.gitClerkConfig = {
-  [...]
-  viewingMode: "file-browser", // "file-browser" or "session"
-  [...]
-};
-```
-
-An example for this setup can be seen in [here](https://github.com/EOX-A/git-clerk/blob/b392fcb482c633e1430101501e30672cc335d7e2/public/config.js#L278).
-
 ### `schemaMap`
 
 With the `schemaMap`, one can configure which file paths are associated with which JSON schemas to automatically render input forms.

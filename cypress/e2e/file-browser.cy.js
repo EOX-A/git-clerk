@@ -69,6 +69,7 @@ describe("File browser related tests", () => {
   // Test to check if the files list is rendered correctly
   it("Render files list", () => {
     cy.visit("/");
+    cy.get(".navbar .v-btn.session-file-btn").click();
     cy.get(".files-view", { timeout: 12000 }).should(
       "have.length",
       contents.length,
