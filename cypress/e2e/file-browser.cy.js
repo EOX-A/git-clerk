@@ -68,7 +68,7 @@ describe("File browser related tests", () => {
 
   // Test to check if the files list is rendered correctly
   it("Render files list", () => {
-    cy.visit("/");
+    cy.visit("/123");
     cy.get(".navbar .v-btn.session-file-btn").click();
     cy.get(".files-view", { timeout: 12000 }).should(
       "have.length",
@@ -80,6 +80,7 @@ describe("File browser related tests", () => {
   it("Add new file", () => {
     cy.get(".add-file-btn").click();
     cy.get(".v-list-item").eq(0).click();
+    cy.get(".new-session-btn").click();
     cy.get(".session-create-field .v-field__input").type(dummySession.title, {
       delay: 100,
     });
