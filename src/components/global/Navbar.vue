@@ -30,13 +30,13 @@ const click = () => {
             icon="mdi-folder-outline"
             size="x-large"
             class="text-h5"
-            @click="fileBrowserDrawer = !fileBrowserDrawer"
+            @click="fileBrowserDrawer = false"
           />
           <div
             v-else
             class="d-flex align-center text-truncate"
             :style="$vuetify.display.smAndDown ? 'max-width: 50px' : ''"
-            @click="fileBrowserDrawer = !fileBrowserDrawer"
+            @click="fileBrowserDrawer = false"
           >
             {{ item.title }}
           </div>
