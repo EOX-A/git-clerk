@@ -14,11 +14,13 @@ const navPaginationItems = ref([
     to: { path: "/" },
   },
 ]);
+const fileBrowserDrawer = ref(false);
 const snackbar = ref(false);
 const isOctokitInitialised = ref(false);
 provide("set-nav-button-config", navButtonConfig);
 provide("set-nav-pagination-items", navPaginationItems);
 provide("set-snackbar", snackbar);
+provide("set-file-browser-drawer", fileBrowserDrawer);
 
 onMounted(async () => {
   const loader = useLoader().show();
@@ -36,7 +38,7 @@ onMounted(async () => {
     <Navbar />
     <v-main>
       <template v-if="isOctokitInitialised">
-        <RouterView />
+        <RouterView :key="$route.fullPath" />
       </template>
       <v-snackbar
         v-model="snackbar"

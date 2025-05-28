@@ -8,6 +8,7 @@ import {
 } from "@/api/index.js";
 import { useRoute, useRouter } from "vue-router";
 import { querySessionDetailsMethod } from "@/methods/session-view/index.js";
+import { FileBrowserDrawer } from "@/components/file-browser/index.js";
 import {
   decodeString,
   getFileSchema,
@@ -223,6 +224,8 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <FileBrowserDrawer v-if="session" :session="session" />
+
   <ActionTabFileEditor
     v-if="session && file"
     :file

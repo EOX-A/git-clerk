@@ -1,9 +1,18 @@
 <script setup>
-import { inject } from "vue";
+import { inject, computed, ref } from "vue";
+import { useRouter } from "vue-router";
 
+const router = useRouter();
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
+const fileBrowserDrawer = inject("set-file-browser-drawer");
+
 import Tooltip from "@/components/global/Tooltip.vue";
+
+const click = () => {
+  navButtonConfig.value.click();
+  fileBrowserDrawer.value = false;
+};
 </script>
 <template>
   <v-app-bar class="navbar" color="primary" app>
@@ -21,11 +30,13 @@ import Tooltip from "@/components/global/Tooltip.vue";
             icon="mdi-folder-outline"
             size="x-large"
             class="text-h5"
+            @click="fileBrowserDrawer = false"
           />
           <div
             v-else
             class="d-flex align-center text-truncate"
             :style="$vuetify.display.smAndDown ? 'max-width: 50px' : ''"
+            @click="fileBrowserDrawer = false"
           >
             {{ item.title }}
           </div>
@@ -33,16 +44,28 @@ import Tooltip from "@/components/global/Tooltip.vue";
       </v-breadcrumbs>
     </v-toolbar-title>
 
+    <v-btn
+      size="large"
+      :prepend-icon="
+        fileBrowserDrawer === true ? 'mdi-source-pull' : 'mdi-folder-open'
+      "
+      variant="tonal"
+      class="session-file-btn text-capitalize font-weight-medium"
+      color="white"
+      @click="fileBrowserDrawer = !fileBrowserDrawer"
+      >{{ fileBrowserDrawer === true ? "View Session" : "Browse Files" }}</v-btn
+    >
+
     <v-col class="button-nav flex-grow-0">
       <v-btn
         v-if="navButtonConfig.text && navButtonConfig.click"
         size="large"
         :prepend-icon="navButtonConfig.icon"
         variant="flat"
-        class="text-capitalize font-weight-medium"
+        class="text-capitalize font-weight-medium action-button"
         color="white"
         :disabled="navButtonConfig.disabled"
-        @click="navButtonConfig.click"
+        @click="click"
         >{{ navButtonConfig.text }}</v-btn
       >
       <v-menu
@@ -54,9 +77,10 @@ import Tooltip from "@/components/global/Tooltip.vue";
             size="large"
             :prepend-icon="navButtonConfig.icon"
             variant="flat"
-            class="text-capitalize font-weight-medium"
+            class="text-capitalize font-weight-medium action-button"
             color="white"
             v-bind="props"
+            @click="fileBrowserDrawer = false"
             :disabled="navButtonConfig.disabled"
           >
             {{ navButtonConfig.text }}

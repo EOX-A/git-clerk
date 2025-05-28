@@ -5,6 +5,8 @@ import FileEditView from "@/views/FileEditView.vue";
 import NotFoundView from "@/views/NotFoundView.vue";
 import { BASE_PATH } from "@/enums";
 
+let firstLoad = true;
+
 const router = createRouter({
   history: createWebHistory(BASE_PATH),
   routes: [
