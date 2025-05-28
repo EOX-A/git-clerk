@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/EOX-A/git-clerk/compare/v1.9.0...v1.9.1) (2025-05-28)
+
+
+### Features
+
+* File browser ([#156](https://github.com/EOX-A/git-clerk/issues/156)) ([7291c9f](https://github.com/EOX-A/git-clerk/commit/7291c9fb8282a91003e23ca491d6e007307d4d87))
+
 ## [1.9.0](https://github.com/EOX-A/git-clerk/compare/v1.8.1...v1.9.0) (2025-04-30)
 
 
