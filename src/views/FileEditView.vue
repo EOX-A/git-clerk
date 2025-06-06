@@ -277,11 +277,12 @@ onUnmounted(() => {
         :class="`file-preview fill-height position-relative ${showPreview ? '' : 'd-none'} ${$vuetify?.display?.smAndDown ? 'order-1' : 'order-2'}`"
       >
         <v-btn
-          class="resize-btn position-absolute text-black elevation-1 d-md-block d-none"
+          class="resize-btn position-absolute text-black d-md-block d-none"
           variant="flat"
-          color="primary"
-          :icon="previewExpanded ? 'mdi-arrow-collapse' : 'mdi-arrow-expand'"
-          size="large"
+          color="surface-light"
+          icon="mdi-arrow-left-right"
+          size="small"
+          :class="previewExpanded ? 'preview-expanded' : ''"
           @click="previewExpanded = !previewExpanded"
         ></v-btn>
         <iframe v-if="previewURL" id="previewFrame" :src="previewURL"></iframe>
@@ -291,6 +292,14 @@ onUnmounted(() => {
 </template>
 
 <style>
+.resize-btn {
+  top: calc(50% - 20px) !important;
+  left: -20px;
+}
+.resize-btn.preview-expanded:hover {
+  left: 5px;
+  transition: left 0.2s ease-in-out;
+}
 .file-editor {
   --secondary-header-height: 80px;
   height: calc(100% - var(--secondary-header-height));
