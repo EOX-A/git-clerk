@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.1](https://github.com/EOX-A/git-clerk/compare/v1.9.0...v1.9.1) (2025-06-06)
+
+
+### Features
+
+* File browser ([#156](https://github.com/EOX-A/git-clerk/issues/156)) ([7291c9f](https://github.com/EOX-A/git-clerk/commit/7291c9fb8282a91003e23ca491d6e007307d4d87))
+* Improve resize preview button ([#163](https://github.com/EOX-A/git-clerk/issues/163)) ([2d6187b](https://github.com/EOX-A/git-clerk/commit/2d6187baeaebde828177024a09785565cf8dd059))
+
 ## [1.9.0](https://github.com/EOX-A/git-clerk/compare/v1.8.1...v1.9.0) (2025-04-30)
 
 
