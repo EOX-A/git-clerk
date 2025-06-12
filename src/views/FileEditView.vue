@@ -23,7 +23,10 @@ import {
   jsonSchemaFileChangeMethod,
   addPostMessageEventMethod,
 } from "../methods/file-edit-view";
-import { ActionTabFileEditor } from "@/components/file/index.js";
+import {
+  ActionTabFileEditor,
+  ValidationError,
+} from "@/components/file/index.js";
 import debounce from "lodash.debounce";
 import "@eox/jsonform";
 import "@eox/drawtools";
@@ -47,6 +50,7 @@ const schemaMetaDetails = ref(null);
 const customInterfaces = ref([]);
 const previewExpanded = ref(false);
 const showPreview = ref(window.innerWidth >= 960);
+const validationErrors = ref([]);
 
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
@@ -102,6 +106,7 @@ const updateFileDetails = async (cache = true) => {
 };
 
 const saveFile = async () => {
+  validationErrors.value = [];
   const loader = useLoader().show(
     {},
     {
@@ -166,11 +171,20 @@ const saveFile = async () => {
   loader.hide();
 };
 
+const validateFileBeforeSave = () => {
+  validationErrors.value = jsonFormInstance.value.editor.validate();
+  if (validationErrors.value.length === 0) saveFile();
+};
+
+const closeValidationErrors = () => {
+  validationErrors.value = [];
+};
+
 const updateNavButtonConfig = (text = "Saved", disabled = true) => {
   navButtonConfig.value = {
     text,
     disabled,
-    click: () => saveFile(),
+    click: () => validateFileBeforeSave(),
     icon: "mdi-cloud-upload-outline",
   };
   reset.value = disabled;
@@ -289,6 +303,12 @@ onUnmounted(() => {
       </v-col>
     </v-row>
   </div>
+  <ValidationError
+    v-if="validationErrors.length > 0"
+    :validationErrors="validationErrors"
+    :closeValidationErrors="closeValidationErrors"
+    :saveFile="saveFile"
+  />
 </template>
 
 <style>

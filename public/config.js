@@ -24,6 +24,7 @@ const schemaMap = [
     schema: {
       title: "FooBar editor",
       type: "object",
+      required: ["foo"],
       properties: {
         id: {
           type: "string",
@@ -35,6 +36,7 @@ const schemaMap = [
           title: "Foo",
           type: "string",
           description: "Simple string input",
+          minLength: 1,
           options: {
             inputAttributes: {
               placeholder: "Type something...",

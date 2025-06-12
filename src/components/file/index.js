@@ -7,3 +7,4 @@ export { default as RenameFile } from "./Rename.vue";
 export { default as PreviewBtn } from "./Preview.vue";
 export { default as Github } from "./Github.vue";
 export { default as UploadArea } from "./UplaodArea.vue";
+export { default as ValidationError } from "./ValidationError.vue";
