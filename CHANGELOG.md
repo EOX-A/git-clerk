@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.9.1](https://github.com/EOX-A/git-clerk/compare/v1.9.0...v1.9.1) (2025-06-12)
+## [1.10.0](https://github.com/EOX-A/git-clerk/compare/v1.9.0...v1.10.0) (2025-06-12)
 
 
 ### Features
