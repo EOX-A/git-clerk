@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, watch, inject } from "vue";
-import { CreateSession } from "@/components/session/index.js";
+import { CreateSession2 } from "@/components/session/index.js";
 import { SessionCheck } from "./";
 import { getSessionDetails } from "@/api/index.js";
 import { useRouter } from "vue-router";
@@ -87,7 +87,7 @@ onMounted(() => {
           <strong>{{ updatedFilePath }}</strong
           >. Please provide a name for the new session.
         </p>
-        <CreateSession
+        <CreateSession2
           :createNewSession="true"
           :fromFileBrowser="true"
           :noRedirectCallback="uploadNewSessionNumber"
