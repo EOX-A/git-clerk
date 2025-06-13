@@ -37,6 +37,7 @@ const hover = ref(null);
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
+const fileBrowserDrawer = inject("set-file-browser-drawer");
 
 const automationDialog = ref(false);
 const selectedAutomation = ref(null);
@@ -106,6 +107,8 @@ onMounted(async () => {
   if (route.query.automation) {
     const automation = find(AUTOMATION, { id: route.query.automation });
     if (automation) handleAutomationClick(automation);
+  } else if (route.query["file-browser"]) {
+    fileBrowserDrawer.value = true;
   }
 
   await updateDetails();

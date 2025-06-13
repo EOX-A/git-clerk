@@ -1,6 +1,6 @@
 <script setup>
 import { ref, inject, onMounted } from "vue";
-import CreateSession from "@/components/session/CreateSession.vue";
+import { CreateSession2 } from "@/components/session/index.js";
 import { useRouter } from "vue-router";
 import { encodeString } from "@/helpers/index.js";
 import { SessionCheck } from "./";
@@ -62,7 +62,7 @@ onMounted(() => {
           <strong>{{ selectedOperation.meta.name }}</strong
           >. Please provide a name for the new session.
         </p>
-        <CreateSession
+        <CreateSession2
           :createNewSession="true"
           :fromFileBrowser="true"
           :filePath="filePath"
