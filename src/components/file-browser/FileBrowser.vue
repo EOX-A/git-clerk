@@ -3,9 +3,13 @@ import { Actions } from "./";
 import { getBranchFileStructure, getRepoDetails } from "@/api/index.js";
 import { ref, onMounted, watch, inject } from "vue";
 import useOctokitStore from "@/stores/octokit";
-import { preventListItemClick } from "@/helpers/index.js";
+import { preventListItemClick, encodeString } from "@/helpers/index.js";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import { EditFile, AddFile, UploadFiles } from "./";
+import { useRoute, useRouter } from "vue-router";
+
+const route = useRoute();
+const router = useRouter();
 
 const fileBrowserDrawer = inject("set-file-browser-drawer");
 
@@ -14,7 +18,6 @@ const updatedFilePathArr = ref([]);
 const currPathDirStructure = ref([]);
 const repoDetails = ref(null);
 const hover = ref(null);
-const updateInNewSession = ref(false);
 
 const selectedOperation = ref(null);
 const { githubConfig } = useOctokitStore();
@@ -46,7 +49,6 @@ onMounted(async () => {
         },
       },
     };
-    updateInNewSession.value = true;
   }
   updatedFilePathArr.value = [""];
 });
@@ -69,6 +71,10 @@ const goToPath = (index) => {
   updatedFilePath.value = updatedFilePathArr.value.join("/") + "/";
 };
 
+const filePath = (item) => {
+  return encodeString((updatedFilePath.value + item.name).replace("/", ""));
+};
+
 const onSelect = (item) => {
   if (item.type === "dir") {
     if (item.name === "...") {
@@ -76,6 +82,10 @@ const onSelect = (item) => {
     } else {
       updateFilePath(`${item.name}/`);
     }
+  } else if (route.query["file-browser"]) {
+    router.push(`/${props.session.number}/${filePath(item)}`);
+    resetOperation();
+    fileBrowserDrawer.value = false;
   } else {
     selectedOperation.value = {
       type: "edit",
@@ -187,37 +197,30 @@ const handleOperation = (operation) => {
       :button="0"
       v-else-if="currPathDirStructure.length === 0"
     />
-    <v-dialog
-      v-model="selectedOperation"
-      @update:modelValue="updateInNewSession = session ? false : true"
-      width="auto"
-      style="z-index: 999999"
-    >
-      <EditFile
-        v-if="selectedOperation && selectedOperation.type === 'edit'"
-        :updatedFilePath="updatedFilePath"
-        :selectedOperation="selectedOperation"
-        :session="session"
-        :resetOperation="resetOperation"
-      />
-      <AddFile
-        v-if="selectedOperation && selectedOperation.type === 'add'"
-        :updatedFilePath="updatedFilePath"
-        :selectedOperation="selectedOperation"
-        :session="session"
-        :repoDetails="repoDetails"
-        :resetOperation="resetOperation"
-      />
-      <UploadFiles
-        v-if="selectedOperation && selectedOperation.type === 'upload'"
-        :updatedFilePath="updatedFilePath"
-        :selectedOperation="selectedOperation"
-        :session="session"
-        :repoDetails="repoDetails"
-        :updateDetails="updateDetails"
-        :resetOperation="resetOperation"
-      />
-    </v-dialog>
+    <EditFile
+      v-if="selectedOperation && selectedOperation.type === 'edit'"
+      :updatedFilePath="updatedFilePath"
+      :selectedOperation="selectedOperation"
+      :session="session"
+      :resetOperation="resetOperation"
+    />
+    <AddFile
+      v-if="selectedOperation && selectedOperation.type === 'add'"
+      :updatedFilePath="updatedFilePath"
+      :selectedOperation="selectedOperation"
+      :session="session"
+      :repoDetails="repoDetails"
+      :resetOperation="resetOperation"
+    />
+    <UploadFiles
+      v-if="selectedOperation && selectedOperation.type === 'upload'"
+      :updatedFilePath="updatedFilePath"
+      :selectedOperation="selectedOperation"
+      :session="session"
+      :repoDetails="repoDetails"
+      :updateDetails="updateDetails"
+      :resetOperation="resetOperation"
+    />
   </v-list>
 </template>
 

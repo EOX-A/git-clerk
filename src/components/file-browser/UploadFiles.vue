@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted, watch, inject } from "vue";
-import { CreateSession2 } from "@/components/session/index.js";
-import { SessionCheck } from "./";
+import { CreateSession } from "@/components/session/index.js";
 import { getSessionDetails } from "@/api/index.js";
 import { useRouter } from "vue-router";
 import { UploadArea } from "@/components/file";
@@ -9,7 +8,7 @@ import { UploadArea } from "@/components/file";
 const router = useRouter();
 const fileBrowserDrawer = inject("set-file-browser-drawer");
 
-const updateInNewSession = ref(false);
+const updateInNewSession = ref(true);
 const uploadNewFile = ref(false);
 const sessionNumber = ref(null);
 
@@ -40,6 +39,7 @@ const props = defineProps({
 
 const uploadNewSessionNumber = async (newSessionNumber) => {
   repoDetails.value = await getSessionDetails(newSessionNumber);
+  updateInNewSession.value = false;
   sessionNumber.value = newSessionNumber;
   uploadNewFile.value = true;
 };
@@ -55,20 +55,45 @@ const close = () => {
 };
 
 onMounted(() => {
-  updateInNewSession.value = props.session ? false : true;
   sessionNumber.value = props.session ? props.session.number : null;
 });
+
+const clearInput = (success) => {
+  updateInNewSession.value = false;
+  if (success) {
+    fileBrowserDrawer.value = false;
+    props.resetOperation(true);
+  } else props.resetOperation(false);
+};
+
+const currentSession = () => {
+  uploadNewFile.value = true;
+  updateInNewSession.value = false;
+};
 </script>
 
 <template>
-  <v-card
-    max-width="400"
-    prepend-icon="mdi-file-plus-outline"
-    title="Upload a new files"
+  <CreateSession
+    v-if="updateInNewSession"
+    :createNewSession="true"
+    :fromFileBrowser="true"
+    :filePath="filePath"
+    :clearInput="clearInput"
+    :session="session"
+    :currentSession="currentSession"
+    :noRedirectCallback="uploadNewSessionNumber"
+  />
+  <v-dialog
+    v-if="!updateInNewSession && uploadNewFile && sessionNumber"
+    v-model="uploadNewFile"
+    @update:modelValue="!$event && clearInput()"
+    width="auto"
+    style="z-index: 999999"
   >
-    <template v-slot:text>
-      <div v-if="uploadNewFile && sessionNumber">
-        <p class="py-6">
+    <v-card max-width="480">
+      <template v-slot:text>
+        <h2 class="text-center pl-3 pr-3">Upload a new files</h2>
+        <p class="text-center px-4">
           Provide a name for the new file. (Note - File will be uploaded to the
           path: <strong>{{ updatedFilePath }}</strong
           >)
@@ -80,28 +105,7 @@ onMounted(() => {
           :updateDetails="updateDetails"
           :fromFileBrowser="true"
         />
-      </div>
-      <div v-else-if="updateInNewSession">
-        <p class="py-6">
-          Create a new session to upload a new file to the path:
-          <strong>{{ updatedFilePath }}</strong
-          >. Please provide a name for the new session.
-        </p>
-        <CreateSession2
-          :createNewSession="true"
-          :fromFileBrowser="true"
-          :noRedirectCallback="uploadNewSessionNumber"
-        />
-      </div>
-      <SessionCheck
-        @currentSession="uploadNewFile = true"
-        @newSession="updateInNewSession = true"
-        v-else
-      >
-        Do you want to upload a new file to
-        <strong>{{ updatedFilePath }}</strong> in a
-        <strong>new session</strong> or <strong>current session</strong>?
-      </SessionCheck>
-    </template>
-  </v-card>
+      </template>
+    </v-card>
+  </v-dialog>
 </template>

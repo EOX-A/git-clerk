@@ -74,8 +74,12 @@ const updateDetails = async (cache = false) => {
 };
 
 onMounted(async () => {
-  suggestionList.value = [
+  const availableAutomation = [
     ...AUTOMATION.filter((automation) => !automation.hidden),
+  ];
+
+  suggestionList.value = [
+    ...availableAutomation,
     {
       title: "Add/Edit File Manually",
       description:
@@ -93,16 +97,18 @@ onMounted(async () => {
     },
   ];
 
-  navButtonConfig.value = {
-    text: "Files",
-    icon: "mdi-pencil-outline",
-    list: suggestionList.value.map((suggestion) => ({
-      ...suggestion,
-      click: () => suggestion.func?.() || handleAutomationClick(suggestion),
-      icon: suggestion.icon || "mdi-auto-fix",
-    })),
-    disabled: true,
-  };
+  if (availableAutomation.length) {
+    navButtonConfig.value = {
+      text: "Automation",
+      icon: "mdi-auto-fix",
+      list: availableAutomation.map((suggestion) => ({
+        ...suggestion,
+        click: () => handleAutomationClick(suggestion),
+        icon: "mdi-auto-fix",
+      })),
+      disabled: true,
+    };
+  }
 
   if (route.query.automation) {
     const automation = find(AUTOMATION, { id: route.query.automation });

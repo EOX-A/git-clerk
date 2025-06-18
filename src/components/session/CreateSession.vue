@@ -33,6 +33,12 @@ const props = defineProps({
     type: String,
     default: "",
   },
+  session: {
+    type: Object,
+  },
+  currentSession: {
+    type: Function,
+  },
 });
 
 const create = async () => {
@@ -57,9 +63,11 @@ const create = async () => {
 const clear = () => {
   props.clearInput();
   newSessionName.value = "";
-  const url = new URL(window.location.href);
-  url.searchParams.delete("file-browser");
-  window.history.replaceState({}, "", url);
+  if (!props.fromFileBrowser) {
+    const url = new URL(window.location.href);
+    url.searchParams.delete("file-browser");
+    window.history.replaceState({}, "", url);
+  }
 };
 
 const onKeyEnter = async (event) => {
@@ -74,13 +82,18 @@ const onKeyEnter = async (event) => {
     @update:model-value="!$event && clear()"
     width="auto"
   >
-    <v-card class="rounded-lg">
+    <v-card max-width="480" class="rounded-lg">
       <template v-slot:text>
-        <h2 class="text-center pl-3 pr-3">Create New Session</h2>
+        <h2 class="text-center pl-3 pr-3">
+          {{ session ? "Choose a session" : "Create New Session" }}
+        </h2>
         <p class="text-center px-4">
-          Begin a new session to add a new content or propose a file change.
+          {{
+            session
+              ? "Begin a new session or edit in current session to add a new content or propose a file change."
+              : "Begin a new session to add a new content or propose a file change."
+          }}
         </p>
-
         <v-alert
           class="my-6"
           title="What is a session?"
@@ -101,29 +114,33 @@ const onKeyEnter = async (event) => {
           v-model="newSessionName"
           class="rounded border-md my-3"
         ></v-text-field>
-        <div class="d-flex ga-4 justify-center">
-          <div>
-            <v-btn
-              color="primary"
-              variant="flat"
-              prepend-icon="mdi-plus"
-              :disabled="!newSessionName"
-              @click="create"
-            >
-              Create New Session
-            </v-btn>
-          </div>
+        <div class="d-flex ga-2 justify-center align-center">
+          <v-btn
+            v-if="session && currentSession"
+            color="primary"
+            variant="tonal"
+            prepend-icon="mdi-pencil"
+            :disabled="newSessionName !== ''"
+            @click="currentSession"
+          >
+            Edit in current session
+          </v-btn>
+          <span
+            v-if="session && currentSession"
+            class="text-center font-weight-bold opacity-50 text-body-2"
+            >OR</span
+          >
+          <v-btn
+            color="primary"
+            variant="flat"
+            prepend-icon="mdi-plus"
+            :disabled="!newSessionName"
+            @click="create"
+          >
+            Create New Session
+          </v-btn>
         </div>
       </template>
     </v-card>
   </v-dialog>
 </template>
-
-<style scoped>
-.v-card {
-  max-width: 480px !important;
-}
-.v-card-text {
-  padding: 1.5rem !important;
-}
-</style>

@@ -47,7 +47,7 @@ export default async function createSession(
     if (!noRedirectCallback) {
       setTimeout(() => {
         router.push(url);
-        clearInput();
+        clearInput(true);
       }, 750);
     } else {
       noRedirectCallback(sessionNumber);

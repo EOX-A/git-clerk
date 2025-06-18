@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted, watch, inject } from "vue";
-import { CreateSession2 } from "@/components/session/index.js";
-import { SessionCheck } from "./";
+import { CreateSession } from "@/components/session/index.js";
 import { useLoader } from "@/helpers/index.js";
 import { createAndUpdateFile, getSessionDetails } from "@/api/index.js";
 import { encodeString } from "@/helpers/index.js";
@@ -11,7 +10,7 @@ const router = useRouter();
 const snackbar = inject("set-snackbar");
 const fileBrowserDrawer = inject("set-file-browser-drawer");
 
-const updateInNewSession = ref(false);
+const updateInNewSession = ref(true);
 const addNewFile = ref(false);
 const sessionNumber = ref(null);
 const newFileName = ref(null);
@@ -36,6 +35,7 @@ const props = defineProps({
 });
 
 const addNewSessionNumber = (newSessionNumber) => {
+  updateInNewSession.value = false;
   sessionNumber.value = newSessionNumber;
   addNewFile.value = true;
 };
@@ -45,7 +45,6 @@ watch(props.session, (newSession) => {
 });
 
 onMounted(() => {
-  updateInNewSession.value = props.session ? false : true;
   sessionNumber.value = props.session ? props.session.number : null;
 });
 
@@ -86,60 +85,69 @@ const createFile = async () => {
     await router.push(`/${sessionNumber.value}/${encodeString(fullFilePath)}`);
   }
 };
+
+const clearInput = (success) => {
+  updateInNewSession.value = false;
+  if (success) {
+    fileBrowserDrawer.value = false;
+    props.resetOperation(true);
+  } else props.resetOperation(false);
+};
+
+const currentSession = () => {
+  addNewFile.value = true;
+  updateInNewSession.value = false;
+};
 </script>
 
 <template>
-  <v-card
-    max-width="400"
-    prepend-icon="mdi-file-plus-outline"
-    title="Add a new file"
+  <CreateSession
+    v-if="updateInNewSession"
+    :createNewSession="true"
+    :fromFileBrowser="true"
+    :filePath="filePath"
+    :clearInput="clearInput"
+    :session="session"
+    :currentSession="currentSession"
+    :noRedirectCallback="addNewSessionNumber"
+  />
+  <v-dialog
+    v-if="!updateInNewSession && addNewFile && sessionNumber"
+    v-model="addNewFile"
+    @update:modelValue="!$event && clearInput()"
+    width="auto"
+    style="z-index: 999999"
   >
-    <template v-slot:text>
-      <div v-if="addNewFile && sessionNumber">
-        <p class="py-6">
+    <v-card max-width="480" class="rounded-lg">
+      <template v-slot:text>
+        <h2 class="text-center pl-3 pr-3">Add a new file</h2>
+        <p class="text-center px-4">
           Provide a name for the new file. (Note - File will be added to the
           path: <strong>{{ updatedFilePath }}</strong
           >)
         </p>
         <v-text-field
-          v-model="newFileName"
+          density="compact"
           label="File Name"
-          placeholder="File Name"
-          variant="outlined"
-          class="add-file-field"
-        />
-        <v-btn
-          color="primary"
-          size="large"
-          variant="flat"
-          class="add-file-button"
-          block
-          @click="createFile"
-        >
-          Add File
-        </v-btn>
-      </div>
-      <div v-else-if="updateInNewSession">
-        <p class="py-6">
-          Create a new session to add a new file to the path:
-          <strong>{{ updatedFilePath }}</strong
-          >. Please provide a name for the new session.
-        </p>
-        <CreateSession2
-          :createNewSession="true"
-          :fromFileBrowser="true"
-          :noRedirectCallback="addNewSessionNumber"
-        />
-      </div>
-      <SessionCheck
-        @currentSession="addNewFile = true"
-        @newSession="updateInNewSession = true"
-        v-else
-      >
-        Do you want to add a new file to
-        <strong>{{ updatedFilePath }}</strong> in a
-        <strong>new session</strong> or <strong>current session</strong>?
-      </SessionCheck>
-    </template>
-  </v-card>
+          variant="solo"
+          hide-details
+          single-line
+          flat="true"
+          v-model="newFileName"
+          class="rounded border-md my-3"
+        ></v-text-field>
+        <div class="d-flex ga-2 justify-center align-center">
+          <v-btn
+            color="primary"
+            variant="flat"
+            prepend-icon="mdi-file-plus-outline"
+            :disabled="!newFileName"
+            @click="createFile"
+          >
+            Add New File
+          </v-btn>
+        </div>
+      </template>
+    </v-card>
+  </v-dialog>
 </template>

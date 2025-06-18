@@ -1,15 +1,14 @@
 <script setup>
-import { ref, inject, onMounted } from "vue";
-import { CreateSession2 } from "@/components/session/index.js";
+import { ref, inject } from "vue";
+import { CreateSession } from "@/components/session/index.js";
 import { useRouter } from "vue-router";
 import { encodeString } from "@/helpers/index.js";
-import { SessionCheck } from "./";
 
 const router = useRouter();
 
 const fileBrowserDrawer = inject("set-file-browser-drawer");
 
-const updateInNewSession = ref(false);
+const updateInNewSession = ref(true);
 
 const props = defineProps({
   updatedFilePath: {
@@ -39,8 +38,12 @@ const filePath = () => {
   );
 };
 
-const clearInput = () => {
-  fileBrowserDrawer.value = false;
+const clearInput = (success) => {
+  updateInNewSession.value = false;
+  if (success) {
+    fileBrowserDrawer.value = false;
+    props.resetOperation(true);
+  } else props.resetOperation(false);
 };
 
 const currentSession = () => {
@@ -48,36 +51,15 @@ const currentSession = () => {
   fileBrowserDrawer.value = false;
   props.resetOperation();
 };
-
-onMounted(() => {
-  updateInNewSession.value = props.session ? false : true;
-});
 </script>
 <template>
-  <v-card max-width="400" prepend-icon="mdi-pencil" title="Edit File">
-    <template v-slot:text>
-      <div v-if="updateInNewSession">
-        <p class="py-6">
-          Create a new session to edit
-          <strong>{{ selectedOperation.meta.name }}</strong
-          >. Please provide a name for the new session.
-        </p>
-        <CreateSession2
-          :createNewSession="true"
-          :fromFileBrowser="true"
-          :filePath="filePath"
-          :clearInput="clearInput"
-        />
-      </div>
-      <SessionCheck
-        @currentSession="currentSession"
-        @newSession="updateInNewSession = true"
-        v-else
-      >
-        Do you want to edit
-        <strong>{{ selectedOperation.meta.name }}</strong> in a
-        <strong>new session</strong> or <strong>current session</strong>?
-      </SessionCheck>
-    </template>
-  </v-card>
+  <CreateSession
+    v-if="updateInNewSession"
+    :createNewSession="true"
+    :fromFileBrowser="true"
+    :filePath="filePath"
+    :clearInput="clearInput"
+    :session="session"
+    :currentSession="currentSession"
+  />
 </template>
