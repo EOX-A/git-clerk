@@ -134,7 +134,7 @@ const currentSession = () => {
           single-line
           flat="true"
           v-model="newFileName"
-          class="rounded border-md my-3"
+          class="rounded border-md my-3 add-file-field"
         ></v-text-field>
         <div class="d-flex ga-2 justify-center align-center">
           <v-btn
@@ -143,6 +143,7 @@ const currentSession = () => {
             prepend-icon="mdi-file-plus-outline"
             :disabled="!newFileName"
             @click="createFile"
+            class="add-file-button"
           >
             Add New File
           </v-btn>

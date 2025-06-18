@@ -56,7 +56,7 @@ describe("Files list related tests", () => {
         // Add uploaded file if flag is set
         if (isUploadFile) {
           tempData.push({
-            filename: "hello/code.js",
+            filename: "eo-missions/code.js",
             status: "added",
             additions: 34,
             deletions: 0,
@@ -262,13 +262,13 @@ describe("Files list related tests", () => {
 
   // Test adding new manual content
   it("Add new manual content", () => {
-    cy.get(".navbar .v-btn.action-button").click();
-    cy.get(".v-list.button-list .v-list-item").eq(1).click();
-    cy.get(".session-create-field .v-field__input").type("manual-file.txt", {
-      delay: 100,
-    });
+    cy.get(".navbar .v-btn.session-file-btn").click();
+    cy.get(".add-file-btn").click();
+    cy.get(".v-list-item").eq(0).click();
+    cy.get(".current-session-btn").click();
+    cy.get(".add-file-field").type("manual-file.txt", { delay: 100 });
     isManualContent = true;
-    cy.get(".session-create-field .mdi-plus").click();
+    cy.get(".add-file-button").click();
     cy.location("pathname", { timeout: 10000 }).should(
       "eq",
       "/123/bWFudWFsLWZpbGUudHh0",
@@ -283,14 +283,11 @@ describe("Files list related tests", () => {
   // Test file upload functionality
   it("Upload a file", () => {
     cy.wait(2000);
-    cy.get(".navbar .v-btn.action-button").click();
-    cy.get(".v-list.button-list .v-list-item").eq(2).click();
-    cy.get(".create-file .session-create-field .v-field__input").type(
-      "hello/",
-      {
-        delay: 100,
-      },
-    );
+    cy.get(".navbar .v-btn.session-file-btn").click();
+    cy.get(".files-browse-list").eq(2).click();
+    cy.get(".add-file-btn").click();
+    cy.get(".v-list-item").eq(1).click();
+    cy.get(".current-session-btn").click();
     cy.get('input[type="file"]').selectFile("cypress/fixtures/code.js", {
       force: true,
     });
@@ -301,7 +298,7 @@ describe("Files list related tests", () => {
     cy.get(".files-list")
       .eq(files.length)
       .find(".file-title")
-      .should("have.text", "hello/code.js");
+      .should("have.text", "eo-missions/code.js");
   });
 
   // Test to check if deployed preview link exists

@@ -90,7 +90,7 @@ const currentSession = () => {
     width="auto"
     style="z-index: 999999"
   >
-    <v-card max-width="480">
+    <v-card max-width="480" class="create-file">
       <template v-slot:text>
         <h2 class="text-center pl-3 pr-3">Upload a new files</h2>
         <p class="text-center px-4">

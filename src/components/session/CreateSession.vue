@@ -81,6 +81,7 @@ const onKeyEnter = async (event) => {
     v-model="openCreateSession"
     @update:model-value="!$event && clear()"
     width="auto"
+    class="session-create-field"
   >
     <v-card max-width="480" class="rounded-lg">
       <template v-slot:text>
@@ -122,6 +123,7 @@ const onKeyEnter = async (event) => {
             prepend-icon="mdi-pencil"
             :disabled="newSessionName !== ''"
             @click="currentSession"
+            class="current-session-btn"
           >
             Edit in current session
           </v-btn>
@@ -136,6 +138,7 @@ const onKeyEnter = async (event) => {
             prepend-icon="mdi-plus"
             :disabled="!newSessionName"
             @click="create"
+            class="new-session-btn"
           >
             Create New Session
           </v-btn>
