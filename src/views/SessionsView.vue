@@ -164,7 +164,10 @@ const resetWholeState = async () => {
   />
 
   <ActionTabSessions
-    v-if="sessions && sessions.length"
+    v-if="
+      numberOfOpenClosedSessions &&
+      (numberOfOpenClosedSessions.open || numberOfOpenClosedSessions.closed)
+    "
     :sessionSelectedState="sessionSelectedState"
     :changeSessionState="changeSessionState"
     :numberOfOpenClosedSessions="numberOfOpenClosedSessions"
