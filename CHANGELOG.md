@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/EOX-A/git-clerk/compare/v1.10.0...v1.10.1) (2025-06-19)
+
+
+### Features
+
+* Welcome screen improvement and harmanize the flow with file browser ([#165](https://github.com/EOX-A/git-clerk/issues/165)) ([6ac5919](https://github.com/EOX-A/git-clerk/commit/6ac5919a42d2e4fb2a895314a45b1e59cfd8ddb6))
+
 ## [1.10.0](https://github.com/EOX-A/git-clerk/compare/v1.9.0...v1.10.0) (2025-06-12)
 
 
