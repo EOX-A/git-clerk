@@ -1,5 +1,9 @@
 <script setup>
 import ActionTab from "@/components/global/ActionTab.vue";
+import { ref, watch, inject } from "vue";
+
+const fileBrowserDrawer = inject("set-file-browser-drawer");
+const actionBtnState = ref(true);
 
 const props = defineProps({
   updatedFilePathArr: {
@@ -14,6 +18,13 @@ const props = defineProps({
     type: Function,
     default: () => {},
   },
+});
+
+watch(fileBrowserDrawer, (newVal) => {
+  if (newVal) {
+    if (newVal === "propose") actionBtnState.value = false;
+    else actionBtnState.value = true;
+  } else actionBtnState.value = true;
 });
 </script>
 <template>
@@ -41,7 +52,7 @@ const props = defineProps({
       </v-hover>
     </v-chip>
 
-    <v-menu attach location="bottom">
+    <v-menu v-if="actionBtnState" attach location="bottom">
       <template v-slot:activator="{ props }">
         <v-btn
           color="primary"

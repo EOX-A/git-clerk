@@ -80,11 +80,10 @@ describe("File browser related tests", () => {
   it("Add new file", () => {
     cy.get(".add-file-btn").click();
     cy.get(".v-list-item").eq(0).click();
-    cy.get(".new-session-btn").click();
     cy.get(".session-create-field .v-field__input").type(dummySession.title, {
       delay: 100,
     });
-    cy.get(".session-create-btn").click();
+    cy.get(".new-session-btn").click();
     cy.wait("@createPulls");
     cy.get(".add-file-field").type("newFile.txt", { delay: 100 });
     cy.get(".add-file-button").click();

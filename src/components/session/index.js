@@ -9,3 +9,4 @@ export { default as ActionSessions } from "./ActionSessions.vue";
 export { default as ActionTabSessions } from "./ActionTabSessions.vue";
 export { default as SessionsStateFilter } from "./SessionsStateFilter.vue";
 export { default as CreateSession } from "./CreateSession.vue";
+export { default as WelcomeSection } from "./WelcomeSection.vue";

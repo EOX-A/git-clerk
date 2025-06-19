@@ -116,7 +116,7 @@ const fileUpload = async () => {
 <template>
   <v-sheet
     ref="uploadArea"
-    class="upload-area d-flex align-center justify-center"
+    class="upload-area d-flex align-center justify-center my-4"
     :class="{ dropping: isDropping, 'from-file-browser': fromFileBrowser }"
     rounded
     border
@@ -145,7 +145,7 @@ const fileUpload = async () => {
   </v-sheet>
 
   <!-- File List -->
-  <v-list v-if="files.length" class="mt-4">
+  <v-list v-if="files.length">
     <v-list-item
       v-for="(file, index) in files"
       :key="index"
@@ -199,10 +199,11 @@ const fileUpload = async () => {
       Clear All
     </v-btn>
     <v-btn
-      class="text-capitalize font-weight-medium upload-file-btn"
+      class="text-capitalize font-weight-medium upload-file-btn px-4"
       color="primary"
       variant="flat"
       @click="fileUpload"
+      prepend-icon="mdi-file-plus-outline"
     >
       Upload Files
     </v-btn>

@@ -21,11 +21,10 @@ import {
   ActionList,
   ActionTabSessions,
   CreateSession,
+  WelcomeSection,
 } from "@/components/session";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import CursorPagination from "@/components/global/CursorPagination.vue";
-import EmptyState from "@/components/global/EmptyState.vue";
-import { BASE_PATH } from "@/enums";
 import { FileBrowserDrawer } from "@/components/file-browser";
 
 const route = useRoute();
@@ -159,11 +158,16 @@ const resetWholeState = async () => {
 <template>
   <FileBrowserDrawer />
   <CreateSession
+    v-if="createNewSession"
     :createNewSession="createNewSession"
     :clearInput="clearInputCreateNewSession"
   />
 
   <ActionTabSessions
+    v-if="
+      numberOfOpenClosedSessions &&
+      (numberOfOpenClosedSessions.open || numberOfOpenClosedSessions.closed)
+    "
     :sessionSelectedState="sessionSelectedState"
     :changeSessionState="changeSessionState"
     :numberOfOpenClosedSessions="numberOfOpenClosedSessions"
@@ -241,19 +245,11 @@ const resetWholeState = async () => {
     <!-- Placeholder for session's list -->
     <ListPlaceholder v-else-if="sessions === null" :button="3" />
 
-    <EmptyState
-      v-else
-      headline="No session started yet"
-      icon="mdi-source-pull"
-      :img="`${BASE_PATH}img/session.svg`"
-      btn-text="Start New Session"
-      description="Start a new session to share your ideas and propose updates."
-      :init-func="createNewSessionClick"
-    />
+    <WelcomeSection v-else :createNewSessionClick="createNewSessionClick" />
   </v-list>
 
   <CursorPagination
-    v-if="sessions"
+    v-if="sessions && sessions.length"
     :pageInfo="pageInfo"
     :onPageChange="onPageChange"
     :currentPage="currentPage"

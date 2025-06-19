@@ -32,7 +32,9 @@ export default async function createSession(
 
   if (props.snackbar.value.number) {
     const params = Object.fromEntries(
-      Object.entries(route.query).filter(([key]) => key !== "session"),
+      Object.entries(route.query).filter(
+        ([key]) => key !== "session" && key !== "file-browser",
+      ),
     );
     const queryString = new URLSearchParams(params).toString();
     const filePathToOpen = filePath ? filePath() : null;
@@ -44,7 +46,7 @@ export default async function createSession(
     if (!noRedirectCallback) {
       setTimeout(() => {
         router.push(url);
-        clearInput();
+        clearInput(true);
       }, 750);
     } else {
       noRedirectCallback(sessionNumber);

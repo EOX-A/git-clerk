@@ -11,6 +11,8 @@ const router = useRouter();
 
 const snackbar = inject("set-snackbar");
 
+const openCreateSession = ref(true);
+
 const props = defineProps({
   createNewSession: {
     type: Boolean,
@@ -30,6 +32,12 @@ const props = defineProps({
   filePath: {
     type: String,
     default: "",
+  },
+  session: {
+    type: Object,
+  },
+  currentSession: {
+    type: Function,
   },
 });
 
@@ -58,59 +66,75 @@ const onKeyEnter = async (event) => {
   else if (event.key === "Enter") await create();
 };
 </script>
+
 <template>
-  <div
-    v-if="createNewSession"
-    :class="{ 'bg-white d-flex justify-center': !fromFileBrowser }"
+  <v-dialog
+    v-model="openCreateSession"
+    @update:model-value="!$event && clear()"
+    width="auto"
+    class="session-create-field"
   >
-    <v-row>
-      <v-col cols="12" class="d-flex">
-        <!-- Custom styled text field -->
-        <div
-          :class="{ 'px-6 py-6 border-b-thin': !fromFileBrowser }"
-          class="session-create-field d-flex w-100 align-center justify-center ga-4"
-        >
-          <v-text-field
-            v-model="newSessionName"
-            label="Session Name"
-            placeholder="Name your Session..."
-            hide-details
-            :append-inner-icon="
-              newSessionName.length > 0 ? 'mdi-restart' : undefined
-            "
-            @click:append-inner="newSessionName = ''"
-            @keydown="onKeyEnter"
-            variant="outlined"
-          />
+    <v-card max-width="480" class="rounded-lg">
+      <template v-slot:text>
+        <h2 class="text-center pl-3 pr-3">
+          {{ session ? "Choose a session" : "Create New Session" }}
+        </h2>
+        <p class="text-center px-4">
+          {{
+            session
+              ? "Begin a new session or edit in current session to add a new content or propose a file change."
+              : "Begin a new session to add a new content or propose a file change."
+          }}
+        </p>
+        <v-alert
+          class="my-6"
+          title="What is a session?"
+          text="A session lets you group and review edits to multiple files before submitting them for approval. Original files stay unchanged until approved."
+          type="success"
+          variant="tonal"
+          icon="mdi-information"
+          rounded="lg"
+          @keydown="onKeyEnter"
+        ></v-alert>
+        <v-text-field
+          density="compact"
+          label="Session Name"
+          variant="solo"
+          hide-details
+          single-line
+          flat="true"
+          v-model="newSessionName"
+          class="rounded border-md my-3"
+        ></v-text-field>
+        <div class="d-flex ga-2 justify-center align-center">
           <v-btn
-            v-if="!fromFileBrowser"
-            prepend-icon="mdi-plus"
+            v-if="session && currentSession"
             color="primary"
-            size="x-large"
-            variant="flat"
-            @click="create"
+            variant="tonal"
+            prepend-icon="mdi-pencil"
+            :disabled="newSessionName !== ''"
+            @click="currentSession"
+            class="current-session-btn"
           >
-            Create
+            Edit in current session
           </v-btn>
+          <span
+            v-if="session && currentSession"
+            class="text-center font-weight-bold opacity-50 text-body-2"
+            >OR</span
+          >
           <v-btn
-            v-if="!fromFileBrowser"
-            variant="text"
-            icon="mdi-close"
-            @click="clear"
-          ></v-btn>
+            color="primary"
+            variant="flat"
+            prepend-icon="mdi-plus"
+            :disabled="!newSessionName"
+            @click="create"
+            class="new-session-btn"
+          >
+            Create New Session
+          </v-btn>
         </div>
-      </v-col>
-    </v-row>
-    <v-btn
-      v-if="fromFileBrowser"
-      color="primary"
-      size="large"
-      variant="flat"
-      @click="create"
-      class="mt-4 session-create-btn"
-      block
-    >
-      Create New Session
-    </v-btn>
-  </div>
+      </template>
+    </v-card>
+  </v-dialog>
 </template>
