@@ -19,7 +19,7 @@ const props = defineProps({
 const welcomeCards = ref([
   {
     title: "Add New Content",
-    description: "Submit new content to the existing file system.",
+    description: "Submit new content to the existing file structure.",
     icon: "mdi-plus",
     buttonText: "Add New Content",
     buttonIcon: "mdi-plus",
@@ -27,10 +27,10 @@ const welcomeCards = ref([
     type: "add",
   },
   {
-    title: "Proposed Changes",
+    title: "Propose Changes",
     description: "Explore files and offer your suggestions for changes.",
     icon: "mdi-pencil-outline",
-    buttonText: "Proposed Changes",
+    buttonText: "Propose Changes",
     buttonIcon: "mdi-pencil-outline",
     img: `${BASE_PATH}img/proposed-changes.svg`,
     type: "propose",
