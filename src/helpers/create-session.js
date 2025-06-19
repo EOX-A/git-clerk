@@ -9,7 +9,6 @@ export default async function createSession(
   clearInput,
   filePath,
   noRedirectCallback,
-  toFileBrowser,
 ) {
   if (!props.newSessionName.value) {
     props.snackbar.value = {
@@ -33,16 +32,16 @@ export default async function createSession(
 
   if (props.snackbar.value.number) {
     const params = Object.fromEntries(
-      Object.entries(route.query).filter(([key]) => key !== "session"),
+      Object.entries(route.query).filter(
+        ([key]) => key !== "session" && key !== "file-browser",
+      ),
     );
     const queryString = new URLSearchParams(params).toString();
     const filePathToOpen = filePath ? filePath() : null;
     const sessionNumber = props.snackbar.value.number;
-    const url = toFileBrowser
-      ? `/${sessionNumber}?file-browser=open`
-      : Boolean(queryString)
-        ? `/${sessionNumber}?${queryString}`
-        : `/${sessionNumber}${filePathToOpen ? `/${filePathToOpen}` : ""}`;
+    const url = Boolean(queryString)
+      ? `/${sessionNumber}?${queryString}`
+      : `/${sessionNumber}${filePathToOpen ? `/${filePathToOpen}` : ""}`;
 
     if (!noRedirectCallback) {
       setTimeout(() => {

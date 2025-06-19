@@ -42,9 +42,6 @@ const props = defineProps({
 });
 
 const create = async () => {
-  const url = new URL(window.location.href);
-  const toFileBrowser = Boolean(url.searchParams.get("file-browser"));
-
   await createSession(
     {
       newSessionName,
@@ -56,18 +53,12 @@ const create = async () => {
     props.clearInput,
     props.filePath,
     props.noRedirectCallback,
-    toFileBrowser,
   );
 };
 
 const clear = () => {
   props.clearInput();
   newSessionName.value = "";
-  if (!props.fromFileBrowser) {
-    const url = new URL(window.location.href);
-    url.searchParams.delete("file-browser");
-    window.history.replaceState({}, "", url);
-  }
 };
 
 const onKeyEnter = async (event) => {

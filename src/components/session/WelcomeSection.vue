@@ -1,15 +1,13 @@
 <script setup>
 import { BASE_PATH } from "@/enums";
 import useOctokitStore from "@/stores/octokit";
-import { ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { ref, inject } from "vue";
 
 const { githubUserData } = useOctokitStore();
+const fileBrowserDrawer = inject("set-file-browser-drawer");
 
 const firstName = (githubUserData.name || githubUserData.login).split(" ")[0];
 const selectedType = ref(null);
-const route = useRoute();
-const router = useRouter();
 
 const props = defineProps({
   createNewSessionClick: {
@@ -41,14 +39,13 @@ const welcomeCards = ref([
 
 const selectedCard = (type) => {
   const url = new URL(window.location.href);
+  selectedType.value = type;
   if (type === "propose") {
-    url.searchParams.set("file-browser", "open");
+    fileBrowserDrawer.value = type;
   } else {
-    url.searchParams.delete("file-browser");
+    props.createNewSessionClick();
   }
   window.history.replaceState({}, "", url);
-  selectedType.value = type;
-  props.createNewSessionClick();
 };
 </script>
 

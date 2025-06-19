@@ -11,12 +11,7 @@ import OctIcon from "@/components/global/OctIcon.vue";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import OffsetPagination from "@/components/global/OffsetPagination.vue";
 import { ActionTabSession } from "@/components/session";
-import {
-  DeleteFile,
-  CreateFile,
-  FileUploader,
-  DuplicateFile,
-} from "@/components/file";
+import { DeleteFile, DuplicateFile } from "@/components/file";
 import { encodeString, preventListItemClick } from "@/helpers/index.js";
 import { BASE_PATH, AUTOMATION } from "@/enums";
 import "@eox/jsonform";
@@ -30,9 +25,7 @@ const sessionNumber = route.params.sessionNumber;
 const session = ref(null);
 const fileChangesList = ref(null);
 const totalPage = ref(0);
-const addNewFileDialog = ref(false);
 const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
-const uploadFilesDialog = ref(false);
 const hover = ref(null);
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
@@ -42,11 +35,6 @@ const fileBrowserDrawer = inject("set-file-browser-drawer");
 const automationDialog = ref(false);
 const selectedAutomation = ref(null);
 const suggestionList = ref([]);
-
-const addNewFileClick = async (state) => {
-  navButtonConfig.value.disabled = state;
-  addNewFileDialog.value = state;
-};
 
 const updateDetails = async (cache = false) => {
   fileChangesList.value = null;
@@ -85,14 +73,14 @@ onMounted(async () => {
       description:
         "Create or edit a file by entering the file path and details manually.",
       icon: "mdi-pencil-plus-outline",
-      func: () => addNewFileClick(true),
+      func: () => (fileBrowserDrawer.value = true),
       manual: true,
     },
     {
       title: "Upload Files",
       description: "Upload files from your computer.",
       icon: "mdi-upload",
-      func: () => (uploadFilesDialog.value = true),
+      func: () => (fileBrowserDrawer.value = true),
       manual: true,
     },
   ];
@@ -113,8 +101,6 @@ onMounted(async () => {
   if (route.query.automation) {
     const automation = find(AUTOMATION, { id: route.query.automation });
     if (automation) handleAutomationClick(automation);
-  } else if (route.query["file-browser"]) {
-    fileBrowserDrawer.value = true;
   }
 
   await updateDetails();
@@ -142,13 +128,6 @@ const handleAutomationClose = () => {
     v-if="session"
     :updateDetails="updateDetails"
     :session="session"
-  />
-  <CreateFile
-    v-if="session && addNewFileClick"
-    :updateDetails
-    :addNewFileClick
-    :open="addNewFileDialog"
-    :session
   />
   <ActionTabSession :session :updateDetails />
 
@@ -227,7 +206,6 @@ const handleAutomationClose = () => {
         }
       `"
       title="No changes found in this session"
-      @click:action="addNewFileClick"
       class="my-16 py-16 empty-state"
     >
       <template v-slot:actions v-if="!session.closed_at">
@@ -276,13 +254,6 @@ const handleAutomationClose = () => {
   </v-list>
 
   <OffsetPagination v-if="fileChangesList" :page :totalPage :onPageChange />
-
-  <FileUploader
-    :open="uploadFilesDialog"
-    :close="() => (uploadFilesDialog = false)"
-    :session
-    :updateDetails
-  />
 
   <!-- Use the Automation component -->
   <v-dialog

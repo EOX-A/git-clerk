@@ -6,10 +6,6 @@ import useOctokitStore from "@/stores/octokit";
 import { preventListItemClick, encodeString } from "@/helpers/index.js";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import { EditFile, AddFile, UploadFiles } from "./";
-import { useRoute, useRouter } from "vue-router";
-
-const route = useRoute();
-const router = useRouter();
 
 const fileBrowserDrawer = inject("set-file-browser-drawer");
 
@@ -82,10 +78,6 @@ const onSelect = (item) => {
     } else {
       updateFilePath(`${item.name}/`);
     }
-  } else if (route.query["file-browser"]) {
-    router.push(`/${props.session.number}/${filePath(item)}`);
-    resetOperation();
-    fileBrowserDrawer.value = false;
   } else {
     selectedOperation.value = {
       type: "edit",
