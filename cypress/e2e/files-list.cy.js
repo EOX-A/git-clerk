@@ -56,7 +56,7 @@ describe("Files list related tests", () => {
         // Add uploaded file if flag is set
         if (isUploadFile) {
           tempData.push({
-            filename: "hello/code.js",
+            filename: "eo-missions/code.js",
             status: "added",
             additions: 34,
             deletions: 0,
@@ -135,7 +135,7 @@ describe("Files list related tests", () => {
   it("Render files list", () => {
     cy.visit("/123");
     cy.wait("@getFiles");
-    cy.get(".files-view", { timeout: 12000 }).should(
+    cy.get(".files-list", { timeout: 12000 }).should(
       "have.length",
       files.length,
     );
@@ -143,7 +143,7 @@ describe("Files list related tests", () => {
 
   // Test that file titles match expected values
   it("Validate files list items with title name", () => {
-    cy.get(".main-title").each((fileElement, index) => {
+    cy.get(".file-title").each((fileElement, index) => {
       cy.wrap(fileElement).should("have.text", files[index].filename);
     });
   });
@@ -169,20 +169,20 @@ describe("Files list related tests", () => {
   // Test file duplication functionality
   it("Duplicate a file", () => {
     duplicateFile = true;
-    cy.get(".files-view").eq(0).find(".v-btn .mdi-content-copy").click();
-    cy.get(".files-view").eq(0).find(".v-field__input").type("products/", {
+    cy.get(".files-list").eq(0).find(".v-btn .mdi-content-copy").click();
+    cy.get(".files-list").eq(0).find(".v-field__input").type("products/", {
       delay: 100,
     });
-    cy.get(".files-view").eq(0).find(".v-field__input").type("foo2/", {
+    cy.get(".files-list").eq(0).find(".v-field__input").type("foo2/", {
       delay: 100,
     });
-    cy.get(".files-view")
+    cy.get(".files-list")
       .eq(0)
       .find(".v-field__input")
       .type("collection.json", {
         delay: 100,
       });
-    cy.get(".files-view")
+    cy.get(".files-list")
       .eq(0)
       .find(".session-create-field .mdi-content-copy")
       .click();
@@ -198,7 +198,7 @@ describe("Files list related tests", () => {
   it("Delete a file", () => {
     cy.wait("@getFiles");
     cy.get("#session-action-menu").click();
-    cy.get(".files-view")
+    cy.get(".files-list")
       .eq(files.length - 1)
       .find(".v-btn .mdi-delete-outline")
       .click();
@@ -206,13 +206,13 @@ describe("Files list related tests", () => {
     duplicateFile = false;
     cy.wait("@deleteContent");
     cy.wait("@getFiles");
-    cy.get(".files-view").should("have.length", files.length);
+    cy.get(".files-list").should("have.length", files.length);
   });
 
   // Test adding a new product
   it("Add new product", () => {
     let location;
-    cy.get(".navbar .v-btn").click();
+    cy.get(".navbar .v-btn.action-button").click();
     cy.get(".v-list.button-list .v-list-item").eq(0).click();
     cy.get("eox-jsonform#automation-form")
       .shadow()
@@ -262,13 +262,13 @@ describe("Files list related tests", () => {
 
   // Test adding new manual content
   it("Add new manual content", () => {
-    cy.get(".navbar .v-btn").click();
-    cy.get(".v-list.button-list .v-list-item").eq(1).click();
-    cy.get(".session-create-field .v-field__input").type("manual-file.txt", {
-      delay: 100,
-    });
+    cy.get(".navbar .v-btn.session-file-btn").click();
+    cy.get(".add-file-btn").click();
+    cy.get(".v-list-item").eq(0).click();
+    cy.get(".current-session-btn").click();
+    cy.get(".add-file-field").type("manual-file.txt", { delay: 100 });
     isManualContent = true;
-    cy.get(".session-create-field .mdi-plus").click();
+    cy.get(".add-file-button").click();
     cy.location("pathname", { timeout: 10000 }).should(
       "eq",
       "/123/bWFudWFsLWZpbGUudHh0",
@@ -283,14 +283,11 @@ describe("Files list related tests", () => {
   // Test file upload functionality
   it("Upload a file", () => {
     cy.wait(2000);
-    cy.get(".navbar .v-btn").click();
-    cy.get(".v-list.button-list .v-list-item").eq(2).click();
-    cy.get(".create-file .session-create-field .v-field__input").type(
-      "hello/",
-      {
-        delay: 100,
-      },
-    );
+    cy.get(".navbar .v-btn.session-file-btn").click();
+    cy.get(".files-browse-list").eq(2).click();
+    cy.get(".add-file-btn").click();
+    cy.get(".v-list-item").eq(1).click();
+    cy.get(".current-session-btn").click();
     cy.get('input[type="file"]').selectFile("cypress/fixtures/code.js", {
       force: true,
     });
@@ -298,10 +295,10 @@ describe("Files list related tests", () => {
     isUploadFile = true;
     cy.get(".create-file button.bg-primary").click();
     cy.wait("@getFiles");
-    cy.get(".files-view")
+    cy.get(".files-list")
       .eq(files.length)
-      .find(".main-title")
-      .should("have.text", "hello/code.js");
+      .find(".file-title")
+      .should("have.text", "eo-missions/code.js");
   });
 
   // Test to check if deployed preview link exists

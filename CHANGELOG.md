@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.11.0](https://github.com/EOX-A/git-clerk/compare/v1.10.0...v1.11.0) (2025-06-19)
+
+
+### Features
+
+* Welcome screen improvement and harmanize the flow with file browser ([#165](https://github.com/EOX-A/git-clerk/issues/165)) ([6ac5919](https://github.com/EOX-A/git-clerk/commit/6ac5919a42d2e4fb2a895314a45b1e59cfd8ddb6))
+
+## [1.10.0](https://github.com/EOX-A/git-clerk/compare/v1.9.0...v1.10.0) (2025-06-12)
+
+
+### Features
+
+* Add validation check and alert user before saving the file ([#164](https://github.com/EOX-A/git-clerk/issues/164)) ([4cf7874](https://github.com/EOX-A/git-clerk/commit/4cf78742b6271fb79113f0fb90b2c9ab9e851c5b))
+* File browser ([#156](https://github.com/EOX-A/git-clerk/issues/156)) ([7291c9f](https://github.com/EOX-A/git-clerk/commit/7291c9fb8282a91003e23ca491d6e007307d4d87))
+* Improve resize preview button ([#163](https://github.com/EOX-A/git-clerk/issues/163)) ([2d6187b](https://github.com/EOX-A/git-clerk/commit/2d6187baeaebde828177024a09785565cf8dd059))
+
 ## [1.9.0](https://github.com/EOX-A/git-clerk/compare/v1.8.1...v1.9.0) (2025-04-30)
 
 

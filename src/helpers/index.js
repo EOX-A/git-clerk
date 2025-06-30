@@ -13,3 +13,4 @@ export { stringifyIfNeeded, parseIfNeeded } from "./transform";
 export { runAutomation } from "./automation";
 export { default as preventListItemClick } from "./prevent-list-item-click";
 export { default as getTourConfig } from "./tour";
+export { default as createSession } from "./create-session";

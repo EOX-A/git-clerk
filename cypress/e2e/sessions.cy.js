@@ -159,7 +159,7 @@ describe("Session list related tests", () => {
 
   // Test that session titles match expected values
   it("Validate sessions list items with title name", () => {
-    cy.get(".main-title").each((titleElement, index) => {
+    cy.get(".session-title").each((titleElement, index) => {
       cy.wrap(titleElement).should(
         "have.text",
         sessionsList.search.nodes[index].title,
@@ -202,7 +202,7 @@ describe("Session list related tests", () => {
 
   // Test creating a new session
   it("Create a new session", () => {
-    cy.get("header .v-btn").click();
+    cy.get("header .v-btn.action-button").click();
     cy.get(".session-create-field .v-field__input").type(dummySession.title, {
       delay: 100,
     });

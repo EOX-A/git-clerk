@@ -8,6 +8,7 @@ import {
 } from "@/api/index.js";
 import { useRoute, useRouter } from "vue-router";
 import { querySessionDetailsMethod } from "@/methods/session-view/index.js";
+import { FileBrowserDrawer } from "@/components/file-browser/index.js";
 import {
   decodeString,
   getFileSchema,
@@ -23,7 +24,10 @@ import {
   jsonSchemaFileChangeMethod,
   addPostMessageEventMethod,
 } from "../methods/file-edit-view";
-import { ActionTabFileEditor } from "@/components/file/index.js";
+import {
+  ActionTabFileEditor,
+  ValidationError,
+} from "@/components/file/index.js";
 import debounce from "lodash.debounce";
 import "@eox/jsonform";
 import "@eox/drawtools";
@@ -47,6 +51,7 @@ const schemaMetaDetails = ref(null);
 const customInterfaces = ref([]);
 const previewExpanded = ref(false);
 const showPreview = ref(window.innerWidth >= 960);
+const validationErrors = ref([]);
 
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
@@ -103,6 +108,7 @@ const updateFileDetails = async (cache = true) => {
 };
 
 const saveFile = async () => {
+  validationErrors.value = [];
   const loader = useLoader().show(
     {},
     {
@@ -167,11 +173,20 @@ const saveFile = async () => {
   loader.hide();
 };
 
+const validateFileBeforeSave = () => {
+  validationErrors.value = jsonFormInstance.value.editor.validate();
+  if (validationErrors.value.length === 0) saveFile();
+};
+
+const closeValidationErrors = () => {
+  validationErrors.value = [];
+};
+
 const updateNavButtonConfig = (text = "Saved", disabled = true) => {
   navButtonConfig.value = {
     text,
     disabled,
-    click: () => saveFile(),
+    click: () => validateFileBeforeSave(),
     icon: "mdi-cloud-upload-outline",
   };
   reset.value = disabled;
@@ -230,6 +245,8 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <FileBrowserDrawer v-if="session" :session="session" />
+
   <ActionTabFileEditor
     v-if="session && file"
     :file
@@ -286,18 +303,33 @@ onUnmounted(() => {
           id="preview-expand-btn"
           class="resize-btn position-absolute text-black elevation-1 d-md-block d-none"
           variant="flat"
-          color="primary"
-          :icon="previewExpanded ? 'mdi-arrow-collapse' : 'mdi-arrow-expand'"
-          size="large"
+          color="surface-light"
+          icon="mdi-arrow-left-right"
+          size="small"
+          :class="previewExpanded ? 'preview-expanded' : ''"
           @click="previewExpanded = !previewExpanded"
         ></v-btn>
         <iframe v-if="previewURL" id="previewFrame" :src="previewURL"></iframe>
       </v-col>
     </v-row>
   </div>
+  <ValidationError
+    v-if="validationErrors.length > 0"
+    :validationErrors="validationErrors"
+    :closeValidationErrors="closeValidationErrors"
+    :saveFile="saveFile"
+  />
 </template>
 
 <style>
+.resize-btn {
+  top: calc(50% - 20px) !important;
+  left: -20px;
+}
+.resize-btn.preview-expanded:hover {
+  left: 5px;
+  transition: left 0.2s ease-in-out;
+}
 .file-editor {
   --secondary-header-height: 80px;
   height: calc(100% - var(--secondary-header-height));

@@ -79,6 +79,16 @@ html {
   z-index: 1;
 }
 
+.v-alert__content {
+  font-size: 0.875rem;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.v-alert__content .v-alert-title {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
 .driver-popover .driver-popover-close-btn {
   right: 8px;
   top: 6px;
