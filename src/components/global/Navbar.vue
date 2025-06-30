@@ -58,6 +58,7 @@ const click = () => {
 
     <v-col class="button-nav flex-grow-0">
       <v-btn
+        id="primary-action-btn"
         v-if="navButtonConfig.text && navButtonConfig.click"
         size="large"
         :prepend-icon="navButtonConfig.icon"
@@ -74,6 +75,7 @@ const click = () => {
       >
         <template v-slot:activator="{ props }">
           <v-btn
+            id="primary-action-menu-btn"
             size="large"
             :prepend-icon="navButtonConfig.icon"
             variant="flat"
