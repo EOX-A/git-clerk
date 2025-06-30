@@ -67,21 +67,21 @@ describe("File browser related tests", () => {
     ).as("getFiles");
   });
 
+  // Test to check if the tour is rendered and close the tour
+  it("Tour check and click next button", () => {
+    cy.visit("/123");
+    cy.wait("@getFiles");
+    cy.wait(1000);
+    checkTour();
+  });
+
   // Test to check if the files list is rendered correctly
   it("Render files list", () => {
-    cy.visit("/123");
     cy.get(".navbar .v-btn.session-file-btn").click();
     cy.get(".files-browse-list", { timeout: 12000 }).should(
       "have.length",
       contents.length,
     );
-  });
-
-  // Test to check if the tour is rendered and close the tour
-  it("Tour check and click next button", () => {
-    cy.wait("@getFiles");
-    cy.wait(1000);
-    checkTour();
   });
 
   // Test to check if the new file is added correctly
