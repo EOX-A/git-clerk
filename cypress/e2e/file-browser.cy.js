@@ -3,6 +3,7 @@ import content from "../fixtures/content:get.json";
 import ghConfig from "../fixtures/gh-config.json";
 import files from "../fixtures/files:get.json";
 import { GITHUB_HOST_REGEX } from "../enums";
+import { checkTour } from "../helper";
 
 const dummySession = {
   url: "https://api.github.com/repos/",
@@ -76,6 +77,13 @@ describe("File browser related tests", () => {
     );
   });
 
+  // Test to check if the tour is rendered and close the tour
+  it("Tour check and click next button", () => {
+    cy.wait("@getFiles");
+    cy.wait(1000);
+    checkTour();
+  });
+
   // Test to check if the new file is added correctly
   it("Add new file", () => {
     cy.get(".add-file-btn").click();
@@ -98,6 +106,7 @@ describe("File browser related tests", () => {
   // Test to check if the existing file is edited correctly
   it("Edit existing file", () => {
     editSession = true;
+    checkTour();
     cy.get(".navbar .v-btn.session-file-btn").click();
     cy.get(".files-browse-list").eq(6).click();
     cy.get(".current-session-btn").click();
