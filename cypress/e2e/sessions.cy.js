@@ -6,6 +6,7 @@ import { GITHUB_HOST } from "../enums";
 import sessionsList from "../fixtures/sessions-list:graphql.json";
 import openCount from "../fixtures/open-count:graphql.json";
 import closeCount from "../fixtures/closed-count:graphql.json";
+import { checkTour } from "../helper";
 
 const mockQuery = {
   issueCount: `
@@ -155,6 +156,12 @@ describe("Session list related tests", () => {
       "have.length",
       sessionsList.search.issueCount,
     );
+  });
+
+  // Test to check if the tour is rendered and close the tour
+  it("Tour check and click next button", () => {
+    cy.wait(1000);
+    checkTour();
   });
 
   // Test that session titles match expected values

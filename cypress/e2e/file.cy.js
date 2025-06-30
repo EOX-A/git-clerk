@@ -2,6 +2,7 @@
 import ghConfig from "../fixtures/gh-config.json";
 import { GITHUB_HOST, GITHUB_HOST_REGEX } from "../enums";
 import content from "../fixtures/content:get.json";
+import { checkTour } from "../helper";
 
 describe("File related tests", () => {
   // Track content change states
@@ -38,8 +39,8 @@ describe("File related tests", () => {
     ).as("getContent");
   });
 
-  // Test resizing/hiding/showing the preview
-  it("Resize Preview", () => {
+  // Test to check if the tour is rendered and close the tour
+  it("Tour check and click next button", () => {
     // Visit a file with a preview
     cy.wait(1000);
     cy.visit(
@@ -50,6 +51,12 @@ describe("File related tests", () => {
     cy.wait("@pullsUpdate");
     cy.wait("@getContent");
 
+    cy.wait(1000);
+    checkTour();
+  });
+
+  // Test resizing/hiding/showing the preview
+  it("Resize Preview", () => {
     // Check if the file is loaded
     cy.get("eox-jsonform").should("exist");
 
@@ -154,6 +161,7 @@ describe("File related tests", () => {
 
   // Test renaming a file
   it("Rename file", () => {
+    checkTour();
     // Rename the file
     isRenameFile = true;
     cy.get("#rename-file-btn").click();

@@ -5,6 +5,8 @@ import { onMounted, provide, ref } from "vue";
 import useOctokitStore from "@/stores/octokit.js";
 import { initOctokit } from "@/api/index.js";
 import { useLoader } from "@/helpers/index.js";
+import "../../EOxElements/elements/tour/src/main.js";
+import "../../EOxElements/elements/tour/dist/eox-tour.css";
 
 const navButtonConfig = ref({});
 const navPaginationItems = ref([
@@ -17,9 +19,11 @@ const navPaginationItems = ref([
 const fileBrowserDrawer = ref(false);
 const snackbar = ref(false);
 const isOctokitInitialised = ref(false);
+const tourConfig = ref(null);
 provide("set-nav-button-config", navButtonConfig);
 provide("set-nav-pagination-items", navPaginationItems);
 provide("set-snackbar", snackbar);
+provide("set-tour-config", tourConfig);
 provide("set-file-browser-drawer", fileBrowserDrawer);
 
 onMounted(async () => {
@@ -48,5 +52,6 @@ onMounted(async () => {
       >
       </v-snackbar>
     </v-main>
+    <eox-tour v-if="tourConfig" :config="tourConfig" />
   </v-app>
 </template>

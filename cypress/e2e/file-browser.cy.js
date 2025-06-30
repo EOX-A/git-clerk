@@ -3,6 +3,7 @@ import content from "../fixtures/content:get.json";
 import ghConfig from "../fixtures/gh-config.json";
 import files from "../fixtures/files:get.json";
 import { GITHUB_HOST_REGEX } from "../enums";
+import { checkTour } from "../helper";
 
 const dummySession = {
   url: "https://api.github.com/repos/",
@@ -66,9 +67,16 @@ describe("File browser related tests", () => {
     ).as("getFiles");
   });
 
+  // Test to check if the tour is rendered and close the tour
+  it("Tour check and click next button", () => {
+    cy.visit("/123");
+    cy.wait("@getFiles");
+    cy.wait(1000);
+    checkTour();
+  });
+
   // Test to check if the files list is rendered correctly
   it("Render files list", () => {
-    cy.visit("/123");
     cy.get(".navbar .v-btn.session-file-btn").click();
     cy.get(".files-browse-list", { timeout: 12000 }).should(
       "have.length",
@@ -98,6 +106,7 @@ describe("File browser related tests", () => {
   // Test to check if the existing file is edited correctly
   it("Edit existing file", () => {
     editSession = true;
+    checkTour();
     cy.get(".navbar .v-btn.session-file-btn").click();
     cy.get(".files-browse-list").eq(6).click();
     cy.get(".current-session-btn").click();

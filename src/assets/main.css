@@ -88,3 +88,43 @@ html {
   font-size: 1rem;
   font-weight: 700;
 }
+
+.driver-popover .driver-popover-close-btn {
+  right: 8px;
+  top: 6px;
+  display: flex;
+  color: rgb(var(--eox-theme-light-primary));
+}
+
+.driver-popover footer > .driver-popover-progress-text {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.5;
+}
+
+.driver-popover .driver-popover-arrow {
+  display: none;
+}
+
+.driver-popover .driver-popover-next-btn,
+.driver-popover .driver-popover-prev-btn {
+  background-color: rgb(var(--eox-theme-light-primary));
+  color: white;
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.driver-popover .driver-popover-btn-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.driver-popover .driver-popover-footer nav {
+  width: 100%;
+  justify-content: end;
+}

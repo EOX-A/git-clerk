@@ -4,6 +4,7 @@ import ghConfig from "../fixtures/gh-config.json";
 import files from "../fixtures/files:get.json";
 import content from "../fixtures/content:get.json";
 import pullsData from "../fixtures/pulls:get.json";
+import { checkTour } from "../helper";
 
 // State flags to control test behavior
 let sessionName = false;
@@ -131,10 +132,16 @@ describe("Files list related tests", () => {
       });
   });
 
-  // Test that files list renders correctly
-  it("Render files list", () => {
+  // Test to check if the tour is rendered and close the tour
+  it("Tour check and click next button", () => {
     cy.visit("/123");
     cy.wait("@getFiles");
+    cy.wait(1000);
+    checkTour();
+  });
+
+  // Test that files list renders correctly
+  it("Render files list", () => {
     cy.get(".files-list", { timeout: 12000 }).should(
       "have.length",
       files.length,
@@ -305,7 +312,7 @@ describe("Files list related tests", () => {
   it("Check preview link exists", () => {
     cy.window().then((win) => {
       expect(win.gitClerkConfig).to.exist;
-      cy.get("#deployed-preview-btn").should(($btn) => {
+      cy.get("#deployed-preview-btn a").should(($btn) => {
         if (win.gitClerkConfig.deployedPreviewLink)
           expect($btn.attr("href")).to.equal(
             win.gitClerkConfig.deployedPreviewLink(pullsData),
