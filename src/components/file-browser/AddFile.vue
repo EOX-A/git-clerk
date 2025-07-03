@@ -46,6 +46,10 @@ onMounted(() => {
   sessionNumber.value = props.session ? props.session.number : null;
 });
 
+const onKeyDown = async (event) => {
+  if (event.key === "Enter") await createFile();
+};
+
 const createFile = async () => {
   const success = () => {
     fileBrowserDrawer.value = false;
@@ -103,6 +107,7 @@ const currentSession = () => {
           >)
         </p>
         <v-text-field
+          @keydown="onKeyDown"
           density="compact"
           label="File Name"
           variant="solo"
