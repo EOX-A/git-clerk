@@ -36,10 +36,12 @@ const props = defineProps({
 
 const duplicateFile = ref(false);
 
+// Reset the file path
 const handleFilePathReset = (value = null) => {
   setTimeout(() => (filePath.value = value), 100);
 };
 
+// Update the file path
 const updateFilePath = (newPath) => {
   const normalizedPath = (updatedFilePath.value + newPath).replace(
     /\/\//g,
@@ -53,6 +55,7 @@ const updateFilePath = (newPath) => {
   updatedFilePath.value = normalizedPath;
 };
 
+// Handle keydown events for the file path input
 const onKeyDownPathName = async (event) => {
   const { key } = event;
 
@@ -78,6 +81,7 @@ const onKeyDownPathName = async (event) => {
   } else if (event.key === "Enter") await createDuplicateFile();
 };
 
+// Handle paste events for the file path input
 const onPastePathName = (event) => {
   const pasteValue = event.clipboardData.getData("text");
   if (!pasteValue.includes("/")) return;
@@ -99,6 +103,7 @@ onMounted(() => {
   updatedFilePathArr.value = [""];
 });
 
+// Watch for changes in the file path and update the current path directory structure
 watch(updatedFilePathArr, async (newPathArr) => {
   currPathDirStructure.value = [];
   const currPath = newPathArr.join("/").replace("/", "");
@@ -110,6 +115,7 @@ watch(updatedFilePathArr, async (newPathArr) => {
   );
 });
 
+// Close the duplicate file dialog
 const close = () => {
   duplicateFile.value = false;
 
@@ -120,6 +126,7 @@ const close = () => {
   currPathDirStructure.value = [];
 };
 
+// Create a duplicate file and call the success callback
 const createDuplicateFile = async (sha = null) => {
   const success = () => {
     close();
@@ -128,6 +135,7 @@ const createDuplicateFile = async (sha = null) => {
     name: filePath.value,
   });
 
+  // Create the duplicate file
   createFileMethod(
     updatedFilePath.value,
     filePath.value,
@@ -141,6 +149,7 @@ const createDuplicateFile = async (sha = null) => {
   );
 };
 
+// Select a file from the current path directory structure
 const onSelectFile = (item) => {
   if (item.type === "file") {
     const encodedFilePath = encodeString(
@@ -150,6 +159,7 @@ const onSelectFile = (item) => {
   }
 };
 
+// Get the selected file folder
 const getSelectedFileFolder = (name) => {
   return find(currPathDirStructure.value, { name });
 };

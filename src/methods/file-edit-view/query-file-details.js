@@ -1,7 +1,7 @@
 import { RequestError } from "octokit";
 import { decodeString } from "@/helpers/index.js";
 
-const getFileContent = (content, props) => {
+const getFileContent = (content) => {
   try {
     const schema = JSON.parse(content);
     return schema;

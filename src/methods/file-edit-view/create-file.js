@@ -24,6 +24,7 @@ export default async function createFileMethod(
   existingFileName = null,
   existingSHA = null,
 ) {
+  // Validate filename exists
   if (!fileName) {
     snackbar.value = {
       text: "Please add a filename",
@@ -35,6 +36,7 @@ export default async function createFileMethod(
   const loader = useLoader().show();
   let fileContent = "";
 
+  // Helper function to create the file
   const create = async () => {
     const fullFilePath = (updatedFilePath + (fileName || "")).replace("/", "");
 
@@ -48,6 +50,7 @@ export default async function createFileMethod(
 
     const sessionDetails = await getSessionDetails(sessionNumber);
 
+    // Create the file
     snackbar.value = await createAndUpdateFile(
       sessionDetails,
       fullFilePath,
@@ -55,6 +58,8 @@ export default async function createFileMethod(
       content,
       sha,
     );
+
+    // If file creation is successful, navigate to the file and call success callback
     if (snackbar.value.status === "success") {
       await router.push(`/${sessionNumber}/${encodeString(fullFilePath)}`);
       success();
@@ -62,8 +67,11 @@ export default async function createFileMethod(
     loader.hide();
   };
 
+  // Handle file duplication
   if (existingFileName) {
     const fileDetails = await getFileDetails(session, existingFileName, false);
+
+    // If file is not empty, decode the content and create the file
     if (fileDetails.encoding !== "none") {
       fileContent = decodeString(fileDetails.content);
       create();
@@ -75,10 +83,13 @@ export default async function createFileMethod(
       loader.hide();
       return;
     }
-  } else {
+  }
+  // Handle new file creation
+  else {
     const fullPath = updatedFilePath + fileName;
     const schemaDetails = getSchemaDetails(fullPath);
     if (schemaDetails) {
+      // Get schema and create file with schema-based content
       const schema =
         schemaDetails.schema || (await fetchSchemaFromURL(schemaDetails.url));
 
@@ -87,12 +98,14 @@ export default async function createFileMethod(
         loader.hide();
         return;
       } else {
+        // Fetch the content from the schema and create the file
         fetchJsonFormContent(schema, (content) => {
           fileContent = stringifyIfNeeded(schemaDetails.content || content);
           create();
         });
       }
     } else {
+      // Create empty file if no schema exists
       create();
     }
   }
