@@ -10,6 +10,7 @@ import {
   decodeString,
   getSchemaDetails,
   stringifyIfNeeded,
+  fetchJsonFormContent,
 } from "@/helpers/index.js";
 
 export default async function createFileMethod(
@@ -86,22 +87,10 @@ export default async function createFileMethod(
         loader.hide();
         return;
       } else {
-        const jsonForm = document.createElement("eox-jsonform");
-        jsonForm.style.display = "none";
-        jsonForm.schema = schema;
-        document.body.appendChild(jsonForm);
-
-        const intervalId = setInterval(() => {
-          if (jsonForm.editor) {
-            fileContent = stringifyIfNeeded(
-              schemaDetails.content || jsonForm.editor.getValue(),
-            );
-            create();
-
-            clearInterval(intervalId);
-            jsonForm.remove();
-          }
-        }, 500);
+        fetchJsonFormContent(schema, (content) => {
+          fileContent = stringifyIfNeeded(schemaDetails.content || content);
+          create();
+        });
       }
     } else {
       create();
