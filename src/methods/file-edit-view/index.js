@@ -5,3 +5,4 @@ export {
   addPostMessageEventMethod,
 } from "./post-message.js";
 export { jsonSchemaFileChangeMethod } from "./file-change";
+export { default as createFileMethod } from "./create-file";

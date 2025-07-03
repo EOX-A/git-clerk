@@ -1,10 +1,8 @@
 <script setup>
 import { ref, onMounted, watch, inject } from "vue";
 import { CreateSession } from "@/components/session/index.js";
-import { useLoader } from "@/helpers/index.js";
-import { createAndUpdateFile, getSessionDetails } from "@/api/index.js";
-import { encodeString } from "@/helpers/index.js";
 import { useRouter } from "vue-router";
+import { createFileMethod } from "@/methods/file-edit-view/index.js";
 
 const router = useRouter();
 const snackbar = inject("set-snackbar");
@@ -49,41 +47,19 @@ onMounted(() => {
 });
 
 const createFile = async () => {
-  if (!newFileName.value) {
-    snackbar.value = {
-      text: "Please add a filename",
-      status: "error",
-    };
-    return;
-  }
-  const loader = useLoader().show();
-
-  const fullFilePath = (
-    props.updatedFilePath + (newFileName.value || "")
-  ).replace("/", "");
-
-  const content = {
-    data: "",
-    type: "string",
-  };
-
-  const sha = props.session?.head?.sha || null;
-
-  const sessionDetails = await getSessionDetails(sessionNumber.value);
-
-  snackbar.value = await createAndUpdateFile(
-    sessionDetails,
-    fullFilePath,
-    newFileName.value,
-    content,
-    sha,
-  );
-  loader.hide();
-  if (snackbar.value.status === "success") {
+  const success = () => {
     fileBrowserDrawer.value = false;
     props.resetOperation();
-    await router.push(`/${sessionNumber.value}/${encodeString(fullFilePath)}`);
-  }
+  };
+  createFileMethod(
+    props.updatedFilePath,
+    newFileName.value,
+    props.session,
+    sessionNumber.value,
+    router,
+    snackbar,
+    success,
+  );
 };
 
 const clearInput = (success) => {
