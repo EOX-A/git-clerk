@@ -1,6 +1,15 @@
 import { RequestError } from "octokit";
 import { decodeString } from "@/helpers/index.js";
 
+const getFileContent = (content) => {
+  try {
+    const schema = JSON.parse(content);
+    return schema;
+  } catch (error) {
+    return {};
+  }
+};
+
 export default function queryFileDetailsMethod(fileDetails, props) {
   if (fileDetails instanceof RequestError) {
     props.snackbar.value = {
@@ -20,13 +29,15 @@ export default function queryFileDetailsMethod(fileDetails, props) {
     props.isSchemaBased.value = props.schemaMetaDetails.value.generic
       ? false
       : true;
+
     props.fileContent.value = props.isSchemaBased.value
       ? props.schemaMetaDetails.value.output
         ? { [props.schemaMetaDetails.value.output]: content }
-        : JSON.parse(content)
+        : getFileContent(content)
       : {
           file: content,
         };
+
     props.previewURL.value = props.schemaMetaDetails.value.preview || null;
 
     props.navPaginationItems.value = [
