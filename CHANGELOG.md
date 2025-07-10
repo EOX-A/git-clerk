@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.2](https://github.com/EOX-A/git-clerk/compare/v1.11.1...v1.11.2) (2025-07-10)
+
+
+### Bug Fixes
+
+* Only render jsonform once file content loaded ([#172](https://github.com/EOX-A/git-clerk/issues/172)) ([2dcb08c](https://github.com/EOX-A/git-clerk/commit/2dcb08cd5c2078847878ae39b43bbea9dbe0ba4a))
+
 ## [1.11.1](https://github.com/EOX-A/git-clerk/compare/v1.11.0...v1.11.1) (2025-07-03)
 
 
