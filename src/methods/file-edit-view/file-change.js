@@ -8,7 +8,6 @@ export function jsonSchemaFileChangeMethod({
   detail,
   updatedFileContent,
   debouncedPostMessage,
-  jsonFormInstance,
   customInterfaces,
   updateNavButtonConfig,
 }) {
@@ -19,10 +18,9 @@ export function jsonSchemaFileChangeMethod({
 
   if (!updatedFileContent.value) {
     // Append key which is not present in the fileContent at beginning
-    updatedFileContent.value = { ...detail, ...fileContent.value };
-    fileContent.value = updatedFileContent.value;
-    jsonFormInstance.value.editor.setValue(updatedFileContent.value);
     customInterfaces.value = Object.values(CUSTOM_EDITOR_INTERFACES);
+    updatedFileContent.value = { ...fileContent.value };
+    fileContent.value = updatedFileContent.value;
     init = true;
   } else if (!isEqual(updatedFileContent.value, detail)) {
     updatedFileContent.value = detail;

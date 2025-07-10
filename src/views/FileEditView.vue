@@ -99,9 +99,19 @@ const updateFileDetails = async (cache = true) => {
     file,
     navPaginationItems,
     fileContent,
+    updatedFileContent,
     isSchemaBased,
     previewURL,
     schemaMetaDetails,
+  });
+
+  jsonSchemaFileChangeMethod({
+    file,
+    fileContent,
+    customInterfaces,
+    updatedFileContent,
+    debouncedPostMessage,
+    updateNavButtonConfig,
   });
 };
 
@@ -197,7 +207,6 @@ const onFileChange = (e) => {
     detail,
     fileContent,
     customInterfaces,
-    jsonFormInstance,
     updatedFileContent,
     debouncedPostMessage,
     updateNavButtonConfig,
@@ -276,6 +285,7 @@ onUnmounted(() => {
         :class="`fill-height overflow-x-auto overflow-y-scroll pa-4 pa-md-8 ${previewURL && previewExpanded ? 'd-none' : ''} ${$vuetify?.display?.smAndDown ? 'order-2' : 'order-1'}`"
       >
         <eox-jsonform
+          v-if="updatedFileContent"
           :schema="schemaMetaDetails.schema"
           :value="updatedFileContent"
           :customEditorInterfaces="customInterfaces"

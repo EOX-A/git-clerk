@@ -75,6 +75,7 @@ const schemaMap = [
       options: {
         disable_edit_json: false,
         disable_properties: false,
+        show_opt_in: true,
       },
     },
     preview: "/example-preview.html",
