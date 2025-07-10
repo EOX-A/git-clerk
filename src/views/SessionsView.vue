@@ -16,6 +16,7 @@ import {
   useLoader,
   preventListItemClick,
   createSession,
+  getTourConfig,
 } from "@/helpers/index.js";
 import {
   ActionList,
@@ -48,6 +49,7 @@ const cursorHistory = ref([]);
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
+const tourConfig = inject("set-tour-config");
 
 const updateSessionsList = async (cache = false) => {
   sessions.value = null;
@@ -120,6 +122,11 @@ onMounted(async () => {
     );
   }
   await updateSessionsList(true);
+
+  const isEmpty = sessions.value && sessions.value.length === 0;
+  const tourID = isEmpty ? "sessions-view-empty" : "sessions-view";
+
+  tourConfig.value = getTourConfig(tourID, { isEmpty });
 });
 
 const onPageChange = async (newCursor) => {

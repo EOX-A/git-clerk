@@ -25,6 +25,7 @@ const props = defineProps({
     text="Open"
     color="blue-grey-darken-4 open-session-btn"
     id="session-action-menu"
+    class="open-session-filter"
     :disabled="!props.sessions"
     @click="changeSessionState('open')"
   >
@@ -46,6 +47,7 @@ const props = defineProps({
     text="Closed"
     color="blue-grey-darken-4 closed-session-btn"
     id="session-action-menu"
+    class="closed-session-filter"
     :disabled="!props.sessions"
     @click="changeSessionState('closed')"
   >
