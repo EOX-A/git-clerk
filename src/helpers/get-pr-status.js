@@ -9,16 +9,18 @@ export default function getPrStatus(session) {
       icon = "git-pull-request-draft";
       state = "draft";
     }
+  } else if (
+    session.state === "merged" ||
+    session.merged_at ||
+    session.pull_request?.merged_at
+  ) {
+    color = "violet";
+    icon = "git-merge";
+    state = "merged";
   } else {
-    if (session.merged_at || session.pull_request?.merged_at) {
-      color = "violet";
-      icon = "git-merge";
-      state = "merged";
-    } else {
-      color = "red";
-      icon = "git-pull-request-closed";
-      state = "closed";
-    }
+    color = "red";
+    icon = "git-pull-request-closed";
+    state = "closed";
   }
 
   return {
