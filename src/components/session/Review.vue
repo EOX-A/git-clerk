@@ -52,7 +52,7 @@ const reviewSessionHandle = async () => {
     const loader = useLoader().show();
     snackbar.value = await reviewBySessionNumber(
       reviewSession.value.number,
-      reviewSession.value.id,
+      reviewSession.value.node_id || reviewSession.value.id,
     );
     reviewSession.value = false;
     loader.hide();
