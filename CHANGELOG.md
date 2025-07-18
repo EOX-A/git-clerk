@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.3](https://github.com/EOX-A/git-clerk/compare/v1.11.2...v1.11.3) (2025-07-14)
+
+
+### Bug Fixes
+
+* Icon and color fix for merged session ([#176](https://github.com/EOX-A/git-clerk/issues/176)) ([c346d34](https://github.com/EOX-A/git-clerk/commit/c346d34c1249bfe6445c20cf3f45a65de6b45dde))
+
 ## [1.11.2](https://github.com/EOX-A/git-clerk/compare/v1.11.1...v1.11.2) (2025-07-10)
 
 
