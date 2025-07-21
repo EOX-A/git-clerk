@@ -13,7 +13,7 @@ import OffsetPagination from "@/components/global/OffsetPagination.vue";
 import { ActionTabSession } from "@/components/session";
 import { DeleteFile, DuplicateFile } from "@/components/file";
 import { encodeString, preventListItemClick } from "@/helpers/index.js";
-import { BASE_PATH, AUTOMATION } from "@/enums";
+import { BASE_PATH, AUTOMATION, DISABLE_MANUAL_FILE_CREATION } from "@/enums";
 import "@eox/jsonform";
 import Automation from "@/components/session/Automation.vue";
 import find from "lodash/find";
@@ -66,24 +66,28 @@ onMounted(async () => {
     ...AUTOMATION.filter((automation) => !automation.hidden),
   ];
 
-  suggestionList.value = [
-    ...availableAutomation,
-    {
-      title: "Add/Edit File Manually",
-      description:
-        "Create or edit a file by entering the file path and details manually.",
-      icon: "mdi-pencil-plus-outline",
-      func: () => (fileBrowserDrawer.value = true),
-      manual: true,
-    },
-    {
-      title: "Upload Files",
-      description: "Upload files from your computer.",
-      icon: "mdi-upload",
-      func: () => (fileBrowserDrawer.value = true),
-      manual: true,
-    },
-  ];
+  if (DISABLE_MANUAL_FILE_CREATION) {
+    suggestionList.value = availableAutomation;
+  } else {
+    suggestionList.value = [
+      ...availableAutomation,
+      {
+        title: "Add/Edit File Manually",
+        description:
+          "Create or edit a file by entering the file path and details manually.",
+        icon: "mdi-pencil-plus-outline",
+        func: () => (fileBrowserDrawer.value = true),
+        manual: true,
+      },
+      {
+        title: "Upload Files",
+        description: "Upload files from your computer.",
+        icon: "mdi-upload",
+        func: () => (fileBrowserDrawer.value = true),
+        manual: true,
+      },
+    ];
+  }
 
   if (availableAutomation.length) {
     navButtonConfig.value = {
@@ -277,5 +281,8 @@ const handleAutomationClose = () => {
   width: 12px;
   height: 12px;
   border: 1px solid white;
+}
+.v-empty-state__actions {
+  width: 100%;
 }
 </style>

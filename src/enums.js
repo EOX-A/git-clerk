@@ -32,3 +32,7 @@ export const DEPLOYED_PREVIEW_LINK =
   globalThis.deployedPreviewLink ||
   GIT_CLERK_CONFIG.deployedPreviewLink ||
   (() => null);
+export const DISABLE_MANUAL_FILE_CREATION =
+  globalThis.disableManualFileCreation ||
+  GIT_CLERK_CONFIG.disableManualFileCreation ||
+  false;

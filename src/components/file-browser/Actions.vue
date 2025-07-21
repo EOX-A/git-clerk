@@ -1,6 +1,7 @@
 <script setup>
 import ActionTab from "@/components/global/ActionTab.vue";
 import { ref, watch, inject } from "vue";
+import { DISABLE_MANUAL_FILE_CREATION } from "@/enums";
 
 const fileBrowserDrawer = inject("set-file-browser-drawer");
 const actionBtnState = ref(true);
@@ -52,7 +53,11 @@ watch(fileBrowserDrawer, (newVal) => {
       </v-hover>
     </v-chip>
 
-    <v-menu v-if="actionBtnState" attach location="bottom">
+    <v-menu
+      v-if="actionBtnState && !DISABLE_MANUAL_FILE_CREATION"
+      attach
+      location="bottom"
+    >
       <template v-slot:activator="{ props }">
         <v-btn
           color="primary"
