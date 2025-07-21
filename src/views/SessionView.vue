@@ -13,7 +13,7 @@ import OffsetPagination from "@/components/global/OffsetPagination.vue";
 import { ActionTabSession } from "@/components/session";
 import { DeleteFile, DuplicateFile } from "@/components/file";
 import { encodeString, preventListItemClick } from "@/helpers/index.js";
-import { BASE_PATH, AUTOMATION, HIDE_MANUAL_FILE_CREATION } from "@/enums";
+import { BASE_PATH, AUTOMATION, DISABLE_MANUAL_FILE_CREATION } from "@/enums";
 import "@eox/jsonform";
 import Automation from "@/components/session/Automation.vue";
 import find from "lodash/find";
@@ -66,7 +66,7 @@ onMounted(async () => {
     ...AUTOMATION.filter((automation) => !automation.hidden),
   ];
 
-  if (HIDE_MANUAL_FILE_CREATION) {
+  if (DISABLE_MANUAL_FILE_CREATION) {
     suggestionList.value = availableAutomation;
   } else {
     suggestionList.value = [

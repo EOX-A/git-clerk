@@ -261,6 +261,18 @@ globalThis.gitClerkConfig = {
 };
 ```
 
+### Disable manual file creation
+
+Git Clerk allows you to configure and disable manual file creation. This can be useful if you like the user to only use automation and editing the files. This will disable manual file creation and upload in file browser and suggestion in empty session. You can configure this by adding a `disableManualFileCreation` function to your config that returns a boolean value:
+
+```js
+globalThis.gitClerkConfig = {
+  [...]
+  disableManualFileCreation: true // boolean value - true or false
+  [...]
+};
+```
+
 An example for this setup can be seen in [here](https://github.com/EOX-A/git-clerk/blob/31bf8b16b5749f55c072bedd16e5eb68ae715f15/public/config.js#L267).
 
 ## Development
