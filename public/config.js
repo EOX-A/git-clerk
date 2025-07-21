@@ -278,7 +278,7 @@ const deployedPreviewLink = (sessionDetail) => {
   return `https://github.com/${base.repo.owner.login}/${base.repo.name}/pull/${number}`;
 };
 
-const disableManualFileCreation = true;
+const disableManualFileCreation = false;
 
 globalThis.gitClerkConfig = {
   ghConfig,
