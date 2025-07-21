@@ -278,6 +278,8 @@ const deployedPreviewLink = (sessionDetail) => {
   return `https://github.com/${base.repo.owner.login}/${base.repo.name}/pull/${number}`;
 };
 
+const hideManualFileCreation = true;
+
 globalThis.gitClerkConfig = {
   ghConfig,
   basePath,
@@ -286,4 +288,5 @@ globalThis.gitClerkConfig = {
   customEditorInterfaces,
   generateEnums,
   deployedPreviewLink,
+  hideManualFileCreation,
 };
