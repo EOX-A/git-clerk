@@ -290,6 +290,7 @@ onUnmounted(() => {
           :value="updatedFileContent"
           :customEditorInterfaces="customInterfaces"
           :options="schemaMetaDetails.jsonform?.options || {}"
+          :propertiesToggle="schemaMetaDetails.jsonform?.propertiesToggle"
           @change="onFileChange"
           class="d-block fill-height"
         ></eox-jsonform>
