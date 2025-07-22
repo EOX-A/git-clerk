@@ -36,3 +36,22 @@ export const DISABLE_MANUAL_FILE_CREATION =
   globalThis.disableManualFileCreation ||
   GIT_CLERK_CONFIG.disableManualFileCreation ||
   false;
+
+export const DEFAULT_I18N = {
+  locale: "en",
+  fallbackLocale: "en",
+  messages: {
+    en: {
+      buttonText: {
+        automation: "Automation",
+      },
+    },
+    de: {
+      buttonText: {
+        automation: "Automatisierung",
+      },
+    },
+  },
+};
+
+export const I18N = globalThis.i18n || GIT_CLERK_CONFIG.i18n || {};
