@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.1](https://github.com/EOX-A/git-clerk/compare/v1.13.0...v1.13.1) (2025-07-22)
+
+
+### Bug Fixes
+
+* **deps:** Update package to prevent error with form validation ([#194](https://github.com/EOX-A/git-clerk/issues/194)) ([f9b6b2d](https://github.com/EOX-A/git-clerk/commit/f9b6b2d6cf4ffb4e93e4c429b7dd821abaf57692))
+
 ## [1.13.0](https://github.com/EOX-A/git-clerk/compare/v1.12.0...v1.13.0) (2025-07-22)
 
 
