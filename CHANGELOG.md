@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.12.0](https://github.com/EOX-A/git-clerk/compare/v1.11.3...v1.12.0) (2025-07-22)
+
+
+### Features
+
+* Support disabling manual file creation  ([#189](https://github.com/EOX-A/git-clerk/issues/189)) ([287150a](https://github.com/EOX-A/git-clerk/commit/287150acead637c66a52f256be5791b4db7e42d0))
+* Support i18n ([#191](https://github.com/EOX-A/git-clerk/issues/191)) ([ac1a40d](https://github.com/EOX-A/git-clerk/commit/ac1a40d9adb86d346774cea29b8752317ed3ad55))
+
+
+### Bug Fixes
+
+* Request review not working because of `id` and `node_id` key difference for graphql and rest api response  ([#187](https://github.com/EOX-A/git-clerk/issues/187)) ([e1d087b](https://github.com/EOX-A/git-clerk/commit/e1d087b35f469007472c8706c4e99083f0d0c033))
+
 ## [1.11.3](https://github.com/EOX-A/git-clerk/compare/v1.11.2...v1.11.3) (2025-07-14)
 
 
