@@ -273,7 +273,34 @@ globalThis.gitClerkConfig = {
 };
 ```
 
-An example for this setup can be seen in [here](https://github.com/EOX-A/git-clerk/blob/31bf8b16b5749f55c072bedd16e5eb68ae715f15/public/config.js#L267).
+### Add internationalization
+
+Git Clerk allows you to configure I18n (internationalization) using config. This can be useful if you like the users to have textual content in different languages. You can configure this by adding a `i18n` constant to your config that returns an i18n options:
+
+```js
+globalThis.gitClerkConfig = {
+  [...]
+  i18n: {
+    locale: "en",
+    fallbackLocale: "en",
+    messages: {
+      en: {
+        buttonText: {
+          automation: "Automation",
+        },
+      },
+      de: {
+        buttonText: {
+          automation: "Automatisierung",
+        },
+      },
+    },
+  }
+  [...]
+};
+```
+
+You can read more about i18n options [here](https://vue-i18n.intlify.dev/guide/essentials/syntax).
 
 ## Development
 

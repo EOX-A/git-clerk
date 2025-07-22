@@ -280,6 +280,21 @@ const deployedPreviewLink = (sessionDetail) => {
 
 const disableManualFileCreation = false;
 
+const i18n = {
+  messages: {
+    en: {
+      buttonText: {
+        automation: "Wizard",
+      },
+    },
+    de: {
+      buttonText: {
+        automation: "Zauberer",
+      },
+    },
+  },
+};
+
 globalThis.gitClerkConfig = {
   ghConfig,
   basePath,
@@ -289,4 +304,5 @@ globalThis.gitClerkConfig = {
   generateEnums,
   deployedPreviewLink,
   disableManualFileCreation,
+  i18n,
 };

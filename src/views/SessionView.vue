@@ -18,8 +18,10 @@ import "@eox/jsonform";
 import Automation from "@/components/session/Automation.vue";
 import find from "lodash/find";
 import { FileBrowserDrawer } from "@/components/file-browser";
+import { useI18n } from "vue-i18n";
 const route = useRoute();
 const router = useRouter();
+const { t } = useI18n();
 const sessionNumber = route.params.sessionNumber;
 
 const session = ref(null);
@@ -91,7 +93,7 @@ onMounted(async () => {
 
   if (availableAutomation.length) {
     navButtonConfig.value = {
-      text: "Automation",
+      text: t("buttonText.automation"),
       icon: "mdi-auto-fix",
       list: availableAutomation.map((suggestion) => ({
         ...suggestion,
