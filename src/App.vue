@@ -3,7 +3,7 @@ import Navbar from "@/components/global/Navbar.vue";
 import { RouterView } from "vue-router";
 import { onMounted, provide, ref } from "vue";
 import useOctokitStore from "@/stores/octokit.js";
-import { initOctokit } from "@/api/index.js";
+import { initOctokit, syncRepo } from "@/api/index.js";
 import { useLoader } from "@/helpers/index.js";
 
 const navButtonConfig = ref({});
@@ -28,6 +28,7 @@ onMounted(async () => {
 
   const octokitStore = useOctokitStore();
   octokitStore.setOctokit(instance);
+  await syncRepo();
   isOctokitInitialised.value = true;
   loader.hide();
 });

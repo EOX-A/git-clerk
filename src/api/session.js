@@ -154,6 +154,74 @@ export async function repoDetails(octokit, githubConfig, githubUserData) {
   }
 }
 
+async function checkForkRepo(username, repo, octokit, owner, loaderText = {}) {
+  let fork;
+  try {
+    fork = await octokit.rest.repos.get({ owner: username, repo });
+  } catch (error) {
+    if (error.status === 404) {
+      fork = await octokit.rest.repos.createFork({ owner, repo });
+      if (fork.data.name !== repo) {
+        throw new Error(
+          "A fork of the original repository already exists for your account",
+        );
+      }
+      loaderText.innerText = "Creating fork repo...";
+
+      // Wait for fork creation to be available and try 3 times
+      let retries = 6;
+      while (retries > 0) {
+        try {
+          if (retries === 5)
+            loaderText.innerText = "Creating fork repo! Please be patient...";
+          await new Promise((resolve) => setTimeout(resolve, 5000)); // 5 seconds
+          fork = await octokit.rest.repos.get({ owner: username, repo });
+          break;
+        } catch (err) {
+          retries--;
+          if (retries === 0) {
+            throw new Error(
+              "Failed to retrieve forked repository after 3 attempts",
+            );
+          }
+        }
+      }
+    } else {
+      throw error;
+    }
+  }
+}
+
+export async function syncARepo(username, repo, octokit) {
+  try {
+    const forkRepo = await octokit.rest.repos.get({ owner: username, repo });
+    const forkDefaultBranch = forkRepo.data.default_branch;
+
+    await octokit.rest.repos.mergeUpstream({
+      owner: username,
+      repo,
+      branch: forkDefaultBranch,
+    });
+
+    return forkDefaultBranch;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function checkForkRepoAndSync(octokit, githubConfig) {
+  try {
+    const { repo } = githubConfig;
+    const username = (await octokit.rest.users.getAuthenticated()).data.login;
+    const fork = await octokit.rest.repos.get({ owner: username, repo });
+    if (fork) {
+      await syncARepo(username, repo, octokit);
+    }
+  } catch (error) {
+    return error;
+  }
+}
+
 export async function createSession(octokit, githubConfig, prName) {
   const { username: owner, repo } = githubConfig;
   const username = (await octokit.rest.users.getAuthenticated()).data.login;
@@ -165,54 +233,12 @@ export async function createSession(octokit, githubConfig, prName) {
 
   try {
     const loaderText = document.getElementById("loader-text");
-    let fork;
-    try {
-      fork = await octokit.rest.repos.get({ owner: username, repo });
-    } catch (error) {
-      if (error.status === 404) {
-        fork = await octokit.rest.repos.createFork({ owner, repo });
-        if (fork.data.name !== repo) {
-          throw new Error(
-            "A fork of the original repository already exists for your account",
-          );
-        }
-        loaderText.innerText = "Creating fork repo...";
-
-        // Wait for fork creation to be available and try 3 times
-        let retries = 6;
-        while (retries > 0) {
-          try {
-            if (retries === 5)
-              loaderText.innerText = "Creating fork repo! Please be patient...";
-            await new Promise((resolve) => setTimeout(resolve, 5000)); // 5 seconds
-            fork = await octokit.rest.repos.get({ owner: username, repo });
-            break;
-          } catch (err) {
-            retries--;
-            if (retries === 0) {
-              throw new Error(
-                "Failed to retrieve forked repository after 3 attempts",
-              );
-            }
-          }
-        }
-      } else {
-        throw error;
-      }
-    }
+    await checkForkRepo(username, repo, octokit, owner, loaderText);
 
     loaderText.innerText = "Updating forked repo...";
     const sourceRepo = await octokit.rest.repos.get({ owner, repo });
     const sourceDefaultBranch = sourceRepo.data.default_branch;
-
-    const forkRepo = await octokit.rest.repos.get({ owner: username, repo });
-    const forkDefaultBranch = forkRepo.data.default_branch;
-
-    await octokit.rest.repos.mergeUpstream({
-      owner: username,
-      repo,
-      branch: forkDefaultBranch,
-    });
+    const forkDefaultBranch = await syncARepo(username, repo, octokit);
 
     const forkDefaultBranchRef = await octokit.rest.git.getRef({
       owner: username,

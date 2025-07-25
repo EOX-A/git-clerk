@@ -10,6 +10,7 @@ import {
   renameSession,
   numberOfOpenClosedSessions,
   repoDetails,
+  checkForkRepoAndSync,
 } from "@/api/session";
 import useOctokitStore from "@/stores/octokit";
 import {
@@ -145,6 +146,11 @@ export async function getSessionReviewStatus(sessionNumber) {
 export async function createSessionByName(name) {
   const { githubConfig, octokit } = useOctokitStore();
   return createSession(octokit, githubConfig, name);
+}
+
+export async function syncRepo() {
+  const { githubConfig, octokit } = useOctokitStore();
+  return checkForkRepoAndSync(octokit, githubConfig);
 }
 
 export async function getFilesListFromSession(sessionNumber, currPage, cache) {

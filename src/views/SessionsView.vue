@@ -5,6 +5,7 @@ import {
   getSessionsList,
   createSessionByName,
   getNumberOfOpenClosedSessions,
+  syncRepo,
 } from "@/api/index.js";
 import {
   querySessionsListMethod,
@@ -52,6 +53,7 @@ const navPaginationItems = inject("set-nav-pagination-items");
 const updateSessionsList = async (cache = false) => {
   sessions.value = null;
   window.scrollTo({ top: 0 });
+  syncRepo();
   const sessionsList = await getSessionsList(
     pageInfo.value,
     cursorPosition.value,
