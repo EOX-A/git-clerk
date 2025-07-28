@@ -18,7 +18,11 @@ const props = defineProps({
 });
 
 const totalPages = computed(() => {
-  if (!props.pageInfo) return 1;
+  if (
+    !props.pageInfo ||
+    (props.currentPage === 1 && !props.pageInfo.hasNextPage)
+  )
+    return 1;
   return props.cursorHistory.length;
 });
 
