@@ -3,6 +3,7 @@ import { defineProps, inject, ref } from "vue";
 import { decodeString, encodeString, useLoader } from "@/helpers/index.js";
 import { createAndUpdateFile, deleteFileBySHA } from "@/api/index.js";
 import { BASE_PATH } from "@/enums";
+import { useRouter } from "vue-router";
 
 const props = defineProps({
   file: {
@@ -23,6 +24,8 @@ const props = defineProps({
   },
 });
 const snackbar = inject("set-snackbar");
+const router = useRouter();
+
 const renameFile = ref(null);
 const renameFileTitle = ref(props.file.name);
 const confirmRename = ref(false);
@@ -63,7 +66,7 @@ const renameFileHandle = async () => {
       confirmRename.value = false;
 
       if (snackbar.value.status === "success") {
-        window.location.href = `${BASE_PATH}${props.session.number}/${encodeString(newPath)}`;
+        router.push(`/${props.session.number}/${encodeString(newPath)}`);
       }
     }
   }
