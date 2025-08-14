@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.13.2](https://github.com/EOX-A/git-clerk/compare/v1.13.1...v1.13.2) (2025-08-14)
+
+
+### Bug Fixes
+
+* Only enable cursor pagination if hasNextPage available ([#196](https://github.com/EOX-A/git-clerk/issues/196)) ([8f7e1ac](https://github.com/EOX-A/git-clerk/commit/8f7e1acace5fbe372f1e24cdf2b67c906c80fcd1))
+* Routing issue after rename ([#201](https://github.com/EOX-A/git-clerk/issues/201)) ([02963c5](https://github.com/EOX-A/git-clerk/commit/02963c5cd9684e1188faba0dea2dafbf34794c0a))
+* Sync fork main when app loads or session list loads ([#197](https://github.com/EOX-A/git-clerk/issues/197)) ([7f5c7a5](https://github.com/EOX-A/git-clerk/commit/7f5c7a5c691c15ddde2c644c109090e9b27ac5a9))
+
 ## [1.13.1](https://github.com/EOX-A/git-clerk/compare/v1.13.0...v1.13.1) (2025-07-22)
 
 
