@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.3](https://github.com/EOX-A/git-clerk/compare/v1.13.2...v1.13.3) (2025-08-18)
+
+
+### Miscellaneous Chores
+
+* **deps:** Update jsonform package ([#203](https://github.com/EOX-A/git-clerk/issues/203)) ([c962bdd](https://github.com/EOX-A/git-clerk/commit/c962bdde58b6c2b71065521022d02c2a7cb826d7))
+
 ## [1.13.2](https://github.com/EOX-A/git-clerk/compare/v1.13.1...v1.13.2) (2025-08-14)
 
 
