@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.5](https://github.com/EOX-A/git-clerk/compare/v1.13.4...v1.13.5) (2025-11-21)
+
+
+### Bug Fixes
+
+* Remove `.` from `base` in vite config ([#214](https://github.com/EOX-A/git-clerk/issues/214)) ([051d4bf](https://github.com/EOX-A/git-clerk/commit/051d4bf799150f896b7d5ac617a1d70e46178a3d))
+
 ## [1.13.4](https://github.com/EOX-A/git-clerk/compare/v1.13.3...v1.13.4) (2025-11-21)
 
 
