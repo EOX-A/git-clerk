@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.4](https://github.com/EOX-A/git-clerk/compare/v1.13.3...v1.13.4) (2025-11-21)
+
+
+### Bug Fixes
+
+* Trailing slash issue ([#212](https://github.com/EOX-A/git-clerk/issues/212)) ([57308c6](https://github.com/EOX-A/git-clerk/commit/57308c65585bb6a4ba8231ad002c29614f5afcfd))
+
 ## [1.13.3](https://github.com/EOX-A/git-clerk/compare/v1.13.2...v1.13.3) (2025-08-18)
 
 
