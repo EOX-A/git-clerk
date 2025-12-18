@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.13.9](https://github.com/EOX-A/git-clerk/compare/v1.13.8...v1.13.9) (2025-12-18)
+
+
+### Bug Fixes
+
+* Paths for links in index ([#223](https://github.com/EOX-A/git-clerk/issues/223)) ([861d879](https://github.com/EOX-A/git-clerk/commit/861d87970b7887137e2b00f61cb8d01278c406a8))
+
 ## [1.13.8](https://github.com/EOX-A/git-clerk/compare/v1.13.7...v1.13.8) (2025-12-18)
 
 
