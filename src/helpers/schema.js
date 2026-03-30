@@ -2,7 +2,7 @@ import { SCHEMA_MAP } from "@/enums";
 
 export function getSchemaDetails(inputPath) {
   for (const schema of SCHEMA_MAP) {
-    const pathPattern = schema.path.replace(/<id>/g, "[^/]+");
+    const pathPattern = schema.path.replace(/<id\d*>/g, "[^/]+");
     const regex = new RegExp(`^${pathPattern}$`);
 
     if (regex.test(inputPath)) {

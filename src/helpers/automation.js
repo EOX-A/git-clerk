@@ -44,6 +44,9 @@ export async function runAutomation(props, value, router) {
             : step.content(value);
       } else {
         const fileDetails = await getFileDetails(session, path);
+        if (fileDetails.content === undefined) {
+          throw new Error("File not found at path: " + path);
+        }
         const existingContent = parseIfNeeded(
           decodeString(fileDetails.content),
         );
