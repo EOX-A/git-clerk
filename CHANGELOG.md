@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.0](https://github.com/EOX-A/git-clerk/compare/v1.13.9...v1.14.0) (2026-03-31)
+
+
+### Features
+
+* Support arbitrary placeholders in schema paths ([#228](https://github.com/EOX-A/git-clerk/issues/228)) ([639b87a](https://github.com/EOX-A/git-clerk/commit/639b87a6fe75ea16d563b7f883ed0e05914ebc26))
+
 ## [1.13.9](https://github.com/EOX-A/git-clerk/compare/v1.13.8...v1.13.9) (2025-12-18)
 
 
