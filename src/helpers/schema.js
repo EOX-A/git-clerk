@@ -2,7 +2,8 @@ import { SCHEMA_MAP } from "@/enums";
 
 export function getSchemaDetails(inputPath) {
   for (const schema of SCHEMA_MAP) {
-    const pathPattern = schema.path.replace(/<id>/g, "[^/]+");
+    // Replace every <...> placeholder (with any content inside) by a path segment matcher
+    const pathPattern = schema.path.replace(/<[^>]+>/g, "[^/]+");
     const regex = new RegExp(`^${pathPattern}$`);
 
     if (regex.test(inputPath)) {

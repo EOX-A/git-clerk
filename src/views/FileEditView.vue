@@ -157,7 +157,10 @@ const saveFile = async () => {
       )
     ) {
       for (let key in CUSTOM_EDITOR_INTERFACES) {
-        const interfaceObj = CUSTOM_EDITOR_INTERFACES[key];
+        const interfaceObj = {
+          ...CUSTOM_EDITOR_INTERFACES[key],
+          parentFileContent: fileContent.value,
+        };
         if (updatedFileContent.value[key] && interfaceObj.operation) {
           await interfaceObj.operation.save(
             updatedFileContent.value[key],
