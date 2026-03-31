@@ -67,6 +67,7 @@ globalThis.gitClerkConfig = {
 ```
 
 In this example, editing the file `/folder-a/file.json` loads the corresponding JSON schema passed via the `schema` property, whereas editing a file with the pattern `/folder-a/<id>/file.json` loads the corresponding JSON schema `https://my-schema-site.com/schemas/folder-a/schema.json`.
+A dynamic path placeholder segments starts and ends with `<...>` eg - `<title>`, `<date>`, `<id>`, `<lorem-ipsum>` etc, which loads the corresponding JSON schema.
 
 #### `content`
 
