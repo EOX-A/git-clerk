@@ -1,0 +1,22 @@
+{
+  "name": "Git Clerk Dev Environment",
+  "build": {
+    "dockerfile": "Dockerfile"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Vue.volar",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode",
+        "vitest.explorer"
+      ]
+    }
+  },
+  "forwardPorts": [5173],
+  "postCreateCommand": "npm install && npm install -g @google/gemini-cli",
+  "remoteEnv": {
+    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}"
+  },
+  "remoteUser": "node"
+}
