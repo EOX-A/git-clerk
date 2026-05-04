@@ -271,4 +271,3 @@ const resetWholeState = async () => {
     :cursorHistory="cursorHistory"
   />
 </template>
-ate>
