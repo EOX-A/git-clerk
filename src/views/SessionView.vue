@@ -64,8 +64,8 @@ const updateDetails = async (cache = false) => {
 };
 
 watch(
-  AUTOMATION,
-  (newAutomation) => {
+  [AUTOMATION, session],
+  ([newAutomation, newSession]) => {
     const availableAutomation = [
       ...newAutomation.filter((automation) => !automation.hidden),
     ];
@@ -106,7 +106,7 @@ watch(
       };
     }
 
-    if (route.query.automation && !selectedAutomation.value) {
+    if (route.query.automation && !selectedAutomation.value && newSession) {
       const automation = find(newAutomation, { id: route.query.automation });
       if (automation) handleAutomationClick(automation);
     }
