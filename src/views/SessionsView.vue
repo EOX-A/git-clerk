@@ -1,6 +1,6 @@
 <script setup>
 import OctIcon from "@/components/global/OctIcon.vue";
-import { h, inject, onMounted, ref } from "vue";
+import { h, inject, onMounted, ref, watch } from "vue";
 import {
   getSessionsList,
   createSessionByName,
@@ -11,6 +11,7 @@ import {
   querySessionsListMethod,
   checkStatusMethod,
 } from "@/methods/sessions-view";
+import { AUTOMATION } from "@/enums";
 import { useRoute, useRouter } from "vue-router";
 import Tooltip from "@/components/global/Tooltip.vue";
 import {
@@ -108,19 +109,31 @@ onMounted(async () => {
   };
   navPaginationItems.value = [navPaginationItems.value[0]];
 
-  if (route.query.session && route.query.automation) {
-    newSessionName.value = route.query.session;
-    await createSession(
-      {
-        newSessionName,
-        snackbar,
-        loader,
-      },
-      router,
-      route,
-      clearInputCreateNewSession,
-    );
-  }
+  watch(
+    AUTOMATION,
+    async (newAutomation) => {
+      if (
+        route.query.session &&
+        route.query.automation &&
+        find(newAutomation, { id: route.query.automation }) &&
+        !newSessionName.value
+      ) {
+        newSessionName.value = route.query.session;
+        await createSession(
+          {
+            newSessionName,
+            snackbar,
+            loader,
+          },
+          router,
+          route,
+          clearInputCreateNewSession,
+        );
+      }
+    },
+    { immediate: true },
+  );
+
   await updateSessionsList(true);
 });
 
@@ -258,3 +271,4 @@ const resetWholeState = async () => {
     :cursorHistory="cursorHistory"
   />
 </template>
+ate>
