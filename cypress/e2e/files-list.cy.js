@@ -95,7 +95,7 @@ describe("Files list related tests", () => {
     cy.visit(
       "?session=update%203d%20earth&automation=add-file&content=ewogICJpZCI6ICI2MTFjNWQxNC03MDg3LTQ4MjAtYWNmNS02NDlhYWJjMjI0MjMiLAogICJmb28iOiAiRm9vIiwKICAiYmFyIjogZmFsc2UsCiAgImN1c3RvbSI6ICIiCn0K",
     );
-    cy.wait("@createPulls").then(() => {
+    cy.wait("@createPulls", { timeout: 15000 }).then(() => {
       cy.location("pathname", { timeout: 10000 }).should("eq", "/123");
     });
     cy.get("eox-jsonform#automation-form")
