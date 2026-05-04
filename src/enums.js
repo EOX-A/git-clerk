@@ -1,3 +1,6 @@
+/* global globalThis */
+import { ref } from "vue";
+
 export const CHECK_STATUS = {
   success: {
     tooltip: "Validation Successful",
@@ -26,8 +29,25 @@ export const BASE_PATH =
   globalThis.basePath || GIT_CLERK_CONFIG.basePath || "/";
 export const SCHEMA_MAP =
   globalThis.schemaMap || GIT_CLERK_CONFIG.schemaMap || [];
-export const AUTOMATION =
-  globalThis.automation || GIT_CLERK_CONFIG.automation || [];
+
+export const AUTOMATION = ref(
+  globalThis.automation || GIT_CLERK_CONFIG.automation || [],
+);
+
+const _initialAutomation =
+  globalThis.automation || GIT_CLERK_CONFIG.automation;
+Object.defineProperty(globalThis, "automation", {
+  get() {
+    return AUTOMATION.value;
+  },
+  set(newVal) {
+    AUTOMATION.value = newVal;
+  },
+});
+if (_initialAutomation) {
+  AUTOMATION.value = _initialAutomation;
+}
+
 export const DEPLOYED_PREVIEW_LINK =
   globalThis.deployedPreviewLink ||
   GIT_CLERK_CONFIG.deployedPreviewLink ||
