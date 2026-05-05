@@ -1,5 +1,5 @@
 <script setup>
-import { inject, onMounted, ref } from "vue";
+import { inject, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getFilesListFromSession, getSessionDetails } from "@/api/index.js";
 import {
@@ -63,52 +63,58 @@ const updateDetails = async (cache = false) => {
   }
 };
 
-onMounted(async () => {
-  const availableAutomation = [
-    ...AUTOMATION.filter((automation) => !automation.hidden),
-  ];
-
-  if (DISABLE_MANUAL_FILE_CREATION) {
-    suggestionList.value = availableAutomation;
-  } else {
-    suggestionList.value = [
-      ...availableAutomation,
-      {
-        title: "Add/Edit File Manually",
-        description:
-          "Create or edit a file by entering the file path and details manually.",
-        icon: "mdi-pencil-plus-outline",
-        func: () => (fileBrowserDrawer.value = true),
-        manual: true,
-      },
-      {
-        title: "Upload Files",
-        description: "Upload files from your computer.",
-        icon: "mdi-upload",
-        func: () => (fileBrowserDrawer.value = true),
-        manual: true,
-      },
+watch(
+  [AUTOMATION, session],
+  ([newAutomation, newSession]) => {
+    const availableAutomation = [
+      ...newAutomation.filter((automation) => !automation.hidden),
     ];
-  }
 
-  if (availableAutomation.length) {
-    navButtonConfig.value = {
-      text: t("buttonText.automation"),
-      icon: "mdi-auto-fix",
-      list: availableAutomation.map((suggestion) => ({
-        ...suggestion,
-        click: () => handleAutomationClick(suggestion),
+    if (DISABLE_MANUAL_FILE_CREATION) {
+      suggestionList.value = availableAutomation;
+    } else {
+      suggestionList.value = [
+        ...availableAutomation,
+        {
+          title: "Add/Edit File Manually",
+          description:
+            "Create or edit a file by entering the file path and details manually.",
+          icon: "mdi-pencil-plus-outline",
+          func: () => (fileBrowserDrawer.value = true),
+          manual: true,
+        },
+        {
+          title: "Upload Files",
+          description: "Upload files from your computer.",
+          icon: "mdi-upload",
+          func: () => (fileBrowserDrawer.value = true),
+          manual: true,
+        },
+      ];
+    }
+
+    if (availableAutomation.length) {
+      navButtonConfig.value = {
+        text: t("buttonText.automation"),
         icon: "mdi-auto-fix",
-      })),
-      disabled: true,
-    };
-  }
+        list: availableAutomation.map((suggestion) => ({
+          ...suggestion,
+          click: () => handleAutomationClick(suggestion),
+          icon: "mdi-auto-fix",
+        })),
+        disabled: navButtonConfig.value?.disabled ?? true,
+      };
+    }
 
-  if (route.query.automation) {
-    const automation = find(AUTOMATION, { id: route.query.automation });
-    if (automation) handleAutomationClick(automation);
-  }
+    if (route.query.automation && !selectedAutomation.value && newSession) {
+      const automation = find(newAutomation, { id: route.query.automation });
+      if (automation) handleAutomationClick(automation);
+    }
+  },
+  { immediate: true, deep: true },
+);
 
+onMounted(async () => {
   await updateDetails();
 });
 
