@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.14.1](https://github.com/EOX-A/git-clerk/compare/v1.14.0...v1.14.1) (2026-05-05)
+
+
+### Bug Fixes
+
+* Automation config is a reactive variable ([#234](https://github.com/EOX-A/git-clerk/issues/234)) ([c8be9a8](https://github.com/EOX-A/git-clerk/commit/c8be9a8accf392e520b97c6ea29ca72c298c0055))
+
 ## [1.14.0](https://github.com/EOX-A/git-clerk/compare/v1.13.9...v1.14.0) (2026-03-31)
 
 
