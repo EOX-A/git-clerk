@@ -117,14 +117,21 @@ onMounted(async () => {
   ) {
     const sessionNumber = route.query.sessionNumber;
     newSessionName.value = route.query.session;
-    const sessionsList = sessionNumber
-      ? null
-      : await searchSessionName(newSessionName.value, null, null, "open");
-    const sessionFound = sessionNumber
-      ? { number: sessionNumber }
-      : find(sessionsList?.data ? sessionsList.data : [], {
-          title: newSessionName.value,
-        });
+
+    let sessionFound = null;
+
+    if (sessionNumber) {
+      sessionFound = { number: sessionNumber };
+    } else if (newSessionName.value) {
+      const sessionsList = await searchSessionName(
+        newSessionName.value,
+        null,
+        null,
+        "open",
+      );
+      const sessionsData = sessionsList?.data || [];
+      sessionFound = find(sessionsData, { title: newSessionName.value });
+    }
     if (sessionFound) {
       postSessionCreation(
         sessionFound.number,
@@ -133,16 +140,12 @@ onMounted(async () => {
         clearInputCreateNewSession,
       );
     } else {
-      await createSession(
-        {
-          newSessionName,
-          snackbar,
-          loader,
-        },
-        router,
-        route,
-        clearInputCreateNewSession,
-      );
+      const props = {
+        newSessionName,
+        snackbar,
+        loader,
+      };
+      await createSession(props, router, route, clearInputCreateNewSession);
     }
   }
   await updateSessionsList(true);
