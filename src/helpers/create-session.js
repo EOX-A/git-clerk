@@ -2,6 +2,35 @@ import { createSessionByName } from "@/api/index.js";
 import { useLoader } from "@/helpers/index.js";
 import { h } from "vue";
 
+export function postSessionCreation(
+  sessionNumber,
+  router,
+  route,
+  clearInput,
+  filePath,
+  noRedirectCallback,
+) {
+  const params = Object.fromEntries(
+    Object.entries(route.query).filter(
+      ([key]) => key !== "session" && key !== "file-browser",
+    ),
+  );
+  const queryString = new URLSearchParams(params).toString();
+  const filePathToOpen = filePath ? filePath() : null;
+  const url = Boolean(queryString)
+    ? `/${sessionNumber}?${queryString}`
+    : `/${sessionNumber}${filePathToOpen ? `/${filePathToOpen}` : ""}`;
+
+  if (!noRedirectCallback) {
+    setTimeout(() => {
+      router.push(url);
+      clearInput(true);
+    }, 750);
+  } else {
+    noRedirectCallback(sessionNumber);
+  }
+}
+
 export default async function createSession(
   props,
   router,
@@ -31,25 +60,13 @@ export default async function createSession(
   props.loader.value.hide();
 
   if (props.snackbar.value.number) {
-    const params = Object.fromEntries(
-      Object.entries(route.query).filter(
-        ([key]) => key !== "session" && key !== "file-browser",
-      ),
+    postSessionCreation(
+      props.snackbar.value.number,
+      router,
+      route,
+      clearInput,
+      filePath,
+      noRedirectCallback,
     );
-    const queryString = new URLSearchParams(params).toString();
-    const filePathToOpen = filePath ? filePath() : null;
-    const sessionNumber = props.snackbar.value.number;
-    const url = Boolean(queryString)
-      ? `/${sessionNumber}?${queryString}`
-      : `/${sessionNumber}${filePathToOpen ? `/${filePathToOpen}` : ""}`;
-
-    if (!noRedirectCallback) {
-      setTimeout(() => {
-        router.push(url);
-        clearInput(true);
-      }, 750);
-    } else {
-      noRedirectCallback(sessionNumber);
-    }
   }
 }

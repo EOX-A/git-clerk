@@ -131,25 +131,21 @@ const automation = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        fileName: {
           type: "string",
           minLength: 1,
-          default: self.crypto.randomUUID(),
-          options: {
-            hidden: true,
-          },
         },
         content: {
           type: "string",
           minLength: 1,
         },
       },
-      required: ["id", "content"],
+      required: ["fileName"],
     },
     steps: [
       {
         type: "add",
-        path: (input) => `/foo/${input.id}.json`,
+        path: (input) => `/foo/${input.fileName}`,
         content: async (input) => {
           let content = input.content;
           let error = null;
@@ -184,20 +180,22 @@ const automation = [
             }
           }
 
-          try {
-            if (isUrl(content)) {
-              const response = await fetch(content);
-              if (!response.ok) {
-                throw new Error("Failed to fetch content from URL");
+          if (content) {
+            try {
+              if (isUrl(content)) {
+                const response = await fetch(content);
+                if (!response.ok) {
+                  throw new Error("Failed to fetch content from URL");
+                }
+                content = await response.json();
+              } else if (isBase64(content)) {
+                content = decoderBase64ToUtf8(content);
+              } else {
+                content = decodeURIComponent(content);
               }
-              content = await response.json();
-            } else if (isBase64(content)) {
-              content = decoderBase64ToUtf8(content);
-            } else {
-              content = decodeURIComponent(content);
+            } catch (e) {
+              error = e;
             }
-          } catch (e) {
-            error = e;
           }
 
           return error || content;
@@ -205,7 +203,7 @@ const automation = [
       },
       {
         type: "navigate",
-        path: (input) => `/foo/${input.id}.json`,
+        path: (input) => `/foo/${input.fileName}`,
       },
     ],
   },

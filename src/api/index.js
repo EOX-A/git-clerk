@@ -92,12 +92,36 @@ export async function getSessionsList(
   cache,
 ) {
   const { githubConfig, githubUserData, octokit } = useOctokitStore();
+  const sessionNameValue = "";
+
   return sessionsList(
     octokit,
     githubConfig,
     pageInfo,
     cursorPosition,
     sessionSelectedState,
+    sessionNameValue,
+    cache,
+    githubUserData.login,
+  );
+}
+
+export async function searchSessionName(
+  sessionName,
+  pageInfo,
+  cursorPosition,
+  sessionSelectedState = "open",
+  cache,
+) {
+  const { githubConfig, githubUserData, octokit } = useOctokitStore();
+  const sessionNameValue = `${sessionName} `;
+  return sessionsList(
+    octokit,
+    githubConfig,
+    pageInfo,
+    cursorPosition,
+    sessionSelectedState,
+    sessionNameValue,
     cache,
     githubUserData.login,
   );

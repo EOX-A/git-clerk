@@ -34,8 +34,7 @@ export const AUTOMATION = ref(
   globalThis.automation || GIT_CLERK_CONFIG.automation || [],
 );
 
-const _initialAutomation =
-  globalThis.automation || GIT_CLERK_CONFIG.automation;
+const _initialAutomation = globalThis.automation || GIT_CLERK_CONFIG.automation;
 Object.defineProperty(globalThis, "automation", {
   get() {
     return AUTOMATION.value;
