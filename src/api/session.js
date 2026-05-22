@@ -46,7 +46,7 @@ export async function sessionsList(
     `;
 
     const response = await octokit.graphql(query, {
-      queryString: `${sessionName} repo:${githubConfig.username}/${githubConfig.repo} is:pr author:${creator} state:${sessionSelectedState}`,
+      queryString: `${sessionName}repo:${githubConfig.username}/${githubConfig.repo} is:pr author:${creator} state:${sessionSelectedState}`,
       perPage: 10,
       after:
         cursorPosition === "endCursor"
