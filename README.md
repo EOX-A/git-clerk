@@ -197,9 +197,12 @@ globalThis.gitClerkConfig = {
 
 Automations can also be triggered via url query parameters. For this, the automation requires an additional `id` parameter which is referenced by the `automation` query parameter.
 
-The automation can either be triggered within a session, or, additionally, a `session` parameter can be passed in order to create a new session in this name.
+The automation can be triggered within a session, or you can supply `session` or `sessionNumber` parameters:
 
-All other query parameters (except `automation` and `session`) are passed as key-value pairs into the automation input (and thus can further be used in automation steps).
+- `session`: The title of the session. If an open session/pull request with this exact title already exists for the user, git-clerk will reuse and open that existing session. If no matching open session is found, it will automatically create a new one. (Note: If a name collision occurs on GitHub, such as during manual creation or with closed/orphaned branches, git-clerk will still automatically append an incremented suffix like `(1)`, `(2)`, etc., to prevent branch collisions).
+- `sessionNumber`: The specific number of an existing session (pull request) to target directly.
+
+All other query parameters (except `automation`, `session`, and `sessionNumber`) are passed as key-value pairs into the automation input (and thus can further be used in automation steps).
 
 Example:
 `https://my-git-clerk-instance.com?session=My New Session&automation=automation-id&field1=value-field1&field2=value-field2`
