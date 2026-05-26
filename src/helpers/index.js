@@ -12,5 +12,8 @@ export { getSchemaDetails, getFileSchema } from "./schema";
 export { stringifyIfNeeded, parseIfNeeded } from "./transform";
 export { runAutomation } from "./automation";
 export { default as preventListItemClick } from "./prevent-list-item-click";
-export { default as createSession } from "./create-session";
+export {
+  default as createSession,
+  postSessionCreation,
+} from "./create-session";
 export { default as fetchJsonFormContent } from "./fetch-json-form-content";

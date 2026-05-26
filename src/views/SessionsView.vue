@@ -4,6 +4,7 @@ import { h, inject, onMounted, ref } from "vue";
 import {
   getSessionsList,
   createSessionByName,
+  searchSessionName,
   getNumberOfOpenClosedSessions,
   syncRepo,
 } from "@/api/index.js";
@@ -17,6 +18,7 @@ import {
   useLoader,
   preventListItemClick,
   createSession,
+  postSessionCreation,
 } from "@/helpers/index.js";
 import {
   ActionList,
@@ -27,6 +29,7 @@ import {
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import CursorPagination from "@/components/global/CursorPagination.vue";
 import { FileBrowserDrawer } from "@/components/file-browser";
+import find from "lodash.find";
 
 const route = useRoute();
 const router = useRouter();
@@ -108,18 +111,42 @@ onMounted(async () => {
   };
   navPaginationItems.value = [navPaginationItems.value[0]];
 
-  if (route.query.session && route.query.automation) {
+  if (
+    (route.query.session || route.query.sessionNumber) &&
+    route.query.automation
+  ) {
+    const sessionNumber = route.query.sessionNumber;
     newSessionName.value = route.query.session;
-    await createSession(
-      {
+
+    let sessionFound = null;
+
+    if (sessionNumber) {
+      sessionFound = { number: sessionNumber };
+    } else if (newSessionName.value) {
+      const sessionsList = await searchSessionName(
+        newSessionName.value,
+        null,
+        null,
+        "open",
+      );
+      const sessionsData = sessionsList?.data || [];
+      sessionFound = find(sessionsData, { title: newSessionName.value });
+    }
+    if (sessionFound) {
+      postSessionCreation(
+        sessionFound.number,
+        router,
+        route,
+        clearInputCreateNewSession,
+      );
+    } else {
+      const props = {
         newSessionName,
         snackbar,
         loader,
-      },
-      router,
-      route,
-      clearInputCreateNewSession,
-    );
+      };
+      await createSession(props, router, route, clearInputCreateNewSession);
+    }
   }
   await updateSessionsList(true);
 });

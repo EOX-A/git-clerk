@@ -90,32 +90,12 @@ describe("Files list related tests", () => {
   });
 
   it("Automation through url", () => {
-    let location;
-    cy.wait(1000);
     cy.visit(
-      "?session=update%203d%20earth&automation=add-file&content=ewogICJpZCI6ICI2MTFjNWQxNC03MDg3LTQ4MjAtYWNmNS02NDlhYWJjMjI0MjMiLAogICJmb28iOiAiRm9vIiwKICAiYmFyIjogZmFsc2UsCiAgImN1c3RvbSI6ICIiCn0K",
+      "?sessionNumber=123&automation=add-file&fileName=bar.json&content=ewogICJpZCI6ICI2MTFjNWQxNC03MDg3LTQ4MjAtYWNmNS02NDlhYWJjMjI0MjMiLAogICJmb28iOiAiRm9vIiwKICAiYmFyIjogZmFsc2UsCiAgImN1c3RvbSI6ICIiCn0K",
     );
-    cy.wait("@createPulls", { timeout: 15000 }).then(() => {
-      cy.location("pathname", { timeout: 10000 }).should("eq", "/123");
-    });
-    cy.get("eox-jsonform#automation-form")
-      .shadow()
-      .within(() => {
-        cy.get(
-          ".je-indented-panel .form-control input[name='root[id]']",
-        ).should("exist");
-        cy.get(".je-indented-panel .form-control input[name='root[id]']").then(
-          ($input) => {
-            location = btoa(`foo/bar/${$input.val()}.json`);
-            cy.wrap(location).as("encodedPath");
-          },
-        );
-      });
-    cy.wait("@getContent", { timeout: 10000 });
-    cy.get("@encodedPath").then((location) => {
-      cy.location("pathname", { timeout: 10000 }).should((path) => {
-        expect(path).to.match(/^\/123\/[A-Za-z0-9+/=]+$/);
-      });
+    cy.location("pathname", { timeout: 10000 }).should("eq", "/123");
+    cy.location("pathname", { timeout: 10000 }).should((path) => {
+      expect(path).to.match(/^\/123\/[A-Za-z0-9+/=]+$/);
     });
 
     // Check if the file is loaded
