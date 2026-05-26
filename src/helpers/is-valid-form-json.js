@@ -1,3 +1,8 @@
+/**
+ *
+ * @param fileContent
+ * @param withErrors
+ */
 export default function isValidFormJSON(fileContent, withErrors = false) {
   try {
     const schema = JSON.parse(fileContent);
@@ -19,6 +24,11 @@ export default function isValidFormJSON(fileContent, withErrors = false) {
   }
 }
 
+/**
+ *
+ * @param schema
+ * @param errors
+ */
 function validateSchemaStructure(schema, errors = []) {
   try {
     // Handle combiners (allOf, anyOf, oneOf)
@@ -49,6 +59,12 @@ function validateSchemaStructure(schema, errors = []) {
   }
 }
 
+/**
+ *
+ * @param combiner
+ * @param name
+ * @param errors
+ */
 function validateCombiner(combiner, name, errors) {
   if (!Array.isArray(combiner)) {
     errors.push(`${name} must be an array`);
@@ -57,6 +73,11 @@ function validateCombiner(combiner, name, errors) {
   combiner.forEach((subSchema) => validateSchemaStructure(subSchema, errors));
 }
 
+/**
+ *
+ * @param type
+ * @param errors
+ */
 function validateType(type, errors) {
   const validTypes = [
     "object",
@@ -78,6 +99,11 @@ function validateType(type, errors) {
   }
 }
 
+/**
+ *
+ * @param properties
+ * @param errors
+ */
 function validateProperties(properties, errors) {
   if (typeof properties !== "object" || properties === null) {
     errors.push("Properties must be an object");
@@ -88,6 +114,11 @@ function validateProperties(properties, errors) {
   );
 }
 
+/**
+ *
+ * @param items
+ * @param errors
+ */
 function validateItems(items, errors) {
   if (Array.isArray(items)) {
     items.forEach((item) => validateSchemaStructure(item, errors));

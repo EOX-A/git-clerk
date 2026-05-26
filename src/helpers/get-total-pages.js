@@ -1,3 +1,7 @@
+/**
+ *
+ * @param linkHeader
+ */
 export default function getTotalPages(linkHeader) {
   if (linkHeader) {
     const lastPageMatch = linkHeader.match(/&page=(\d+)>; rel="last"/);

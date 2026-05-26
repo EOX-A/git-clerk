@@ -1,8 +1,5 @@
 <script setup>
-import { inject, computed, ref } from "vue";
-import { useRouter } from "vue-router";
-
-const router = useRouter();
+import { inject } from "vue";
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 const fileBrowserDrawer = inject("set-file-browser-drawer");
@@ -18,10 +15,10 @@ const click = () => {
   <v-app-bar class="navbar" color="primary" app>
     <v-toolbar-title class="toolbar-title">
       <v-breadcrumbs :items="navPaginationItems">
-        <template v-slot:divider>
+        <template #divider>
           <v-icon icon="mdi-chevron-right"></v-icon>
         </template>
-        <template v-slot:title="{ item }">
+        <template #title="{ item }">
           <v-icon
             v-if="
               $vuetify.display.smAndDown &&
@@ -69,10 +66,10 @@ const click = () => {
         >{{ navButtonConfig.text }}</v-btn
       >
       <v-menu
-        location="bottom"
         v-if="navButtonConfig.text && navButtonConfig.list"
+        location="bottom"
       >
-        <template v-slot:activator="{ props }">
+        <template #activator="{ props }">
           <v-btn
             size="large"
             :prepend-icon="navButtonConfig.icon"
@@ -80,8 +77,8 @@ const click = () => {
             class="text-capitalize font-weight-medium action-button"
             color="white"
             v-bind="props"
-            @click="fileBrowserDrawer = false"
             :disabled="navButtonConfig.disabled"
+            @click="fileBrowserDrawer = false"
           >
             {{ navButtonConfig.text }}
             <v-icon
@@ -93,24 +90,24 @@ const click = () => {
           </v-btn>
         </template>
         <v-list class="pa-0 button-list" density="compact">
-          <template :key="index" v-for="(item, index) in navButtonConfig.list">
+          <template v-for="(item, index) in navButtonConfig.list" :key="index">
             <v-divider
-              thickness="1"
-              class="mx-3"
               v-if="
                 item.manual &&
                 index > 0 &&
                 !navButtonConfig.list[index - 1].manual
               "
+              thickness="1"
+              class="mx-3"
             ></v-divider>
             <v-list-item
               :title="item.title"
-              @click="item.click"
               class="m-0 py-3"
               active-color="grey-lighten-3"
               hover
+              @click="item.click"
             >
-              <template v-slot:title>
+              <template #title>
                 <div class="d-flex align-center ga-3">
                   <v-icon
                     :icon="item.icon"
@@ -124,7 +121,7 @@ const click = () => {
                   }}</span>
                 </div>
               </template>
-              <template v-if="item.description && !item.manual" v-slot:append>
+              <template v-if="item.description && !item.manual" #append>
                 <Tooltip location="bottom" :text="item.description">
                   <v-icon
                     icon="mdi-information-outline"

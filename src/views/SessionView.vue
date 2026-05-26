@@ -138,29 +138,29 @@ const handleAutomationClose = () => {
 <template>
   <FileBrowserDrawer
     v-if="session"
-    :updateDetails="updateDetails"
+    :update-details="updateDetails"
     :session="session"
   />
-  <ActionTabSession :session :updateDetails />
+  <ActionTabSession :session :update-details />
 
   <v-list class="py-0">
     <!-- file's list -->
     <v-list-item
-      v-if="fileChangesList && fileChangesList.length"
       v-for="(file, index) in fileChangesList"
+      v-if="fileChangesList && fileChangesList.length"
       :key="file.title"
       :title="file.title"
       class="files-view files-list py-4 border-b-thin"
-      @mouseenter="hover = index"
-      @mouseleave="hover = null"
-      @click.native.capture="preventListItemClick"
       :to="
         !session.closed_at
           ? `/${session.number}/${encodeString(file.title)}`
           : null
       "
+      @mouseenter="hover = index"
+      @mouseleave="hover = null"
+      @click.native.capture="preventListItemClick"
     >
-      <template v-slot:title>
+      <template #title>
         <div class="d-flex align-start px-5">
           <v-icon :color="file.state.color" class="file-icon opacity-100">
             <OctIcon :name="file.state.icon" />
@@ -194,16 +194,16 @@ const handleAutomationClose = () => {
         </div>
       </template>
 
-      <template v-slot:append v-if="!session.closed_at">
+      <template v-if="!session.closed_at" #append>
         <div class="action-list d-flex align-center">
-          <DuplicateFile :file :session :callBack="updateDetails" />
-          <DeleteFile :file :session :callBack="updateDetails" />
+          <DuplicateFile :file :session :call-back="updateDetails" />
+          <DeleteFile :file :session :call-back="updateDetails" />
         </div>
       </template>
     </v-list-item>
 
     <!-- Placeholder for file's list -->
-    <ListPlaceholder :button="1" v-else-if="fileChangesList === null" />
+    <ListPlaceholder v-else-if="fileChangesList === null" :button="1" />
 
     <!-- Empty State -->
     <v-empty-state
@@ -220,7 +220,7 @@ const handleAutomationClose = () => {
       title="No changes found in this session"
       class="my-16 py-16 empty-state"
     >
-      <template v-slot:actions v-if="!session.closed_at">
+      <template v-if="!session.closed_at" #actions>
         <v-container class="pa-4 pt-10">
           <v-row class="justify-center">
             <!-- Dynamic automation buttons -->
@@ -265,20 +265,20 @@ const handleAutomationClose = () => {
     </v-empty-state>
   </v-list>
 
-  <OffsetPagination v-if="fileChangesList" :page :totalPage :onPageChange />
+  <OffsetPagination v-if="fileChangesList" :page :total-page :on-page-change />
 
   <!-- Use the Automation component -->
   <v-dialog
     v-if="session"
-    :class="selectedAutomation?.hidden ? 'd-none' : ''"
     v-model="automationDialog"
+    :class="selectedAutomation?.hidden ? 'd-none' : ''"
     max-width="500px"
   >
     <Automation
-      :handleAutomationClose
-      :updateDetails
-      :automationDialog
-      :selectedAutomation
+      :handle-automation-close
+      :update-details
+      :automation-dialog
+      :selected-automation
       :session
     />
   </v-dialog>

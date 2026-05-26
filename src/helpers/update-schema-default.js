@@ -1,3 +1,8 @@
+/**
+ *
+ * @param schema
+ * @param formValues
+ */
 export default function updateSchemaDefaults(schema, formValues) {
   // Return early if schema or formValues is not valid
   if (!schema || !formValues || typeof formValues !== "object") {
@@ -18,6 +23,11 @@ export default function updateSchemaDefaults(schema, formValues) {
   return schema;
 }
 
+/**
+ *
+ * @param properties
+ * @param formValues
+ */
 function updatePropertiesWithNesting(properties, formValues) {
   for (let key in formValues) {
     if (properties[key] && !properties[key]?.options?.hidden) {
@@ -41,6 +51,11 @@ function updatePropertiesWithNesting(properties, formValues) {
   }
 }
 
+/**
+ *
+ * @param property
+ * @param value
+ */
 function isValidDefaultValue(property, value) {
   switch (property.type) {
     case "string":

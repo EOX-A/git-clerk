@@ -1,3 +1,9 @@
+/**
+ *
+ * @param additions
+ * @param deletions
+ * @param changes
+ */
 export default function createColorBlocks(additions, deletions, changes) {
   const totalBlocks = 5;
 

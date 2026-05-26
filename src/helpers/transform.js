@@ -1,3 +1,8 @@
+/**
+ *
+ * @param value
+ * @param oldContent
+ */
 export function stringifyIfNeeded(value, oldContent) {
   if (value === null) {
     return null;
@@ -37,6 +42,10 @@ export function stringifyIfNeeded(value, oldContent) {
   return value;
 }
 
+/**
+ *
+ * @param value
+ */
 export function parseIfNeeded(value) {
   if (value == null) return null;
 

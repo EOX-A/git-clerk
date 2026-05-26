@@ -1,4 +1,7 @@
 import { useLoading } from "vue-loading-overlay";
+/**
+ *
+ */
 export default function useLoader() {
   return useLoading({
     color: "#002742",

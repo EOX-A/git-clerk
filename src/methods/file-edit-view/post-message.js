@@ -1,8 +1,14 @@
-import { updateSchemaDefaults, useLoader } from "@/helpers/index.js";
+import { useLoader } from "@/helpers/index.js";
 import isEqual from "lodash.isequal";
 import { initEOXJSONFormMethod } from "@/methods/file-edit-view/init-eox-jsonform.js";
 
-export function debouncePostMessageMethod(message, origin, init = false) {
+/**
+ *
+ * @param message
+ * @param origin
+ * @param init
+ */
+export function debouncePostMessageMethod(message, origin) {
   const data = JSON.parse(JSON.stringify(message));
   const previewFrame = document.getElementById("previewFrame");
   if (previewFrame && previewFrame.contentWindow) {
@@ -13,6 +19,13 @@ export function debouncePostMessageMethod(message, origin, init = false) {
   }
 }
 
+/**
+ *
+ * @param root0
+ * @param root0.previewURL
+ * @param root0.updatedFileContent
+ * @param root0.jsonFormInstance
+ */
 export function addPostMessageEventMethod({
   previewURL,
   updatedFileContent,

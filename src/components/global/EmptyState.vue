@@ -28,10 +28,10 @@ const props = defineProps({
     :image="props.img"
     :text="props.description"
     :title="props.headline"
-    @click:action="props.initFunc"
     class="my-16 py-16 empty-state"
+    @click:action="props.initFunc"
   >
-    <template v-slot:actions>
+    <template #actions>
       <v-btn
         class="text-capitalize"
         color="primary"

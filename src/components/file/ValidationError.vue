@@ -1,7 +1,7 @@
 <script setup>
-import { ref, watch } from "vue";
+import { ref } from "vue";
 
-const props = defineProps({
+defineProps({
   validationErrors: {
     type: Array,
     required: true,
@@ -26,7 +26,7 @@ const validateBind = ref(true);
     @update:model-value="!$event && closeValidationErrors()"
   >
     <v-card class="rounded-lg">
-      <template v-slot:text>
+      <template #text>
         <h2 class="text-center pl-3 pr-3">
           File contains incomplete or invalid fields.
         </h2>

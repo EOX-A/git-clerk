@@ -57,6 +57,7 @@ const closeRename = () => {
   <!-- Non-mobile -->
   <v-btn
     v-if="tab"
+    id="rename-session-btn"
     rounded="0"
     block
     color="blue-grey-darken-4"
@@ -65,9 +66,8 @@ const closeRename = () => {
     :text="text"
     variant="text"
     :disabled="disabled"
-    @click="renameSession = session"
     class="text-capitalize font-weight-medium d-flex justify-start"
-    id="rename-session-btn"
+    @click="renameSession = session"
   ></v-btn>
 
   <div
@@ -100,14 +100,14 @@ const closeRename = () => {
 
   <v-dialog v-model="confirmRename" width="auto">
     <v-card max-width="400" prepend-icon="mdi-alert" title="Rename Session">
-      <template v-slot:text>
+      <template #text>
         <p class="mt-8">
           Are you sure you want to rename the session to
           <strong>{{ renameSessionTitle }}</strong
           >?
         </p>
       </template>
-      <template v-slot:actions>
+      <template #actions>
         <v-spacer></v-spacer>
         <v-btn
           size="large"

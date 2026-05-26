@@ -83,23 +83,23 @@ const currentSession = () => {
 <template>
   <CreateSession
     v-if="updateInNewSession"
-    :createNewSession="true"
-    :fromFileBrowser="true"
-    :filePath="filePath"
-    :clearInput="clearInput"
+    :create-new-session="true"
+    :from-file-browser="true"
+    :file-path="filePath"
+    :clear-input="clearInput"
     :session="session"
-    :currentSession="currentSession"
-    :noRedirectCallback="addNewSessionNumber"
+    :current-session="currentSession"
+    :no-redirect-callback="addNewSessionNumber"
   />
   <v-dialog
     v-if="!updateInNewSession && addNewFile && sessionNumber"
     v-model="addNewFile"
-    @update:modelValue="!$event && clearInput()"
     width="auto"
     style="z-index: 999999"
+    @update:model-value="!$event && clearInput()"
   >
     <v-card max-width="480" class="rounded-lg">
-      <template v-slot:text>
+      <template #text>
         <h2 class="text-center pl-3 pr-3">Add a new file</h2>
         <p class="text-center px-4">
           Provide a name for the new file. (Note - File will be added to the
@@ -107,15 +107,15 @@ const currentSession = () => {
           >)
         </p>
         <v-text-field
-          @keydown="onKeyDown"
+          v-model="newFileName"
           density="compact"
           label="File Name"
           variant="solo"
           hide-details
           single-line
           flat="true"
-          v-model="newFileName"
           class="rounded border-md my-3 add-file-field"
+          @keydown="onKeyDown"
         ></v-text-field>
         <div class="d-flex ga-2 justify-center align-center">
           <v-btn
@@ -123,8 +123,8 @@ const currentSession = () => {
             variant="flat"
             prepend-icon="mdi-file-plus-outline"
             :disabled="!newFileName"
-            @click="createFile"
             class="add-file-button"
+            @click="createFile"
           >
             Add New File
           </v-btn>

@@ -1,3 +1,7 @@
+/**
+ *
+ * @param status
+ */
 export default function getFileChangesStatus(status) {
   let color = "green";
   let icon = "git-added";

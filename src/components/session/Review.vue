@@ -60,6 +60,10 @@ const reviewSessionHandle = async () => {
   }
 };
 
+/**
+ *
+ * @param newProps
+ */
 function checkDisableStatus(newProps) {
   if (!newProps.session || newProps.session.changed_files === 0) return true;
   return (
@@ -92,10 +96,10 @@ watch([props], ([newProps]) => {
       :text="props.text"
       :variant="props.variant"
       :disabled="disabled"
-      @click="reviewSession = props.session"
       :class="`text-capitalize font-weight-medium ${props.class}`"
+      @click="reviewSession = props.session"
     >
-      <template v-if="error" v-slot:append>
+      <template v-if="error" #append>
         <v-icon
           :color="props.session.check.color"
           :icon="props.session.check.icon.replace('-outline', '')"
@@ -108,23 +112,23 @@ watch([props], ([newProps]) => {
   <!-- Mobile -->
   <v-list-item
     v-if="!props.tab"
-    @click="reviewSession = props.session"
     prepend-icon="mdi-file-document-edit"
     :title="props.text"
     :disabled="disabled"
     class="d-flex d-sm-none"
+    @click="reviewSession = props.session"
   ></v-list-item>
   <!-- Non-mobile -->
   <Tooltip :text="props.tooltip">
     <v-btn
       v-if="!props.tab"
-      @click="reviewSession = props.session"
       color="blue-grey-darken-4"
       icon="mdi-file-document-edit"
       :size="props.size"
       variant="text"
       :disabled="disabled"
       class="d-none d-sm-flex"
+      @click="reviewSession = props.session"
     ></v-btn>
   </Tooltip>
 
@@ -134,13 +138,13 @@ watch([props], ([newProps]) => {
       prepend-icon="mdi-alert"
       title="Request Review Session"
     >
-      <template v-slot:text>
+      <template #text>
         <p class="mt-8">
           Are you sure you want to request this session for review:
           <strong>{{ reviewSession.title }}</strong>
         </p>
       </template>
-      <template v-slot:actions>
+      <template #actions>
         <v-spacer></v-spacer>
         <v-btn size="large" @click="reviewSession = false"> Cancel </v-btn>
         <v-btn

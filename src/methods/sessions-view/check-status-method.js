@@ -6,6 +6,16 @@ import {
 import { CHECK_STATUS } from "@/enums.js";
 import isEqual from "lodash.isequal";
 
+/**
+ *
+ * @param sessions
+ * @param currPageInfo
+ * @param updatedPageInfo
+ * @param currSessionState
+ * @param sessionSelectedState
+ * @param currPath
+ * @param route
+ */
 export default async function checkStatusMethod(
   sessions,
   currPageInfo,

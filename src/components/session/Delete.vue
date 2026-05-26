@@ -51,19 +51,19 @@ const disabled = props.session.state === "closed";
     :text="text"
     variant="text"
     :disabled="disabled"
-    @click="deleteSession = session"
     class="text-capitalize font-weight-medium d-flex justify-start"
+    @click="deleteSession = session"
   ></v-btn>
 
   <!-- Tab = false -->
   <!-- Mobile -->
   <v-list-item
     v-if="!tab"
-    @click="deleteSession = session"
     prepend-icon="mdi-delete-outline"
     :title="props.text"
     :disabled="disabled"
     class="d-flex d-sm-none"
+    @click="deleteSession = session"
   ></v-list-item>
   <!-- Non-mobile -->
   <Tooltip :text="props.text">
@@ -74,20 +74,20 @@ const disabled = props.session.state === "closed";
       :size="size"
       variant="text"
       :disabled="disabled"
-      @click="deleteSession = session"
       class="d-none d-sm-flex"
+      @click="deleteSession = session"
     ></v-btn>
   </Tooltip>
 
   <v-dialog v-model="deleteSession" width="auto">
     <v-card max-width="400" prepend-icon="mdi-alert" title="Delete Session">
-      <template v-slot:text>
+      <template #text>
         <p class="mt-8">
           Are you sure you want to delete the session:
           <strong>{{ deleteSession.title }}</strong>
         </p>
       </template>
-      <template v-slot:actions>
+      <template #actions>
         <v-spacer></v-spacer>
         <v-btn size="large" @click="deleteSession = false"> Cancel </v-btn>
         <v-btn

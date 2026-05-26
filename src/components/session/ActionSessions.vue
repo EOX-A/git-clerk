@@ -21,12 +21,12 @@ const props = defineProps({
     tab
     size="x-large"
     :session="props.session"
-    :callBack="props.callBack"
+    :call-back="props.callBack"
   />
   <RenameSession
     tab
     size="x-large"
     :session="props.session"
-    :callBack="props.callBack"
+    :call-back="props.callBack"
   />
 </template>

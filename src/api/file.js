@@ -1,6 +1,14 @@
 import { getTotalPages, encodeString } from "@/helpers/index.js";
 import axios from "axios";
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ * @param prNumber
+ * @param currPage
+ * @param cache
+ */
 export async function filesListFromSession(
   octokit,
   githubConfig,
@@ -36,6 +44,17 @@ export async function filesListFromSession(
   }
 }
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ * @param owner
+ * @param repo
+ * @param path
+ * @param message
+ * @param sha
+ * @param ref
+ */
 export async function deleteFile(
   octokit,
   githubConfig,
@@ -68,6 +87,15 @@ export async function deleteFile(
   }
 }
 
+/**
+ *
+ * @param octokit
+ * @param owner
+ * @param repo
+ * @param ref
+ * @param filePath
+ * @param cache
+ */
 export async function fileDetails(octokit, owner, repo, ref, filePath, cache) {
   try {
     if (!cache) {
@@ -93,6 +121,16 @@ export async function fileDetails(octokit, owner, repo, ref, filePath, cache) {
   }
 }
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ * @param owner
+ * @param repo
+ * @param ref
+ * @param path
+ * @param noFiles
+ */
 export async function branchFileStructure(
   octokit,
   githubConfig,
@@ -139,11 +177,23 @@ export async function branchFileStructure(
     }
 
     return dirStructure;
-  } catch (error) {
+  } catch (_error) {
     return [];
   }
 }
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ * @param owner
+ * @param repo
+ * @param ref
+ * @param path
+ * @param fileName
+ * @param content
+ * @param sha
+ */
 export async function updateFile(
   octokit,
   githubConfig,
@@ -181,11 +231,15 @@ export async function updateFile(
   }
 }
 
+/**
+ *
+ * @param url
+ */
 export async function schemaFromURL(url) {
   try {
     const res = await axios.get(url);
     return res.data;
-  } catch (error) {
+  } catch (_error) {
     return {
       text: "Failed to fetch schema: Please manually add appropriate schema for the file.",
       status: "error",

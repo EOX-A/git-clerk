@@ -2,6 +2,11 @@ import { RequestError } from "octokit";
 import { querySession } from "@/helpers";
 import { DEPLOYED_PREVIEW_LINK } from "@/enums";
 
+/**
+ *
+ * @param sessionDetails
+ * @param props
+ */
 export default function querySessionDetailsMethod(sessionDetails, props) {
   if (sessionDetails instanceof RequestError) {
     props.snackbar.value = {

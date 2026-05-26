@@ -1,5 +1,9 @@
 import { SCHEMA_MAP } from "@/enums";
 
+/**
+ *
+ * @param inputPath
+ */
 export function getSchemaDetails(inputPath) {
   for (const schema of SCHEMA_MAP) {
     // Replace every <...> placeholder (with any content inside) by a path segment matcher
@@ -13,6 +17,10 @@ export function getSchemaDetails(inputPath) {
   return null;
 }
 
+/**
+ *
+ * @param fileEnding
+ */
 export function getFileSchema(fileEnding = "textarea") {
   return {
     generic: true,

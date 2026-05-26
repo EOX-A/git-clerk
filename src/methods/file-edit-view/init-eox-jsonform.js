@@ -1,10 +1,7 @@
-function getShadowRoot(jsonFormInstance) {
-  return (
-    jsonFormInstance.value.shadowRoot ||
-    jsonFormInstance.value.attachShadow({ mode: "open" })
-  );
-}
-
+/**
+ *
+ * @param jsonFormInstance
+ */
 export function initEOXJSONFormMethod(jsonFormInstance) {
   jsonFormInstance.value = document.querySelector("eox-jsonform");
 }

@@ -6,7 +6,7 @@ import { DISABLE_MANUAL_FILE_CREATION } from "@/enums";
 const fileBrowserDrawer = inject("set-file-browser-drawer");
 const actionBtnState = ref(true);
 
-const props = defineProps({
+defineProps({
   updatedFilePathArr: {
     type: Array,
     default: [],
@@ -38,7 +38,6 @@ watch(fileBrowserDrawer, (newVal) => {
         :key="item"
       >
         <span
-          @click="updatedFilePathArr.length !== index + 1 && goToPath(index)"
           :class="{
             'text-decoration-underline':
               isHovering && updatedFilePathArr.length !== index + 1,
@@ -47,6 +46,7 @@ watch(fileBrowserDrawer, (newVal) => {
             'opacity-100': isHovering,
           }"
           v-bind="props"
+          @click="updatedFilePathArr.length !== index + 1 && goToPath(index)"
         >
           {{ item || "(root)" }}/
         </span>
@@ -58,7 +58,7 @@ watch(fileBrowserDrawer, (newVal) => {
       attach
       location="bottom"
     >
-      <template v-slot:activator="{ props }">
+      <template #activator="{ props }">
         <v-btn
           color="primary"
           variant="flat"

@@ -7,7 +7,7 @@ import { useDisplay } from "vuetify";
 
 const { width } = useDisplay();
 
-const props = defineProps({
+defineProps({
   session: {
     type: Object,
     default: null,
@@ -27,6 +27,6 @@ const props = defineProps({
     :width="width"
     class="file-browser-drawer"
   >
-    <FileBrowser :session="session" :updateDetails="updateDetails" />
+    <FileBrowser :session="session" :update-details="updateDetails" />
   </v-navigation-drawer>
 </template>

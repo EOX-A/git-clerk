@@ -1,9 +1,7 @@
 import eox from "@eox/eslint-config";
-import pluginVue from "eslint-plugin-vue";
 
 export default [
   ...eox,
-  ...pluginVue.configs["flat/recommended"],
   {
     ignores: ["public/", "dist/"],
   },

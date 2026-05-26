@@ -23,6 +23,9 @@ import {
 } from "@/api/file";
 import { GIT_CLERK_CONFIG } from "@/enums";
 
+/**
+ *
+ */
 export async function initOctokit() {
   try {
     const config = globalThis.ghConfig || GIT_CLERK_CONFIG.ghConfig;
@@ -76,15 +79,29 @@ export async function initOctokit() {
   }
 }
 
+/**
+ *
+ */
 export async function getLoginData() {
-  return data;
+  const { githubUserData } = useOctokitStore();
+  return githubUserData;
 }
 
+/**
+ *
+ */
 export async function getRepoDetails() {
   const { githubConfig, githubUserData, octokit } = useOctokitStore();
   return repoDetails(octokit, githubConfig, githubUserData);
 }
 
+/**
+ *
+ * @param pageInfo
+ * @param cursorPosition
+ * @param sessionSelectedState
+ * @param cache
+ */
 export async function getSessionsList(
   pageInfo,
   cursorPosition,
@@ -106,6 +123,14 @@ export async function getSessionsList(
   );
 }
 
+/**
+ *
+ * @param sessionName
+ * @param pageInfo
+ * @param cursorPosition
+ * @param sessionSelectedState
+ * @param cache
+ */
 export async function searchSessionName(
   sessionName,
   pageInfo,
@@ -127,6 +152,10 @@ export async function searchSessionName(
   );
 }
 
+/**
+ *
+ * @param cache
+ */
 export async function getNumberOfOpenClosedSessions(cache) {
   const { githubConfig, githubUserData, octokit } = useOctokitStore();
   return numberOfOpenClosedSessions(
@@ -137,46 +166,85 @@ export async function getNumberOfOpenClosedSessions(cache) {
   );
 }
 
+/**
+ *
+ * @param sessionNumber
+ */
 export async function getSessionDetails(sessionNumber) {
   const { githubConfig, octokit } = useOctokitStore();
   return sessionDetails(octokit, githubConfig, sessionNumber);
 }
 
+/**
+ *
+ * @param sessionNumber
+ */
 export async function deleteBySessionNumber(sessionNumber) {
   const { githubConfig, octokit } = useOctokitStore();
   return deleteSession(octokit, githubConfig, sessionNumber);
 }
 
+/**
+ *
+ * @param sessionNumber
+ * @param newName
+ */
 export async function renameBySessionNumber(sessionNumber, newName) {
   const { githubConfig, octokit } = useOctokitStore();
   return renameSession(octokit, githubConfig, sessionNumber, newName);
 }
 
+/**
+ *
+ * @param sessionNumber
+ * @param pullRequestId
+ */
 export async function reviewBySessionNumber(sessionNumber, pullRequestId) {
   const { githubConfig, octokit } = useOctokitStore();
   return reviewSession(octokit, githubConfig, sessionNumber, pullRequestId);
 }
 
+/**
+ *
+ * @param sha
+ */
 export async function getCheckStatus(sha) {
   const { githubConfig, octokit } = useOctokitStore();
   return checkStatus(octokit, githubConfig, sha);
 }
 
+/**
+ *
+ * @param sessionNumber
+ */
 export async function getSessionReviewStatus(sessionNumber) {
   const { githubConfig, octokit } = useOctokitStore();
   return sessionReviewStatus(octokit, githubConfig, sessionNumber);
 }
 
+/**
+ *
+ * @param name
+ */
 export async function createSessionByName(name) {
   const { githubConfig, octokit } = useOctokitStore();
   return createSession(octokit, githubConfig, name);
 }
 
+/**
+ *
+ */
 export async function syncRepo() {
   const { githubConfig, octokit } = useOctokitStore();
   return checkForkRepoAndSync(octokit, githubConfig);
 }
 
+/**
+ *
+ * @param sessionNumber
+ * @param currPage
+ * @param cache
+ */
 export async function getFilesListFromSession(sessionNumber, currPage, cache) {
   const { githubConfig, octokit } = useOctokitStore();
 
@@ -189,6 +257,15 @@ export async function getFilesListFromSession(sessionNumber, currPage, cache) {
   );
 }
 
+/**
+ *
+ * @param owner
+ * @param repo
+ * @param path
+ * @param message
+ * @param sha
+ * @param ref
+ */
 export async function deleteFileBySHA(owner, repo, path, message, sha, ref) {
   const { githubConfig, octokit } = useOctokitStore();
   return deleteFile(
@@ -203,6 +280,12 @@ export async function deleteFileBySHA(owner, repo, path, message, sha, ref) {
   );
 }
 
+/**
+ *
+ * @param session
+ * @param filePath
+ * @param cache
+ */
 export async function getFileDetails(session, filePath, cache = true) {
   const { octokit } = useOctokitStore();
   const { head } = session;
@@ -217,6 +300,12 @@ export async function getFileDetails(session, filePath, cache = true) {
   );
 }
 
+/**
+ *
+ * @param session
+ * @param path
+ * @param noFiles
+ */
 export async function getBranchFileStructure(session, path, noFiles = false) {
   const { githubConfig, octokit } = useOctokitStore();
   const { head } = session;
@@ -232,6 +321,14 @@ export async function getBranchFileStructure(session, path, noFiles = false) {
   );
 }
 
+/**
+ *
+ * @param session
+ * @param path
+ * @param fileName
+ * @param content
+ * @param sha
+ */
 export async function createAndUpdateFile(
   session,
   path,
@@ -255,6 +352,13 @@ export async function createAndUpdateFile(
   );
 }
 
+/**
+ *
+ * @param session
+ * @param path
+ * @param files
+ * @param sha
+ */
 export async function createAndUpdateMultipleFiles(session, path, files, sha) {
   const { githubConfig, octokit } = useOctokitStore();
   const { head } = session;
@@ -302,6 +406,10 @@ export async function createAndUpdateMultipleFiles(session, path, files, sha) {
   }
 }
 
+/**
+ *
+ * @param url
+ */
 export async function fetchSchemaFromURL(url) {
   return schemaFromURL(url);
 }

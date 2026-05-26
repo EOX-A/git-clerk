@@ -28,7 +28,7 @@ const props = defineProps({
     :title="n"
     class="sessions-view py-4 border-b-thin"
   >
-    <template v-slot:title>
+    <template #title>
       <div class="d-flex align-start px-5">
         <v-skeleton-loader
           v-if="props.avatar"
@@ -45,7 +45,7 @@ const props = defineProps({
         </div>
       </div>
     </template>
-    <template v-slot:append>
+    <template #append>
       <v-skeleton-loader
         v-for="a in props.button"
         :key="a"

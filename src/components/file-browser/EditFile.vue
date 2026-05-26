@@ -55,11 +55,11 @@ const currentSession = () => {
 <template>
   <CreateSession
     v-if="updateInNewSession"
-    :createNewSession="true"
-    :fromFileBrowser="true"
-    :filePath="filePath"
-    :clearInput="clearInput"
+    :create-new-session="true"
+    :from-file-browser="true"
+    :file-path="filePath"
+    :clear-input="clearInput"
     :session="session"
-    :currentSession="currentSession"
+    :current-session="currentSession"
   />
 </template>

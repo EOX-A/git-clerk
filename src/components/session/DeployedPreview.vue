@@ -30,12 +30,16 @@ const props = defineProps({
 
 const disabled = ref(checkDisableStatus(props));
 
+/**
+ *
+ * @param newProps
+ */
 function checkDisableStatus(newProps) {
   return Boolean(
     newProps.session.changed_files === 0 ||
-      newProps.session.commits < 2 ||
-      !newProps.session.deployedPreviewLink ||
-      newProps.state === "closed",
+    newProps.session.commits < 2 ||
+    !newProps.session.deployedPreviewLink ||
+    newProps.state === "closed",
   );
 }
 
@@ -48,6 +52,7 @@ watch([props], ([newProps]) => {
   <!-- Mobile -->
   <v-btn
     v-if="tab"
+    id="deployed-preview-btn"
     :href="session.deployedPreviewLink"
     target="_blank"
     color="blue-grey-darken-4"
@@ -55,12 +60,12 @@ watch([props], ([newProps]) => {
     :size="size"
     variant="outlined"
     class="d-flex d-md-none border-black border-md border-opacity-100"
-    id="deployed-preview-btn"
     :disabled="disabled"
   ></v-btn>
   <!-- Non-mobile -->
   <v-btn
     v-if="tab"
+    id="deployed-preview-btn"
     :href="session.deployedPreviewLink"
     target="_blank"
     color="blue-grey-darken-4"
@@ -69,7 +74,6 @@ watch([props], ([newProps]) => {
     :text="text"
     variant="outlined"
     class="text-capitalize font-weight-medium d-none d-md-flex border-black border-md border-opacity-100"
-    id="deployed-preview-btn"
     :disabled="disabled"
   ></v-btn>
 </template>

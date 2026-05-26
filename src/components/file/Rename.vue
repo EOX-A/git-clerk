@@ -1,8 +1,8 @@
 <script setup>
 import { defineProps, inject, ref } from "vue";
-import { decodeString, encodeString, useLoader } from "@/helpers/index.js";
+import { encodeString, useLoader } from "@/helpers/index.js";
 import { createAndUpdateFile, deleteFileBySHA } from "@/api/index.js";
-import { BASE_PATH } from "@/enums";
+
 import { useRouter } from "vue-router";
 
 const props = defineProps({
@@ -86,19 +86,19 @@ const closeRename = () => {
     icon="mdi-pencil-outline"
     :size="size"
     variant="text"
-    @click="renameFile = props.file"
     class="d-flex d-sm-none"
+    @click="renameFile = props.file"
   ></v-btn>
   <!-- Non-mobile -->
   <v-btn
+    id="rename-file-btn"
     color="blue-grey-darken-4"
     prepend-icon="mdi-pencil-outline"
     :size="size"
     :text="text"
     variant="text"
-    @click="renameFile = props.file"
     class="text-capitalize font-weight-medium d-none d-sm-flex"
-    id="rename-file-btn"
+    @click="renameFile = props.file"
   ></v-btn>
 
   <div
@@ -122,29 +122,29 @@ const closeRename = () => {
       color="primary"
       size="x-large"
       variant="flat"
-      @click="confirmRename = true"
       class="text-capitalize"
+      @click="confirmRename = true"
     >
       Rename
     </v-btn>
     <v-btn
       variant="text"
       icon="mdi-close"
-      @click="closeRename"
       class="px-1 rounded-circle"
+      @click="closeRename"
     ></v-btn>
   </div>
 
   <v-dialog v-model="confirmRename" width="auto">
     <v-card max-width="400" prepend-icon="mdi-alert" title="Rename Session">
-      <template v-slot:text>
+      <template #text>
         <p class="mt-8">
           Are you sure you want to rename the file to
           <strong>{{ renameFileTitle }}</strong
           >?
         </p>
       </template>
-      <template v-slot:actions>
+      <template #actions>
         <v-spacer></v-spacer>
         <v-btn
           class="text-capitalize font-weight-medium"

@@ -1,3 +1,7 @@
+/**
+ *
+ * @param session
+ */
 export default function getPrStatus(session) {
   let color = "green";
   let icon = "git-pull-request";

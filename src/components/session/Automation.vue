@@ -44,16 +44,16 @@ onMounted(() => {
     prepend-icon="mdi-auto-fix"
     :title="props.selectedAutomation.title"
   >
-    <template v-slot:text>
+    <template #text>
       <eox-jsonform
         id="automation-form"
         :value="initValue"
         :schema="props.selectedAutomation.inputSchema"
-        :customEditorInterfaces="Object.values(CUSTOM_EDITOR_INTERFACES)"
+        :custom-editor-interfaces="Object.values(CUSTOM_EDITOR_INTERFACES)"
       />
     </template>
 
-    <template v-slot:actions>
+    <template #actions>
       <v-spacer></v-spacer>
       <v-btn
         color="grey-darken-1"

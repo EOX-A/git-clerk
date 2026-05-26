@@ -16,11 +16,11 @@ defineProps({
 
 <template>
   <div class="d-none d-sm-flex action-list">
-    <Actions :session="session" :callBack="callBack" />
+    <Actions :session="session" :call-back="callBack" />
   </div>
   <div class="d-flex d-sm-none action-list">
     <v-menu :close-on-content-click="false">
-      <template v-slot:activator="{ props }">
+      <template #activator="{ props }">
         <v-btn
           v-bind="props"
           icon="mdi-dots-vertical"
@@ -29,7 +29,7 @@ defineProps({
         ></v-btn>
       </template>
       <v-list>
-        <Actions :session="session" :callBack="callBack" />
+        <Actions :session="session" :call-back="callBack" />
       </v-list>
     </v-menu>
   </div>

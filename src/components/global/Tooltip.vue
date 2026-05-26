@@ -15,7 +15,7 @@ defineProps({
 
 <template>
   <v-tooltip :text="text" :location="location">
-    <template v-slot:activator="{ on: tooltipOn, props: tooltipProps }">
+    <template #activator="{ on: tooltipOn, props: tooltipProps }">
       <div v-bind="tooltipProps">
         <slot />
       </div>

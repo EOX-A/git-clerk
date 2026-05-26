@@ -19,12 +19,12 @@ const props = defineProps({
     <v-pagination
       v-model="props.page"
       :length="props.totalPage"
-      @update:model-value="props.onPageChange"
       density="comfortable"
       total-visible="6"
       color="primary"
       next-icon="mdi-menu-right"
       prev-icon="mdi-menu-left"
+      @update:model-value="props.onPageChange"
     ></v-pagination>
   </div>
 </template>

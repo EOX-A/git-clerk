@@ -6,6 +6,10 @@ const useOctokitStore = defineStore("octokit", () => {
   const githubUserData = ref(null);
   const octokit = ref(null);
 
+  /**
+   *
+   * @param instance
+   */
   function setOctokit(instance) {
     githubConfig.value = instance?.githubConfig;
     githubUserData.value = instance?.githubUserData;

@@ -1,3 +1,4 @@
+/* eslint-disable cypress/no-unnecessary-waiting, cypress/unsafe-to-chain-command */
 // Import required dependencies and test data
 import { GITHUB_HOST_REGEX } from "../enums";
 import ghConfig from "../fixtures/gh-config.json";

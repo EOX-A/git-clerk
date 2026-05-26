@@ -1,6 +1,10 @@
 import { getCheckStatus, getSessionReviewStatus } from "@/api/index.js";
 import { CHECK_STATUS } from "@/enums.js";
 
+/**
+ *
+ * @param session
+ */
 export default async function checkStatusMethod(session) {
   const check = await getCheckStatus(session.value.head.sha);
   const requestedChanges = await getSessionReviewStatus(session.value.number);

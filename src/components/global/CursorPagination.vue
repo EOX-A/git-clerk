@@ -40,13 +40,13 @@ const handlePageChange = (page) => {
       :model-value="currentPage"
       :length="totalPages"
       :total-visible="4"
+      density="comfortable"
+      color="primary"
       @update:model-value="
         (page) => page !== currentPage && handlePageChange(page)
       "
-      density="comfortable"
-      color="primary"
     >
-      <template v-slot:prev>
+      <template #prev>
         <v-btn
           :disabled="!props.pageInfo.hasPreviousPage"
           icon="mdi-menu-left"
@@ -57,7 +57,7 @@ const handlePageChange = (page) => {
           @click="handlePageChange('startCursor')"
         />
       </template>
-      <template v-slot:next>
+      <template #next>
         <v-btn
           :disabled="!props.pageInfo.hasNextPage"
           icon="mdi-menu-right"

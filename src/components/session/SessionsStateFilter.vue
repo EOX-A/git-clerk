@@ -19,16 +19,16 @@ const props = defineProps({
 </script>
 <template>
   <v-btn
+    id="session-action-menu"
     prepend-icon="mdi-source-pull"
     :variant="sessionSelectedState === 'open' ? 'tonal' : 'text'"
     size="x-large"
     text="Open"
     color="blue-grey-darken-4 open-session-btn"
-    id="session-action-menu"
     :disabled="!props.sessions"
     @click="changeSessionState('open')"
   >
-    <template v-slot:append>
+    <template #append>
       <v-chip
         variant="tonal"
         color="secondary"
@@ -40,16 +40,16 @@ const props = defineProps({
   </v-btn>
 
   <v-btn
+    id="session-action-menu"
     prepend-icon="mdi-check-circle-outline"
     :variant="sessionSelectedState === 'closed' ? 'tonal' : 'text'"
     size="x-large"
     text="Closed"
     color="blue-grey-darken-4 closed-session-btn"
-    id="session-action-menu"
     :disabled="!props.sessions"
     @click="changeSessionState('closed')"
   >
-    <template v-slot:append>
+    <template #append>
       <v-chip
         variant="tonal"
         color="red"

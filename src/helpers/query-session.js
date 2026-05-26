@@ -1,6 +1,10 @@
 import dayjs from "dayjs";
 import { getPrStatus } from "@/helpers";
 
+/**
+ *
+ * @param session
+ */
 export default function querySession(session) {
   return {
     title: session.title,

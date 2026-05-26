@@ -1,6 +1,11 @@
 import { RequestError } from "octokit";
 import { queryFile } from "@/helpers";
 
+/**
+ *
+ * @param fileLists
+ * @param props
+ */
 export default function queryFilesListMethod(fileLists, props) {
   if (fileLists instanceof RequestError) {
     props.snackbar.value = {

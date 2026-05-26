@@ -152,12 +152,12 @@ const fileUpload = async () => {
       :title="file.name"
       lines="three"
     >
-      <template v-slot:prepend>
+      <template #prepend>
         <v-avatar color="primary">
           <v-icon color="white">mdi-file-document</v-icon>
         </v-avatar>
       </template>
-      <template v-slot:title>
+      <template #title>
         <v-text-field
           :model-value="file.newName || file.name"
           placeholder="File Name"
@@ -169,7 +169,7 @@ const fileUpload = async () => {
         ></v-text-field>
       </template>
 
-      <template v-slot:append>
+      <template #append>
         <div class="d-flex align-center ga-2">
           <p class="text-body-2">
             <strong>{{ (file.size / (1024 * 1024)).toFixed(2) }} MB</strong>
@@ -202,8 +202,8 @@ const fileUpload = async () => {
       class="text-capitalize font-weight-medium upload-file-btn px-4"
       color="primary"
       variant="flat"
-      @click="fileUpload"
       prepend-icon="mdi-file-plus-outline"
+      @click="fileUpload"
     >
       Upload Files
     </v-btn>

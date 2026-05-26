@@ -19,22 +19,22 @@ const props = defineProps({
 <template>
   <ActionTab v-if="session">
     <v-menu :close-on-content-click="false">
-      <template v-slot:activator="{ props }">
+      <template #activator="{ props }">
         <v-btn
           v-bind="props"
+          id="session-action-menu"
           prepend-icon="mdi-dots-vertical"
           append-icon="mdi-chevron-down"
           variant="text"
           size="x-large"
           text="Session"
           color="blue-grey-darken-4"
-          id="session-action-menu"
         ></v-btn>
       </template>
       <v-list class="pa-0">
         <ActionSessions
           :session="props.session"
-          :callBack="props.updateDetails"
+          :call-back="props.updateDetails"
         />
       </v-list>
     </v-menu>
@@ -61,7 +61,7 @@ const props = defineProps({
       color="blue-grey-lighten-4"
       variant="flat"
       :session="props.session"
-      :callBack="props.updateDetails"
+      :call-back="props.updateDetails"
       class="ml-5"
     />
     <DeployedPreview

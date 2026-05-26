@@ -127,7 +127,7 @@ const close = () => {
 };
 
 // Create a duplicate file and call the success callback
-const createDuplicateFile = async (sha = null) => {
+const createDuplicateFile = async () => {
   const success = () => {
     close();
   };
@@ -189,14 +189,14 @@ const getSelectedFileFolder = (name) => {
           >
             <v-combobox
               v-model="filePath"
-              @paste="onPastePathName"
-              @keydown="onKeyDownPathName"
               label="File Name"
               placeholder="file.txt"
               :items="map(currPathDirStructure, 'name')"
               hide-details
               color="primary"
               variant="outlined"
+              @paste="onPastePathName"
+              @keydown="onKeyDownPathName"
             >
               <template #prepend-inner>
                 <span
@@ -204,7 +204,7 @@ const getSelectedFileFolder = (name) => {
                   >(root){{ updatedFilePath }}</span
                 >
               </template>
-              <template v-slot:item="{ props, item }">
+              <template #item="{ props, item }">
                 <v-list-item
                   :prepend-icon="`mdi-${getSelectedFileFolder(item.raw).icon}-outline`"
                   v-bind="props"
@@ -213,7 +213,7 @@ const getSelectedFileFolder = (name) => {
                 >
                   <template
                     v-if="getSelectedFileFolder(item.raw).type === 'file'"
-                    v-slot:append
+                    #append
                   >
                     <div
                       class="d-flex align-center ga-2 text-sm-body-2 font-weight-bold"

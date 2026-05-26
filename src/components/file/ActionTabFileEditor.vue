@@ -11,7 +11,7 @@ import { useRouter } from "vue-router";
 import ActionTab from "@/components/global/ActionTab.vue";
 const router = useRouter();
 
-const props = defineProps({
+defineProps({
   session: {
     type: Object,
     default: {},
@@ -39,14 +39,14 @@ const props = defineProps({
       size="x-large"
       :file="file"
       :session="session"
-      :callBack="() => router.push(`/${session.number}`)"
+      :call-back="() => router.push(`/${session.number}`)"
     />
     <RenameFile text="Rename File" size="x-large" :file :session />
     <v-divider v-if="previewURL" inset vertical></v-divider>
     <PreviewBtn
-      :togglePreview="togglePreview"
-      :showPreview="showPreview"
-      :previewURL="previewURL"
+      :toggle-preview="togglePreview"
+      :show-preview="showPreview"
+      :preview-u-r-l="previewURL"
     />
     <v-spacer></v-spacer>
     <Tooltip text="Reset Content">

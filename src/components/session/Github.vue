@@ -34,7 +34,6 @@ const redirectToGithub = () => {
     v-if="tab"
     rounded="0"
     block
-    @click="redirectToGithub"
     target="_blank"
     color="blue-grey-darken-4"
     prepend-icon="mdi-github"
@@ -42,29 +41,30 @@ const redirectToGithub = () => {
     :text="text"
     variant="text"
     class="text-capitalize font-weight-medium d-flex justify-start"
+    @click="redirectToGithub"
   ></v-btn>
 
   <!-- Tab = false -->
   <!-- Mobile -->
   <v-list-item
     v-if="!tab"
-    @click="redirectToGithub"
     target="_blank"
     prepend-icon="mdi-github"
     :title="props.tooltip"
     class="d-flex d-sm-none"
+    @click="redirectToGithub"
   ></v-list-item>
   <!-- Non-mobile -->
   <Tooltip :text="props.tooltip">
     <v-btn
       v-if="!tab"
-      @click="redirectToGithub"
       target="_blank"
       color="blue-grey-darken-4"
       icon="mdi-github"
       :size="size"
       variant="text"
       class="d-none d-sm-flex"
+      @click="redirectToGithub"
     ></v-btn>
   </Tooltip>
 </template>

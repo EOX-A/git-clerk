@@ -75,23 +75,23 @@ const currentSession = () => {
 <template>
   <CreateSession
     v-if="updateInNewSession"
-    :createNewSession="true"
-    :fromFileBrowser="true"
-    :filePath="filePath"
-    :clearInput="clearInput"
+    :create-new-session="true"
+    :from-file-browser="true"
+    :file-path="filePath"
+    :clear-input="clearInput"
     :session="session"
-    :currentSession="currentSession"
-    :noRedirectCallback="uploadNewSessionNumber"
+    :current-session="currentSession"
+    :no-redirect-callback="uploadNewSessionNumber"
   />
   <v-dialog
     v-if="!updateInNewSession && uploadNewFile && sessionNumber"
     v-model="uploadNewFile"
-    @update:modelValue="!$event && clearInput()"
     width="auto"
     style="z-index: 999999"
+    @update:model-value="!$event && clearInput()"
   >
     <v-card max-width="480" class="create-file">
-      <template v-slot:text>
+      <template #text>
         <h2 class="text-center pl-3 pr-3">Upload a new files</h2>
         <p class="text-center px-4">
           Provide a name for the new file. (Note - File will be uploaded to the
@@ -100,10 +100,10 @@ const currentSession = () => {
         </p>
         <UploadArea
           :session="repoDetails || props.session"
-          :filePath="updatedFilePath.replace('/', '')"
+          :file-path="updatedFilePath.replace('/', '')"
           :close="close"
-          :updateDetails="updateDetails"
-          :fromFileBrowser="true"
+          :update-details="updateDetails"
+          :from-file-browser="true"
         />
       </template>
     </v-card>

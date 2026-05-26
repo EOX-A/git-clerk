@@ -1,6 +1,6 @@
 <script setup>
 import { defineProps } from "vue";
-const props = defineProps({
+defineProps({
   togglePreview: Function,
   showPreview: Boolean,
   previewURL: String,

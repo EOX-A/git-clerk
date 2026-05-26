@@ -1,4 +1,3 @@
-/* global globalThis */
 import { ref } from "vue";
 
 export const CHECK_STATUS = {

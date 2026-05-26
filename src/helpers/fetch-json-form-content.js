@@ -1,4 +1,9 @@
 // Helper function to fetch the content from the schema and call the callback function
+/**
+ *
+ * @param schema
+ * @param callBack
+ */
 export default async function fetchJsonFormContent(schema, callBack) {
   const jsonForm = document.createElement("eox-jsonform");
   jsonForm.style.display = "none";

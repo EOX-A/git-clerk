@@ -2,6 +2,15 @@ import { createSessionByName } from "@/api/index.js";
 import { useLoader } from "@/helpers/index.js";
 import { h } from "vue";
 
+/**
+ *
+ * @param sessionNumber
+ * @param router
+ * @param route
+ * @param clearInput
+ * @param filePath
+ * @param noRedirectCallback
+ */
 export function postSessionCreation(
   sessionNumber,
   router,
@@ -17,7 +26,7 @@ export function postSessionCreation(
   );
   const queryString = new URLSearchParams(params).toString();
   const filePathToOpen = filePath ? filePath() : null;
-  const url = Boolean(queryString)
+  const url = queryString
     ? `/${sessionNumber}?${queryString}`
     : `/${sessionNumber}${filePathToOpen ? `/${filePathToOpen}` : ""}`;
 
@@ -31,6 +40,15 @@ export function postSessionCreation(
   }
 }
 
+/**
+ *
+ * @param props
+ * @param router
+ * @param route
+ * @param clearInput
+ * @param filePath
+ * @param noRedirectCallback
+ */
 export default async function createSession(
   props,
   router,

@@ -15,6 +15,12 @@ const getLoaderMsg = (type, path, currentMsg) => {
   return messages[type] || currentMsg;
 };
 
+/**
+ *
+ * @param props
+ * @param value
+ * @param router
+ */
 export async function runAutomation(props, value, router) {
   const loaderEle = document.getElementById("loader-text");
   for (const step of props.selectedAutomation.steps) {

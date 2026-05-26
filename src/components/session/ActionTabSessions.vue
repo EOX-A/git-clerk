@@ -3,7 +3,7 @@ import { defineProps } from "vue";
 import SessionsStateFilter from "./SessionsStateFilter.vue";
 import ActionTab from "@/components/global/ActionTab.vue";
 
-const props = defineProps({
+defineProps({
   sessions: {
     type: Array,
     default: null,
@@ -24,9 +24,9 @@ const props = defineProps({
   <ActionTab>
     <SessionsStateFilter
       :sessions="sessions"
-      :numberOfOpenClosedSessions="numberOfOpenClosedSessions"
-      :sessionSelectedState="sessionSelectedState"
-      :changeSessionState="changeSessionState"
+      :number-of-open-closed-sessions="numberOfOpenClosedSessions"
+      :session-selected-state="sessionSelectedState"
+      :change-session-state="changeSessionState"
     />
   </ActionTab>
 </template>

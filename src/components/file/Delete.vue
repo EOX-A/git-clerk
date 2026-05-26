@@ -70,13 +70,13 @@ const deleteFileHandle = async () => {
 
   <v-dialog v-model="deleteFile" width="auto">
     <v-card max-width="400" prepend-icon="mdi-alert" title="Delete File">
-      <template v-slot:text>
+      <template #text>
         <p class="mt-8">
           Are you sure you want to delete the file:
           <strong>{{ deleteFile.title }}</strong>
         </p>
       </template>
-      <template v-slot:actions>
+      <template #actions>
         <v-spacer></v-spacer>
         <v-btn size="large" @click="deleteFile = false"> Cancel </v-btn>
         <v-btn

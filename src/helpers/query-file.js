@@ -1,5 +1,9 @@
 import { createColorBlocks, getFileChangesStatus } from "@/helpers";
 
+/**
+ *
+ * @param file
+ */
 export default function queryFile(file) {
   return {
     title: file.filename,

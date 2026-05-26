@@ -1,6 +1,14 @@
 import { runAutomation, useLoader } from "@/helpers";
 import { h } from "vue";
 
+/**
+ *
+ * @param props
+ * @param value
+ * @param validate
+ * @param router
+ * @param snackbar
+ */
 export default async function handleAutomationMethod(
   props,
   value,

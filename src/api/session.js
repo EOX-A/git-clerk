@@ -1,6 +1,16 @@
-import { getTotalPages } from "../helpers";
 import slugify from "slugify";
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ * @param pageInfo
+ * @param cursorPosition
+ * @param sessionSelectedState
+ * @param sessionName
+ * @param cache
+ * @param creator
+ */
 export async function sessionsList(
   octokit,
   githubConfig,
@@ -81,6 +91,13 @@ export async function sessionsList(
   }
 }
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ * @param cache
+ * @param creator
+ */
 export async function numberOfOpenClosedSessions(
   octokit,
   githubConfig,
@@ -122,6 +139,12 @@ export async function numberOfOpenClosedSessions(
   }
 }
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ * @param prName
+ */
 async function numberOfSessionBasedOnTitle(octokit, githubConfig, prName) {
   try {
     const query = `
@@ -141,6 +164,12 @@ async function numberOfSessionBasedOnTitle(octokit, githubConfig, prName) {
   }
 }
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ * @param githubUserData
+ */
 export async function repoDetails(octokit, githubConfig, githubUserData) {
   const { repo } = githubConfig;
   const { login: owner } = githubUserData;
@@ -150,11 +179,19 @@ export async function repoDetails(octokit, githubConfig, githubUserData) {
       repo,
     });
     return response.data;
-  } catch (error) {
+  } catch (_error) {
     return null;
   }
 }
 
+/**
+ *
+ * @param username
+ * @param repo
+ * @param octokit
+ * @param owner
+ * @param loaderText
+ */
 async function checkForkRepo(username, repo, octokit, owner, loaderText = {}) {
   let fork;
   try {
@@ -178,7 +215,7 @@ async function checkForkRepo(username, repo, octokit, owner, loaderText = {}) {
           await new Promise((resolve) => setTimeout(resolve, 5000)); // 5 seconds
           fork = await octokit.rest.repos.get({ owner: username, repo });
           break;
-        } catch (err) {
+        } catch (_err) {
           retries--;
           if (retries === 0) {
             throw new Error(
@@ -193,23 +230,30 @@ async function checkForkRepo(username, repo, octokit, owner, loaderText = {}) {
   }
 }
 
+/**
+ *
+ * @param username
+ * @param repo
+ * @param octokit
+ */
 export async function syncARepo(username, repo, octokit) {
-  try {
-    const forkRepo = await octokit.rest.repos.get({ owner: username, repo });
-    const forkDefaultBranch = forkRepo.data.default_branch;
+  const forkRepo = await octokit.rest.repos.get({ owner: username, repo });
+  const forkDefaultBranch = forkRepo.data.default_branch;
 
-    await octokit.rest.repos.mergeUpstream({
-      owner: username,
-      repo,
-      branch: forkDefaultBranch,
-    });
+  await octokit.rest.repos.mergeUpstream({
+    owner: username,
+    repo,
+    branch: forkDefaultBranch,
+  });
 
-    return forkDefaultBranch;
-  } catch (error) {
-    throw error;
-  }
+  return forkDefaultBranch;
 }
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ */
 export async function checkForkRepoAndSync(octokit, githubConfig) {
   try {
     const { repo } = githubConfig;
@@ -223,6 +267,12 @@ export async function checkForkRepoAndSync(octokit, githubConfig) {
   }
 }
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ * @param prName
+ */
 export async function createSession(octokit, githubConfig, prName) {
   const { username: owner, repo } = githubConfig;
   const username = (await octokit.rest.users.getAuthenticated()).data.login;
@@ -323,6 +373,12 @@ export async function createSession(octokit, githubConfig, prName) {
   }
 }
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ * @param prNumber
+ */
 export async function sessionDetails(octokit, githubConfig, prNumber) {
   try {
     const response = await octokit.rest.pulls.get({
@@ -348,6 +404,12 @@ export async function sessionDetails(octokit, githubConfig, prNumber) {
   }
 }
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ * @param prNumber
+ */
 export async function deleteSession(octokit, githubConfig, prNumber) {
   try {
     const response = await octokit.rest.pulls.update({
@@ -375,6 +437,13 @@ export async function deleteSession(octokit, githubConfig, prNumber) {
   }
 }
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ * @param prNumber
+ * @param newName
+ */
 export async function renameSession(octokit, githubConfig, prNumber, newName) {
   try {
     const response = await octokit.rest.pulls.update({
@@ -396,6 +465,13 @@ export async function renameSession(octokit, githubConfig, prNumber, newName) {
   }
 }
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ * @param prNumber
+ * @param pullRequestId
+ */
 export async function reviewSession(
   octokit,
   githubConfig,
@@ -431,6 +507,12 @@ export async function reviewSession(
   }
 }
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ * @param sha
+ */
 export async function checkStatus(octokit, githubConfig, sha) {
   try {
     const response = await octokit.rest.checks.listForRef({
@@ -449,6 +531,12 @@ export async function checkStatus(octokit, githubConfig, sha) {
   }
 }
 
+/**
+ *
+ * @param octokit
+ * @param githubConfig
+ * @param prNumber
+ */
 export async function sessionReviewStatus(octokit, githubConfig, prNumber) {
   try {
     const response = await octokit.rest.pulls.listReviews({

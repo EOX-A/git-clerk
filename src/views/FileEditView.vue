@@ -6,7 +6,7 @@ import {
   getFileDetails,
   getSessionDetails,
 } from "@/api/index.js";
-import { useRoute, useRouter } from "vue-router";
+import { useRoute } from "vue-router";
 import { querySessionDetailsMethod } from "@/methods/session-view/index.js";
 import { FileBrowserDrawer } from "@/components/file-browser/index.js";
 import {
@@ -34,7 +34,6 @@ import "@eox/map";
 import { CUSTOM_EDITOR_INTERFACES, GENERATE_ENUMS } from "@/enums";
 
 const route = useRoute();
-const router = useRouter();
 const sessionNumber = route.params.sessionNumber;
 const filePath = decodeString(route.params.encodedFilePath);
 
@@ -257,10 +256,10 @@ onUnmounted(() => {
     :file
     :session
     :reset
-    :resetContent
-    :togglePreview
-    :showPreview
-    :previewURL
+    :reset-content
+    :toggle-preview
+    :show-preview
+    :preview-u-r-l
   />
 
   <div
@@ -268,8 +267,8 @@ onUnmounted(() => {
     :class="`bg-white d-block file-editor ${schemaMetaDetails.generic && 'file-editor-code'}`"
   >
     <div
-      class="d-flex align-center align-self-center justify-center flex-column py-12"
       v-if="file.encoding === 'none'"
+      class="d-flex align-center align-self-center justify-center flex-column py-12"
     >
       <p class="text-sm-body-2 text-blue-grey-darken-2">
         Sorry about that, but we can’t show files that are this big right now.
@@ -291,11 +290,11 @@ onUnmounted(() => {
           v-if="updatedFileContent"
           :schema="schemaMetaDetails.schema"
           :value="updatedFileContent"
-          :customEditorInterfaces="customInterfaces"
+          :custom-editor-interfaces="customInterfaces"
           :options="schemaMetaDetails.jsonform?.options || {}"
-          :propertiesToggle="schemaMetaDetails.jsonform?.propertiesToggle"
-          @change="onFileChange"
+          :properties-toggle="schemaMetaDetails.jsonform?.propertiesToggle"
           class="d-block fill-height"
+          @change="onFileChange"
         ></eox-jsonform>
       </v-col>
       <v-col
@@ -319,9 +318,9 @@ onUnmounted(() => {
   </div>
   <ValidationError
     v-if="validationErrors.length > 0"
-    :validationErrors="validationErrors"
-    :closeValidationErrors="closeValidationErrors"
-    :saveFile="saveFile"
+    :validation-errors="validationErrors"
+    :close-validation-errors="closeValidationErrors"
+    :save-file="saveFile"
   />
 </template>
 

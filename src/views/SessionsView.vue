@@ -1,9 +1,8 @@
 <script setup>
 import OctIcon from "@/components/global/OctIcon.vue";
-import { h, inject, onMounted, ref } from "vue";
+import { inject, onMounted, ref } from "vue";
 import {
   getSessionsList,
-  createSessionByName,
   searchSessionName,
   getNumberOfOpenClosedSessions,
   syncRepo,
@@ -15,7 +14,6 @@ import {
 import { useRoute, useRouter } from "vue-router";
 import Tooltip from "@/components/global/Tooltip.vue";
 import {
-  useLoader,
   preventListItemClick,
   createSession,
   postSessionCreation,
@@ -35,12 +33,9 @@ const route = useRoute();
 const router = useRouter();
 
 const sessions = ref(null);
-const page = ref(route.query.page ? parseInt(route.query.page, 10) : 1);
 const pageInfo = ref(null);
 const hover = ref(null);
 const cursorPosition = ref(null);
-const deleteSession = ref(false);
-const reviewSession = ref(false);
 const sessionSelectedState = ref("open");
 const numberOfOpenClosedSessions = ref(null);
 const createNewSession = ref(false);
@@ -188,8 +183,8 @@ const resetWholeState = async () => {
   <FileBrowserDrawer />
   <CreateSession
     v-if="createNewSession"
-    :createNewSession="createNewSession"
-    :clearInput="clearInputCreateNewSession"
+    :create-new-session="createNewSession"
+    :clear-input="clearInputCreateNewSession"
   />
 
   <ActionTabSessions
@@ -197,9 +192,9 @@ const resetWholeState = async () => {
       numberOfOpenClosedSessions &&
       (numberOfOpenClosedSessions.open || numberOfOpenClosedSessions.closed)
     "
-    :sessionSelectedState="sessionSelectedState"
-    :changeSessionState="changeSessionState"
-    :numberOfOpenClosedSessions="numberOfOpenClosedSessions"
+    :session-selected-state="sessionSelectedState"
+    :change-session-state="changeSessionState"
+    :number-of-open-closed-sessions="numberOfOpenClosedSessions"
     :sessions="sessions"
   />
 
@@ -211,12 +206,12 @@ const resetWholeState = async () => {
         :key="session.title"
         :title="session.title"
         class="sessions-view bg-white py-4 border-b-thin"
+        :to="`/${session.number}`"
         @mouseenter="hover = index"
         @mouseleave="hover = null"
-        :to="`/${session.number}`"
         @click.native.capture="preventListItemClick"
       >
-        <template v-slot:title>
+        <template #title>
           <div class="d-flex align-start px-5">
             <v-icon :color="session.status.color" class="pr-icon opacity-100">
               <OctIcon :name="session.status.icon" />
@@ -230,8 +225,8 @@ const resetWholeState = async () => {
                   {{ session.title }}
                 </div>
                 <Tooltip
-                  location="right"
                   v-if="session.check && !session.check.success"
+                  location="right"
                   :text="session.check.tooltip"
                 >
                   <v-icon
@@ -241,8 +236,8 @@ const resetWholeState = async () => {
                   ></v-icon>
                 </Tooltip>
                 <Tooltip
-                  location="right"
                   v-if="session.requested_changes"
+                  location="right"
                   text="Requested Changes"
                 >
                   <v-icon color="red" class="file-diff">
@@ -265,8 +260,8 @@ const resetWholeState = async () => {
           </div>
         </template>
 
-        <template v-slot:append>
-          <ActionList :session="session" :callBack="resetWholeState" />
+        <template #append>
+          <ActionList :session="session" :call-back="resetWholeState" />
         </template>
       </v-list-item>
     </template>
@@ -274,14 +269,14 @@ const resetWholeState = async () => {
     <!-- Placeholder for session's list -->
     <ListPlaceholder v-else-if="sessions === null" :button="3" />
 
-    <WelcomeSection v-else :createNewSessionClick="createNewSessionClick" />
+    <WelcomeSection v-else :create-new-session-click="createNewSessionClick" />
   </v-list>
 
   <CursorPagination
     v-if="sessions && sessions.length"
-    :pageInfo="pageInfo"
-    :onPageChange="onPageChange"
-    :currentPage="currentPage"
-    :cursorHistory="cursorHistory"
+    :page-info="pageInfo"
+    :on-page-change="onPageChange"
+    :current-page="currentPage"
+    :cursor-history="cursorHistory"
   />
 </template>

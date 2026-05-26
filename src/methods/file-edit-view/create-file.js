@@ -13,6 +13,18 @@ import {
   fetchJsonFormContent,
 } from "@/helpers/index.js";
 
+/**
+ *
+ * @param updatedFilePath
+ * @param fileName
+ * @param session
+ * @param existingSessionNumber
+ * @param router
+ * @param snackbar
+ * @param success
+ * @param existingFileName
+ * @param existingSHA
+ */
 export default async function createFileMethod(
   updatedFilePath,
   fileName,

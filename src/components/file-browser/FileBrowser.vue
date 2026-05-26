@@ -3,7 +3,7 @@ import { Actions } from "./";
 import { getBranchFileStructure, getRepoDetails } from "@/api/index.js";
 import { ref, onMounted, watch, inject } from "vue";
 import useOctokitStore from "@/stores/octokit";
-import { preventListItemClick, encodeString } from "@/helpers/index.js";
+import { preventListItemClick } from "@/helpers/index.js";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import { EditFile, AddFile, UploadFiles } from "./";
 
@@ -67,10 +67,6 @@ const goToPath = (index) => {
   updatedFilePath.value = updatedFilePathArr.value.join("/") + "/";
 };
 
-const filePath = (item) => {
-  return encodeString((updatedFilePath.value + item.name).replace("/", ""));
-};
-
 const onSelect = (item) => {
   if (item.type === "dir") {
     if (item.name === "...") {
@@ -119,7 +115,7 @@ watch(updatedFilePathArr, async (newPathArr) => {
   await fetchDirStructure(newPathArr);
 });
 
-watch(fileBrowserDrawer, async (newFileBrowserDrawer) => {
+watch(fileBrowserDrawer, async () => {
   await fetchDirStructure(updatedFilePathArr.value);
 });
 
@@ -132,15 +128,15 @@ const handleOperation = (operation) => {
 </script>
 <template>
   <Actions
-    :handleOperation="handleOperation"
-    :updatedFilePathArr="updatedFilePathArr"
-    :goToPath="goToPath"
+    :handle-operation="handleOperation"
+    :updated-file-path-arr="updatedFilePathArr"
+    :go-to-path="goToPath"
   />
   <v-list class="py-0">
     <!-- file's list -->
     <v-list-item
-      v-if="currPathDirStructure && currPathDirStructure.length"
       v-for="(item, index) in currPathDirStructure"
+      v-if="currPathDirStructure && currPathDirStructure.length"
       :key="item.name"
       :title="item.name"
       class="files-view files-browse-list py-4 border-b-thin"
@@ -149,7 +145,7 @@ const handleOperation = (operation) => {
       @click.native.capture="preventListItemClick"
       @click="onSelect(item)"
     >
-      <template v-slot:title>
+      <template #title>
         <div
           :class="{ 'ml-6': updatedFilePathArr.length > 1 && index }"
           class="d-flex align-start px-5"
@@ -184,34 +180,34 @@ const handleOperation = (operation) => {
       </template>
     </v-list-item>
     <ListPlaceholder
-      :avatar="false"
-      :subTitle="false"
-      :button="0"
       v-else-if="currPathDirStructure.length === 0"
+      :avatar="false"
+      :sub-title="false"
+      :button="0"
     />
     <EditFile
       v-if="selectedOperation && selectedOperation.type === 'edit'"
-      :updatedFilePath="updatedFilePath"
-      :selectedOperation="selectedOperation"
+      :updated-file-path="updatedFilePath"
+      :selected-operation="selectedOperation"
       :session="session"
-      :resetOperation="resetOperation"
+      :reset-operation="resetOperation"
     />
     <AddFile
       v-if="selectedOperation && selectedOperation.type === 'add'"
-      :updatedFilePath="updatedFilePath"
-      :selectedOperation="selectedOperation"
+      :updated-file-path="updatedFilePath"
+      :selected-operation="selectedOperation"
       :session="session"
-      :repoDetails="repoDetails"
-      :resetOperation="resetOperation"
+      :repo-details="repoDetails"
+      :reset-operation="resetOperation"
     />
     <UploadFiles
       v-if="selectedOperation && selectedOperation.type === 'upload'"
-      :updatedFilePath="updatedFilePath"
-      :selectedOperation="selectedOperation"
+      :updated-file-path="updatedFilePath"
+      :selected-operation="selectedOperation"
       :session="session"
-      :repoDetails="repoDetails"
-      :updateDetails="updateDetails"
-      :resetOperation="resetOperation"
+      :repo-details="repoDetails"
+      :update-details="updateDetails"
+      :reset-operation="resetOperation"
     />
   </v-list>
 </template>

@@ -70,12 +70,12 @@ const onKeyEnter = async (event) => {
 <template>
   <v-dialog
     v-model="openCreateSession"
-    @update:model-value="!$event && clear()"
     width="auto"
     class="session-create-field"
+    @update:model-value="!$event && clear()"
   >
     <v-card max-width="480" class="rounded-lg">
-      <template v-slot:text>
+      <template #text>
         <h2 class="text-center pl-3 pr-3">
           {{ session ? "Choose a session" : "Create New Session" }}
         </h2>
@@ -97,13 +97,13 @@ const onKeyEnter = async (event) => {
           @keydown="onKeyEnter"
         ></v-alert>
         <v-text-field
+          v-model="newSessionName"
           density="compact"
           label="Session Name"
           variant="solo"
           hide-details
           single-line
           flat="true"
-          v-model="newSessionName"
           class="rounded border-md my-3"
         ></v-text-field>
         <div class="d-flex ga-2 justify-center align-center">
@@ -113,8 +113,8 @@ const onKeyEnter = async (event) => {
             variant="tonal"
             prepend-icon="mdi-pencil"
             :disabled="newSessionName !== ''"
-            @click="currentSession"
             class="current-session-btn"
+            @click="currentSession"
           >
             Edit in current session
           </v-btn>
@@ -128,8 +128,8 @@ const onKeyEnter = async (event) => {
             variant="flat"
             prepend-icon="mdi-plus"
             :disabled="!newSessionName"
-            @click="create"
             class="new-session-btn"
+            @click="create"
           >
             Create New Session
           </v-btn>

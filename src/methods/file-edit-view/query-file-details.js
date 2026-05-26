@@ -5,11 +5,16 @@ const getFileContent = (content) => {
   try {
     const schema = JSON.parse(content);
     return schema;
-  } catch (error) {
+  } catch (_error) {
     return {};
   }
 };
 
+/**
+ *
+ * @param fileDetails
+ * @param props
+ */
 export default function queryFileDetailsMethod(fileDetails, props) {
   if (fileDetails instanceof RequestError) {
     props.snackbar.value = {
