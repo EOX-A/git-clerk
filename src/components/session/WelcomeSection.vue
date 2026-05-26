@@ -38,14 +38,12 @@ const welcomeCards = ref([
 ]);
 
 const selectedCard = (type) => {
-  const url = new URL(window.location.href);
   selectedType.value = type;
   if (type === "propose") {
     fileBrowserDrawer.value = type;
   } else {
     props.createNewSessionClick();
   }
-  window.history.replaceState({}, "", url);
 };
 </script>
 

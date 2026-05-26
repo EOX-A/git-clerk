@@ -11,13 +11,11 @@ export function postSessionCreation(
   noRedirectCallback,
 ) {
   const params = Object.fromEntries(
-    Object.entries(route.query).filter(
-      ([key]) => key !== "session" && key !== "file-browser",
-    ),
+    Object.entries(route.query).filter(([key]) => key !== "session"),
   );
   const queryString = new URLSearchParams(params).toString();
   const filePathToOpen = filePath ? filePath() : null;
-  const url = Boolean(queryString)
+  const url = queryString
     ? `/${sessionNumber}?${queryString}`
     : `/${sessionNumber}${filePathToOpen ? `/${filePathToOpen}` : ""}`;
 
