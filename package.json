@@ -17,7 +17,7 @@
     "cypress:install": "cypress install"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=24.0.0"
   },
   "dependencies": {
     "@eox/drawtools": "^1.1.5",
