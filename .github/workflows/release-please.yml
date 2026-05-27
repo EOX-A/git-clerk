@@ -18,7 +18,7 @@ jobs:
         uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4
         id: release
       - name: Checkout 🛎️
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         # these if statements ensure that a publication only occurs when
         # a new release is created:
         if: ${{ fromJSON(steps.release.outputs.releases_created) }}
