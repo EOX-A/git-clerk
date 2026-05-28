@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.15.0](https://github.com/EOX-A/git-clerk/compare/v1.14.1...v1.15.0) (2026-05-28)
+
+
+### Features
+
+* Edit existing session through external automation URL ([#237](https://github.com/EOX-A/git-clerk/issues/237)) ([0a2b861](https://github.com/EOX-A/git-clerk/commit/0a2b861899d64a08093ec043c340cced2b6ba914))
+
 ## [1.14.1](https://github.com/EOX-A/git-clerk/compare/v1.14.0...v1.14.1) (2026-05-05)
 
 
