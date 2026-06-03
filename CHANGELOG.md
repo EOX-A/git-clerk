@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.14.2](https://github.com/EOX-A/git-clerk/compare/v1.14.1...v1.14.2) (2026-06-03)
+## [1.15.0](https://github.com/EOX-A/git-clerk/compare/v1.14.1...v1.15.0) (2026-06-03)
 
 
 ### Features
@@ -8,7 +8,7 @@
 * Edit existing session through external automation URL ([#237](https://github.com/EOX-A/git-clerk/issues/237)) ([0a2b861](https://github.com/EOX-A/git-clerk/commit/0a2b861899d64a08093ec043c340cced2b6ba914))
 
 
-### Bug Fixes
+### Miscellaneous Chores
 
 * Update EOxElements packages versions ([#253](https://github.com/EOX-A/git-clerk/issues/253)) ([aaf0e01](https://github.com/EOX-A/git-clerk/commit/aaf0e01ac19576a6ff3b97c759787c5e706b0c0f))
 
