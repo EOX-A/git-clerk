@@ -34,7 +34,7 @@
     "lodash.map": "^4.6.0",
     "lodash.merge": "^4.6.2",
     "octokit": "^4.0.2",
-    "pinia": "^2.2.4",
+    "pinia": "^3.0.4",
     "slugify": "^1.6.6",
     "vue": "^3.4.29",
     "vue-i18n": "^11.1.10",
