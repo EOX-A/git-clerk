@@ -209,6 +209,10 @@ Automations can also be triggered via -
 
    Example:
 
+   ```html
+   <a href="/" target="_blank" rel="opener">Git Clerk</a>
+   ```
+
    ```javascript
    const automationData = {
      session: "My New Session",
