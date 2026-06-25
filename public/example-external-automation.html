@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>External Automation</title>
+</head>
+<body>
+  <a class="open-link" href="/" target="_blank" rel="opener">Open External Automation</a>
+  <script>
+    let readyAutomation = false;
+    window.addEventListener('message', (event) => {
+      if (event.data === 'automation-ready') {
+        console.log("automation-ready", event)
+        if(!readyAutomation) {
+          event.source.postMessage(JSON.stringify({
+            "session": "Test Automation",
+            "automation": "add-file",
+            "content": "R2l0IGNsZXJrIGF1dG9tYXRpb24=",
+            "fileName": "automation.txt"
+          }), '*');
+          console.log("Message sent")
+          readyAutomation = true;
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -2,6 +2,7 @@
 import { inject, onMounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { getFilesListFromSession, getSessionDetails } from "@/api/index.js";
+import { storeToRefs } from "pinia";
 import {
   checkStatusMethod,
   queryFilesListMethod,
@@ -19,10 +20,20 @@ import Automation from "@/components/session/Automation.vue";
 import find from "lodash/find";
 import { FileBrowserDrawer } from "@/components/file-browser";
 import { useI18n } from "vue-i18n";
+import useAutomationStore from "@/stores/automation";
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 const sessionNumber = route.params.sessionNumber;
+
+const automationStore = useAutomationStore();
+const {
+  selectedAutomation,
+  automationDialog,
+  automation,
+  externalAutomationData,
+} = storeToRefs(automationStore);
+const { handleAutomationClick } = automationStore;
 
 const session = ref(null);
 const fileChangesList = ref(null);
@@ -34,8 +45,6 @@ const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 const fileBrowserDrawer = inject("set-file-browser-drawer");
 
-const automationDialog = ref(false);
-const selectedAutomation = ref(null);
 const suggestionList = ref([]);
 
 const updateDetails = async (cache = false) => {
@@ -106,9 +115,11 @@ watch(
       };
     }
 
-    if (route.query.automation && !selectedAutomation.value && newSession) {
-      const automation = find(newAutomation, { id: route.query.automation });
-      if (automation) handleAutomationClick(automation);
+    if (automation.value && !selectedAutomation.value && newSession) {
+      const automationExist = find(newAutomation, {
+        id: externalAutomationData.value.automation,
+      });
+      if (automationExist) handleAutomationClick(automationExist);
     }
   },
   { immediate: true, deep: true },
@@ -122,16 +133,6 @@ const onPageChange = async (newPage) => {
   page.value = newPage;
   await router.push({ query: { ...route.query, page: newPage } });
   await updateDetails(true);
-};
-
-const handleAutomationClick = (automation) => {
-  selectedAutomation.value = automation;
-  automationDialog.value = true;
-};
-
-const handleAutomationClose = () => {
-  selectedAutomation.value = null;
-  automationDialog.value = false;
 };
 </script>
 
@@ -266,7 +267,6 @@ const handleAutomationClose = () => {
   </v-list>
 
   <OffsetPagination v-if="fileChangesList" :page :totalPage :onPageChange />
-
   <!-- Use the Automation component -->
   <v-dialog
     v-if="session"
@@ -274,13 +274,7 @@ const handleAutomationClose = () => {
     v-model="automationDialog"
     max-width="500px"
   >
-    <Automation
-      :handleAutomationClose
-      :updateDetails
-      :automationDialog
-      :selectedAutomation
-      :session
-    />
+    <Automation :updateDetails :session />
   </v-dialog>
 </template>
 

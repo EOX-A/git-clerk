@@ -1,5 +1,6 @@
 import { runAutomation, useLoader } from "@/helpers";
 import { h } from "vue";
+import useAutomationStore from "@/stores/automation";
 
 export default async function handleAutomationMethod(
   props,
@@ -23,7 +24,8 @@ export default async function handleAutomationMethod(
     try {
       await runAutomation(props, value, router);
       loader.hide();
-      props.handleAutomationClose();
+      const { handleAutomationClose } = useAutomationStore();
+      handleAutomationClose();
       props.updateDetails();
     } catch (error) {
       loader.hide();
