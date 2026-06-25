@@ -216,17 +216,14 @@ Automations can also be triggered via -
      field1: "value-field1",
      field2: "value-field2",
    };
+   let readyAutomation = false; // This will prevent event from triggering multiple times.
+   window.addEventListener("message", (event) => {
+     if (event.data === "automation-ready" && !readyAutomation) {
+       event.source.postMessage(JSON.stringify(automationData), "\*");
+       readyAutomation = true;
+     }
+   });
    ```
-
-let readyAutomation = false; // This will prevent event from triggering multiple times.
-window.addEventListener('message', (event) => {
-if (event.data === 'automation-ready' && !readyAutomation) {
-event.source.postMessage(JSON.stringify(automationData), '\*');
-readyAutomation = true;
-}
-});
-
-````
 
 Example - [external automation through js](/public/example-external-automation.html)
 
@@ -247,7 +244,7 @@ customEditorInterfaces: {
 },
 [...]
 };
-````
+```
 
 An example for this setup can be seen in [here](https://github.com/EOX-A/git-clerk/blob/bfa157a499ef488fe3b0ebf3215fb9368d552496/public/config.js#L680).
 
