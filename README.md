@@ -195,17 +195,40 @@ globalThis.gitClerkConfig = {
 };
 ```
 
-Automations can also be triggered via url query parameters. For this, the automation requires an additional `id` parameter which is referenced by the `automation` query parameter.
+Automations can also be triggered via -
 
-The automation can be triggered within a session, or you can supply `session` or `sessionNumber` parameters:
+1. URL Query Parameters - for this, the automation requires an additional `id` parameter which is referenced by the `automation` query parameter. The automation can be triggered within a session, or you can supply `session` or `sessionNumber` parameters:
+   - `session`: The title of the session. If an open session/pull request with this exact title already exists for the user, git-clerk will reuse and open that existing session. If no matching open session is found, it will automatically create a new one. (Note: If a name collision occurs on GitHub, such as during manual creation or with closed/orphaned branches, git-clerk will still automatically append an incremented suffix like `(1)`, `(2)`, etc., to prevent branch collisions).
+   - `sessionNumber`: The specific number of an existing session (pull request) to target directly.
 
-- `session`: The title of the session. If an open session/pull request with this exact title already exists for the user, git-clerk will reuse and open that existing session. If no matching open session is found, it will automatically create a new one. (Note: If a name collision occurs on GitHub, such as during manual creation or with closed/orphaned branches, git-clerk will still automatically append an incremented suffix like `(1)`, `(2)`, etc., to prevent branch collisions).
-- `sessionNumber`: The specific number of an existing session (pull request) to target directly.
+   All other query parameters (except `automation`, `session`, and `sessionNumber`) are passed as key-value pairs into the automation input (and thus can further be used in automation steps).
 
-All other query parameters (except `automation`, `session`, and `sessionNumber`) are passed as key-value pairs into the automation input (and thus can further be used in automation steps).
+   Example:`https://my-git-clerk-instance.com?session=My New Session&automation=automation-id&field1=value-field1&field2=value-field2`
 
-Example:
-`https://my-git-clerk-instance.com?session=My New Session&automation=automation-id&field1=value-field1&field2=value-field2`
+2. `postMessage` from parent tab - when git-clerk is opened from another application, it sends an `'automation-ready'` message to its parent window or opener once it is loaded. The parent can then listen for this message and reply with a `postMessage` containing the automation data as a JSON string. The automation data should include `session` or `sessionNumber` (similar to url query params), `automation` (automation id), and any other key-value pairs required by the automation input.
+
+   Example:
+
+   ```javascript
+   const automationData = {
+     session: "My New Session",
+     automation: "automation-id",
+     field1: "value-field1",
+     field2: "value-field2",
+   };
+   ```
+
+let readyAutomation = false; // This will prevent event from triggering multiple times.
+window.addEventListener('message', (event) => {
+if (event.data === 'automation-ready' && !readyAutomation) {
+event.source.postMessage(JSON.stringify(automationData), '\*');
+readyAutomation = true;
+}
+});
+
+````
+
+Example - [external automation through js](/public/example-external-automation.html)
 
 ### Custom Editor Interface
 
@@ -213,18 +236,18 @@ Git Clerk uses `eox-jsonform` to render applications based on different JSON edi
 
 ```js
 globalThis.gitClerkConfig = {
-  [...]
-  customEditorInterfaces: {
-    "some-format-key-name": {
-      type: "string", // Any data type for the custom editor
-      format: "any-custom-format", // Any custom format key
-      func: CustomEditorInterface, // Build any custom editor using `JSON Editor`'s `AbstractEditor` class
-      ... // Add any key values as per your business logic
-    },
-  },
-  [...]
+[...]
+customEditorInterfaces: {
+ "some-format-key-name": {
+   type: "string", // Any data type for the custom editor
+   format: "any-custom-format", // Any custom format key
+   func: CustomEditorInterface, // Build any custom editor using `JSON Editor`'s `AbstractEditor` class
+   ... // Add any key values as per your business logic
+ },
+},
+[...]
 };
-```
+````
 
 An example for this setup can be seen in [here](https://github.com/EOX-A/git-clerk/blob/bfa157a499ef488fe3b0ebf3215fb9368d552496/public/config.js#L680).
 

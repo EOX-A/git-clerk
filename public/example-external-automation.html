@@ -6,17 +6,19 @@
 <body>
   <a class="open-link" href="/" target="_blank" rel="opener">Open External Automation</a>
   <script>
+    const mainExampleData = {
+      "session": "Test Automation",
+      "automation": "add-file",
+      "content": "R2l0IGNsZXJrIGF1dG9tYXRpb24=",
+      "fileName": "automation.txt"
+    }
+
     let readyAutomation = false;
     window.addEventListener('message', (event) => {
       if (event.data === 'automation-ready') {
         console.log("automation-ready", event)
         if(!readyAutomation) {
-          event.source.postMessage(JSON.stringify({
-            "session": "Test Automation",
-            "automation": "add-file",
-            "content": "R2l0IGNsZXJrIGF1dG9tYXRpb24=",
-            "fileName": "automation.txt"
-          }), '*');
+          event.source.postMessage(JSON.stringify(mainExampleData), '*');
           console.log("Message sent")
           readyAutomation = true;
         }
