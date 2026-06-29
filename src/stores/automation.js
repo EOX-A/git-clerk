@@ -8,10 +8,14 @@ const useAutomationStore = defineStore("automation", () => {
   const automationDialog = ref(false);
 
   function setExternalAutomation(data) {
-    const parsedData = typeof data === "string" ? JSON.parse(data) : data;
-    if (parsedData.automation) {
-      externalAutomationData.value = parsedData;
-      automation.value = true;
+    try {
+      const parsedData = typeof data === "string" ? JSON.parse(data) : data;
+      if (parsedData.automation) {
+        externalAutomationData.value = parsedData;
+        automation.value = true;
+      }
+    } catch (error) {
+      console.error("Error parsing automation data:", error);
     }
   }
 

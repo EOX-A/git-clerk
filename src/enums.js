@@ -34,6 +34,9 @@ export const AUTOMATION = ref(
   globalThis.automation || GIT_CLERK_CONFIG.automation || [],
 );
 
+export const ALLOWED_ORIGINS =
+  globalThis.allowedOrigins || GIT_CLERK_CONFIG.allowedOrigins || [];
+
 const _initialAutomation = globalThis.automation || GIT_CLERK_CONFIG.automation;
 Object.defineProperty(globalThis, "automation", {
   get() {

@@ -9,6 +9,7 @@ import i18n from "@/plugins/i18n";
 import { LoadingPlugin } from "vue-loading-overlay";
 import { createPinia } from "pinia";
 import useAutomationStore from "@/stores/automation";
+import { ALLOWED_ORIGINS } from "@/enums";
 
 const app = createApp(App);
 const pinia = createPinia();
@@ -25,7 +26,11 @@ if (window.opener) {
 }
 
 window.addEventListener("message", (event) => {
-  useAutomationStore().setExternalAutomation(event.data);
+  if (ALLOWED_ORIGINS.length > 0 && !ALLOWED_ORIGINS.includes(event.origin)) {
+    throw new Error("Invalid automation URL origin");
+  } else {
+    useAutomationStore().setExternalAutomation(event.data);
+  }
 });
 
 const params = Object.fromEntries(new URLSearchParams(window.location.search));
