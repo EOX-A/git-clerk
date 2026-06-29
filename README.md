@@ -205,9 +205,15 @@ Automations can also be triggered via -
 
    Example:`https://my-git-clerk-instance.com?session=My New Session&automation=automation-id&field1=value-field1&field2=value-field2`
 
-2. `postMessage` from parent tab - when git-clerk is opened from another application, it sends an `'automation-ready'` message to its parent window or opener once it is loaded. The parent can then listen for this message and reply with a `postMessage` containing the automation data as a JSON string. The automation data should include `session` or `sessionNumber` (similar to url query params), `automation` (automation id), and any other key-value pairs required by the automation input.
+2. `postMessage` from parent tab - when git-clerk is opened from another application, it sends an `'automation-ready'` message to its parent window or opener once it is loaded. The parent can then listen for this message and reply with a `postMessage` containing the automation data as a JSON string. The automation data should include `session` or `sessionNumber` (similar to url query params), `automation` (automation id), and any other key-value pairs required by the automation input. This is only applicable if `allowedOrigins` is provided in `config.js`.
 
    Example:
+
+   ```js
+   // config.js
+   const allowedOrigins = ["http://example.website"];
+   globalThis.gitClerkConfig.allowedOrigins = allowedOrigins;
+   ```
 
    ```html
    <a href="/" target="_blank" rel="opener">Git Clerk</a>
