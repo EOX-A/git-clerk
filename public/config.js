@@ -293,6 +293,8 @@ const i18n = {
   },
 };
 
+const allowedOrigins = [import.meta.url.replace("/config.js", "")];
+
 globalThis.gitClerkConfig = {
   ghConfig,
   basePath,
@@ -303,4 +305,5 @@ globalThis.gitClerkConfig = {
   deployedPreviewLink,
   disableManualFileCreation,
   i18n,
+  allowedOrigins,
 };

@@ -5,6 +5,7 @@ import {
   stringifyIfNeeded,
 } from "@/helpers";
 import { createAndUpdateFile, getFileDetails } from "@/api";
+import useAutomationStore from "@/stores/automation";
 
 const getLoaderMsg = (type, path, currentMsg) => {
   const messages = {
@@ -16,8 +17,9 @@ const getLoaderMsg = (type, path, currentMsg) => {
 };
 
 export async function runAutomation(props, value, router) {
+  const { selectedAutomation } = useAutomationStore();
   const loaderEle = document.getElementById("loader-text");
-  for (const step of props.selectedAutomation.steps) {
+  for (const step of selectedAutomation.steps) {
     let path =
       typeof step.path === "function"
         ? step.path.constructor.name === "AsyncFunction"

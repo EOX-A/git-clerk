@@ -3,15 +3,19 @@ import { CUSTOM_EDITOR_INTERFACES } from "@/enums";
 import { initEOXJSONFormMethod } from "@/methods/file-edit-view";
 import { handleAutomationMethod } from "@/methods/session-view";
 import { inject, ref, onMounted } from "vue";
-import { useRouter, useRoute } from "vue-router";
+import { useRouter } from "vue-router";
+import useAutomationStore from "@/stores/automation";
+import { storeToRefs } from "pinia";
+
 const snackbar = inject("set-snackbar");
-const route = useRoute();
 const router = useRouter();
 
+const automationStore = useAutomationStore();
+const { selectedAutomation, automation, externalAutomationData } =
+  storeToRefs(automationStore);
+const { handleAutomationClose, resetExternalAutomation } = automationStore;
+
 const props = defineProps({
-  selectedAutomation: Object,
-  automationDialog: Boolean,
-  handleAutomationClose: Function,
   updateDetails: Function,
   session: Object,
 });
@@ -26,12 +30,15 @@ const handleAutomationSubmit = async () => {
 };
 
 onMounted(() => {
-  if (route.query.automation && props.selectedAutomation.hidden) {
+  if (automation.value && selectedAutomation.value.hidden) {
     initValue.value = Object.fromEntries(
-      Object.entries(route.query).filter(([key]) => key !== "automation"),
+      Object.entries(externalAutomationData.value).filter(
+        ([key]) => key !== "automation",
+      ),
     );
     setTimeout(() => {
       handleAutomationSubmit();
+      resetExternalAutomation();
     }, 2000);
   }
   initEOXJSONFormMethod(jsonFormInstance);
@@ -40,15 +47,15 @@ onMounted(() => {
 
 <template>
   <v-card
-    v-if="props.selectedAutomation"
+    v-if="selectedAutomation"
     prepend-icon="mdi-auto-fix"
-    :title="props.selectedAutomation.title"
+    :title="selectedAutomation.title"
   >
     <template v-slot:text>
       <eox-jsonform
         id="automation-form"
         :value="initValue"
-        :schema="props.selectedAutomation.inputSchema"
+        :schema="selectedAutomation.inputSchema"
         :customEditorInterfaces="Object.values(CUSTOM_EDITOR_INTERFACES)"
       />
     </template>
@@ -58,7 +65,7 @@ onMounted(() => {
       <v-btn
         color="grey-darken-1"
         variant="text"
-        @click="props.handleAutomationClose"
+        @click="handleAutomationClose"
       >
         Cancel
       </v-btn>

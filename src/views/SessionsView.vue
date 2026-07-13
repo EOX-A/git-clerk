@@ -30,6 +30,11 @@ import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import CursorPagination from "@/components/global/CursorPagination.vue";
 import { FileBrowserDrawer } from "@/components/file-browser";
 import find from "lodash.find";
+import useAutomationStore from "@/stores/automation";
+import { storeToRefs } from "pinia";
+
+const automationStore = useAutomationStore();
+const { automation, externalAutomationData } = storeToRefs(automationStore);
 
 const route = useRoute();
 const router = useRouter();
@@ -112,11 +117,12 @@ onMounted(async () => {
   navPaginationItems.value = [navPaginationItems.value[0]];
 
   if (
-    (route.query.session || route.query.sessionNumber) &&
-    route.query.automation
+    (externalAutomationData.value.session ||
+      externalAutomationData.value.sessionNumber) &&
+    automation.value
   ) {
-    const sessionNumber = route.query.sessionNumber;
-    newSessionName.value = route.query.session;
+    const sessionNumber = externalAutomationData.value.sessionNumber;
+    newSessionName.value = externalAutomationData.value.session;
 
     let sessionFound = null;
 

@@ -15,6 +15,14 @@ let isUploadFile = false;
 // Test file path constant
 const fileName = "products/foo2/collection.json";
 
+const automationData = {
+  sessionNumber: 123,
+  automation: "add-file",
+  fileName: "bar.json",
+  content:
+    "ewogICJpZCI6ICI2MTFjNWQxNC03MDg3LTQ4MjAtYWNmNS02NDlhYWJjMjI0MjMiLAogICJmb28iOiAiRm9vIiwKICAiYmFyIjogZmFsc2UsCiAgImN1c3RvbSI6ICIiCn0K",
+};
+
 describe("Files list related tests", () => {
   beforeEach(() => {
     // Intercept GET request for pull request details
@@ -89,10 +97,37 @@ describe("Files list related tests", () => {
     ).as("getContent");
   });
 
+  // Test automation through url
   it("Automation through url", () => {
-    cy.visit(
-      "?sessionNumber=123&automation=add-file&fileName=bar.json&content=ewogICJpZCI6ICI2MTFjNWQxNC03MDg3LTQ4MjAtYWNmNS02NDlhYWJjMjI0MjMiLAogICJmb28iOiAiRm9vIiwKICAiYmFyIjogZmFsc2UsCiAgImN1c3RvbSI6ICIiCn0K",
-    );
+    let qs = "?";
+    Object.keys(automationData).forEach((key) => {
+      qs += `${key}=${automationData[key]}&`;
+    });
+    cy.visit(qs);
+    cy.location("pathname", { timeout: 10000 }).should("eq", "/123");
+    cy.location("pathname", { timeout: 10000 }).should((path) => {
+      expect(path).to.match(/^\/123\/[A-Za-z0-9+/=]+$/);
+    });
+
+    // Check if the file is loaded
+    cy.get("eox-jsonform").should("exist");
+    cy.get("eox-jsonform")
+      .shadow()
+      .within(() => {
+        // Check if the file is loaded
+        cy.get(".je-indented-panel .ace_editor .ace_line").should(
+          "have.text",
+          atob(content.content).replaceAll("\n", ""),
+        );
+      });
+  });
+
+  // Test automation through post message
+  it("Automation through post message", () => {
+    cy.visit("/");
+    cy.window().then((win) => {
+      win.postMessage(JSON.stringify(automationData), "*");
+    });
     cy.location("pathname", { timeout: 10000 }).should("eq", "/123");
     cy.location("pathname", { timeout: 10000 }).should((path) => {
       expect(path).to.match(/^\/123\/[A-Za-z0-9+/=]+$/);
