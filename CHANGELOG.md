@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.16.0](https://github.com/EOX-A/git-clerk/compare/v1.15.0...v1.16.0) (2026-07-13)
+
+
+### Features
+
+* External automation with js ([#256](https://github.com/EOX-A/git-clerk/issues/256)) ([b48ab34](https://github.com/EOX-A/git-clerk/commit/b48ab3490f15cc8c07fe72de5ae815257ccdd54b))
+
 ## [1.15.0](https://github.com/EOX-A/git-clerk/compare/v1.14.1...v1.15.0) (2026-06-03)
 
 
