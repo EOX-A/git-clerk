@@ -255,6 +255,26 @@ const resetWholeState = async () => {
                     <OctIcon name="file-diff" />
                   </v-icon>
                 </Tooltip>
+                <v-chip
+                  v-if="index % 2"
+                  color="primary"
+                  size="small"
+                  prepend-icon="mdi-account"
+                  rounded
+                >
+                  Personal
+                </v-chip>
+                <v-chip
+                  v-else
+                  color="primary"
+                  size="small"
+                  prepend-icon="mdi-account-group"
+                  rounded
+                >
+                  <span class="d-flex align-center ga-1"
+                    ><strong>Org: </strong> EOxElements</span
+                  >
+                </v-chip>
               </div>
               <div class="v-list-item-subtitle d-flex align-center pt-2 ga-3">
                 <span class="d-none d-sm-flex">Changes made on: </span>

@@ -64,11 +64,18 @@ export async function initOctokit() {
 
     const octokit = new Octokit({ auth });
 
-    const { data } = await octokit.rest.users.getAuthenticated();
+    const userData = await octokit.rest.users.getAuthenticated();
+    const orgData = await octokit.rest.orgs.listMembershipsForAuthenticatedUser(
+      {
+        state: "active",
+        per_page: 100,
+      },
+    );
 
     return {
       githubConfig: { auth, username, repo: repoName },
-      githubUserData: data,
+      githubUserData: userData.data,
+      githubOrgData: orgData.data,
       octokit,
     };
   } catch (error) {

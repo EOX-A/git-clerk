@@ -1,10 +1,16 @@
 <script setup>
 import { createSession } from "@/helpers/index.js";
 import { useRoute, useRouter } from "vue-router";
-import { ref, inject } from "vue";
+import { ref, inject, onMounted } from "vue";
+import { FORK_LOCATION } from "@/enums";
+import useOctokitStore from "@/stores/octokit";
+
+const { githubOrgData } = useOctokitStore();
 
 const loader = ref({});
 const newSessionName = ref("");
+const sessionOwner = ref(null);
+const sessionOwnerItems = ref(null);
 
 const route = useRoute();
 const router = useRouter();
@@ -65,6 +71,22 @@ const onKeyEnter = async (event) => {
   if (event.key === "Escape") clear();
   else if (event.key === "Enter") await create();
 };
+
+onMounted(() => {
+  sessionOwnerItems.value = [
+    ...(FORK_LOCATION.personal
+      ? [
+          {
+            name: "Personal",
+            role: "self",
+          },
+        ]
+      : []),
+    ...(FORK_LOCATION.org
+      ? githubOrgData.map((org) => ({ ...org, name: org.organization.login }))
+      : []),
+  ];
+});
 </script>
 
 <template>
@@ -87,7 +109,7 @@ const onKeyEnter = async (event) => {
           }}
         </p>
         <v-alert
-          class="my-6"
+          class="my-4"
           title="What is a session?"
           text="A session lets you group and review edits to multiple files before submitting them for approval. Original files stay unchanged until approved."
           type="success"
@@ -96,43 +118,68 @@ const onKeyEnter = async (event) => {
           rounded="lg"
           @keydown="onKeyEnter"
         ></v-alert>
-        <v-text-field
-          density="compact"
-          label="Session Name"
-          variant="solo"
-          hide-details
-          single-line
-          flat="true"
-          v-model="newSessionName"
-          class="rounded border-md my-3"
-        ></v-text-field>
-        <div class="d-flex ga-2 justify-center align-center">
-          <v-btn
-            v-if="session && currentSession"
-            color="primary"
-            variant="tonal"
-            prepend-icon="mdi-pencil"
-            :disabled="newSessionName !== ''"
-            @click="currentSession"
-            class="current-session-btn"
+        <div class="d-flex flex-column ga-4">
+          <v-text-field
+            density="compact"
+            label="Session Name"
+            variant="solo"
+            hide-details
+            single-line
+            flat="true"
+            v-model="newSessionName"
+            class="rounded border-md"
+          ></v-text-field>
+          <v-select
+            v-if="sessionOwnerItems"
+            v-model="sessionOwner"
+            label="Select Session Owner"
+            density="comfortable"
+            persistent-hint
+            :hint="
+              sessionOwner
+                ? `Your session will be added to '${sessionOwner}' account.`
+                : ''
+            "
+            :items="sessionOwnerItems"
+            single-line
+            variant="outlined"
+            item-title="name"
           >
-            Edit in current session
-          </v-btn>
-          <span
-            v-if="session && currentSession"
-            class="text-center font-weight-bold opacity-50 text-body-2"
-            >OR</span
-          >
-          <v-btn
-            color="primary"
-            variant="flat"
-            prepend-icon="mdi-plus"
-            :disabled="!newSessionName"
-            @click="create"
-            class="new-session-btn"
-          >
-            Create New Session
-          </v-btn>
+            <template v-slot:item="{ props: itemProps, item }">
+              <v-list-item
+                v-bind="itemProps"
+                :subtitle="item.raw.role"
+              ></v-list-item>
+            </template>
+          </v-select>
+          <div class="d-flex ga-2 justify-center align-center">
+            <v-btn
+              v-if="session && currentSession"
+              color="primary"
+              variant="tonal"
+              prepend-icon="mdi-pencil"
+              :disabled="newSessionName !== ''"
+              @click="currentSession"
+              class="current-session-btn"
+            >
+              Edit in current session
+            </v-btn>
+            <span
+              v-if="session && currentSession"
+              class="text-center font-weight-bold opacity-50 text-body-2"
+              >OR</span
+            >
+            <v-btn
+              color="primary"
+              variant="flat"
+              prepend-icon="mdi-plus"
+              :disabled="!newSessionName || !sessionOwner"
+              @click="create"
+              class="new-session-btn"
+            >
+              Create New Session
+            </v-btn>
+          </div>
         </div>
       </template>
     </v-card>
