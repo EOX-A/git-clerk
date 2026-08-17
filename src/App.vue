@@ -3,7 +3,7 @@ import Navbar from "@/components/global/Navbar.vue";
 import { RouterView } from "vue-router";
 import { onMounted, provide, ref } from "vue";
 import useOctokitStore from "@/stores/octokit.js";
-import { initOctokit, syncRepo } from "@/api/index.js";
+import { getRepoDetails, initOctokit, syncRepo } from "@/api/index.js";
 import { useLoader } from "@/helpers/index.js";
 
 const navButtonConfig = ref({});
@@ -31,6 +31,14 @@ onMounted(async () => {
   await syncRepo();
   isOctokitInitialised.value = true;
   loader.hide();
+  instance.githubOrgData.forEach(async (org, index) => {
+    const data = index
+      ? await getRepoDetails(org.organization.login)
+      : await getRepoDetails();
+    if (data?.fork) {
+      octokitStore.setForkedRepoStatus(data, index);
+    }
+  });
 });
 </script>
 

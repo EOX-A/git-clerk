@@ -75,7 +75,7 @@ export async function initOctokit() {
     return {
       githubConfig: { auth, username, repo: repoName },
       githubUserData: userData.data,
-      githubOrgData: orgData.data,
+      githubOrgData: [userData.data, ...orgData.data],
       octokit,
     };
   } catch (error) {
@@ -87,9 +87,9 @@ export async function getLoginData() {
   return data;
 }
 
-export async function getRepoDetails() {
+export async function getRepoDetails(owner) {
   const { githubConfig, githubUserData, octokit } = useOctokitStore();
-  return repoDetails(octokit, githubConfig, githubUserData);
+  return repoDetails(octokit, githubConfig, githubUserData, owner);
 }
 
 export async function getSessionsList(

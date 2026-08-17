@@ -1,11 +1,12 @@
 <script setup>
 import { createSession } from "@/helpers/index.js";
 import { useRoute, useRouter } from "vue-router";
-import { ref, inject, onMounted } from "vue";
+import { ref, inject, onMounted, watch } from "vue";
 import { FORK_LOCATION } from "@/enums";
 import useOctokitStore from "@/stores/octokit";
+import { storeToRefs } from "pinia";
 
-const { githubOrgData } = useOctokitStore();
+const { githubOrgData } = storeToRefs(useOctokitStore());
 
 const loader = ref({});
 const newSessionName = ref("");
@@ -72,21 +73,23 @@ const onKeyEnter = async (event) => {
   else if (event.key === "Enter") await create();
 };
 
-onMounted(() => {
-  sessionOwnerItems.value = [
-    ...(FORK_LOCATION.personal
-      ? [
-          {
-            name: "Personal",
-            role: "self",
-          },
-        ]
-      : []),
-    ...(FORK_LOCATION.org
-      ? githubOrgData.map((org) => ({ ...org, name: org.organization.login }))
-      : []),
-  ];
-});
+watch(
+  githubOrgData.value,
+  (newData) => {
+    sessionOwnerItems.value = [
+      ...(FORK_LOCATION.org
+        ? newData.map((org, index) => ({
+            ...org,
+            name: index ? org.organization.login : "Personal",
+            role: index ? org.role : "self",
+          }))
+        : []),
+    ];
+  },
+  {
+    immediate: true,
+  },
+);
 </script>
 
 <template>
@@ -146,10 +149,19 @@ onMounted(() => {
             item-title="name"
           >
             <template v-slot:item="{ props: itemProps, item }">
-              <v-list-item
-                v-bind="itemProps"
-                :subtitle="item.raw.role"
-              ></v-list-item>
+              <v-list-item v-bind="itemProps" :subtitle="item.raw.role">
+                <template v-slot:append>
+                  <v-chip
+                    v-if="item.raw.forked"
+                    size="x-small"
+                    variant="flat"
+                    color="primary"
+                    class="ml-2"
+                  >
+                    Forked
+                  </v-chip>
+                </template>
+              </v-list-item>
             </template>
           </v-select>
           <div class="d-flex ga-2 justify-center align-center">

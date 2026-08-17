@@ -14,12 +14,20 @@ const useOctokitStore = defineStore("octokit", () => {
     octokit.value = instance?.octokit;
   }
 
+  function setForkedRepoStatus(data, index) {
+    githubOrgData.value[index] = {
+      ...githubOrgData.value[index],
+      forked: data,
+    };
+  }
+
   return {
     githubConfig,
     githubUserData,
     githubOrgData,
     octokit,
     setOctokit,
+    setForkedRepoStatus,
   };
 });
 
