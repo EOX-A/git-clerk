@@ -51,6 +51,8 @@ const customInterfaces = ref([]);
 const previewExpanded = ref(false);
 const showPreview = ref(window.innerWidth >= 960);
 const validationErrors = ref([]);
+const contentHistory = ref([]);
+const contentHistoryIndex = ref(0);
 
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
@@ -108,6 +110,8 @@ const updateFileDetails = async (cache = true) => {
   jsonSchemaFileChangeMethod({
     file,
     fileContent,
+    contentHistory,
+    contentHistoryIndex,
     customInterfaces,
     updatedFileContent,
     debouncedPostMessage,
@@ -209,6 +213,8 @@ const onFileChange = (e) => {
     file,
     detail,
     fileContent,
+    contentHistory,
+    contentHistoryIndex,
     customInterfaces,
     updatedFileContent,
     debouncedPostMessage,
@@ -218,8 +224,51 @@ const onFileChange = (e) => {
   jsonSchemaFileChangeMethod(props);
 };
 
+const restoreInputFocusAfterUndoRedo = (callback) => {
+  const root = jsonFormInstance.value?.shadowRoot;
+  const activeEl = root?.activeElement || document.activeElement;
+  const id =
+    activeEl?.getAttribute("name") || activeEl?.getAttribute("data-schemapath");
+
+  callback();
+
+  if (root && id) {
+    setTimeout(() => {
+      root.querySelector(`[name="${id}"], [data-schemapath="${id}"]`)?.focus();
+    }, 10);
+  }
+};
+
 const resetContent = () => {
-  jsonFormInstance.value.editor.setValue(fileContent.value);
+  contentHistoryIndex.value = 0;
+  contentHistory.value = [];
+  restoreInputFocusAfterUndoRedo(() => {
+    jsonFormInstance.value.editor.setValue(fileContent.value);
+  });
+  initEOXJSONFormMethod(jsonFormInstance);
+  updateNavButtonConfig();
+};
+
+const undoContent = () => {
+  const newContentHistoryIndex = contentHistoryIndex.value - 1;
+  contentHistoryIndex.value = newContentHistoryIndex;
+  restoreInputFocusAfterUndoRedo(() => {
+    jsonFormInstance.value.editor.setValue(
+      contentHistory.value[newContentHistoryIndex],
+    );
+  });
+  initEOXJSONFormMethod(jsonFormInstance);
+  updateNavButtonConfig();
+};
+
+const redoContent = () => {
+  const newContentHistoryIndex = contentHistoryIndex.value + 1;
+  contentHistoryIndex.value = newContentHistoryIndex;
+  restoreInputFocusAfterUndoRedo(() => {
+    jsonFormInstance.value.editor.setValue(
+      contentHistory.value[newContentHistoryIndex],
+    );
+  });
   initEOXJSONFormMethod(jsonFormInstance);
   updateNavButtonConfig();
 };
@@ -227,6 +276,28 @@ const resetContent = () => {
 const togglePreview = () => {
   showPreview.value = !showPreview.value;
   previewExpanded.value = false;
+};
+
+const handleKeyDown = (e) => {
+  if (
+    (e.ctrlKey || e.metaKey) &&
+    ((e.shiftKey && e.key.toLowerCase() === "z") ||
+      (!e.shiftKey && e.key.toLowerCase() === "y"))
+  ) {
+    e.preventDefault();
+    if (contentHistoryIndex.value !== contentHistory.value.length - 1) {
+      redoContent();
+    }
+  } else if (
+    (e.ctrlKey || e.metaKey) &&
+    !e.shiftKey &&
+    e.key.toLowerCase() === "z"
+  ) {
+    e.preventDefault();
+    if (contentHistoryIndex.value !== 0) {
+      undoContent();
+    }
+  }
 };
 
 onMounted(async () => {
@@ -242,10 +313,12 @@ onMounted(async () => {
     });
   }
   loader.hide();
+  window.addEventListener("keydown", handleKeyDown);
 });
 
 onUnmounted(() => {
   debouncedPostMessage.cancel();
+  window.removeEventListener("keydown", handleKeyDown);
 });
 </script>
 
@@ -258,6 +331,10 @@ onUnmounted(() => {
     :session
     :reset
     :resetContent
+    :undoContent
+    :redoContent
+    :contentHistory
+    :contentHistoryIndex
     :togglePreview
     :showPreview
     :previewURL
