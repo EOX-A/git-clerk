@@ -96,6 +96,7 @@ describe("File related tests", () => {
     // Click on the navbar button to save the file
     cy.get(".navbar .v-btn.action-button").click();
     cy.wait("@getContent");
+    cy.wait("@getContent");
 
     // Check if the file is saved
     cy.get("eox-jsonform").should("exist");

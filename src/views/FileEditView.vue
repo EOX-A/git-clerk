@@ -63,6 +63,8 @@ const updateFileDetails = async (cache = true) => {
   updatedFileContent.value = null;
   fileContent.value = null;
   previewURL.value = null;
+  contentHistory.value = [];
+  contentHistoryIndex.value = 0;
   schemaMetaDetails.value = null;
   window.scrollTo({ top: 0 });
 
@@ -93,6 +95,7 @@ const updateFileDetails = async (cache = true) => {
       { getFileDetails },
     );
   }
+  updatedFileContent.value = null;
 
   const fileDetails = await getFileDetails(session.value, filePath, cache);
   queryFileDetailsMethod(fileDetails, {
