@@ -1,6 +1,6 @@
-import { decodeString, updateSchemaDefaults } from "@/helpers/index.js";
 import isEqual from "lodash.isequal";
 import { CUSTOM_EDITOR_INTERFACES } from "@/enums";
+import { editorPreviewPostMessageMethod } from "@/methods/file-edit-view/post-message.js";
 let init = false;
 
 export function jsonSchemaFileChangeMethod({
@@ -9,15 +9,9 @@ export function jsonSchemaFileChangeMethod({
   contentHistory,
   contentHistoryIndex,
   updatedFileContent,
-  debouncedPostMessage,
   customInterfaces,
   updateNavButtonConfig,
 }) {
-  const message = {
-    type: "SCHEMA_DATA_EDITOR_UPDATE",
-    detail: detail,
-  };
-
   if (!updatedFileContent.value) {
     // Append key which is not present in the fileContent at beginning
     customInterfaces.value = Object.values(CUSTOM_EDITOR_INTERFACES);
@@ -51,6 +45,15 @@ export function jsonSchemaFileChangeMethod({
   if (isEqual(updatedFileContent.value, fileContent.value))
     updateNavButtonConfig();
 
-  debouncedPostMessage(message, "*");
+  const message = {
+    type: "SCHEMA_DATA_EDITOR_UPDATE",
+    detail: detail,
+    undo: Boolean(contentHistoryIndex.value !== 0),
+    redo: Boolean(
+      contentHistoryIndex.value !== contentHistory.value.length - 1,
+    ),
+  };
+
+  editorPreviewPostMessageMethod(message, "*");
   init = false;
 }

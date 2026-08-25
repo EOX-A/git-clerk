@@ -19,7 +19,6 @@ import {
 import {
   queryFileDetailsMethod,
   initEOXJSONFormMethod,
-  debouncePostMessageMethod,
   jsonSchemaFileChangeMethod,
   addPostMessageEventMethod,
 } from "../methods/file-edit-view";
@@ -28,7 +27,7 @@ import {
   ValidationError,
 } from "@/components/file/index.js";
 import debounce from "lodash.debounce";
-import "@eox/jsonform";
+import "../../../EOxElements/elements/jsonform/dist/eox-jsonform.js";
 import "@eox/drawtools";
 import "@eox/map";
 import { CUSTOM_EDITOR_INTERFACES, GENERATE_ENUMS } from "@/enums";
@@ -58,7 +57,7 @@ const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 
-const debouncedPostMessage = debounce(debouncePostMessageMethod, 500);
+const debouncedJSONSchemaFileChange = debounce(jsonSchemaFileChangeMethod, 500);
 
 const updateFileDetails = async (cache = true) => {
   updatedFileContent.value = null;
@@ -114,7 +113,6 @@ const updateFileDetails = async (cache = true) => {
     contentHistoryIndex,
     customInterfaces,
     updatedFileContent,
-    debouncedPostMessage,
     updateNavButtonConfig,
   });
 };
@@ -217,11 +215,10 @@ const onFileChange = (e) => {
     contentHistoryIndex,
     customInterfaces,
     updatedFileContent,
-    debouncedPostMessage,
     updateNavButtonConfig,
   };
 
-  jsonSchemaFileChangeMethod(props);
+  debouncedJSONSchemaFileChange(props);
 };
 
 const restoreInputFocusAfterUndoRedo = (callback) => {
@@ -310,6 +307,8 @@ onMounted(async () => {
       previewURL,
       updatedFileContent,
       jsonFormInstance,
+      undoContent,
+      redoContent,
     });
   }
   loader.hide();
@@ -317,7 +316,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  debouncedPostMessage.cancel();
+  debouncedJSONSchemaFileChange.cancel();
   window.removeEventListener("keydown", handleKeyDown);
 });
 </script>

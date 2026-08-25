@@ -1,7 +1,7 @@
 export { default as queryFileDetailsMethod } from "./query-file-details";
 export { initEOXJSONFormMethod } from "./init-eox-jsonform";
 export {
-  debouncePostMessageMethod,
+  editorPreviewPostMessageMethod,
   addPostMessageEventMethod,
 } from "./post-message.js";
 export { jsonSchemaFileChangeMethod } from "./file-change";

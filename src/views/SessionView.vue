@@ -15,7 +15,7 @@ import { ActionTabSession } from "@/components/session";
 import { DeleteFile, DuplicateFile } from "@/components/file";
 import { encodeString, preventListItemClick } from "@/helpers/index.js";
 import { BASE_PATH, AUTOMATION, DISABLE_MANUAL_FILE_CREATION } from "@/enums";
-import "@eox/jsonform";
+import "../../../EOxElements/elements/jsonform/dist/eox-jsonform.js";
 import Automation from "@/components/session/Automation.vue";
 import find from "lodash/find";
 import { FileBrowserDrawer } from "@/components/file-browser";
