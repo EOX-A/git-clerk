@@ -27,7 +27,6 @@ import {
   ValidationError,
 } from "@/components/file/index.js";
 import debounce from "lodash.debounce";
-// import "../../../EOxElements/elements/jsonform/dist/eox-jsonform.js";
 import "@eox/jsonform";
 import "@eox/drawtools";
 import "@eox/map";
