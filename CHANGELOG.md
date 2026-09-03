@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.0](https://github.com/EOX-A/git-clerk/compare/v1.16.0...v1.17.0) (2026-09-03)
+
+
+### Features
+
+* Added undo/redo functionality to file viewer ([#267](https://github.com/EOX-A/git-clerk/issues/267)) ([05a9893](https://github.com/EOX-A/git-clerk/commit/05a9893e79ef0b153ec73a40d3ebaff08422ec37))
+
 ## [1.16.0](https://github.com/EOX-A/git-clerk/compare/v1.15.0...v1.16.0) (2026-07-13)
 
 
