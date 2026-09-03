@@ -2,7 +2,7 @@ import { updateSchemaDefaults, useLoader } from "@/helpers/index.js";
 import isEqual from "lodash.isequal";
 import { initEOXJSONFormMethod } from "@/methods/file-edit-view/init-eox-jsonform.js";
 
-export function debouncePostMessageMethod(message, origin, init = false) {
+export function editorPreviewPostMessageMethod(message, origin) {
   const data = JSON.parse(JSON.stringify(message));
   const previewFrame = document.getElementById("previewFrame");
   if (previewFrame && previewFrame.contentWindow) {
@@ -17,6 +17,8 @@ export function addPostMessageEventMethod({
   previewURL,
   updatedFileContent,
   jsonFormInstance,
+  undoContent,
+  redoContent,
 }) {
   const loader = useLoader();
   let loaderInstance = null;
@@ -33,6 +35,10 @@ export function addPostMessageEventMethod({
         }
       }
     }
+    if (event.data && event.data.type === "SCHEMA_DATA_EDITOR_UNDO")
+      undoContent();
+    if (event.data && event.data.type === "SCHEMA_DATA_EDITOR_REDO")
+      redoContent();
     if (event.data && event.data.type === "ENABLE_LOADER_POSTMESSAGE")
       loaderInstance = loader.show();
     if (event.data && event.data.type === "DISABLE_LOADER_POSTMESSAGE")

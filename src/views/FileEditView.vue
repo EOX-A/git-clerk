@@ -19,7 +19,6 @@ import {
 import {
   queryFileDetailsMethod,
   initEOXJSONFormMethod,
-  debouncePostMessageMethod,
   jsonSchemaFileChangeMethod,
   addPostMessageEventMethod,
 } from "../methods/file-edit-view";
@@ -51,17 +50,21 @@ const customInterfaces = ref([]);
 const previewExpanded = ref(false);
 const showPreview = ref(window.innerWidth >= 960);
 const validationErrors = ref([]);
+const contentHistory = ref([]);
+const contentHistoryIndex = ref(0);
 
 const snackbar = inject("set-snackbar");
 const navButtonConfig = inject("set-nav-button-config");
 const navPaginationItems = inject("set-nav-pagination-items");
 
-const debouncedPostMessage = debounce(debouncePostMessageMethod, 500);
+const debouncedJSONSchemaFileChange = debounce(jsonSchemaFileChangeMethod, 500);
 
 const updateFileDetails = async (cache = true) => {
   updatedFileContent.value = null;
   fileContent.value = null;
   previewURL.value = null;
+  contentHistory.value = [];
+  contentHistoryIndex.value = 0;
   schemaMetaDetails.value = null;
   window.scrollTo({ top: 0 });
 
@@ -92,6 +95,7 @@ const updateFileDetails = async (cache = true) => {
       { getFileDetails },
     );
   }
+  updatedFileContent.value = null;
 
   const fileDetails = await getFileDetails(session.value, filePath, cache);
   queryFileDetailsMethod(fileDetails, {
@@ -108,9 +112,10 @@ const updateFileDetails = async (cache = true) => {
   jsonSchemaFileChangeMethod({
     file,
     fileContent,
+    contentHistory,
+    contentHistoryIndex,
     customInterfaces,
     updatedFileContent,
-    debouncedPostMessage,
     updateNavButtonConfig,
   });
 };
@@ -209,17 +214,61 @@ const onFileChange = (e) => {
     file,
     detail,
     fileContent,
+    contentHistory,
+    contentHistoryIndex,
     customInterfaces,
     updatedFileContent,
-    debouncedPostMessage,
     updateNavButtonConfig,
   };
 
-  jsonSchemaFileChangeMethod(props);
+  debouncedJSONSchemaFileChange(props);
+};
+
+const restoreInputFocusAfterUndoRedo = (callback) => {
+  const root = jsonFormInstance.value?.shadowRoot;
+  const activeEl = root?.activeElement || document.activeElement;
+  const id =
+    activeEl?.getAttribute("name") || activeEl?.getAttribute("data-schemapath");
+
+  callback();
+
+  if (root && id) {
+    setTimeout(() => {
+      root.querySelector(`[name="${id}"], [data-schemapath="${id}"]`)?.focus();
+    }, 10);
+  }
 };
 
 const resetContent = () => {
-  jsonFormInstance.value.editor.setValue(fileContent.value);
+  contentHistoryIndex.value = 0;
+  contentHistory.value = [];
+  restoreInputFocusAfterUndoRedo(() => {
+    jsonFormInstance.value.editor.setValue(fileContent.value);
+  });
+  initEOXJSONFormMethod(jsonFormInstance);
+  updateNavButtonConfig();
+};
+
+const undoContent = () => {
+  const newContentHistoryIndex = contentHistoryIndex.value - 1;
+  contentHistoryIndex.value = newContentHistoryIndex;
+  restoreInputFocusAfterUndoRedo(() => {
+    jsonFormInstance.value.editor.setValue(
+      contentHistory.value[newContentHistoryIndex],
+    );
+  });
+  initEOXJSONFormMethod(jsonFormInstance);
+  updateNavButtonConfig();
+};
+
+const redoContent = () => {
+  const newContentHistoryIndex = contentHistoryIndex.value + 1;
+  contentHistoryIndex.value = newContentHistoryIndex;
+  restoreInputFocusAfterUndoRedo(() => {
+    jsonFormInstance.value.editor.setValue(
+      contentHistory.value[newContentHistoryIndex],
+    );
+  });
   initEOXJSONFormMethod(jsonFormInstance);
   updateNavButtonConfig();
 };
@@ -227,6 +276,28 @@ const resetContent = () => {
 const togglePreview = () => {
   showPreview.value = !showPreview.value;
   previewExpanded.value = false;
+};
+
+const handleKeyDown = (e) => {
+  if (
+    (e.ctrlKey || e.metaKey) &&
+    ((e.shiftKey && e.key.toLowerCase() === "z") ||
+      (!e.shiftKey && e.key.toLowerCase() === "y"))
+  ) {
+    e.preventDefault();
+    if (contentHistoryIndex.value !== contentHistory.value.length - 1) {
+      redoContent();
+    }
+  } else if (
+    (e.ctrlKey || e.metaKey) &&
+    !e.shiftKey &&
+    e.key.toLowerCase() === "z"
+  ) {
+    e.preventDefault();
+    if (contentHistoryIndex.value !== 0) {
+      undoContent();
+    }
+  }
 };
 
 onMounted(async () => {
@@ -239,13 +310,17 @@ onMounted(async () => {
       previewURL,
       updatedFileContent,
       jsonFormInstance,
+      undoContent,
+      redoContent,
     });
   }
   loader.hide();
+  window.addEventListener("keydown", handleKeyDown);
 });
 
 onUnmounted(() => {
-  debouncedPostMessage.cancel();
+  debouncedJSONSchemaFileChange.cancel();
+  window.removeEventListener("keydown", handleKeyDown);
 });
 </script>
 
@@ -258,6 +333,10 @@ onUnmounted(() => {
     :session
     :reset
     :resetContent
+    :undoContent
+    :redoContent
+    :contentHistory
+    :contentHistoryIndex
     :togglePreview
     :showPreview
     :previewURL

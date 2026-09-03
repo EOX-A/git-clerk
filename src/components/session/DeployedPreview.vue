@@ -33,9 +33,9 @@ const disabled = ref(checkDisableStatus(props));
 function checkDisableStatus(newProps) {
   return Boolean(
     newProps.session.changed_files === 0 ||
-      newProps.session.commits < 2 ||
-      !newProps.session.deployedPreviewLink ||
-      newProps.state === "closed",
+    newProps.session.commits < 2 ||
+    !newProps.session.deployedPreviewLink ||
+    newProps.state === "closed",
   );
 }
 

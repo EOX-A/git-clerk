@@ -24,6 +24,16 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  contentHistory: {
+    type: Array,
+    default: [],
+  },
+  contentHistoryIndex: {
+    type: Number,
+    default: 0,
+  },
+  undoContent: Function,
+  redoContent: Function,
   resetContent: Function,
   togglePreview: Function,
   showPreview: Boolean,
@@ -49,6 +59,27 @@ const props = defineProps({
       :previewURL="previewURL"
     />
     <v-spacer></v-spacer>
+    <Tooltip text="Undo ((Ctrl | Cmd) + Z)">
+      <v-btn
+        color="blue-grey-darken-4"
+        icon="mdi-undo-variant"
+        size="large"
+        variant="text"
+        :disabled="contentHistoryIndex === 0"
+        @click="undoContent"
+      ></v-btn>
+    </Tooltip>
+    <Tooltip text="Redo ((Ctrl | Cmd) + Shift + Z / Y)">
+      <v-btn
+        color="blue-grey-darken-4"
+        icon="mdi-redo-variant"
+        size="large"
+        variant="text"
+        :disabled="contentHistoryIndex === contentHistory.length - 1"
+        @click="redoContent"
+      ></v-btn>
+    </Tooltip>
+    <v-divider inset vertical class="mx-2"></v-divider>
     <Tooltip text="Reset Content">
       <v-btn
         color="blue-grey-darken-4"

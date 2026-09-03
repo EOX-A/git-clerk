@@ -96,6 +96,7 @@ describe("File related tests", () => {
     // Click on the navbar button to save the file
     cy.get(".navbar .v-btn.action-button").click();
     cy.wait("@getContent");
+    cy.wait("@getContent");
 
     // Check if the file is saved
     cy.get("eox-jsonform").should("exist");
@@ -173,5 +174,89 @@ describe("File related tests", () => {
       "have.text",
       renamedSessionTitle,
     );
+  });
+
+  // Test custom Undo/Redo logic
+  it("Test Undo and Redo", () => {
+    isNormalContentChanged = true;
+    cy.visit("/123/Y29kZS5qcw==");
+    cy.wait("@pullsUpdate");
+    cy.wait("@getContent");
+
+    cy.get("eox-jsonform").should("exist");
+    cy.get("eox-jsonform")
+      .shadow()
+      .within(() => {
+        // Wait for editor to initialize
+        cy.get(".je-indented-panel .ace_editor .ace_line").should(
+          "have.text",
+          `console.log("Hello World");`,
+        );
+
+        // Edit the file to trigger a history update
+        cy.get(".ace_text-input").type(" edited", { force: true });
+        cy.get(".ace_content").should(
+          "contain.text",
+          'console.log("Hello World"); edited',
+        );
+      });
+
+    // Wait for the 500ms debounce in git-clerk to record the history state
+    cy.wait(600);
+
+    // Trigger Undo (Cmd+Z)
+    cy.window().trigger("keydown", { key: "z", metaKey: true });
+
+    // Check if the content reverted to the original state
+    cy.get("eox-jsonform")
+      .shadow()
+      .within(() => {
+        cy.get(".ace_content").should("not.contain.text", "edited");
+        cy.get(".ace_content").should(
+          "contain.text",
+          'console.log("Hello World");',
+        );
+      });
+
+    // Trigger Redo (Cmd+Y) (Wait, Mac redo is Cmd+Shift+Z or Cmd+Y? In our logic it is `e.metaKey && e.shiftKey && e.key === 'z'` or `e.metaKey && e.key === 'y'`)
+    // Let's trigger Cmd+Shift+Z
+    cy.window().trigger("keydown", { key: "z", metaKey: true, shiftKey: true });
+
+    // Check if the content reverted back to the edited state
+    cy.get("eox-jsonform")
+      .shadow()
+      .within(() => {
+        cy.get(".ace_content").should(
+          "contain.text",
+          'console.log("Hello World"); edited',
+        );
+      });
+
+    // Trigger Undo via UI button
+    cy.get(".mdi-undo-variant").click({ force: true });
+
+    // Check if the content reverted to the original state
+    cy.get("eox-jsonform")
+      .shadow()
+      .within(() => {
+        cy.get(".ace_content").should("not.contain.text", "edited");
+        cy.get(".ace_content").should(
+          "contain.text",
+          'console.log("Hello World");',
+        );
+      });
+
+    // Trigger Redo via UI button
+    cy.get(".mdi-redo-variant").click({ force: true });
+
+    // Check if the content reverted back to the edited state
+    cy.get("eox-jsonform")
+      .shadow()
+      .within(() => {
+        cy.get(".ace_content").should(
+          "contain.text",
+          'console.log("Hello World"); edited',
+        );
+      });
   });
 });
