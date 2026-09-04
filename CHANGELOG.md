@@ -5,7 +5,7 @@
 
 ### Miscellaneous Chores
 
-* Trigger release 1.18.0 ([9bb917b](https://github.com/EOX-A/git-clerk/commit/9bb917bb85816fb29357a8a5fcc9f8f330475ddd))
+* Trigger release 1.18.0 for `eox-jsonform` update (introducing markdown toolbar attach file) ([9bb917b](https://github.com/EOX-A/git-clerk/commit/9bb917bb85816fb29357a8a5fcc9f8f330475ddd))
 
 ## [1.17.0](https://github.com/EOX-A/git-clerk/compare/v1.16.0...v1.17.0) (2026-09-03)
 
