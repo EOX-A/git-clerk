@@ -31,11 +31,14 @@ onMounted(async () => {
   await syncRepo();
   isOctokitInitialised.value = true;
   loader.hide();
-  instance.githubOrgData.forEach(async (org, index) => {
+  const { githubConfig } = octokitStore;
+  const target = `${githubConfig.username}/${githubConfig.repo}`.toLowerCase();
+  (instance?.githubOrgData || []).forEach(async (org, index) => {
+    if (org.forked) return;
     const data = index
       ? await getRepoDetails(org.organization.login)
       : await getRepoDetails();
-    if (data?.fork) {
+    if (data?.fork && data.parent?.full_name?.toLowerCase() === target) {
       octokitStore.setForkedRepoStatus(data, index);
     }
   });

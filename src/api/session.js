@@ -1,5 +1,199 @@
-import { getTotalPages } from "../helpers";
 import slugify from "slugify";
+
+function mapPullRequestNode(node) {
+  return {
+    ...node,
+    draft: node.isDraft,
+    state: node.state.toLowerCase(),
+    changed_files: node.changedFiles,
+    created_at: node.createdAt,
+    updated_at: node.updatedAt,
+    html_url: node.url,
+  };
+}
+
+const ORG_PULL_REQUESTS_QUERY = `
+  query($owner: String!, $repo: String!, $states: [PullRequestState!], $perPage: Int!, $after: String) {
+    repository(owner: $owner, name: $repo) {
+      pullRequests(states: $states, first: $perPage, after: $after, orderBy: { field: UPDATED_AT, direction: DESC }) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          id
+          title
+          url
+          state
+          number
+          changedFiles
+          createdAt
+          updatedAt
+          isDraft
+          author {
+            login
+          }
+          headRepositoryOwner {
+            login
+          }
+        }
+      }
+    }
+  }
+`;
+
+async function fetchOrgPullRequests(
+  octokit,
+  githubConfig,
+  forkOwners,
+  sessionSelectedState,
+  cache,
+  maxItems = Infinity,
+) {
+  const states =
+    sessionSelectedState === "open" ? ["OPEN"] : ["CLOSED", "MERGED"];
+  const nodes = [];
+  let after = null;
+
+  do {
+    const response = await octokit.graphql(ORG_PULL_REQUESTS_QUERY, {
+      owner: githubConfig.username,
+      repo: githubConfig.repo,
+      states,
+      perPage: 100,
+      after,
+      headers: {
+        ...(cache ? {} : { "If-None-Match": "" }),
+      },
+    });
+    const { pageInfo, nodes: pageNodes } = response.repository.pullRequests;
+
+    for (const node of pageNodes) {
+      if (forkOwners.includes(node.headRepositoryOwner?.login))
+        nodes.push(node);
+    }
+
+    after = pageInfo.hasNextPage ? pageInfo.endCursor : null;
+  } while (after && nodes.length < maxItems);
+
+  return nodes;
+}
+
+const AFFILIATED_FORKS_QUERY = `
+  query($owner: String!, $repo: String!, $after: String) {
+    repository(owner: $owner, name: $repo) {
+      forks(first: 100, after: $after, affiliations: [OWNER, COLLABORATOR, ORGANIZATION_MEMBER]) {
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+        nodes {
+          name
+          isPrivate
+          viewerPermission
+          owner {
+            login
+            __typename
+          }
+        }
+      }
+    }
+  }
+`;
+
+export async function affiliatedForks(octokit, githubConfig) {
+  const forks = [];
+  let after = null;
+
+  do {
+    const response = await octokit.graphql(AFFILIATED_FORKS_QUERY, {
+      owner: githubConfig.username,
+      repo: githubConfig.repo,
+      after,
+    });
+    const { pageInfo, nodes } = response.repository.forks;
+
+    for (const node of nodes) {
+      // The app addresses forks by the target's name, renamed forks are unusable
+      if (node.name !== githubConfig.repo) continue;
+      const permission = node.viewerPermission;
+      forks.push({
+        owner: node.owner.login,
+        ownerType: node.owner.__typename,
+        viewerPermission: permission,
+        permissions: {
+          admin: permission === "ADMIN",
+          push: ["ADMIN", "MAINTAIN", "WRITE"].includes(permission),
+          pull: true,
+        },
+      });
+    }
+
+    after = pageInfo.hasNextPage ? pageInfo.endCursor : null;
+  } while (after);
+
+  return forks;
+}
+
+export async function orgSessionsList(
+  octokit,
+  githubConfig,
+  forkOwners,
+  pageInfo,
+  cursorPosition,
+  sessionSelectedState,
+  cache,
+) {
+  try {
+    const perPage = 10;
+    let page = 1;
+    if (cursorPosition === "endCursor") page = Number(pageInfo?.endCursor) + 1;
+    else if (cursorPosition === "startCursor")
+      page = Number(pageInfo?.startCursor) - 1;
+    else if (cursorPosition) page = Number(cursorPosition) + 1;
+    if (!page || page < 1) page = 1;
+
+    const nodes = await fetchOrgPullRequests(
+      octokit,
+      githubConfig,
+      forkOwners,
+      sessionSelectedState,
+      cache,
+      page * perPage + 1,
+    );
+    const start = (page - 1) * perPage;
+    const items = nodes.slice(start, start + perPage).map(mapPullRequestNode);
+
+    return {
+      data: items,
+      pageInfo: {
+        hasNextPage: nodes.length > page * perPage,
+        hasPreviousPage: page > 1,
+        startCursor: String(page),
+        endCursor: String(page),
+      },
+    };
+  } catch (error) {
+    return error;
+  }
+}
+
+export async function orgNumberOfOpenClosedSessions(
+  octokit,
+  githubConfig,
+  forkOwners,
+  cache,
+) {
+  try {
+    const [open, closed] = await Promise.all([
+      fetchOrgPullRequests(octokit, githubConfig, forkOwners, "open", cache),
+      fetchOrgPullRequests(octokit, githubConfig, forkOwners, "closed", cache),
+    ]);
+    return { open: open.length, closed: closed.length };
+  } catch (error) {
+    return error;
+  }
+}
 
 export async function sessionsList(
   octokit,
@@ -39,6 +233,9 @@ export async function sessionsList(
               author {
                 login
               }
+              headRepositoryOwner {
+                login
+              }
             }
           }
         }
@@ -60,17 +257,7 @@ export async function sessionsList(
       },
     });
 
-    const items = response.search.nodes.map((node) => {
-      return {
-        ...node,
-        draft: node.isDraft,
-        state: node.state.toLowerCase(),
-        changed_files: node.changedFiles,
-        created_at: node.createdAt,
-        updated_at: node.updatedAt,
-        html_url: node.url,
-      };
-    });
+    const items = response.search.nodes.map(mapPullRequestNode);
 
     return {
       data: items,
@@ -160,13 +347,24 @@ export async function repoDetails(
   }
 }
 
-async function checkForkRepo(username, repo, octokit, owner, loaderText = {}) {
+async function checkForkRepo(
+  forkOwner,
+  repo,
+  octokit,
+  owner,
+  loaderText = {},
+  organization = null,
+) {
   let fork;
   try {
-    fork = await octokit.rest.repos.get({ owner: username, repo });
+    fork = await octokit.rest.repos.get({ owner: forkOwner, repo });
   } catch (error) {
     if (error.status === 404) {
-      fork = await octokit.rest.repos.createFork({ owner, repo });
+      fork = await octokit.rest.repos.createFork({
+        owner,
+        repo,
+        ...(organization ? { organization } : {}),
+      });
       if (fork.data.name !== repo) {
         throw new Error(
           "A fork of the original repository already exists for your account",
@@ -181,7 +379,7 @@ async function checkForkRepo(username, repo, octokit, owner, loaderText = {}) {
           if (retries === 5)
             loaderText.innerText = "Creating fork repo! Please be patient...";
           await new Promise((resolve) => setTimeout(resolve, 5000)); // 5 seconds
-          fork = await octokit.rest.repos.get({ owner: username, repo });
+          fork = await octokit.rest.repos.get({ owner: forkOwner, repo });
           break;
         } catch (err) {
           retries--;
@@ -215,22 +413,34 @@ export async function syncARepo(username, repo, octokit) {
   }
 }
 
-export async function checkForkRepoAndSync(octokit, githubConfig) {
+export async function checkForkRepoAndSync(
+  octokit,
+  githubConfig,
+  forkOwner = null,
+) {
   try {
     const { repo } = githubConfig;
-    const username = (await octokit.rest.users.getAuthenticated()).data.login;
-    const fork = await octokit.rest.repos.get({ owner: username, repo });
+    const owner =
+      forkOwner || (await octokit.rest.users.getAuthenticated()).data.login;
+    const fork = await octokit.rest.repos.get({ owner, repo });
     if (fork) {
-      await syncARepo(username, repo, octokit);
+      await syncARepo(owner, repo, octokit);
     }
   } catch (error) {
     return error;
   }
 }
 
-export async function createSession(octokit, githubConfig, prName) {
+export async function createSession(
+  octokit,
+  githubConfig,
+  prName,
+  forkOwner = null,
+) {
   const { username: owner, repo } = githubConfig;
   const username = (await octokit.rest.users.getAuthenticated()).data.login;
+  const forkOwnerLogin = forkOwner || username;
+  const organization = forkOwnerLogin !== username ? forkOwnerLogin : null;
   const slugifiedPrName = slugify(prName, {
     lower: true,
     strict: true,
@@ -239,15 +449,22 @@ export async function createSession(octokit, githubConfig, prName) {
 
   try {
     const loaderText = document.getElementById("loader-text");
-    await checkForkRepo(username, repo, octokit, owner, loaderText);
+    await checkForkRepo(
+      forkOwnerLogin,
+      repo,
+      octokit,
+      owner,
+      loaderText,
+      organization,
+    );
 
     loaderText.innerText = "Updating forked repo...";
     const sourceRepo = await octokit.rest.repos.get({ owner, repo });
     const sourceDefaultBranch = sourceRepo.data.default_branch;
-    const forkDefaultBranch = await syncARepo(username, repo, octokit);
+    const forkDefaultBranch = await syncARepo(forkOwnerLogin, repo, octokit);
 
     const forkDefaultBranchRef = await octokit.rest.git.getRef({
-      owner: username,
+      owner: forkOwnerLogin,
       repo,
       ref: `heads/${forkDefaultBranch}`,
     });
@@ -256,14 +473,14 @@ export async function createSession(octokit, githubConfig, prName) {
 
     loaderText.innerText = "Creating new branch...";
     const { data: latestCommit } = await octokit.rest.git.getCommit({
-      owner: username,
+      owner: forkOwnerLogin,
       repo,
       commit_sha: latestCommitSha,
     });
     const treeSha = latestCommit.tree.sha;
 
     await octokit.rest.git.createRef({
-      owner: username,
+      owner: forkOwnerLogin,
       repo,
       ref: `refs/heads/${forkBranchName}`,
       sha: latestCommitSha,
@@ -272,7 +489,7 @@ export async function createSession(octokit, githubConfig, prName) {
     loaderText.innerText = "Adding first commit to branch...";
     const emptyCommitMessage = "chore: create session using empty commit";
     const { data: commit } = await octokit.rest.git.createCommit({
-      owner: username,
+      owner: forkOwnerLogin,
       repo,
       message: emptyCommitMessage,
       tree: treeSha,
@@ -280,7 +497,7 @@ export async function createSession(octokit, githubConfig, prName) {
     });
 
     await octokit.rest.git.updateRef({
-      owner: username,
+      owner: forkOwnerLogin,
       repo,
       ref: `heads/${forkBranchName}`,
       sha: commit.sha,
@@ -292,7 +509,7 @@ export async function createSession(octokit, githubConfig, prName) {
       owner,
       repo,
       title: prName,
-      head: `${username}:${forkBranchName}`,
+      head: `${forkOwnerLogin}:${forkBranchName}`,
       base: sourceDefaultBranch,
       draft: true,
     });
@@ -301,6 +518,7 @@ export async function createSession(octokit, githubConfig, prName) {
       text: `Successfully Created Session:  ${prName}`,
       status: "success",
       number: res.data.number,
+      forkOwner: forkOwnerLogin,
     };
   } catch (error) {
     if (error.status === 422 && error.response?.url?.includes("/refs")) {
@@ -317,7 +535,7 @@ export async function createSession(octokit, githubConfig, prName) {
         };
       } else {
         const newSessionName = `${prName} (${numberOfSession + 1})`;
-        return createSession(octokit, githubConfig, newSessionName);
+        return createSession(octokit, githubConfig, newSessionName, forkOwner);
       }
     } else {
       return {

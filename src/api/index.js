@@ -11,6 +11,9 @@ import {
   numberOfOpenClosedSessions,
   repoDetails,
   checkForkRepoAndSync,
+  orgSessionsList,
+  orgNumberOfOpenClosedSessions,
+  affiliatedForks,
 } from "@/api/session";
 import useOctokitStore from "@/stores/octokit";
 import {
@@ -21,7 +24,7 @@ import {
   fileDetails,
   schemaFromURL,
 } from "@/api/file";
-import { GIT_CLERK_CONFIG } from "@/enums";
+import { GIT_CLERK_CONFIG, FORK_LOCATION } from "@/enums";
 
 export async function initOctokit() {
   try {
@@ -65,22 +68,92 @@ export async function initOctokit() {
     const octokit = new Octokit({ auth });
 
     const userData = await octokit.rest.users.getAuthenticated();
-    const orgData = await octokit.rest.orgs.listMembershipsForAuthenticatedUser(
-      {
-        state: "active",
-        per_page: 100,
-      },
-    );
+
+    let orgMemberships = [];
+    if (FORK_LOCATION.org) {
+      try {
+        const orgData =
+          await octokit.rest.orgs.listMembershipsForAuthenticatedUser({
+            state: "active",
+            per_page: 100,
+          });
+        orgMemberships = orgData.data;
+      } catch (error) {
+        console.warn(
+          "Unable to list organisation memberships, continuing as individual:",
+          error.message,
+        );
+      }
+    }
+
+    const githubConfig = { auth, username, repo: repoName };
+    let githubOrgData = [userData.data, ...orgMemberships];
+    if (FORK_LOCATION.org) {
+      githubOrgData = await mergeAffiliatedForks(
+        octokit,
+        githubConfig,
+        githubOrgData,
+      );
+    }
 
     return {
-      githubConfig: { auth, username, repo: repoName },
+      githubConfig,
       githubUserData: userData.data,
-      githubOrgData: [userData.data, ...orgData.data],
+      githubOrgData,
       octokit,
     };
   } catch (error) {
     console.error(error);
   }
+}
+
+async function mergeAffiliatedForks(octokit, githubConfig, githubOrgData) {
+  let forks;
+  try {
+    forks = await affiliatedForks(octokit, githubConfig);
+  } catch (error) {
+    console.warn(
+      "Unable to list affiliated forks, checking each owner instead:",
+      error.message,
+    );
+    return githubOrgData;
+  }
+
+  const loginOf = (entry, index) =>
+    index === 0 ? entry.login : entry.organization?.login;
+
+  for (const fork of forks) {
+    const index = githubOrgData.findIndex(
+      (entry, i) => loginOf(entry, i) === fork.owner,
+    );
+
+    if (index >= 0) {
+      githubOrgData[index] = { ...githubOrgData[index], forked: fork };
+      continue;
+    }
+
+    if (fork.ownerType !== "Organization" || !fork.permissions.push) continue;
+
+    let organization = { login: fork.owner };
+    try {
+      organization = (await octokit.rest.orgs.get({ org: fork.owner })).data;
+    } catch (error) {
+      console.warn(
+        `Unable to fetch organisation ${fork.owner}:`,
+        error.message,
+      );
+    }
+
+    githubOrgData.push({
+      state: "active",
+      role: fork.permissions.admin ? "admin" : "member",
+      collaborator: true,
+      organization,
+      forked: fork,
+    });
+  }
+
+  return githubOrgData;
 }
 
 export async function getLoginData() {
@@ -98,8 +171,21 @@ export async function getSessionsList(
   sessionSelectedState = "open",
   cache,
 ) {
-  const { githubConfig, githubUserData, octokit } = useOctokitStore();
+  const { githubConfig, githubUserData, octokit, scopeOwners } =
+    useOctokitStore();
   const sessionNameValue = "";
+
+  if (scopeOwners.length) {
+    return orgSessionsList(
+      octokit,
+      githubConfig,
+      scopeOwners,
+      pageInfo,
+      cursorPosition,
+      sessionSelectedState,
+      cache,
+    );
+  }
 
   return sessionsList(
     octokit,
@@ -135,7 +221,18 @@ export async function searchSessionName(
 }
 
 export async function getNumberOfOpenClosedSessions(cache) {
-  const { githubConfig, githubUserData, octokit } = useOctokitStore();
+  const { githubConfig, githubUserData, octokit, scopeOwners } =
+    useOctokitStore();
+
+  if (scopeOwners.length) {
+    return orgNumberOfOpenClosedSessions(
+      octokit,
+      githubConfig,
+      scopeOwners,
+      cache,
+    );
+  }
+
   return numberOfOpenClosedSessions(
     octokit,
     githubConfig,
@@ -174,14 +271,14 @@ export async function getSessionReviewStatus(sessionNumber) {
   return sessionReviewStatus(octokit, githubConfig, sessionNumber);
 }
 
-export async function createSessionByName(name) {
+export async function createSessionByName(name, forkOwner = null) {
   const { githubConfig, octokit } = useOctokitStore();
-  return createSession(octokit, githubConfig, name);
+  return createSession(octokit, githubConfig, name, forkOwner);
 }
 
-export async function syncRepo() {
+export async function syncRepo(forkOwner = null) {
   const { githubConfig, octokit } = useOctokitStore();
-  return checkForkRepoAndSync(octokit, githubConfig);
+  return checkForkRepoAndSync(octokit, githubConfig, forkOwner);
 }
 
 export async function getFilesListFromSession(sessionNumber, currPage, cache) {

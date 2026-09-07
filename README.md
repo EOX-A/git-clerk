@@ -336,6 +336,34 @@ globalThis.gitClerkConfig = {
 
 You can read more about i18n options [here](https://vue-i18n.intlify.dev/guide/essentials/syntax).
 
+### Organisation forks and roles
+
+By default every user works in her/his own fork and sees only the sessions (PRs) whose branch lives in that fork. With `forkingLocation` you can additionally allow sessions in an **organisation fork** that is shared by all members:
+
+```js
+globalThis.gitClerkConfig = {
+  [...]
+  forkingLocation: {
+    personal: true, // sessions in the user's personal fork (default: true)
+    org: true, // sessions in organisation forks (default: false)
+  },
+  [...]
+};
+```
+
+When `org` is enabled, git-clerk lists the organisations the user is a member of (this needs a token with the `read:org` scope) and, in the same load step, asks GitHub for the forks of the target repository the user is affiliated with (owned, outside collaborator, or through an organisation membership). Org forks the user can push to without being a member are added as well. The resulting roles are:
+
+| Role                     | Can create sessions in                                                               | Sees                                                                    | Can rename / delete / submit                                    |
+| ------------------------ | ------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- | --------------------------------------------------------------- |
+| Individual (no org)      | Personal fork                                                                        | Own sessions                                                            | Own sessions                                                    |
+| Organisation **admin**   | Personal fork, or the org fork (created automatically if missing)                    | Own sessions, plus every session from the org fork regardless of author | Own sessions, plus every session from the org fork              |
+| Organisation **member**  | Personal fork, or the org fork **only if an admin already created it**               | Own sessions, plus every session from the org fork regardless of author | Own sessions only (others' sessions are read-only)              |
+| Outside **collaborator** | Personal fork, or an org fork she/he has write access to without being an org member | Same as member                                                          | Same as member (admin rights on the fork grant admin behaviour) |
+
+A scope switcher above the sessions list toggles between _All Repos_ (personal plus every organisation fork, the default), _Personal_, and each organisation that already holds a fork. Session branches in an org fork are still prefixed with the user's login (`<login>/<slug>`), so members never collide. In organisation scope each session shows its author. Everyone with push access to the org fork can edit files in any of its sessions.
+
+External automations can target an organisation fork by adding `forkOwner: "<org-login>"` to the payload or query parameters.
+
 ## Development
 
 ### Recommended IDE Setup

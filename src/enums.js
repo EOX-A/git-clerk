@@ -37,6 +37,8 @@ export const AUTOMATION = ref(
 export const ALLOWED_ORIGINS =
   globalThis.allowedOrigins || GIT_CLERK_CONFIG.allowedOrigins || [];
 
+export const SESSIONS_SCOPE_ALL = "all";
+
 export const FORK_LOCATION = globalThis.forkingLocation ||
   GIT_CLERK_CONFIG.forkingLocation || { personal: true, org: false };
 

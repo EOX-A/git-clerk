@@ -25,16 +25,28 @@ import {
   ActionTabSessions,
   CreateSession,
   WelcomeSection,
+  SessionOriginChip,
 } from "@/components/session";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import CursorPagination from "@/components/global/CursorPagination.vue";
 import { FileBrowserDrawer } from "@/components/file-browser";
 import find from "lodash.find";
 import useAutomationStore from "@/stores/automation";
+import useOctokitStore from "@/stores/octokit";
 import { storeToRefs } from "pinia";
+import { SESSIONS_SCOPE_ALL } from "@/enums";
 
 const automationStore = useAutomationStore();
 const { automation, externalAutomationData } = storeToRefs(automationStore);
+
+const octokitStore = useOctokitStore();
+const {
+  githubUserData,
+  sessionsScope,
+  scopeOptions,
+  selectedScopeOption,
+  isOrgScope,
+} = storeToRefs(octokitStore);
 
 const route = useRoute();
 const router = useRouter();
@@ -61,7 +73,9 @@ const navPaginationItems = inject("set-nav-pagination-items");
 const updateSessionsList = async (cache = false) => {
   sessions.value = null;
   window.scrollTo({ top: 0 });
-  syncRepo();
+  syncRepo(
+    sessionsScope.value === SESSIONS_SCOPE_ALL ? null : sessionsScope.value,
+  );
   const sessionsList = await getSessionsList(
     pageInfo.value,
     cursorPosition.value,
@@ -150,6 +164,7 @@ onMounted(async () => {
         newSessionName,
         snackbar,
         loader,
+        forkOwner: ref(externalAutomationData.value.forkOwner || null),
       };
       await createSession(props, router, route, clearInputCreateNewSession);
     }
@@ -182,6 +197,13 @@ const changeSessionState = async (newState) => {
   }
 };
 
+const changeSessionScope = async (owner) => {
+  if (sessionsScope.value !== owner) {
+    octokitStore.setSessionsScope(owner);
+    await resetWholeState();
+  }
+};
+
 const resetWholeState = async () => {
   cursorHistory.value = []; // Reset cursor history when changing state
   currentPage.value = 1;
@@ -200,13 +222,18 @@ const resetWholeState = async () => {
 
   <ActionTabSessions
     v-if="
-      numberOfOpenClosedSessions &&
-      (numberOfOpenClosedSessions.open || numberOfOpenClosedSessions.closed)
+      (numberOfOpenClosedSessions &&
+        (numberOfOpenClosedSessions.open ||
+          numberOfOpenClosedSessions.closed)) ||
+      scopeOptions.length > 1
     "
     :sessionSelectedState="sessionSelectedState"
     :changeSessionState="changeSessionState"
     :numberOfOpenClosedSessions="numberOfOpenClosedSessions"
     :sessions="sessions"
+    :forkOptions="scopeOptions"
+    :selectedScopeOption="selectedScopeOption"
+    :changeSessionScope="changeSessionScope"
   />
 
   <v-list class="py-0">
@@ -255,25 +282,26 @@ const resetWholeState = async () => {
                     <OctIcon name="file-diff" />
                   </v-icon>
                 </Tooltip>
+                <!-- Where the session lives: personal fork or organisation fork -->
+                <SessionOriginChip :session="session" />
+                <!-- Author, shown only in organisation scope where sessions of all members are listed -->
                 <v-chip
-                  v-if="index % 2"
-                  color="primary"
+                  v-if="isOrgScope && session.authorLogin"
+                  :color="
+                    session.authorLogin === githubUserData?.login
+                      ? 'primary'
+                      : 'blue-grey-darken-1'
+                  "
                   size="small"
                   prepend-icon="mdi-account"
+                  class="session-author-chip"
                   rounded
                 >
-                  Personal
-                </v-chip>
-                <v-chip
-                  v-else
-                  color="primary"
-                  size="small"
-                  prepend-icon="mdi-account-group"
-                  rounded
-                >
-                  <span class="d-flex align-center ga-1"
-                    ><strong>Org: </strong> EOxElements</span
-                  >
+                  {{
+                    session.authorLogin === githubUserData?.login
+                      ? "You"
+                      : session.authorLogin
+                  }}
                 </v-chip>
               </div>
               <div class="v-list-item-subtitle d-flex align-center pt-2 ga-3">

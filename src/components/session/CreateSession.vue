@@ -1,17 +1,15 @@
 <script setup>
 import { createSession } from "@/helpers/index.js";
 import { useRoute, useRouter } from "vue-router";
-import { ref, inject, onMounted, watch } from "vue";
-import { FORK_LOCATION } from "@/enums";
+import { ref, inject, watch } from "vue";
 import useOctokitStore from "@/stores/octokit";
 import { storeToRefs } from "pinia";
 
-const { githubOrgData } = storeToRefs(useOctokitStore());
+const { forkOptions, sessionsScope } = storeToRefs(useOctokitStore());
 
 const loader = ref({});
 const newSessionName = ref("");
 const sessionOwner = ref(null);
-const sessionOwnerItems = ref(null);
 
 const route = useRoute();
 const router = useRouter();
@@ -54,6 +52,7 @@ const create = async () => {
       newSessionName,
       snackbar,
       loader,
+      forkOwner: sessionOwner,
     },
     router,
     route,
@@ -73,22 +72,29 @@ const onKeyEnter = async (event) => {
   else if (event.key === "Enter") await create();
 };
 
+const isSelectable = (option) => option.forkExists || option.canCreateFork;
+
+const roleLabel = (option) => {
+  if (option.type === "personal") return "Your personal fork";
+  if (!isSelectable(option))
+    return "Fork not created yet, ask an organisation admin";
+  if (option.collaborator)
+    return option.role === "admin" ? "Admin (collaborator)" : "Collaborator";
+  return option.role === "admin" ? "Admin" : "Member";
+};
+
 watch(
-  githubOrgData.value,
-  (newData) => {
-    sessionOwnerItems.value = [
-      ...(FORK_LOCATION.org
-        ? newData.map((org, index) => ({
-            ...org,
-            name: index ? org.organization.login : "Personal",
-            role: index ? org.role : "self",
-          }))
-        : []),
-    ];
+  forkOptions,
+  (options) => {
+    const selectable = options.filter(isSelectable);
+    if (!selectable.some((option) => option.owner === sessionOwner.value)) {
+      const preferred =
+        selectable.find((option) => option.owner === sessionsScope.value) ||
+        selectable[0];
+      sessionOwner.value = preferred?.owner || null;
+    }
   },
-  {
-    immediate: true,
-  },
+  { immediate: true, deep: true },
 );
 </script>
 
@@ -133,34 +139,30 @@ watch(
             class="rounded border-md"
           ></v-text-field>
           <v-select
-            v-if="sessionOwnerItems"
+            v-if="forkOptions.length > 1"
             v-model="sessionOwner"
-            label="Select Session Owner"
+            label="Session owner"
             density="comfortable"
             persistent-hint
             :hint="
               sessionOwner
-                ? `Your session will be added to '${sessionOwner}' account.`
+                ? `The session branch is created in the '${sessionOwner}' fork.`
                 : ''
             "
-            :items="sessionOwnerItems"
+            :items="forkOptions"
+            item-title="name"
+            item-value="owner"
             single-line
             variant="outlined"
-            item-title="name"
+            class="session-owner-select"
           >
             <template v-slot:item="{ props: itemProps, item }">
-              <v-list-item v-bind="itemProps" :subtitle="item.raw.role">
-                <template v-slot:append>
-                  <v-chip
-                    v-if="item.raw.forked"
-                    size="x-small"
-                    variant="flat"
-                    color="primary"
-                    class="ml-2"
-                  >
-                    Forked
-                  </v-chip>
-                </template>
+              <v-list-item
+                v-bind="itemProps"
+                :subtitle="roleLabel(item.raw)"
+                :disabled="!isSelectable(item.raw)"
+                :class="`session-owner-item owner-${item.raw.owner}`"
+              >
               </v-list-item>
             </template>
           </v-select>
@@ -185,7 +187,9 @@ watch(
               color="primary"
               variant="flat"
               prepend-icon="mdi-plus"
-              :disabled="!newSessionName || !sessionOwner"
+              :disabled="
+                !newSessionName || (forkOptions.length > 1 && !sessionOwner)
+              "
               @click="create"
               class="new-session-btn"
             >
