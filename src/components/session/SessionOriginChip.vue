@@ -31,11 +31,11 @@ const isPersonal = computed(
 
 <template>
   <v-chip
-    v-if="forkOwner"
+    v-if="forkOwner && !isPersonal"
     color="primary"
     :size="size"
     :prepend-icon="isPersonal ? 'mdi-account' : 'mdi-account-group'"
-    :class="`session-origin-chip ${isPersonal ? 'origin-personal' : 'origin-org'}`"
+    :class="`session-origin-chip px-3 ${isPersonal ? 'origin-personal' : 'origin-org'}`"
     rounded
   >
     <template v-if="isPersonal">Personal</template>

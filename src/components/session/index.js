@@ -12,3 +12,4 @@ export { default as CreateSession } from "./CreateSession.vue";
 export { default as WelcomeSection } from "./WelcomeSection.vue";
 export { default as SessionsScopeFilter } from "./SessionsScopeFilter.vue";
 export { default as SessionOriginChip } from "./SessionOriginChip.vue";
+export { default as SessionAuthorChip } from "./SessionAuthorChip.vue";

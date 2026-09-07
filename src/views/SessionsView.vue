@@ -26,6 +26,7 @@ import {
   CreateSession,
   WelcomeSection,
   SessionOriginChip,
+  SessionAuthorChip,
 } from "@/components/session";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import CursorPagination from "@/components/global/CursorPagination.vue";
@@ -40,13 +41,8 @@ const automationStore = useAutomationStore();
 const { automation, externalAutomationData } = storeToRefs(automationStore);
 
 const octokitStore = useOctokitStore();
-const {
-  githubUserData,
-  sessionsScope,
-  scopeOptions,
-  selectedScopeOption,
-  isOrgScope,
-} = storeToRefs(octokitStore);
+const { sessionsScope, scopeOptions, selectedScopeOption, isOrgScope } =
+  storeToRefs(octokitStore);
 
 const route = useRoute();
 const router = useRouter();
@@ -282,29 +278,9 @@ const resetWholeState = async () => {
                     <OctIcon name="file-diff" />
                   </v-icon>
                 </Tooltip>
-                <!-- Where the session lives: personal fork or organisation fork -->
                 <SessionOriginChip :session="session" />
-                <!-- Author, shown only in organisation scope where sessions of all members are listed -->
-                <v-chip
-                  v-if="isOrgScope && session.authorLogin"
-                  :color="
-                    session.authorLogin === githubUserData?.login
-                      ? 'primary'
-                      : 'blue-grey-darken-1'
-                  "
-                  size="small"
-                  prepend-icon="mdi-account"
-                  class="session-author-chip"
-                  rounded
-                >
-                  {{
-                    session.authorLogin === githubUserData?.login
-                      ? "You"
-                      : session.authorLogin
-                  }}
-                </v-chip>
               </div>
-              <div class="v-list-item-subtitle d-flex align-center pt-2 ga-3">
+              <div class="v-list-item-subtitle d-flex align-center pt-2 ga-2">
                 <span class="d-none d-sm-flex">Changes made on: </span>
                 <div class="d-flex align-center">
                   <v-icon>mdi-calendar-blank-outline</v-icon>
@@ -314,6 +290,7 @@ const resetWholeState = async () => {
                   <v-icon>mdi-clock-time-five-outline</v-icon>
                   <span class="text-black px-1">{{ session.time }}</span>
                 </div>
+                <SessionAuthorChip v-if="isOrgScope" :session="session" />
               </div>
             </div>
           </div>
