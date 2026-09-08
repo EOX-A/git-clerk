@@ -7,6 +7,7 @@ import {
   searchSessionName,
   getNumberOfOpenClosedSessions,
   syncRepo,
+  clearSessionsCache,
 } from "@/api/index.js";
 import {
   querySessionsListMethod,
@@ -90,10 +91,22 @@ const updateSessionsList = async (cache = false) => {
   }
 
   cursorPosition.value = null;
-  numberOfOpenClosedSessions.value = await getNumberOfOpenClosedSessions(cache);
   const currSessionState = sessionSelectedState.value;
-  querySessionsListMethod(sessionsList, { snackbar, sessions, pageInfo });
+  const currScope = sessionsScope.value;
   const currPath = route.path;
+
+  querySessionsListMethod(sessionsList, { snackbar, sessions, pageInfo });
+
+  getNumberOfOpenClosedSessions(cache).then((counts) => {
+    if (
+      currSessionState === sessionSelectedState.value &&
+      currScope === sessionsScope.value &&
+      currPath === route.path
+    ) {
+      numberOfOpenClosedSessions.value = counts;
+    }
+  });
+
   checkStatusMethod(
     sessions,
     sessionsList.pageInfo,
@@ -125,6 +138,7 @@ onMounted(async () => {
     click: createNewSessionClick,
   };
   navPaginationItems.value = [navPaginationItems.value[0]];
+  clearSessionsCache();
 
   if (
     (externalAutomationData.value.session ||
@@ -204,6 +218,8 @@ const resetWholeState = async () => {
   cursorHistory.value = []; // Reset cursor history when changing state
   currentPage.value = 1;
   pageInfo.value = null;
+  numberOfOpenClosedSessions.value = null;
+  clearSessionsCache();
   await updateSessionsList(true);
 };
 </script>
@@ -221,6 +237,7 @@ const resetWholeState = async () => {
       (numberOfOpenClosedSessions &&
         (numberOfOpenClosedSessions.open ||
           numberOfOpenClosedSessions.closed)) ||
+      (sessions && sessions.length) ||
       scopeOptions.length > 1
     "
     :sessionSelectedState="sessionSelectedState"

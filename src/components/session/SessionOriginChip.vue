@@ -14,7 +14,7 @@ const props = defineProps({
   },
 });
 
-const { githubUserData } = storeToRefs(useOctokitStore());
+const { githubUserData, githubConfig } = storeToRefs(useOctokitStore());
 
 const forkOwner = computed(
   () =>
@@ -27,6 +27,10 @@ const forkOwner = computed(
 const isPersonal = computed(
   () => forkOwner.value === githubUserData.value?.login,
 );
+
+const isUpstream = computed(
+  () => forkOwner.value === githubConfig.value?.username,
+);
 </script>
 
 <template>
@@ -34,11 +38,20 @@ const isPersonal = computed(
     v-if="forkOwner && !isPersonal"
     color="primary"
     :size="size"
-    :prepend-icon="isPersonal ? 'mdi-account' : 'mdi-account-group'"
+    :prepend-icon="
+      isPersonal
+        ? 'mdi-account'
+        : isUpstream
+          ? 'mdi-source-branch'
+          : 'mdi-account-group'
+    "
     :class="`session-origin-chip px-3 ${isPersonal ? 'origin-personal' : 'origin-org'}`"
     rounded
   >
     <template v-if="isPersonal">Personal</template>
+    <span v-else-if="isUpstream" class="d-flex align-center ga-1"
+      ><strong>Repo: </strong>{{ forkOwner }}</span
+    >
     <span v-else class="d-flex align-center ga-1"
       ><strong>Org: </strong>{{ forkOwner }}</span
     >

@@ -23,9 +23,10 @@ const scopeIcon = (option) => {
   return "mdi-account";
 };
 
-const roleLabel = (option) => {
+const roleOf = (option) => {
+  if (option.unfiltered) return "Every pull request, native and forks";
   if (option.type === "all") return "Personal and organisation forks";
-  if (option.type === "personal") return "Your personal fork";
+  if (option.type === "personal") return "Your fork";
   if (option.collaborator)
     return option.role === "admin" ? "Admin (collaborator)" : "Collaborator";
   return option.role === "admin" ? "Admin" : "Member";
@@ -52,12 +53,15 @@ const roleLabel = (option) => {
         v-for="option in forkOptions"
         :key="option.owner"
         :title="option.name"
-        :subtitle="roleLabel(option)"
         :prepend-icon="scopeIcon(option)"
         :active="option.owner === selectedScopeOption?.owner"
         :class="`sessions-scope-item scope-${option.owner}`"
         @click="changeSessionScope(option.owner)"
       >
+        <template v-slot:subtitle>
+          <template v-if="option.fullName">{{ option.fullName }} · </template>
+          <strong>{{ roleOf(option) }}</strong>
+        </template>
       </v-list-item>
     </v-list>
   </v-menu>

@@ -6,6 +6,7 @@ const useOctokitStore = defineStore("octokit", () => {
   const githubConfig = ref(null);
   const githubUserData = ref(null);
   const githubOrgData = ref(null);
+  const githubTargetRepo = ref(null);
   const octokit = ref(null);
   const sessionsScope = ref(null);
 
@@ -13,6 +14,7 @@ const useOctokitStore = defineStore("octokit", () => {
     githubConfig.value = instance?.githubConfig;
     githubUserData.value = instance?.githubUserData;
     githubOrgData.value = instance?.githubOrgData;
+    githubTargetRepo.value = instance?.githubTargetRepo || null;
     octokit.value = instance?.octokit;
     sessionsScope.value = scopeOptions.value.some(
       (option) => option.type === "all",
@@ -49,26 +51,45 @@ const useOctokitStore = defineStore("octokit", () => {
 
         return {
           owner,
-          name: isPersonal ? "Personal" : owner,
+          name: isPersonal ? "Personal" : entry.organization?.name || owner,
+          fullName: `${owner}/${githubConfig.value?.repo || ""}`,
           type: isPersonal ? "personal" : "org",
           role: isPersonal ? "owner" : isAdmin ? "admin" : "member",
           collaborator: Boolean(entry.collaborator),
           forkExists: Boolean(forked),
-          canCreateFork: isAdmin && !entry.collaborator,
+          canCreateFork: !entry.collaborator,
           canPush,
         };
       })
       .filter((option) => {
         if (option.type === "personal") return FORK_LOCATION.personal !== false;
-        // Read-only collaborators on an existing org fork cannot create branches
         return Boolean(FORK_LOCATION.org) && option.canPush;
       });
   });
+
+  const isRepoMember = computed(() =>
+    Boolean(
+      githubTargetRepo.value?.permissions?.push ||
+      githubTargetRepo.value?.permissions?.admin,
+    ),
+  );
 
   const scopeOptions = computed(() => {
     const forked = forkOptions.value.filter(
       (option) => option.type === "personal" || option.forkExists,
     );
+    if (isRepoMember.value) {
+      return [
+        {
+          owner: SESSIONS_SCOPE_ALL,
+          name: "All PRs",
+          type: "all",
+          unfiltered: true,
+          forkExists: true,
+        },
+        ...forked,
+      ];
+    }
     if (forked.length < 2) return forked;
     return [
       {
@@ -99,6 +120,7 @@ const useOctokitStore = defineStore("octokit", () => {
   );
 
   const scopeOwners = computed(() => {
+    if (selectedScopeOption.value?.unfiltered) return null;
     if (selectedScopeOption.value?.type === "all") {
       return scopeOptions.value
         .filter((option) => option.type !== "all")
@@ -111,8 +133,10 @@ const useOctokitStore = defineStore("octokit", () => {
     githubConfig,
     githubUserData,
     githubOrgData,
+    githubTargetRepo,
     octokit,
     sessionsScope,
+    isRepoMember,
     forkOptions,
     scopeOptions,
     selectedScopeOption,

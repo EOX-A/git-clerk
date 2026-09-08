@@ -42,6 +42,12 @@ const ORG_PULL_REQUESTS_QUERY = `
   }
 `;
 
+const orgPullRequestsCache = new Map();
+
+export function clearOrgPullRequestsCache() {
+  orgPullRequestsCache.clear();
+}
+
 async function fetchOrgPullRequests(
   octokit,
   githubConfig,
@@ -52,31 +58,52 @@ async function fetchOrgPullRequests(
 ) {
   const states =
     sessionSelectedState === "open" ? ["OPEN"] : ["CLOSED", "MERGED"];
-  const nodes = [];
-  let after = null;
+  const key = `${forkOwners ? [...forkOwners].sort().join(",") : "*"}|${sessionSelectedState}`;
+  const entry = orgPullRequestsCache.get(key) || {
+    nodes: [],
+    after: null,
+    done: false,
+    inflight: null,
+  };
+  orgPullRequestsCache.set(key, entry);
 
-  do {
-    const response = await octokit.graphql(ORG_PULL_REQUESTS_QUERY, {
-      owner: githubConfig.username,
-      repo: githubConfig.repo,
-      states,
-      perPage: 100,
-      after,
-      headers: {
-        ...(cache ? {} : { "If-None-Match": "" }),
-      },
-    });
-    const { pageInfo, nodes: pageNodes } = response.repository.pullRequests;
-
-    for (const node of pageNodes) {
-      if (forkOwners.includes(node.headRepositoryOwner?.login))
-        nodes.push(node);
+  while (!entry.done && entry.nodes.length < maxItems) {
+    if (entry.inflight) {
+      await entry.inflight;
+      continue;
     }
 
-    after = pageInfo.hasNextPage ? pageInfo.endCursor : null;
-  } while (after && nodes.length < maxItems);
+    entry.inflight = octokit
+      .graphql(ORG_PULL_REQUESTS_QUERY, {
+        owner: githubConfig.username,
+        repo: githubConfig.repo,
+        states,
+        perPage: 100,
+        after: entry.after,
+        headers: {
+          ...(cache ? {} : { "If-None-Match": "" }),
+        },
+      })
+      .then((response) => {
+        const { pageInfo, nodes } = response.repository.pullRequests;
+        for (const node of nodes) {
+          if (
+            !forkOwners ||
+            forkOwners.includes(node.headRepositoryOwner?.login)
+          )
+            entry.nodes.push(node);
+        }
+        entry.after = pageInfo.hasNextPage ? pageInfo.endCursor : null;
+        entry.done = !pageInfo.hasNextPage;
+      })
+      .finally(() => {
+        entry.inflight = null;
+      });
 
-  return nodes;
+    await entry.inflight;
+  }
+
+  return entry.nodes;
 }
 
 const AFFILIATED_FORKS_QUERY = `
@@ -114,7 +141,6 @@ export async function affiliatedForks(octokit, githubConfig) {
     const { pageInfo, nodes } = response.repository.forks;
 
     for (const node of nodes) {
-      // The app addresses forks by the target's name, renamed forks are unusable
       if (node.name !== githubConfig.repo) continue;
       const permission = node.viewerPermission;
       forks.push({
@@ -284,14 +310,14 @@ export async function numberOfOpenClosedSessions(
     `;
 
     const openResponse = await octokit.graphql(query, {
-      queryString: `repo:${githubConfig.username}/${githubConfig.repo} is:pr author:${creator} state:open`,
+      queryString: `repo:${githubConfig.username}/${githubConfig.repo} is:pr ${creator ? `author:${creator} ` : ""}state:open`,
       headers: {
         ...(cache ? {} : { "If-None-Match": "" }),
       },
     });
 
     const closedResponse = await octokit.graphql(query, {
-      queryString: `repo:${githubConfig.username}/${githubConfig.repo} is:pr author:${creator} state:closed`,
+      queryString: `repo:${githubConfig.username}/${githubConfig.repo} is:pr ${creator ? `author:${creator} ` : ""}state:closed`,
       headers: {
         ...(cache ? {} : { "If-None-Match": "" }),
       },

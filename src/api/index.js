@@ -14,6 +14,7 @@ import {
   orgSessionsList,
   orgNumberOfOpenClosedSessions,
   affiliatedForks,
+  clearOrgPullRequestsCache,
 } from "@/api/session";
 import useOctokitStore from "@/stores/octokit";
 import {
@@ -87,6 +88,16 @@ export async function initOctokit() {
     }
 
     const githubConfig = { auth, username, repo: repoName };
+
+    let githubTargetRepo = null;
+    try {
+      githubTargetRepo = (
+        await octokit.rest.repos.get({ owner: username, repo: repoName })
+      ).data;
+    } catch (error) {
+      console.warn("Unable to read the target repository:", error.message);
+    }
+
     let githubOrgData = [userData.data, ...orgMemberships];
     if (FORK_LOCATION.org) {
       githubOrgData = await mergeAffiliatedForks(
@@ -100,6 +111,7 @@ export async function initOctokit() {
       githubConfig,
       githubUserData: userData.data,
       githubOrgData,
+      githubTargetRepo,
       octokit,
     };
   } catch (error) {
@@ -175,7 +187,7 @@ export async function getSessionsList(
     useOctokitStore();
   const sessionNameValue = "";
 
-  if (scopeOwners.length) {
+  if (scopeOwners === null || scopeOwners.length) {
     return orgSessionsList(
       octokit,
       githubConfig,
@@ -220,9 +232,17 @@ export async function searchSessionName(
   );
 }
 
+export function clearSessionsCache() {
+  clearOrgPullRequestsCache();
+}
+
 export async function getNumberOfOpenClosedSessions(cache) {
   const { githubConfig, githubUserData, octokit, scopeOwners } =
     useOctokitStore();
+
+  if (scopeOwners === null) {
+    return numberOfOpenClosedSessions(octokit, githubConfig, cache, null);
+  }
 
   if (scopeOwners.length) {
     return orgNumberOfOpenClosedSessions(

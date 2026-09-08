@@ -74,10 +74,10 @@ const onKeyEnter = async (event) => {
 
 const isSelectable = (option) => option.forkExists || option.canCreateFork;
 
-const roleLabel = (option) => {
-  if (option.type === "personal") return "Your personal fork";
-  if (!isSelectable(option))
-    return "Fork not created yet, ask an organisation admin";
+const roleOf = (option) => {
+  if (option.type === "personal") return "Your fork";
+  if (!isSelectable(option)) return "No fork and no permission to create one";
+  if (!option.forkExists) return "Fork is created with the first session";
   if (option.collaborator)
     return option.role === "admin" ? "Admin (collaborator)" : "Collaborator";
   return option.role === "admin" ? "Admin" : "Member";
@@ -159,10 +159,13 @@ watch(
             <template v-slot:item="{ props: itemProps, item }">
               <v-list-item
                 v-bind="itemProps"
-                :subtitle="roleLabel(item.raw)"
                 :disabled="!isSelectable(item.raw)"
                 :class="`session-owner-item owner-${item.raw.owner}`"
               >
+                <template v-slot:subtitle>
+                  {{ item.raw.fullName }} ·
+                  <strong>{{ roleOf(item.raw) }}</strong>
+                </template>
               </v-list-item>
             </template>
           </v-select>
