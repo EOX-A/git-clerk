@@ -17,3 +17,4 @@ export {
   postSessionCreation,
 } from "./create-session";
 export { default as fetchJsonFormContent } from "./fetch-json-form-content";
+export { default as canManageSession } from "./can-manage-session";

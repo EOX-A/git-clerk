@@ -1,6 +1,6 @@
 <script setup>
 import { defineProps, inject, ref } from "vue";
-import { useLoader } from "@/helpers/index.js";
+import { useLoader, canManageSession } from "@/helpers/index.js";
 import { renameBySessionNumber } from "@/api/index.js";
 
 const props = defineProps({
@@ -26,7 +26,8 @@ const snackbar = inject("set-snackbar");
 const renameSession = ref(false);
 const renameSessionTitle = ref(props.session.title);
 const confirmRename = ref(false);
-const disabled = props.session.state === "closed";
+const disabled =
+  props.session.state === "closed" || !canManageSession(props.session);
 
 const renameSessionHandle = async () => {
   if (renameSession.value) {

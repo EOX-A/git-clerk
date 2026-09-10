@@ -1,7 +1,7 @@
 <script setup>
 import { defineProps, inject, ref } from "vue";
 import Tooltip from "@/components/global/Tooltip.vue";
-import { useLoader } from "@/helpers/index.js";
+import { useLoader, canManageSession } from "@/helpers/index.js";
 import { reviewBySessionNumber } from "@/api/index.js";
 import { watch } from "vue";
 
@@ -62,6 +62,7 @@ const reviewSessionHandle = async () => {
 
 function checkDisableStatus(newProps) {
   if (!newProps.session || newProps.session.changed_files === 0) return true;
+  if (!canManageSession(newProps.session)) return true;
   return (
     !newProps.session.draft ||
     newProps.session.state === "closed" ||

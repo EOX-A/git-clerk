@@ -7,6 +7,7 @@ import {
   searchSessionName,
   getNumberOfOpenClosedSessions,
   syncRepo,
+  clearSessionsCache,
 } from "@/api/index.js";
 import {
   querySessionsListMethod,
@@ -25,16 +26,24 @@ import {
   ActionTabSessions,
   CreateSession,
   WelcomeSection,
+  SessionOriginChip,
+  SessionAuthorChip,
 } from "@/components/session";
 import ListPlaceholder from "@/components/global/ListPlaceholder.vue";
 import CursorPagination from "@/components/global/CursorPagination.vue";
 import { FileBrowserDrawer } from "@/components/file-browser";
 import find from "lodash.find";
 import useAutomationStore from "@/stores/automation";
+import useOctokitStore from "@/stores/octokit";
 import { storeToRefs } from "pinia";
+import { SESSIONS_SCOPE_ALL } from "@/enums";
 
 const automationStore = useAutomationStore();
 const { automation, externalAutomationData } = storeToRefs(automationStore);
+
+const octokitStore = useOctokitStore();
+const { sessionsScope, scopeOptions, selectedScopeOption, isOrgScope } =
+  storeToRefs(octokitStore);
 
 const route = useRoute();
 const router = useRouter();
@@ -61,7 +70,9 @@ const navPaginationItems = inject("set-nav-pagination-items");
 const updateSessionsList = async (cache = false) => {
   sessions.value = null;
   window.scrollTo({ top: 0 });
-  syncRepo();
+  syncRepo(
+    sessionsScope.value === SESSIONS_SCOPE_ALL ? null : sessionsScope.value,
+  );
   const sessionsList = await getSessionsList(
     pageInfo.value,
     cursorPosition.value,
@@ -80,10 +91,22 @@ const updateSessionsList = async (cache = false) => {
   }
 
   cursorPosition.value = null;
-  numberOfOpenClosedSessions.value = await getNumberOfOpenClosedSessions(cache);
   const currSessionState = sessionSelectedState.value;
-  querySessionsListMethod(sessionsList, { snackbar, sessions, pageInfo });
+  const currScope = sessionsScope.value;
   const currPath = route.path;
+
+  querySessionsListMethod(sessionsList, { snackbar, sessions, pageInfo });
+
+  getNumberOfOpenClosedSessions(cache).then((counts) => {
+    if (
+      currSessionState === sessionSelectedState.value &&
+      currScope === sessionsScope.value &&
+      currPath === route.path
+    ) {
+      numberOfOpenClosedSessions.value = counts;
+    }
+  });
+
   checkStatusMethod(
     sessions,
     sessionsList.pageInfo,
@@ -115,6 +138,7 @@ onMounted(async () => {
     click: createNewSessionClick,
   };
   navPaginationItems.value = [navPaginationItems.value[0]];
+  clearSessionsCache();
 
   if (
     (externalAutomationData.value.session ||
@@ -150,6 +174,7 @@ onMounted(async () => {
         newSessionName,
         snackbar,
         loader,
+        forkOwner: ref(externalAutomationData.value.forkOwner || null),
       };
       await createSession(props, router, route, clearInputCreateNewSession);
     }
@@ -182,10 +207,19 @@ const changeSessionState = async (newState) => {
   }
 };
 
+const changeSessionScope = async (owner) => {
+  if (sessionsScope.value !== owner) {
+    octokitStore.setSessionsScope(owner);
+    await resetWholeState();
+  }
+};
+
 const resetWholeState = async () => {
   cursorHistory.value = []; // Reset cursor history when changing state
   currentPage.value = 1;
   pageInfo.value = null;
+  numberOfOpenClosedSessions.value = null;
+  clearSessionsCache();
   await updateSessionsList(true);
 };
 </script>
@@ -200,13 +234,19 @@ const resetWholeState = async () => {
 
   <ActionTabSessions
     v-if="
-      numberOfOpenClosedSessions &&
-      (numberOfOpenClosedSessions.open || numberOfOpenClosedSessions.closed)
+      (numberOfOpenClosedSessions &&
+        (numberOfOpenClosedSessions.open ||
+          numberOfOpenClosedSessions.closed)) ||
+      (sessions && sessions.length) ||
+      scopeOptions.length > 1
     "
     :sessionSelectedState="sessionSelectedState"
     :changeSessionState="changeSessionState"
     :numberOfOpenClosedSessions="numberOfOpenClosedSessions"
     :sessions="sessions"
+    :forkOptions="scopeOptions"
+    :selectedScopeOption="selectedScopeOption"
+    :changeSessionScope="changeSessionScope"
   />
 
   <v-list class="py-0">
@@ -255,8 +295,9 @@ const resetWholeState = async () => {
                     <OctIcon name="file-diff" />
                   </v-icon>
                 </Tooltip>
+                <SessionOriginChip :session="session" />
               </div>
-              <div class="v-list-item-subtitle d-flex align-center pt-2 ga-3">
+              <div class="v-list-item-subtitle d-flex align-center pt-2 ga-2">
                 <span class="d-none d-sm-flex">Changes made on: </span>
                 <div class="d-flex align-center">
                   <v-icon>mdi-calendar-blank-outline</v-icon>
@@ -266,6 +307,7 @@ const resetWholeState = async () => {
                   <v-icon>mdi-clock-time-five-outline</v-icon>
                   <span class="text-black px-1">{{ session.time }}</span>
                 </div>
+                <SessionAuthorChip v-if="isOrgScope" :session="session" />
               </div>
             </div>
           </div>

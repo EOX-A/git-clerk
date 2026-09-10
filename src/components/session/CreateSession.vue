@@ -1,10 +1,15 @@
 <script setup>
 import { createSession } from "@/helpers/index.js";
 import { useRoute, useRouter } from "vue-router";
-import { ref, inject } from "vue";
+import { ref, inject, watch } from "vue";
+import useOctokitStore from "@/stores/octokit";
+import { storeToRefs } from "pinia";
+
+const { forkOptions, sessionsScope } = storeToRefs(useOctokitStore());
 
 const loader = ref({});
 const newSessionName = ref("");
+const sessionOwner = ref(null);
 
 const route = useRoute();
 const router = useRouter();
@@ -47,6 +52,7 @@ const create = async () => {
       newSessionName,
       snackbar,
       loader,
+      forkOwner: sessionOwner,
     },
     router,
     route,
@@ -65,6 +71,31 @@ const onKeyEnter = async (event) => {
   if (event.key === "Escape") clear();
   else if (event.key === "Enter") await create();
 };
+
+const isSelectable = (option) => option.forkExists || option.canCreateFork;
+
+const roleOf = (option) => {
+  if (option.type === "personal") return "Your fork";
+  if (!isSelectable(option)) return "No fork and no permission to create one";
+  if (!option.forkExists) return "Fork is created with the first session";
+  if (option.collaborator)
+    return option.role === "admin" ? "Admin (collaborator)" : "Collaborator";
+  return option.role === "admin" ? "Admin" : "Member";
+};
+
+watch(
+  forkOptions,
+  (options) => {
+    const selectable = options.filter(isSelectable);
+    if (!selectable.some((option) => option.owner === sessionOwner.value)) {
+      const preferred =
+        selectable.find((option) => option.owner === sessionsScope.value) ||
+        selectable[0];
+      sessionOwner.value = preferred?.owner || null;
+    }
+  },
+  { immediate: true, deep: true },
+);
 </script>
 
 <template>
@@ -87,7 +118,7 @@ const onKeyEnter = async (event) => {
           }}
         </p>
         <v-alert
-          class="my-6"
+          class="my-4"
           title="What is a session?"
           text="A session lets you group and review edits to multiple files before submitting them for approval. Original files stay unchanged until approved."
           type="success"
@@ -96,43 +127,78 @@ const onKeyEnter = async (event) => {
           rounded="lg"
           @keydown="onKeyEnter"
         ></v-alert>
-        <v-text-field
-          density="compact"
-          label="Session Name"
-          variant="solo"
-          hide-details
-          single-line
-          flat="true"
-          v-model="newSessionName"
-          class="rounded border-md my-3"
-        ></v-text-field>
-        <div class="d-flex ga-2 justify-center align-center">
-          <v-btn
-            v-if="session && currentSession"
-            color="primary"
-            variant="tonal"
-            prepend-icon="mdi-pencil"
-            :disabled="newSessionName !== ''"
-            @click="currentSession"
-            class="current-session-btn"
+        <div class="d-flex flex-column ga-4">
+          <v-text-field
+            density="compact"
+            label="Session Name"
+            variant="solo"
+            hide-details
+            single-line
+            flat="true"
+            v-model="newSessionName"
+            class="rounded border-md session-name-field"
+          ></v-text-field>
+          <v-select
+            v-if="forkOptions.length > 1"
+            v-model="sessionOwner"
+            label="Session owner"
+            density="comfortable"
+            persistent-hint
+            :hint="
+              sessionOwner
+                ? `The session branch is created in the '${sessionOwner}' fork.`
+                : ''
+            "
+            :items="forkOptions"
+            item-title="name"
+            item-value="owner"
+            single-line
+            variant="outlined"
+            class="session-owner-select"
           >
-            Edit in current session
-          </v-btn>
-          <span
-            v-if="session && currentSession"
-            class="text-center font-weight-bold opacity-50 text-body-2"
-            >OR</span
-          >
-          <v-btn
-            color="primary"
-            variant="flat"
-            prepend-icon="mdi-plus"
-            :disabled="!newSessionName"
-            @click="create"
-            class="new-session-btn"
-          >
-            Create New Session
-          </v-btn>
+            <template v-slot:item="{ props: itemProps, item }">
+              <v-list-item
+                v-bind="itemProps"
+                :disabled="!isSelectable(item.raw)"
+                :class="`session-owner-item owner-${item.raw.owner}`"
+              >
+                <template v-slot:subtitle>
+                  {{ item.raw.fullName }} ·
+                  <strong>{{ roleOf(item.raw) }}</strong>
+                </template>
+              </v-list-item>
+            </template>
+          </v-select>
+          <div class="d-flex ga-2 justify-center align-center">
+            <v-btn
+              v-if="session && currentSession"
+              color="primary"
+              variant="tonal"
+              prepend-icon="mdi-pencil"
+              :disabled="newSessionName !== ''"
+              @click="currentSession"
+              class="current-session-btn"
+            >
+              Edit in current session
+            </v-btn>
+            <span
+              v-if="session && currentSession"
+              class="text-center font-weight-bold opacity-50 text-body-2"
+              >OR</span
+            >
+            <v-btn
+              color="primary"
+              variant="flat"
+              prepend-icon="mdi-plus"
+              :disabled="
+                !newSessionName || (forkOptions.length > 1 && !sessionOwner)
+              "
+              @click="create"
+              class="new-session-btn"
+            >
+              Create New Session
+            </v-btn>
+          </div>
         </div>
       </template>
     </v-card>
