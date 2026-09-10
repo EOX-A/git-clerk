@@ -8,6 +8,36 @@ import sessionsList from "../fixtures/sessions-list:graphql.json";
 const openNodes = sessionsList.repository.pullRequests.nodes;
 const closedNodes = [];
 
+const orgLogin = "testroles";
+const orgNodes = [
+  {
+    id: "PR_org_1",
+    title: "Org: Bar 1",
+    url: "https://github.com/octocat/Hello-World/pull/11",
+    state: "OPEN",
+    number: 11,
+    changedFiles: 2,
+    createdAt: "2025-01-10T06:07:57Z",
+    updatedAt: "2025-01-10T06:07:57Z",
+    isDraft: true,
+    author: { login: user.login },
+    headRepositoryOwner: { login: orgLogin },
+  },
+  {
+    id: "PR_org_2",
+    title: "Org: Bar 2",
+    url: "https://github.com/octocat/Hello-World/pull/12",
+    state: "OPEN",
+    number: 12,
+    changedFiles: 1,
+    createdAt: "2025-01-09T06:07:57Z",
+    updatedAt: "2025-01-09T06:07:57Z",
+    isDraft: true,
+    author: { login: "colleague" },
+    headRepositoryOwner: { login: orgLogin },
+  },
+];
+
 // Define a dummy session object for testing
 const dummySession = {
   url: "https://api.github.com/repos/",
@@ -22,6 +52,7 @@ const dummySession = {
 // State flags to control test behavior
 let deleteSession = false;
 let reviewSession = false;
+let orgFork = false;
 
 describe("Session list related tests", () => {
   beforeEach(() => {
@@ -34,7 +65,8 @@ describe("Session list related tests", () => {
       (req) => {
         const { query, variables } = req.body;
 
-        // Affiliated forks lookup on startup: only the personal fork exists
+        // Affiliated forks lookup on startup: the personal fork always exists,
+        // the organisation fork only when the orgFork flag is set
         if (query.includes("forks(")) {
           req.reply({
             data: {
@@ -48,6 +80,19 @@ describe("Session list related tests", () => {
                       viewerPermission: "ADMIN",
                       owner: { login: user.login, __typename: "User" },
                     },
+                    ...(orgFork
+                      ? [
+                          {
+                            name: ghConfig.repo,
+                            isPrivate: false,
+                            viewerPermission: "WRITE",
+                            owner: {
+                              login: orgLogin,
+                              __typename: "Organization",
+                            },
+                          },
+                        ]
+                      : []),
                   ],
                 },
               },
@@ -73,7 +118,7 @@ describe("Session list related tests", () => {
               repository: {
                 pullRequests: {
                   pageInfo: { hasNextPage: false, endCursor: null },
-                  nodes: isOpen ? openNodes : closedNodes,
+                  nodes: isOpen ? [...openNodes, ...orgNodes] : closedNodes,
                 },
               },
             },
@@ -104,6 +149,61 @@ describe("Session list related tests", () => {
     );
     // Wait for the open/closed counts so their requests do not leak into the next test
     cy.get(".open-session-chip").should("have.text", String(openNodes.length));
+  });
+
+  // Test role based scopes: All Repos, organisation and Personal with their counts, org tags and authors
+  it("List sessions per scope with org tags and authors", () => {
+    // Reload with the organisation fork present: the default scope becomes "All Repos"
+    orgFork = true;
+    cy.visit("/");
+    cy.get(".sessions-scope-btn", { timeout: 12000 }).should(
+      "contain.text",
+      "All Repos",
+    );
+    cy.get(".sessions-view").should(
+      "have.length",
+      openNodes.length + orgNodes.length,
+    );
+    cy.get(".open-session-chip").should(
+      "have.text",
+      String(openNodes.length + orgNodes.length),
+    );
+
+    // Personal sessions
+    cy.get(".session-origin-chip").should("have.length", orgNodes.length);
+    cy.get(".session-origin-chip").each((chip) => {
+      cy.wrap(chip).should("contain.text", `Org: ${orgLogin}`);
+    });
+
+    // Author is shown per row: "You" for the current user, the login otherwise
+    cy.get(".sessions-view")
+      .eq(openNodes.length)
+      .should("contain.text", "by @You");
+    cy.get(".sessions-view")
+      .eq(openNodes.length + 1)
+      .should("contain.text", `by @${orgNodes[1].author.login}`);
+
+    // Organisation scope lists
+    cy.get(".sessions-scope-btn").click();
+    cy.get(`.sessions-scope-list .scope-${orgLogin}`).click();
+    cy.get(".sessions-scope-btn").should("contain.text", orgLogin);
+    cy.get(".sessions-view").should("have.length", orgNodes.length);
+    cy.get(".open-session-chip").should("have.text", String(orgNodes.length));
+    cy.get(".session-title").each((titleElement, index) => {
+      cy.wrap(titleElement).should("have.text", orgNodes[index].title);
+    });
+
+    // Personal scope lists
+    cy.get(".sessions-scope-btn").click();
+    cy.get(`.sessions-scope-list .scope-${user.login}`).click();
+    cy.get(".sessions-scope-btn").should("contain.text", "Personal");
+    cy.get(".sessions-view").should("have.length", openNodes.length);
+    cy.get(".open-session-chip").should("have.text", String(openNodes.length));
+    cy.get(".session-origin-chip").should("not.exist");
+
+    cy.then(() => {
+      orgFork = false;
+    });
   });
 
   // Test that session titles match expected values
