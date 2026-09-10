@@ -136,7 +136,7 @@ watch(
             single-line
             flat="true"
             v-model="newSessionName"
-            class="rounded border-md"
+            class="rounded border-md session-name-field"
           ></v-text-field>
           <v-select
             v-if="forkOptions.length > 1"
