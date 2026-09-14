@@ -14,7 +14,8 @@ const props = defineProps({
   },
 });
 
-const { githubUserData, githubConfig } = storeToRefs(useOctokitStore());
+const { githubUserData, githubConfig, forkOptions } =
+  storeToRefs(useOctokitStore());
 
 const forkOwner = computed(
   () =>
@@ -31,6 +32,13 @@ const isPersonal = computed(
 const isUpstream = computed(
   () => forkOwner.value === githubConfig.value?.username,
 );
+
+const originLabel = computed(() => {
+  const option = forkOptions.value.find(
+    (item) => item.owner === forkOwner.value,
+  );
+  return `${option?.name || forkOwner.value}/${githubConfig.value?.repo || ""}`;
+});
 </script>
 
 <template>
@@ -50,10 +58,10 @@ const isUpstream = computed(
   >
     <template v-if="isPersonal">Personal</template>
     <span v-else-if="isUpstream" class="d-flex align-center ga-1"
-      ><strong>Repo: </strong>{{ forkOwner }}</span
+      ><strong>Repo: </strong>{{ originLabel }}</span
     >
     <span v-else class="d-flex align-center ga-1"
-      ><strong>Org: </strong>{{ forkOwner }}</span
+      ><strong>Org: </strong>{{ originLabel }}</span
     >
   </v-chip>
 </template>
