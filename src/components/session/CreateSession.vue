@@ -1,11 +1,11 @@
 <script setup>
 import { createSession } from "@/helpers/index.js";
 import { useRoute, useRouter } from "vue-router";
-import { ref, inject, watch } from "vue";
+import { ref, inject, watch, computed } from "vue";
 import useOctokitStore from "@/stores/octokit";
 import { storeToRefs } from "pinia";
 
-const { forkOptions, sessionsScope } = storeToRefs(useOctokitStore());
+const { forkLocationOptions, sessionsScope } = storeToRefs(useOctokitStore());
 
 const loader = ref({});
 const newSessionName = ref("");
@@ -72,25 +72,30 @@ const onKeyEnter = async (event) => {
   else if (event.key === "Enter") await create();
 };
 
-const isSelectable = (option) => option.forkExists || option.canCreateFork;
-
 const roleOf = (option) => {
   if (option.type === "personal") return "Your fork";
-  if (!isSelectable(option)) return "No fork and no permission to create one";
-  if (!option.forkExists) return "Fork is created with the first session";
   if (option.collaborator)
     return option.role === "admin" ? "Admin (collaborator)" : "Collaborator";
   return option.role === "admin" ? "Admin" : "Member";
 };
 
+const ownerHint = computed(() => {
+  const option = forkLocationOptions.value.find(
+    (item) => item.owner === sessionOwner.value,
+  );
+  if (!option) return "";
+  return option.forkExists
+    ? `The session branch is created in the '${option.fullName}' fork.`
+    : `No fork in '${option.owner}' yet, it is created together with this session.`;
+});
+
 watch(
-  forkOptions,
+  forkLocationOptions,
   (options) => {
-    const selectable = options.filter(isSelectable);
-    if (!selectable.some((option) => option.owner === sessionOwner.value)) {
+    if (!options.some((option) => option.owner === sessionOwner.value)) {
       const preferred =
-        selectable.find((option) => option.owner === sessionsScope.value) ||
-        selectable[0];
+        options.find((option) => option.owner === sessionsScope.value) ||
+        options[0];
       sessionOwner.value = preferred?.owner || null;
     }
   },
@@ -139,17 +144,13 @@ watch(
             class="rounded border-md session-name-field"
           ></v-text-field>
           <v-select
-            v-if="forkOptions.length > 1"
+            v-if="forkLocationOptions.length > 1"
             v-model="sessionOwner"
             label="Session owner"
             density="comfortable"
             persistent-hint
-            :hint="
-              sessionOwner
-                ? `The session branch is created in the '${sessionOwner}' fork.`
-                : ''
-            "
-            :items="forkOptions"
+            :hint="ownerHint"
+            :items="forkLocationOptions"
             item-title="name"
             item-value="owner"
             single-line
@@ -159,12 +160,23 @@ watch(
             <template v-slot:item="{ props: itemProps, item }">
               <v-list-item
                 v-bind="itemProps"
-                :disabled="!isSelectable(item.raw)"
                 :class="`session-owner-item owner-${item.raw.owner}`"
               >
                 <template v-slot:subtitle>
                   {{ item.raw.fullName }} ·
                   <strong>{{ roleOf(item.raw) }}</strong>
+                </template>
+                <template v-slot:append>
+                  <v-chip
+                    v-if="item.raw.forkExists"
+                    size="x-small"
+                    variant="flat"
+                    color="primary"
+                    prepend-icon="mdi-source-fork"
+                    class="ml-4 fork-exists-chip"
+                  >
+                    Forked
+                  </v-chip>
                 </template>
               </v-list-item>
             </template>
@@ -191,7 +203,8 @@ watch(
               variant="flat"
               prepend-icon="mdi-plus"
               :disabled="
-                !newSessionName || (forkOptions.length > 1 && !sessionOwner)
+                !newSessionName ||
+                (forkLocationOptions.length > 1 && !sessionOwner)
               "
               @click="create"
               class="new-session-btn"

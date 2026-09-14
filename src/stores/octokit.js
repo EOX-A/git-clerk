@@ -74,6 +74,12 @@ const useOctokitStore = defineStore("octokit", () => {
     ),
   );
 
+  const forkLocationOptions = computed(() =>
+    forkOptions.value.filter(
+      (option) => option.forkExists || option.canCreateFork,
+    ),
+  );
+
   const scopeOptions = computed(() => {
     const forked = forkOptions.value.filter(
       (option) => option.type === "personal" || option.forkExists,
@@ -138,6 +144,7 @@ const useOctokitStore = defineStore("octokit", () => {
     sessionsScope,
     isRepoMember,
     forkOptions,
+    forkLocationOptions,
     scopeOptions,
     selectedScopeOption,
     isOrgScope,
