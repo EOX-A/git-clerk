@@ -17,6 +17,7 @@
 import "./commands";
 import { GITHUB_HOST, GITHUB_HOST_REGEX } from "../enums";
 import ghConfig from "../fixtures/gh-config.json";
+import user from "../fixtures/user:get.json";
 
 // Set up intercepts for all API calls before each test
 beforeEach(() => {
@@ -241,4 +242,41 @@ beforeEach(() => {
     },
     {},
   ).as("deleteContent");
+
+  // Intercept affiliated forks lookup (GraphQL) run on startup: only the personal fork exists
+  cy.intercept(
+    {
+      method: "POST",
+      url: `${GITHUB_HOST}/graphql`,
+    },
+    (req) => {
+      if (!req.body?.query?.includes("forks(")) return;
+      req.reply({
+        data: {
+          repository: {
+            forks: {
+              pageInfo: { hasNextPage: false, endCursor: null },
+              nodes: [
+                {
+                  name: ghConfig.repo,
+                  isPrivate: false,
+                  viewerPermission: "ADMIN",
+                  owner: { login: user.login, __typename: "User" },
+                },
+              ],
+            },
+          },
+        },
+      });
+    },
+  ).as("postGraphqlForks");
+
+  // Intercept org memberships request
+  cy.intercept(
+    "GET",
+    new RegExp(`${GITHUB_HOST_REGEX}\/user\/memberships\/orgs.*`),
+    {
+      fixture: "org:get.json",
+    },
+  ).as("getOrgMemberships");
 });

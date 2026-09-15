@@ -293,6 +293,11 @@ const i18n = {
   },
 };
 
+const forkingLocation = {
+  personal: true,
+  org: true,
+};
+
 const allowedOrigins = [import.meta.url.replace("/config.js", "")];
 
 globalThis.gitClerkConfig = {
@@ -306,4 +311,5 @@ globalThis.gitClerkConfig = {
   disableManualFileCreation,
   i18n,
   allowedOrigins,
+  forkingLocation,
 };

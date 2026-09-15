@@ -1,5 +1,6 @@
 import { createSessionByName } from "@/api/index.js";
 import { useLoader } from "@/helpers/index.js";
+import useOctokitStore from "@/stores/octokit";
 import { h } from "vue";
 
 export function postSessionCreation(
@@ -54,10 +55,16 @@ export default async function createSession(
       ),
     },
   );
-  props.snackbar.value = await createSessionByName(props.newSessionName.value);
+  props.snackbar.value = await createSessionByName(
+    props.newSessionName.value,
+    props.forkOwner?.value || null,
+  );
   props.loader.value.hide();
 
   if (props.snackbar.value.number) {
+    if (props.snackbar.value.forkOwner) {
+      useOctokitStore().setSessionsScope(props.snackbar.value.forkOwner);
+    }
     postSessionCreation(
       props.snackbar.value.number,
       router,

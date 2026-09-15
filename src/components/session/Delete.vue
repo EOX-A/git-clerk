@@ -3,6 +3,7 @@ import { defineProps, inject, ref } from "vue";
 import Tooltip from "@/components/global/Tooltip.vue";
 import { useLoader } from "@/helpers/index.js";
 import { deleteBySessionNumber } from "@/api/index.js";
+import { canManageSession } from "@/helpers/index.js";
 
 const props = defineProps({
   session: {
@@ -36,7 +37,8 @@ const deleteSessionHandle = async () => {
   }
 };
 
-const disabled = props.session.state === "closed";
+const disabled =
+  props.session.state === "closed" || !canManageSession(props.session);
 </script>
 
 <template>

@@ -1,0 +1,45 @@
+[
+  {
+    "url": "https://api.github.com/orgs/testroles/memberships/testuser",
+    "state": "active",
+    "role": "admin",
+    "organization_url": "https://api.github.com/orgs/testroles",
+    "user": {
+      "login": "testuser",
+      "id": 76159488,
+      "node_id": "MDQ6VXNlcjc2MTU5NDg4",
+      "avatar_url": "https://avatars.githubusercontent.com/u/76159488?v=4",
+      "gravatar_id": "",
+      "url": "https://api.github.com/users/testuser",
+      "html_url": "https://github.com/testuser",
+      "followers_url": "https://api.github.com/users/testuser/followers",
+      "following_url": "https://api.github.com/users/testuser/following{/other_user}",
+      "gists_url": "https://api.github.com/users/testuser/gists{/gist_id}",
+      "starred_url": "https://api.github.com/users/testuser/starred{/owner}{/repo}",
+      "subscriptions_url": "https://api.github.com/users/testuser/subscriptions",
+      "organizations_url": "https://api.github.com/users/testuser/orgs",
+      "repos_url": "https://api.github.com/users/testuser/repos",
+      "events_url": "https://api.github.com/users/testuser/events{/privacy}",
+      "received_events_url": "https://api.github.com/users/testuser/received_events",
+      "type": "User",
+      "user_view_type": "public",
+      "site_admin": false
+    },
+    "direct_membership": true,
+    "enterprise_teams_providing_indirect_membership": [],
+    "organization": {
+      "login": "testroles",
+      "id": 313305621,
+      "node_id": "O_kgDOEqyqFQ",
+      "url": "https://api.github.com/orgs/testroles",
+      "repos_url": "https://api.github.com/orgs/testroles/repos",
+      "events_url": "https://api.github.com/orgs/testroles/events",
+      "hooks_url": "https://api.github.com/orgs/testroles/hooks",
+      "issues_url": "https://api.github.com/orgs/testroles/issues",
+      "members_url": "https://api.github.com/orgs/testroles/members{/member}",
+      "public_members_url": "https://api.github.com/orgs/testroles/public_members{/member}",
+      "avatar_url": "https://avatars.githubusercontent.com/u/313305621?v=4",
+      "description": null
+    }
+  }
+]

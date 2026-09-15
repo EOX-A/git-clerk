@@ -3,6 +3,7 @@ import {
   ReviewSession,
   DeployedPreview,
   ActionSessions,
+  SessionOriginChip,
 } from "@/components/session/index.js";
 import { defineProps } from "vue";
 import OctIcon from "@/components/global/OctIcon.vue";
@@ -72,6 +73,11 @@ const props = defineProps({
       size="x-large"
     />
     <v-spacer></v-spacer>
+    <SessionOriginChip
+      :session="session"
+      size="large"
+      class="mr-2 d-sm-flex d-none"
+    />
     <v-chip
       class="mx-5 pl-5 session-icon ga-2 d-sm-flex d-none"
       size="large"

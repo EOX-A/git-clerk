@@ -34,7 +34,8 @@ const props = defineProps({
         color="secondary"
         class="rounded-pill font-weight-bold open-session-chip"
       >
-        {{ numberOfOpenClosedSessions?.open || "-" }}
+        <span v-if="!numberOfOpenClosedSessions" class="count-shimmer"></span>
+        <template v-else>{{ numberOfOpenClosedSessions.open || "-" }}</template>
       </v-chip>
     </template>
   </v-btn>
@@ -55,8 +56,36 @@ const props = defineProps({
         color="red"
         class="rounded-pill font-weight-bold closed-session-chip"
       >
-        {{ numberOfOpenClosedSessions?.closed || "-" }}
+        <span v-if="!numberOfOpenClosedSessions" class="count-shimmer"></span>
+        <template v-else>{{
+          numberOfOpenClosedSessions.closed || "-"
+        }}</template>
       </v-chip>
     </template>
   </v-btn>
 </template>
+
+<style>
+.count-shimmer {
+  display: inline-block;
+  width: 18px;
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.08) 25%,
+    rgba(0, 0, 0, 0.2) 50%,
+    rgba(0, 0, 0, 0.08) 75%
+  );
+  background-size: 200% 100%;
+  animation: count-shimmer 1.2s ease-in-out infinite;
+}
+@keyframes count-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+</style>

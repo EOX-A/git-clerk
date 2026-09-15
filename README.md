@@ -29,6 +29,22 @@ globalThis.gitClerkConfig = {
 
 You can also set this GitHub config via an `.env` variable, by passing `GITCLERK_GITHUB_TOKEN` and `GITCLERK_GITHUB_REPO` see e.g. [.env.example](./.env.examle).
 
+### Permission required by GitClerk on GitHub
+
+| Permission           | Classic token / OAuth App                         | GitHub App                    | Fine-grained PAT                                                                 | Needed for                                                  |
+| -------------------- | ------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Repository access    | `repo` (or `public_repo` if everything is public) | Metadata: Read                | Metadata: Read, plus access to the target and the forks under the resource owner | Reading repos and forks                                     |
+| Contents             | `repo`                                            | Contents: Read and write      | Contents: Read and write                                                         | Files, branches, commits, forks, merge-upstream             |
+| Pull requests        | `repo`                                            | Pull requests: Read and write | Pull requests: Read and write                                                    | Sessions (create, list, rename, close, submit for review)   |
+| Checks               | `repo`                                            | Checks: Read                  | Checks: Read                                                                     | CI status on sessions                                       |
+| Organisation members | `read:org`                                        | Members: Read                 | Members: Read (only when the resource owner is an organisation)                  | Organisation forks, only with `forkingLocation.org`         |
+| Workflows            | `workflow`                                        | Workflows: Read and write     | Workflows: Read and write                                                        | Optional, only for editing files under `.github/workflows/` |
+
+**Notes:**
+
+- A GitHub App must be installed on the user's account and in every organisation whose fork should be usable.
+- A fine-grained PAT has a single resource owner, so it cannot combine personal and organisation forks.
+
 ## Features
 
 ### `schemaMap`
@@ -335,6 +351,35 @@ globalThis.gitClerkConfig = {
 ```
 
 You can read more about i18n options [here](https://vue-i18n.intlify.dev/guide/essentials/syntax).
+
+### Organisation forks and roles
+
+By default every user works in her/his own fork and sees only the sessions (PRs) whose branch lives in that fork. With `forkingLocation` you can additionally allow sessions in an **organisation fork** that is shared by all members:
+
+```js
+globalThis.gitClerkConfig = {
+  [...]
+  forkingLocation: {
+    personal: true, // sessions in the user's personal fork (default: true)
+    org: true, // sessions in organisation forks (default: false)
+  },
+  [...]
+};
+```
+
+When `org` is enabled, git-clerk lists the organisations the user is a member of (this needs a token with the `read:org` scope) and, in the same load step, asks GitHub for the forks of the target repository the user is affiliated with (owned, outside collaborator, or through an organisation membership). Org forks the user can push to without being a member are added as well. The resulting roles are:
+
+| Role                                            | Fork repo                                                 | View sessions                    | Create session                           | Edit files          | Rename / Delete / Submit |
+| ----------------------------------------------- | --------------------------------------------------------- | -------------------------------- | ---------------------------------------- | ------------------- | ------------------------ |
+| **Repo member** (write on target)               | Personal ✅, Org ✅                                       | All PRs ✅ (native + every fork) | Personal ✅, Org ✅                      | ✅ all              | ✅ all                   |
+| **Personal** (no write, no org)                 | Personal ✅, Org ❌                                       | Personal ✅, Org ❌              | Personal ✅, Org ❌                      | Personal ✅, Org ❌ | Personal ✅, Org ❌      |
+| **Org member**                                  | Personal ✅, Org ✅ (unless the org forbids member forks) | Personal ✅, Org ✅              | Personal ✅, Org ✅                      | Personal ✅, Org ✅ | Personal ✅, Org ✅      |
+| **Outside collaborator** (write on an org fork) | Personal ✅, Org ❌                                       | Personal ✅, Org ✅              | Personal ✅, Org ✅ (existing fork only) | Personal ✅, Org ✅ | Personal ✅, Org ✅      |
+| **Read-only collaborator**                      | Personal ✅, Org ❌                                       | Personal ✅, Org ❌              | Personal ✅, Org ❌                      | Personal ✅, Org ❌ | Personal ✅, Org ❌      |
+
+A scope switcher above the sessions list toggles between _All PRs_ (repo members: everything, the default) or _All Repos_ (everyone else: personal plus every organisation fork, the default), _Personal_, and each organisation that already holds a fork. Session branches in an org fork are still prefixed with the user's login (`<login>/<slug>`), so members never collide. In organisation scope each session shows its author. Everyone with push access to the org fork can edit files in any of its sessions.
+
+External automations can target an organisation fork by adding `forkOwner: "<org-login>"` to the payload or query parameters.
 
 ## Development
 
