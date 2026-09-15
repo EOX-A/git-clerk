@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.0](https://github.com/EOX-A/git-clerk/compare/v1.18.0...v1.19.0) (2026-09-15)
+
+
+### Features
+
+* Add role-based session listing and org forking support ([#265](https://github.com/EOX-A/git-clerk/issues/265)) ([e7c2895](https://github.com/EOX-A/git-clerk/commit/e7c289516201f5126693833b3d7376f547145843))
+
 ## [1.18.0](https://github.com/EOX-A/git-clerk/compare/v1.17.0...v1.18.0) (2026-09-04)
 
 
