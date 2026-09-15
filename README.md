@@ -29,6 +29,22 @@ globalThis.gitClerkConfig = {
 
 You can also set this GitHub config via an `.env` variable, by passing `GITCLERK_GITHUB_TOKEN` and `GITCLERK_GITHUB_REPO` see e.g. [.env.example](./.env.examle).
 
+### Permission required by GitClerk on GitHub
+
+| Permission           | Classic token / OAuth App                         | GitHub App                    | Fine-grained PAT                                                                 | Needed for                                                  |
+| -------------------- | ------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Repository access    | `repo` (or `public_repo` if everything is public) | Metadata: Read                | Metadata: Read, plus access to the target and the forks under the resource owner | Reading repos and forks                                     |
+| Contents             | `repo`                                            | Contents: Read and write      | Contents: Read and write                                                         | Files, branches, commits, forks, merge-upstream             |
+| Pull requests        | `repo`                                            | Pull requests: Read and write | Pull requests: Read and write                                                    | Sessions (create, list, rename, close, submit for review)   |
+| Checks               | `repo`                                            | Checks: Read                  | Checks: Read                                                                     | CI status on sessions                                       |
+| Organisation members | `read:org`                                        | Members: Read                 | Members: Read (only when the resource owner is an organisation)                  | Organisation forks, only with `forkingLocation.org`         |
+| Workflows            | `workflow`                                        | Workflows: Read and write     | Workflows: Read and write                                                        | Optional, only for editing files under `.github/workflows/` |
+
+**Notes:**
+
+- A GitHub App must be installed on the user's account and in every organisation whose fork should be usable.
+- A fine-grained PAT has a single resource owner, so it cannot combine personal and organisation forks.
+
 ## Features
 
 ### `schemaMap`
