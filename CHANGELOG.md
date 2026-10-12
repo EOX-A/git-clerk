@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.1](https://github.com/EOX-A/git-clerk/compare/v1.19.0...v1.19.1) (2026-10-12)
+
+
+### Bug Fixes
+
+* Update eox/* dependencies, remove concurently dep ([#279](https://github.com/EOX-A/git-clerk/issues/279)) ([a20c16a](https://github.com/EOX-A/git-clerk/commit/a20c16ad235aae8cd176d1196ba2c7e25556c5a8))
+
 ## [1.19.0](https://github.com/EOX-A/git-clerk/compare/v1.18.0...v1.19.0) (2026-09-15)
 
 
