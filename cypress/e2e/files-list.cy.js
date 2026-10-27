@@ -9,7 +9,6 @@ import pullsData from "../fixtures/pulls:get.json";
 let sessionName = false;
 let sessionTitle = "Renamed Session";
 let duplicateFile = false;
-let isManualContent = false;
 let isUploadFile = false;
 
 // Test file path constant
@@ -32,7 +31,7 @@ describe("Files list related tests", () => {
         url: `${GITHUB_HOST_REGEX}/repos/${ghConfig.username}/${ghConfig.repo}/pulls/123`,
       },
       (req) => {
-        let tempPulls = pullsData;
+        const tempPulls = structuredClone(pullsData);
         if (sessionName) {
           tempPulls.title = sessionTitle;
         }
@@ -55,11 +54,10 @@ describe("Files list related tests", () => {
         ),
       },
       (req) => {
-        let tempData = files;
+        const tempData = structuredClone(files);
         // Add duplicate file if flag is set
         if (duplicateFile) {
-          tempData.push(files[0]);
-          tempData[tempData.length - 1].filename = fileName;
+          tempData.push({ ...files[0], filename: fileName });
         }
         // Add uploaded file if flag is set
         if (isUploadFile) {
@@ -86,11 +84,10 @@ describe("Files list related tests", () => {
         ),
       },
       (req) => {
-        let tempContent = content;
-        if (isManualContent) {
+        const tempContent = structuredClone(content);
+        if (new URL(req.url).pathname.endsWith("/manual-file.txt")) {
           tempContent.path = "manual-file.txt";
           tempContent.content = "";
-          isManualContent = false;
         }
         req.reply(tempContent);
       },
@@ -175,6 +172,7 @@ describe("Files list related tests", () => {
     cy.get(".rename-session-container .v-btn.bg-primary").click();
     cy.get(".v-card-actions .v-btn.bg-success").click();
     cy.wait("@getRepo");
+    cy.wait("@getFiles");
     cy.get(".v-breadcrumbs-item--disabled div").should(
       "have.text",
       sessionTitle,
@@ -211,14 +209,12 @@ describe("Files list related tests", () => {
 
   // Test file deletion functionality
   it("Delete a file", () => {
-    cy.wait("@getFiles");
-    cy.get("#session-action-menu").click();
-    cy.get(".files-list")
-      .eq(files.length - 1)
-      .find(".v-btn .mdi-delete-outline")
-      .click();
+    cy.get(".files-list").should("have.length", files.length + 1);
+    cy.get(".files-list").last().find(".v-btn .mdi-delete-outline").click();
     cy.get(".v-card-actions .v-btn.bg-red").click();
-    duplicateFile = false;
+    cy.then(() => {
+      duplicateFile = false;
+    });
     cy.wait("@deleteContent");
     cy.wait("@getFiles");
     cy.get(".files-list").should("have.length", files.length);
@@ -277,13 +273,14 @@ describe("Files list related tests", () => {
 
   // Test adding new manual content
   it("Add new manual content", () => {
+    cy.get(".files-list").should("have.length", files.length);
     cy.get(".navbar .v-btn.session-file-btn").click();
     cy.get(".add-file-btn").click();
-    cy.get(".v-list-item").eq(0).click();
+    cy.contains(".v-menu .v-list-item", "Add file here").click();
     cy.get(".current-session-btn").click();
-    cy.get(".add-file-field").type("manual-file.txt", { delay: 100 });
-    isManualContent = true;
+    cy.get(".add-file-field input").type("manual-file.txt", { delay: 100 });
     cy.get(".add-file-button").click();
+    cy.wait("@putContent");
     cy.location("pathname", { timeout: 10000 }).should(
       "eq",
       "/123/bWFudWFsLWZpbGUudHh0",
@@ -307,7 +304,9 @@ describe("Files list related tests", () => {
       force: true,
     });
     cy.get(".create-file .v-list input").should("have.value", "code.js");
-    isUploadFile = true;
+    cy.then(() => {
+      isUploadFile = true;
+    });
     cy.get(".create-file button.bg-primary").click();
     cy.wait("@getFiles");
     cy.get(".files-list")
