@@ -364,7 +364,7 @@ onUnmounted(() => {
       <v-col
         cols="12"
         :md="previewURL ? (showPreview ? 6 : 12) : 12"
-        :class="`fill-height overflow-x-auto overflow-y-scroll pa-4 pa-md-8 ${previewURL && previewExpanded ? 'd-none' : ''} ${$vuetify?.display?.smAndDown ? 'order-2' : 'order-1'}`"
+        :class="`fill-height overflow-x-auto ${previewURL && previewExpanded ? 'd-none' : ''} ${$vuetify?.display?.smAndDown ? 'order-2' : 'order-1'}`"
       >
         <eox-jsonform
           v-if="updatedFileContent"
@@ -392,7 +392,7 @@ onUnmounted(() => {
           :class="previewExpanded ? 'preview-expanded' : ''"
           @click="previewExpanded = !previewExpanded"
         ></v-btn>
-        <iframe v-if="previewURL" id="previewFrame" :src="previewURL"></iframe>
+        <iframe v-if="previewURL" id="previewFrame" allow="clipboard-write *;" :src="previewURL"></iframe>
       </v-col>
     </v-row>
   </div>
