@@ -392,7 +392,7 @@ onUnmounted(() => {
           :class="previewExpanded ? 'preview-expanded' : ''"
           @click="previewExpanded = !previewExpanded"
         ></v-btn>
-        <iframe v-if="previewURL" id="previewFrame" :src="previewURL"></iframe>
+        <iframe v-if="previewURL" id="previewFrame" allow="clipboard-write *;" :src="previewURL"></iframe>
       </v-col>
     </v-row>
   </div>
