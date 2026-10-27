@@ -181,17 +181,24 @@ describe("Files list related tests", () => {
 
   // Test file duplication functionality
   it("Duplicate a file", () => {
-    duplicateFile = true;
+    cy.visit("/123");
+    cy.wait("@getFiles");
     cy.get(".files-list").eq(0).find(".v-btn .mdi-content-copy").click();
-    cy.get(".files-list").eq(0).find(".v-field__input").type("products/", {
-      delay: 100,
-    });
-    cy.get(".files-list").eq(0).find(".v-field__input").type("foo2/", {
-      delay: 100,
-    });
     cy.get(".files-list")
       .eq(0)
-      .find(".v-field__input")
+      .find("input[role='combobox']")
+      .type("products/", {
+        delay: 100,
+      });
+    cy.get(".files-list")
+      .eq(0)
+      .find("input[role='combobox']")
+      .should("have.value", "")
+      .type("foo2/", { delay: 100 });
+    cy.get(".files-list")
+      .eq(0)
+      .find("input[role='combobox']")
+      .should("have.value", "")
       .type("collection.json", {
         delay: 100,
       });
@@ -199,7 +206,9 @@ describe("Files list related tests", () => {
       .eq(0)
       .find(".session-create-field .mdi-content-copy")
       .click();
-    cy.wait("@putContent");
+    cy.wait("@putContent").then(() => {
+      duplicateFile = true;
+    });
     cy.location("pathname", { timeout: 10000 }).should(
       "eq",
       "/123/cHJvZHVjdHMvZm9vMi9jb2xsZWN0aW9uLmpzb24=",
@@ -273,13 +282,19 @@ describe("Files list related tests", () => {
 
   // Test adding new manual content
   it("Add new manual content", () => {
+    cy.visit("/123");
+    cy.wait("@getFiles");
     cy.get(".files-list").should("have.length", files.length);
     cy.get(".navbar .v-btn.session-file-btn").click();
     cy.get(".add-file-btn").click();
     cy.contains(".v-menu .v-list-item", "Add file here").click();
     cy.get(".current-session-btn").click();
-    cy.get(".add-file-field input").type("manual-file.txt", { delay: 100 });
-    cy.get(".add-file-button").click();
+    cy.get(".current-session-btn").should("not.exist");
+    cy.get(".add-file-field input")
+      .should("be.visible")
+      .type("manual-file.txt", { delay: 100 })
+      .should("have.value", "manual-file.txt");
+    cy.get(".v-dialog.v-overlay--active .add-file-button").click();
     cy.wait("@putContent");
     cy.location("pathname", { timeout: 10000 }).should(
       "eq",
