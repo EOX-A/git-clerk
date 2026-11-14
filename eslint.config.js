@@ -5,7 +5,7 @@ export default [
   ...eox,
   ...pluginVue.configs["flat/recommended"],
   {
-    ignores: ["public/", "dist/", "dist-v2/"],
+    ignores: ["public/", "dist/", "dist-v2/", "src2/docs/"],
   },
   {
     files: ["src/**/*.vue", "src2/**/*.vue"],

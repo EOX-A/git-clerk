@@ -415,9 +415,35 @@ npm run start:v1
 npm run start:v2
 ```
 
-V2 currently has a single `/` route displaying "Hello world" and requires no
-GitHub credentials. `src2/main.js` mounts the app configured in `src2/app.js`;
-`src2/App.vue` renders the router. It follows v1's JavaScript, Vue Composition API,
+V2 keeps `/` as the new-session placeholder and shows a selected session at
+`/:sessionNumber`, without reloading the page. The conversation workspace comes
+later. `src2/main.js` mounts the app configured in `src2/app.js`; `src2/App.vue`
+keeps navigation mounted around the router. Navigation components live in
+`src2/components/nav/` and support a collapsed rail, mobile drawer, and light/dark
+appearance. The sidebar starts at 264 px; drag its right edge to resize
+between 240 and 360 px on desktop. Double-click the edge to reset, or focus it
+and use the arrow keys (Enter resets).
+
+V2 loads the shared `/config.js` and accepts the same GitHub configuration as v1:
+`globalThis.ghConfig` or `globalThis.gitClerkConfig.ghConfig`, with `githubRepo`
+(`owner/repository`) and `githubAuthToken` (string or sync/async function).
+`GITCLERK_GITHUB_REPO` and `GITCLERK_GITHUB_TOKEN` remain the local `.env` fallbacks.
+Keep credentials out of source control.
+
+The sidebar uses Octokit to read PR sessions, newest activity first, including
+Draft, Open, Merged, and Closed. Repository writers see all PRs; other accounts
+see sessions from their enabled personal and writable organization forks, using
+the existing `forkingLocation` config. Load more walks subsequent GitHub pages.
+Selecting a row displays its title, status, and PR link. Missing configuration
+and request failures show a retryable message. GitHub operations stay behind
+`src2/api/index.js` so the UI can later use a backend; this flow does not create
+or sync forks or change pull requests.
+
+Run the focused API regression tests with `npm run test:v2` (mocked GitHub data).
+
+Temporary design references live in `src2/docs/` and are excluded from Tailwind
+scanning and formatting. Design colours, typography, spacing, radii, and shadows
+are defined as Tailwind tokens in `src2/assets/main.css`. It follows v1's JavaScript, Vue Composition API,
 `@/` imports, and directory conventions, with empty directories reserved for
 future implementation. Tailwind replaces Vuetify in v2, using the
 [Tailwind Vite plugin](https://tailwindcss.com/docs/installation/using-vite).

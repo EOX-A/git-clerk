@@ -1,1 +1,160 @@
 @import "tailwindcss" source("../");
+
+/* Temporary design references must not contribute app utilities. */
+@source not "../docs";
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-sidebar: var(--sidebar);
+  --color-elev: var(--elev);
+  --color-ws-nav: var(--ws-nav);
+  --color-ws-hover: var(--ws-hover);
+  --color-ws-seg: var(--ws-seg);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-border-soft: var(--border-soft);
+  --color-hover: var(--hover);
+  --color-scrim: var(--scrim);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-tint: var(--tint);
+  --color-blank: var(--blank);
+  --color-draft: var(--draft);
+  --color-open: var(--open);
+  --color-merged: var(--merged);
+  --color-closed: var(--closed);
+  --color-warn: var(--warn);
+  --color-dirty: var(--dirty);
+  --color-add-bg: var(--add-bg);
+  --color-add-fg: var(--add-fg);
+  --color-del-bg: var(--del-bg);
+  --color-del-fg: var(--del-fg);
+  --color-hunk-bg: var(--hunk-bg);
+  --color-syn-key: var(--syn-key);
+  --color-syn-str: var(--syn-str);
+  --color-syn-num: var(--syn-num);
+  --color-syn-kw: var(--syn-kw);
+  --color-syn-punc: var(--syn-punc);
+}
+
+@theme {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --breakpoint-workspace: 53.75rem;
+  --spacing-sidebar: 16.5rem;
+  --spacing-rail: 3.25rem;
+  --spacing-drawer: 16rem;
+  --text-heading: 1.6875rem;
+  --text-heading--line-height: 2.125rem;
+  --text-heading--letter-spacing: -0.022em;
+  --text-ui: 0.8125rem;
+  --text-ui--line-height: 1.25rem;
+  --text-meta: 0.71875rem;
+  --text-meta--line-height: 1.0625rem;
+  --radius-control: 0.5625rem;
+  --radius-menu: 0.875rem;
+  --radius-composer: 1.25rem;
+  --shadow-composer:
+    0 1px 2px rgb(16 24 40 / 0.04), 0 10px 30px -14px rgb(16 24 40 / 0.18);
+  --shadow-floating:
+    0 1px 2px rgb(16 24 40 / 0.06), 0 16px 40px -16px rgb(16 24 40 / 0.3);
+  --shadow-menu: 0 16px 40px -12px rgb(16 24 40 / 0.28);
+  --shadow-selected: 0 1px 2px rgb(16 24 40 / 0.14);
+}
+
+@layer base {
+  :root {
+    color-scheme: light;
+    --bg: #fafbfc;
+    --surface: #f2f4f7;
+    --sidebar: #eef2f6;
+    --elev: #ffffff;
+    --ws-nav: #eceff3;
+    --ws-hover: #dce2e9;
+    --ws-seg: #d8dfe7;
+    --text: #12202d;
+    --muted: #4d5e6e;
+    --border: #bfcad6;
+    --border-soft: #e1e6ec;
+    --hover: #e7ebf0;
+    --scrim: rgba(10, 24, 38, 0.45);
+    --primary: #004170;
+    --on-primary: #ffffff;
+    --tint: #d9e6f2;
+    --blank: #e0e9f3;
+    --draft: #55677a;
+    --open: #1a7f37;
+    --merged: #6f42c1;
+    --closed: #cf222e;
+    --warn: #8f5f00;
+    --dirty: #b98100;
+    --add-bg: #e3f4e7;
+    --add-fg: #116329;
+    --del-bg: #fce8ea;
+    --del-fg: #a40e26;
+    --hunk-bg: #e8eff6;
+    --syn-key: #004170;
+    --syn-str: #8a4508;
+    --syn-num: #6f42c1;
+    --syn-kw: #b3261e;
+    --syn-punc: #4d5e6e;
+  }
+
+  :root:has([data-gc="dark"]) {
+    color-scheme: dark;
+    --bg: #0f141a;
+    --surface: #151c24;
+    --sidebar: #151c24;
+    --elev: #1a222b;
+    --ws-nav: #11171e;
+    --ws-hover: #202a35;
+    --ws-seg: #2a3541;
+    --text: #e1e7ee;
+    --muted: #9aa8b6;
+    --border: #3a4755;
+    --border-soft: #26313c;
+    --hover: #212c38;
+    --scrim: rgba(0, 0, 0, 0.55);
+    --primary: #9ecaff;
+    --on-primary: #003258;
+    --tint: #16304a;
+    --blank: #1c2d40;
+    --draft: #9aa8b6;
+    --open: #5fd38a;
+    --merged: #bf9bff;
+    --closed: #ff7b72;
+    --warn: #e3b341;
+    --dirty: #f5c451;
+    --add-bg: rgba(46, 160, 67, 0.17);
+    --add-fg: #7ee29a;
+    --del-bg: rgba(248, 81, 73, 0.17);
+    --del-fg: #ffa198;
+    --hunk-bg: #162636;
+    --syn-key: #9ecaff;
+    --syn-str: #f0b87a;
+    --syn-num: #cdb4ff;
+    --syn-kw: #ff9c8f;
+    --syn-punc: #8796a5;
+  }
+
+  body {
+    @apply bg-bg font-sans text-sm leading-[22px] text-text antialiased;
+    margin: 0;
+  }
+
+  button:not(:disabled),
+  a {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--tint);
+  }
+}

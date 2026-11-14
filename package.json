@@ -18,7 +18,8 @@
     "start:v1": "vite --host --strictPort",
     "start:v2": "vite --config vite.v2.config.js --host",
     "build:v2": "vite build --config vite.v2.config.js",
-    "preview:v2": "vite preview --config vite.v2.config.js"
+    "preview:v2": "vite preview --config vite.v2.config.js",
+    "test:v2": "node --test test/v2-*.test.js"
   },
   "engines": {
     "node": ">=24.0.0"
