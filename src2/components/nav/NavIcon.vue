@@ -92,5 +92,17 @@ defineProps({
       <path d="M18 11v5"></path>
       <path d="m15.5 3.5 5 5M20.5 3.5l-5 5"></path>
     </g>
+    <g v-else-if="name === 'check'"><path d="m5 12.5 4.5 4.5L19 7.5"></path></g>
+    <g v-else-if="name === 'org'">
+      <path d="M4 21V5a2 2 0 0 1 2-2h7a2 2 0 0 1 2 2v16"></path>
+      <path d="M15 9h3a2 2 0 0 1 2 2v10"></path>
+      <path d="M3 21h18M8 7.5h3M8 11.5h3M8 15.5h3"></path>
+    </g>
+    <g v-else-if="name === 'repo'">
+      <path
+        d="M5 19.5v-14A2.5 2.5 0 0 1 7.5 3H19v14H7.5A2.5 2.5 0 0 0 5 19.5zm0 0A2.5 2.5 0 0 0 7.5 22H19v-5"
+      ></path>
+    </g>
+    <g v-else-if="name === 'chev-right'"><path d="m9 6 6 6-6 6"></path></g>
   </svg>
 </template>

@@ -158,3 +158,76 @@
     background: var(--tint);
   }
 }
+
+@layer components {
+  .nav-scrollbar {
+    --scrollbar-thumb: transparent;
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+    scrollbar-gutter: stable;
+    overscroll-behavior-y: contain;
+  }
+
+  .nav-scrollbar:is(:hover, :focus-within, [data-scrolling="true"]) {
+    --scrollbar-thumb: color-mix(in srgb, var(--muted) 65%, transparent);
+  }
+
+  /* Chromium and Safari allow the same rounded thumb on every desktop OS. */
+  @supports selector(::-webkit-scrollbar) {
+    .nav-scrollbar {
+      scrollbar-width: auto;
+      scrollbar-color: auto;
+    }
+
+    .nav-scrollbar::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+
+    .nav-scrollbar::-webkit-scrollbar-track,
+    .nav-scrollbar::-webkit-scrollbar-corner {
+      background: transparent;
+    }
+
+    .nav-scrollbar::-webkit-scrollbar-thumb {
+      min-height: 32px;
+      border: 2px solid transparent;
+      border-radius: 999px;
+      background-color: var(--scrollbar-thumb);
+      background-clip: padding-box;
+    }
+
+    .nav-scrollbar::-webkit-scrollbar-thumb:hover,
+    .nav-scrollbar::-webkit-scrollbar-thumb:active {
+      background-color: var(--muted);
+    }
+
+    .nav-scrollbar::-webkit-scrollbar-button {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+  }
+
+  @media (hover: none) {
+    .nav-scrollbar {
+      --scrollbar-thumb: color-mix(in srgb, var(--muted) 65%, transparent);
+    }
+  }
+
+  /* Respect high-contrast system scrollbars rather than hiding their controls. */
+  @media (forced-colors: active) {
+    .nav-scrollbar {
+      scrollbar-width: auto;
+      scrollbar-color: auto;
+    }
+
+    .nav-scrollbar::-webkit-scrollbar,
+    .nav-scrollbar::-webkit-scrollbar-track,
+    .nav-scrollbar::-webkit-scrollbar-corner,
+    .nav-scrollbar::-webkit-scrollbar-thumb,
+    .nav-scrollbar::-webkit-scrollbar-button {
+      all: revert;
+    }
+  }
+}

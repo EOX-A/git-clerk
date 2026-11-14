@@ -8,8 +8,8 @@ export async function connectGitHub() {
   useOctokitStore().setOctokit(context);
 }
 
-export function getSessionsList(after = null) {
-  return sessionsList(useOctokitStore().context, after);
+export function getSessionsList(after = null, signal) {
+  return sessionsList(useOctokitStore().context, after, signal);
 }
 
 export function getSessionDetails(number) {

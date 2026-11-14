@@ -62,11 +62,12 @@ function mapSession(node, githubConfig) {
   };
 }
 
-export async function sessionsList(context, after = null) {
+export async function sessionsList(context, after = null, signal) {
   const { octokit, githubConfig } = context;
   let pageInfo;
   let nodes;
   do {
+    signal?.throwIfAborted();
     const response = await octokit.graphql(
       `query($owner: String!, $repo: String!, $after: String) {
         repository(owner: $owner, name: $repo) {
@@ -76,8 +77,14 @@ export async function sessionsList(context, after = null) {
           }
         }
       }`,
-      { owner: githubConfig.username, repo: githubConfig.repo, after },
+      {
+        owner: githubConfig.username,
+        repo: githubConfig.repo,
+        after,
+        request: { signal },
+      },
     );
+    signal?.throwIfAborted();
     ({ pageInfo, nodes } = response.repository.pullRequests);
     nodes = nodes.filter((node) => matchesScope(node, context));
     after = pageInfo.endCursor;

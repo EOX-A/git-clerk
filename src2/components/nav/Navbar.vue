@@ -3,6 +3,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRouter } from "vue-router";
 import NavIcon from "@/components/nav/NavIcon.vue";
 import SessionList from "@/components/nav/SessionList.vue";
+import SessionFilters from "@/components/nav/SessionFilters.vue";
 import SidebarResizeHandle from "@/components/nav/SidebarResizeHandle.vue";
 import useOctokitStore from "@/stores/octokit.js";
 import { storeToRefs } from "pinia";
@@ -215,18 +216,7 @@ onUnmounted(() => {
 
       <template v-if="!isRail">
         <div class="mt-2.5 mb-0.5 border-t border-border-soft"></div>
-        <div class="flex items-center gap-1 pt-2.5 pr-2 pb-1 pl-[18px]">
-          <h2 class="flex-1 text-meta font-medium text-muted">Sessions</h2>
-          <button
-            type="button"
-            disabled
-            aria-label="Filter, sort and group sessions"
-            title="Session filters coming next"
-            class="flex size-11 items-center justify-center rounded-lg text-muted opacity-50 workspace:size-7"
-          >
-            <NavIcon name="sliders" class="size-4" />
-          </button>
-        </div>
+        <SessionFilters :visible="!isNarrow || mobileOpen" />
         <SessionList :on-select-session="selectSessionMethod" />
       </template>
       <div v-else class="flex-1"></div>
