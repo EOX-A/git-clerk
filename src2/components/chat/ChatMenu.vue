@@ -1,6 +1,6 @@
 <script setup>
 import { nextTick, onMounted, onUnmounted, ref } from "vue";
-import ChatIcon from "@/components/ChatIcon.vue";
+import ChatIcon from "./ChatIcon.vue";
 
 const props = defineProps({
   title: { type: String, required: true },

@@ -1,5 +1,5 @@
 <script setup>
-import ChatComposer from "@/components/ChatComposer.vue";
+import { ChatComposer } from "@/components/chat";
 </script>
 
 <template>

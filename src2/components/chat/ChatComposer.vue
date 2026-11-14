@@ -1,7 +1,7 @@
 <script setup>
 import { computed, nextTick, ref, shallowRef } from "vue";
-import ChatIcon from "@/components/ChatIcon.vue";
-import ChatMenu from "@/components/ChatMenu.vue";
+import ChatIcon from "./ChatIcon.vue";
+import ChatMenu from "./ChatMenu.vue";
 import { CHAT_AUTOMATIONS, CHAT_MODELS } from "@/helpers/chat-options.js";
 
 const message = ref("");
