@@ -4,6 +4,7 @@ import { useRoute } from "vue-router";
 import useSessionsStore from "@/stores/sessions.js";
 import sessionError from "@/helpers/session-error.js";
 import { SessionTopbar } from "@/components/session";
+import { FileWorkspace } from "@/components/file-browser";
 
 const route = useRoute();
 const sessionsStore = useSessionsStore();
@@ -61,7 +62,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <section class="flex min-h-full flex-col">
+  <section class="flex h-full min-h-0 flex-col">
     <SessionTopbar
       :key="route.params.sessionNumber"
       :session="session"
@@ -78,11 +79,6 @@ onUnmounted(() => {
         Retry
       </button>
     </div>
-    <div
-      v-if="session"
-      class="flex flex-1 flex-col items-center justify-center gap-2 p-6 text-center"
-    >
-      <p class="text-muted">The conversation workspace will be added next.</p>
-    </div>
+    <FileWorkspace v-if="session" :key="session.number" :session="session" />
   </section>
 </template>
