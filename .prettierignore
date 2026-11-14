@@ -1,4 +1,5 @@
 dist
+dist-v2
 public/*
 !public/config.js
 !public/storytelling.html

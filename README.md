@@ -400,11 +400,40 @@ npm install
 #### Compile and Hot-Reload for Development
 
 ```sh
-npm start
+npm run start
 ```
+
+This starts both versions in separate Vite servers:
+
+- v1: `src/`, Vue and Vuetify, at http://localhost:3000.
+- v2: `src2/`, Vue and Tailwind CSS, at http://localhost:3001.
+
+To run either version independently:
+
+```sh
+npm run start:v1
+npm run start:v2
+```
+
+V2 currently has a single `/` route displaying "Hello world" and requires no
+GitHub credentials. `src2/main.js` mounts the app configured in `src2/app.js`;
+`src2/App.vue` renders the router. It follows v1's JavaScript, Vue Composition API,
+`@/` imports, and directory conventions, with empty directories reserved for
+future implementation. Tailwind replaces Vuetify in v2, using the
+[Tailwind Vite plugin](https://tailwindcss.com/docs/installation/using-vite).
+Each version resolves `@/` to its own source directory.
 
 #### Compile and Minify for Production
 
 ```sh
 npm run build
 ```
+
+The default build remains v1 in `dist/`. Build and preview v2 separately with:
+
+```sh
+npm run build:v2
+npm run preview:v2
+```
+
+V2 builds into `dist-v2/`, keeping the existing v1 release output separate.

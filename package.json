@@ -4,17 +4,21 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "start": "vite --host",
+    "start": "concurrently --kill-others --names v1,v2 \"npm:start:v1\" \"npm:start:v2\"",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test:serve": "GITCLERK_GITHUB_REPO=octocat/Hello-World GITCLERK_GITHUB_TOKEN=dummy-token npm run start",
+    "test:serve": "GITCLERK_GITHUB_REPO=octocat/Hello-World GITCLERK_GITHUB_TOKEN=dummy-token npm run start:v1",
     "test": "node cypress/test.run.js",
     "test:ga": "cypress run --e2e --browser chrome",
     "cypress": "node cypress/test.run.js --open",
-    "cypress:install": "cypress install"
+    "cypress:install": "cypress install",
+    "start:v1": "vite --host --strictPort",
+    "start:v2": "vite --config vite.v2.config.js --host",
+    "build:v2": "vite build --config vite.v2.config.js",
+    "preview:v2": "vite preview --config vite.v2.config.js"
   },
   "engines": {
     "node": ">=24.0.0"
@@ -44,9 +48,12 @@
   },
   "devDependencies": {
     "@eox/eslint-config": "^2.0.0",
+    "@tailwindcss/vite": "^4.3.5",
     "@vitejs/plugin-vue": "^5.0.5",
+    "concurrently": "^9.2.5",
     "cypress": "^13.17.0",
     "eslint-plugin-vue": "^9.28.0",
+    "tailwindcss": "^4.3.5",
     "vite": "^5.3.1"
   }
 }
