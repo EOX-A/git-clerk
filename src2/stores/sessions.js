@@ -144,11 +144,15 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     collapsedGroups.value = closed;
   }
 
-  async function getSession(number) {
-    const session = sessions.value.find((item) => item.number === number);
-    if (session) return session;
+  async function getSession(number, signal) {
     await ensureConnected();
-    return getSessionDetails(number);
+    signal?.throwIfAborted();
+    // Sidebar rows are summaries; the header always needs fresh PR details.
+    const session = await getSessionDetails(number, signal);
+    sessions.value = sessions.value.map((item) =>
+      item.number === number ? session : item,
+    );
+    return session;
   }
 
   return {

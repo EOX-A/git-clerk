@@ -447,10 +447,18 @@ from page one. Older requests are cancelled and cannot overwrite newer results.
 Filtering and sorting apply to the freshly fetched scoped pages; grouping reuses
 them. Failed requests can be retried.
 Preferences stay in the current app session across navigation and sidebar collapse.
-Selecting a row displays its title, status, and PR link. Missing configuration
-and request failures show a retryable message. GitHub operations stay behind
-`src2/api/index.js` so the UI can later use a backend; this flow does not create
-or sync forks or change pull requests.
+Selecting a row loads a fresh two-line session header: title, PR status, checks,
+repository, PR link, and branch name. Active PRs refresh every 30 seconds while
+visible and on window focus. The session options menu supports rename, open on
+GitHub, and delete (close the PR and delete its head branch), with confirmation
+dialogs and permission checks. Drafts with changes can be submitted for review
+when checks pass or no checks are configured. Closed/merged sessions are read-only;
+default branches and unwritable forks cannot be deleted. Partial deletion errors
+are reported without hiding that the PR was closed.
+Missing configuration and request failures show a retryable message. GitHub
+operations stay behind `src2/api/index.js` so the UI can later use a backend.
+This flow does not create or sync forks. The conversation/Visualizer workspace
+and its mobile Chat/Files switch will be added separately.
 
 Run the focused API regression tests with `npm run test:v2` (mocked GitHub data).
 

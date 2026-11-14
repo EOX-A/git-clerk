@@ -96,21 +96,59 @@ export async function sessionsList(context, after = null, signal) {
   };
 }
 
-export async function sessionDetails(context, number) {
+export async function sessionDetails(context, number, signal) {
   const { octokit, githubConfig } = context;
   const response = await octokit.graphql(
     `query($owner: String!, $repo: String!, $number: Int!) {
       repository(owner: $owner, name: $repo) {
-        pullRequest(number: $number) { ${SESSION_FIELDS} }
+        pullRequest(number: $number) {
+          ${SESSION_FIELDS}
+          headRefName headRefOid changedFiles viewerCanUpdate reviewDecision
+          headRef { id }
+          headRepository {
+            name owner { login } viewerPermission defaultBranchRef { name }
+          }
+          statusCheckRollup { state }
+        }
       }
     }`,
-    { owner: githubConfig.username, repo: githubConfig.repo, number },
+    {
+      owner: githubConfig.username,
+      repo: githubConfig.repo,
+      number,
+      request: { signal },
+    },
   );
+  signal?.throwIfAborted();
   const node = response.repository?.pullRequest;
   if (!node || !matchesScope(node, context)) {
     const error = new Error("Session not found in the current scope.");
     error.status = 404;
     throw error;
   }
-  return mapSession(node, githubConfig);
+  const session = mapSession(node, githubConfig);
+  const canManage =
+    Boolean(node.viewerCanUpdate) && ["draft", "open"].includes(session.status);
+  const head = node.headRepository;
+  return {
+    ...session,
+    branch: node.headRefName,
+    headSha: node.headRefOid,
+    headRefID: node.headRef?.id || null,
+    headOwner: head?.owner.login,
+    headRepo: head?.name,
+    changedFiles: node.changedFiles ?? 0,
+    checks: node.statusCheckRollup?.state || null,
+    reviewDecision: node.reviewDecision,
+    canManage,
+    // Never offer branch deletion for a default branch or an unwritable fork.
+    canDelete:
+      canManage &&
+      (!node.headRef ||
+        Boolean(
+          head?.defaultBranchRef?.name &&
+          node.headRefName !== head.defaultBranchRef.name &&
+          ["ADMIN", "MAINTAIN", "WRITE"].includes(head.viewerPermission),
+        )),
+  };
 }

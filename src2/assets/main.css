@@ -3,6 +3,9 @@
 /* Temporary design references must not contribute app utilities. */
 @source not "../docs";
 
+/* Dark mode is an explicit app choice, never the operating system preference. */
+@custom-variant dark (&:where([data-gc="dark"], [data-gc="dark"] *));
+
 @theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
@@ -66,7 +69,7 @@
 
 @layer base {
   :root {
-    color-scheme: light;
+    color-scheme: only light;
     --bg: #fafbfc;
     --surface: #f2f4f7;
     --sidebar: #eef2f6;

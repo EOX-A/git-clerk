@@ -332,3 +332,37 @@ test("retry finishes a full count scan even before any filters are changed", asy
   assert.deepEqual(cursors, [null, "second", "second", "third"]);
   assert.equal(store.sessions.length, 3);
 });
+
+test("opening a session fetches fresh details even when its sidebar row is cached", async () => {
+  let requests = 0;
+  const store = createStore(async (query, variables) => {
+    requests++;
+    assert.equal(variables.number, 7);
+    assert.match(query, /headRefName/);
+    return {
+      repository: {
+        pullRequest: {
+          id: "PR_7",
+          number: 7,
+          title: "Fresh title",
+          state: "OPEN",
+          isDraft: true,
+          headRepositoryOwner: { login: "alice" },
+          headRefName: "gc/seven",
+          changedFiles: 3,
+          viewerCanUpdate: true,
+          statusCheckRollup: { state: "PENDING" },
+        },
+      },
+    };
+  });
+  store.sessions = [
+    { id: "PR_7", number: 7, title: "Old title", status: "open" },
+  ];
+  const session = await store.getSession(7);
+  assert.equal(requests, 1);
+  assert.equal(session.branch, "gc/seven");
+  assert.equal(session.checks, "PENDING");
+  assert.equal(store.sessions[0].title, "Fresh title");
+  assert.equal(store.sessions[0].status, "draft");
+});
