@@ -415,9 +415,13 @@ npm run start:v1
 npm run start:v2
 ```
 
-V2 keeps `/` as the new-session placeholder and shows a selected session at
+V2 shows a centered chat starter at `/` and a selected session at
 `/:sessionNumber`, without reloading the page. The conversation workspace comes
-later. `src2/main.js` mounts the app configured in `src2/app.js`; `src2/App.vue`
+later. The starter accepts local draft text and removable file attachments, automation
+templates with editable blanks, and model selection from the design reference.
+Attachments stay in memory; nothing is uploaded. Repository selection is hidden,
+speech input is removed, and sending remains disabled until the backend is ready.
+`src2/main.js` mounts the app configured in `src2/app.js`; `src2/App.vue`
 keeps navigation mounted around the router. Navigation components live in
 `src2/components/nav/` and support a collapsed rail, mobile drawer, and light/dark
 appearance. The sidebar starts at 264 px; drag its right edge to resize
@@ -435,8 +439,8 @@ Draft, Open, Merged, and Closed. Repository writers see all PRs; other accounts
 see sessions from their enabled personal and writable organization forks, using
 the existing `forkingLocation` config. Load more walks subsequent GitHub pages.
 Use the Sessions filter button to toggle Draft/Open/Merged/Closed, sort by
-recent activity, PR number, title, or status, and group by organization or
-repository. Groups can be collapsed. The active-filter summary clears all options
+recent activity, PR number, title, or status. Grouping is hidden for now,
+until organization support is introduced. The active-filter summary clears all options
 back to the defaults. Opening filters finishes loading the remaining scoped sessions for complete
 counts. Changing status or sort, or clearing those filters, fetches a fresh list
 from page one. Older requests are cancelled and cannot overwrite newer results.

@@ -1,5 +1,5 @@
 import { createRouter, createWebHistory } from "vue-router";
-import HelloWorldView from "@/views/HelloWorldView.vue";
+import NewSessionView from "@/views/NewSessionView.vue";
 import SessionView from "@/views/SessionView.vue";
 
 const router = createRouter({
@@ -7,8 +7,8 @@ const router = createRouter({
   routes: [
     {
       path: "/",
-      name: "hello-world",
-      component: HelloWorldView,
+      name: "new-session",
+      component: NewSessionView,
     },
     {
       path: "/:sessionNumber(\\d+)",

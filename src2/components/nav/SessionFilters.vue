@@ -3,10 +3,7 @@ import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { storeToRefs } from "pinia";
 import useSessionsStore from "@/stores/sessions.js";
 import { SESSION_STATUS } from "@/helpers/session-status.js";
-import {
-  SESSION_SORT_OPTIONS,
-  SESSION_GROUP_OPTIONS,
-} from "@/helpers/session-filters.js";
+import { SESSION_SORT_OPTIONS } from "@/helpers/session-filters.js";
 import NavIcon from "@/components/nav/NavIcon.vue";
 import useScrollbar from "@/helpers/use-scrollbar.js";
 
@@ -15,7 +12,6 @@ const sessionsStore = useSessionsStore();
 const {
   statuses,
   sort,
-  group,
   filterSummary,
   filtersActive,
   statusCounts,
@@ -99,8 +95,8 @@ onUnmounted(() => {
       <button
         ref="trigger"
         type="button"
-        aria-label="Filter, sort and group sessions"
-        title="Filter, sort and group"
+        aria-label="Filter and sort sessions"
+        title="Filter and sort"
         aria-haspopup="dialog"
         aria-controls="session-filter-panel"
         :aria-expanded="open"
@@ -130,7 +126,7 @@ onUnmounted(() => {
         >
         <button
           type="button"
-          aria-label="Clear filters, sorting and grouping"
+          aria-label="Clear filters and sorting"
           title="Clear filters"
           class="flex size-8 shrink-0 items-center justify-center rounded-md text-muted hover:bg-hover hover:text-text workspace:size-[22px]"
           @click="clearMethod"
@@ -145,7 +141,7 @@ onUnmounted(() => {
       id="session-filter-panel"
       ref="panel"
       role="dialog"
-      aria-label="Filter, sort and group sessions"
+      aria-label="Filter and sort sessions"
       :style="position"
       :data-scrolling="isScrolling"
       class="nav-scrollbar fixed z-50 flex max-h-[calc(100dvh-16px)] w-[264px] max-w-[calc(100vw-16px)] flex-col gap-3.5 overflow-y-auto rounded-xl border border-border-soft bg-elev p-3 shadow-menu"
@@ -225,31 +221,7 @@ onUnmounted(() => {
         </div>
       </fieldset>
 
-      <fieldset>
-        <legend class="mb-2 text-meta font-semibold text-muted">
-          Group by
-        </legend>
-        <div class="flex gap-0.5 rounded-control bg-hover p-[3px]">
-          <label
-            v-for="option in SESSION_GROUP_OPTIONS"
-            :key="option.value"
-            class="relative min-w-0 flex-1 cursor-pointer"
-          >
-            <input
-              type="radio"
-              name="session-group"
-              :value="option.value"
-              :checked="group === option.value"
-              class="peer sr-only"
-              @change="sessionsStore.setGroup(option.value)"
-            />
-            <span
-              class="flex h-11 items-center justify-center rounded-[7px] text-xs font-medium text-muted peer-checked:bg-elev peer-checked:text-text peer-checked:shadow-selected peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary workspace:h-7"
-              >{{ option.label }}</span
-            >
-          </label>
-        </div>
-      </fieldset>
+      <!-- Grouping is deferred until organization support is available. -->
       <p v-if="!allLoaded" role="status" class="text-meta text-muted">
         {{
           loading

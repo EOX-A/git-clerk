@@ -50,7 +50,7 @@ const toggleSidebarMethod = () => {
 
 const newSessionMethod = async () => {
   closeAccountMethod();
-  await router.push({ name: "hello-world" });
+  await router.push({ name: "new-session" });
   if (props.mobileOpen) await props.closeSidebar();
   document.getElementById("workspace")?.focus();
 };
