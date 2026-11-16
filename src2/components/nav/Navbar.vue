@@ -20,9 +20,13 @@ const { githubUserData } = storeToRefs(useOctokitStore());
 const narrowViewport = window.matchMedia("(max-width: 859px)");
 const isNarrow = ref(narrowViewport.matches);
 const isCollapsed = ref(false);
-const sidebarWidth = ref(264);
+const sidebarWidth = ref(280);
 const isRail = computed(() => isCollapsed.value && !isNarrow.value);
 const accountOpen = ref(false);
+const avatarFailed = ref(false);
+const avatarUrl = computed(() =>
+  !avatarFailed.value ? githubUserData.value?.avatar_url || "" : "",
+);
 const sidebar = ref(null);
 const toggleButton = ref(null);
 const accountArea = ref(null);
@@ -110,6 +114,13 @@ const viewportChangeMethod = (event) => {
   closeAccountMethod();
   if (props.mobileOpen) props.closeSidebar();
 };
+
+watch(
+  () => githubUserData.value?.avatar_url,
+  () => {
+    avatarFailed.value = false;
+  },
+);
 
 watch(
   () => props.mobileOpen,
@@ -287,7 +298,16 @@ onUnmounted(() => {
             class="flex w-full items-center rounded-control text-left hover:bg-hover"
             @click="toggleAccountMethod"
           >
+            <img
+              v-if="avatarUrl"
+              :src="avatarUrl"
+              alt=""
+              aria-hidden="true"
+              class="size-[26px] shrink-0 rounded-full object-cover"
+              @error="avatarFailed = true"
+            />
             <span
+              v-else
               aria-hidden="true"
               class="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-on-primary"
               >{{ githubUserData?.login?.[0]?.toUpperCase() || "G" }}</span

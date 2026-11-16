@@ -1,10 +1,12 @@
 <script setup>
+import { ref } from "vue";
 import { storeToRefs } from "pinia";
 import { useRoute } from "vue-router";
 import useSessionsStore from "@/stores/sessions.js";
 import { SESSION_STATUS } from "@/helpers/session-status.js";
 import NavIcon from "@/components/nav/NavIcon.vue";
 import SessionListPlaceholder from "@/components/nav/SessionListPlaceholder.vue";
+import { SessionActionDialog, SessionOptions } from "@/components/session";
 import useScrollbar from "@/helpers/use-scrollbar.js";
 
 defineProps({ onSelectSession: { type: Function, required: true } });
@@ -23,6 +25,27 @@ const {
   error,
   pageInfo,
 } = storeToRefs(sessionsStore);
+const actionSession = ref(null);
+const action = ref("");
+
+const openActionMethod = (session, value) => {
+  actionSession.value = session;
+  action.value = value;
+};
+const closeActionMethod = () => {
+  actionSession.value = null;
+  action.value = "";
+};
+const updatedSessionMethod = async () => {
+  if (!actionSession.value) return;
+  try {
+    actionSession.value = await sessionsStore.getSession(
+      actionSession.value.number,
+    );
+  } catch {
+    /* Ignore refresh errors; the store keeps existing row data. */
+  }
+};
 </script>
 
 <template>
@@ -70,7 +93,12 @@ const {
         v-show="group === 'none' || !collapsedGroups.has(sessionGroup.id)"
         class="space-y-px"
       >
-        <li v-for="session in sessionGroup.sessions" :key="session.id">
+        <li
+          v-for="session in sessionGroup.sessions"
+          :key="session.id"
+          :data-selected="Number(route.params.sessionNumber) === session.number"
+          class="group/row relative"
+        >
           <button
             type="button"
             :aria-label="`${session.title}, PR #${session.number}, ${SESSION_STATUS[session.status].label}`"
@@ -85,7 +113,7 @@ const {
                 ? 'bg-elev font-medium shadow-selected'
                 : 'hover:bg-hover'
             "
-            class="flex min-h-11 w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left"
+            class="flex min-h-11 w-full items-start gap-2.5 rounded-lg py-2 pr-9 pl-2.5 text-left"
             @click="onSelectSession(session)"
           >
             <NavIcon
@@ -105,9 +133,24 @@ const {
               >
             </span>
           </button>
+          <div class="absolute top-2.5 right-1.5">
+            <SessionOptions
+              :session="session"
+              compact
+              :label="`More options for ${session.title}`"
+              :on-action="(value) => openActionMethod(session, value)"
+            />
+          </div>
         </li>
       </ul>
     </div>
+    <SessionActionDialog
+      v-if="action && actionSession"
+      :session="actionSession"
+      :action="action"
+      :on-close="closeActionMethod"
+      :on-updated="updatedSessionMethod"
+    />
     <div v-if="loading" role="status">
       <span class="sr-only">{{
         filtersActive

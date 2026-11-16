@@ -2,9 +2,11 @@
 import { nextTick, ref, watch } from "vue";
 import { fileName } from "@/helpers/file-workspace.js";
 import FileIcon from "./FileIcon.vue";
+import FileTabsPlaceholder from "./FileTabsPlaceholder.vue";
 
 const props = defineProps({
   tabs: { type: Array, required: true },
+  dirtyPaths: { type: Array, default: () => [] },
   activeId: { type: String, default: null },
   drawerOpen: Boolean,
   changeCount: { type: Number, default: 0 },
@@ -30,7 +32,7 @@ const keydownMethod = async (event, index) => {
   else if (event.key === "End") next = props.tabs.length - 1;
   else if (event.key === "Delete") {
     event.preventDefault();
-    props.onClose(props.tabs[index].id);
+    await props.onClose(props.tabs[index].id);
     await focusTabMethod();
     return;
   } else return;
@@ -95,6 +97,12 @@ watch(
           @click="onSelect(tab.id)"
           @keydown="keydownMethod($event, index)"
         >
+          <span
+            v-if="dirtyPaths.includes(tab.path)"
+            role="img"
+            aria-label="Unsaved changes"
+            class="size-[7px] shrink-0 rounded-full bg-dirty"
+          />
           <FileIcon class="size-3.5" />
           <span class="truncate">{{ fileName(tab.path) }}</span>
         </button>
@@ -104,25 +112,19 @@ watch(
           :title="`Close ${tab.path}`"
           class="file-tab-close mr-1.5 flex size-6 shrink-0 items-center justify-center rounded-md text-muted hover:bg-ws-hover hover:text-text"
           @click="
-            onClose(tab.id);
-            focusTabMethod();
+            async () => {
+              await onClose(tab.id);
+              focusTabMethod();
+            }
           "
         >
           <FileIcon name="close" class="size-[13px]" />
         </button>
       </div>
-      <div
+      <FileTabsPlaceholder
         v-if="loading && !tabs.length"
-        role="status"
-        aria-label="Loading changed files"
-        class="flex items-center gap-3 px-4"
-      >
-        <span
-          v-for="n in 3"
-          :key="n"
-          class="h-3 w-20 rounded bg-border motion-safe:animate-pulse"
-        />
-      </div>
+        :count="changeCount || 3"
+      />
     </div>
   </div>
 </template>

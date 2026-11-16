@@ -4,6 +4,7 @@ import { getBranchRoot, getBranchDirectory } from "@/api/index.js";
 import useScrollbar from "@/helpers/use-scrollbar.js";
 import ChangesList from "./ChangesList.vue";
 import FileTree from "./FileTree.vue";
+import FileTreePlaceholder from "./FileTreePlaceholder.vue";
 import FileIcon from "./FileIcon.vue";
 
 const props = defineProps({
@@ -200,19 +201,7 @@ const switchViewMethod = (event) => {
         </p>
       </template>
       <template v-else>
-        <div
-          v-if="directories['']?.loading"
-          role="status"
-          aria-label="Loading branch files"
-          class="space-y-3 p-2 motion-safe:animate-pulse"
-        >
-          <div
-            v-for="n in 8"
-            :key="n"
-            class="h-3 rounded bg-border"
-            :class="n % 2 ? 'w-4/5' : 'w-3/5'"
-          />
-        </div>
+        <FileTreePlaceholder v-if="directories['']?.loading" />
         <div
           v-else-if="directories['']?.error"
           role="alert"

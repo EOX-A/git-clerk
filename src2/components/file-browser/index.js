@@ -4,3 +4,5 @@ export { default as FileDrawer } from "./FileDrawer.vue";
 export { default as FileTree } from "./FileTree.vue";
 export { default as ChangesList } from "./ChangesList.vue";
 export { default as FileIcon } from "./FileIcon.vue";
+export { default as FileTreePlaceholder } from "./FileTreePlaceholder.vue";
+export { default as FileTabsPlaceholder } from "./FileTabsPlaceholder.vue";

@@ -2,6 +2,11 @@ const SESSION_FIELDS = `
   id title number url state isDraft updatedAt
   author { login }
   headRepositoryOwner { login }
+  headRefName viewerCanUpdate
+  headRef { id }
+  headRepository {
+    name owner { login } viewerPermission defaultBranchRef { name }
+  }
 `;
 
 export async function affiliatedForkOwners(octokit, githubConfig) {
@@ -45,20 +50,42 @@ function matchesScope(node, { scopeOwners, githubUserData }) {
 }
 
 function mapSession(node, githubConfig) {
+  const status =
+    node.state === "OPEN"
+      ? node.isDraft
+        ? "draft"
+        : "open"
+      : node.state.toLowerCase();
+  const canManage =
+    Boolean(node.viewerCanUpdate) && ["draft", "open"].includes(status);
+  const head = node.headRepository;
   return {
     id: node.id,
     number: node.number,
     title: node.title,
     url: node.url,
-    status:
-      node.state === "OPEN"
-        ? node.isDraft
-          ? "draft"
-          : "open"
-        : node.state.toLowerCase(),
+    status,
     updatedAt: node.updatedAt,
     repo: githubConfig.repo,
     owner: githubConfig.username,
+    branch: node.headRefName,
+    headRefID: node.headRef?.id || null,
+    headOwner: head?.owner.login || node.headRepositoryOwner?.login,
+    headRepo: head?.name,
+    canManage,
+    canEdit:
+      canManage &&
+      Boolean(node.headRef) &&
+      ["ADMIN", "MAINTAIN", "WRITE"].includes(head?.viewerPermission),
+    // Never offer branch deletion for a default branch or an unwritable fork.
+    canDelete:
+      canManage &&
+      (!node.headRef ||
+        Boolean(
+          head?.defaultBranchRef?.name &&
+          node.headRefName !== head.defaultBranchRef.name &&
+          ["ADMIN", "MAINTAIN", "WRITE"].includes(head.viewerPermission),
+        )),
   };
 }
 
@@ -103,11 +130,7 @@ export async function sessionDetails(context, number, signal) {
       repository(owner: $owner, name: $repo) {
         pullRequest(number: $number) {
           ${SESSION_FIELDS}
-          headRefName headRefOid changedFiles viewerCanUpdate reviewDecision
-          headRef { id }
-          headRepository {
-            name owner { login } viewerPermission defaultBranchRef { name }
-          }
+          headRefOid baseRefOid changedFiles reviewDecision
           statusCheckRollup { state }
         }
       }
@@ -126,29 +149,12 @@ export async function sessionDetails(context, number, signal) {
     error.status = 404;
     throw error;
   }
-  const session = mapSession(node, githubConfig);
-  const canManage =
-    Boolean(node.viewerCanUpdate) && ["draft", "open"].includes(session.status);
-  const head = node.headRepository;
   return {
-    ...session,
-    branch: node.headRefName,
+    ...mapSession(node, githubConfig),
     headSha: node.headRefOid,
-    headRefID: node.headRef?.id || null,
-    headOwner: head?.owner.login,
-    headRepo: head?.name,
+    baseSha: node.baseRefOid,
     changedFiles: node.changedFiles ?? 0,
     checks: node.statusCheckRollup?.state || null,
     reviewDecision: node.reviewDecision,
-    canManage,
-    // Never offer branch deletion for a default branch or an unwritable fork.
-    canDelete:
-      canManage &&
-      (!node.headRef ||
-        Boolean(
-          head?.defaultBranchRef?.name &&
-          node.headRefName !== head.defaultBranchRef.name &&
-          ["ADMIN", "MAINTAIN", "WRITE"].includes(head.viewerPermission),
-        )),
   };
 }

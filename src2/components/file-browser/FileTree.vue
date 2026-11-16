@@ -1,6 +1,7 @@
 <script setup>
 import { FILE_STATUS } from "@/helpers/file-workspace.js";
 import FileIcon from "./FileIcon.vue";
+import FileTreePlaceholder from "./FileTreePlaceholder.vue";
 
 defineProps({
   entries: { type: Array, required: true },
@@ -69,13 +70,12 @@ defineProps({
         >
       </button>
       <template v-if="entry.type === 'folder' && expanded[entry.path]">
-        <div
+        <FileTreePlaceholder
           v-if="directories[entry.path]?.loading"
-          role="status"
-          class="px-6 py-2 text-meta text-muted"
-        >
-          Loading folder…
-        </div>
+          :depth="depth + 1"
+          compact
+          :label="`Loading folder ${entry.path}`"
+        />
         <button
           v-else-if="directories[entry.path]?.error"
           type="button"

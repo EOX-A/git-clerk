@@ -1,5 +1,17 @@
 <script setup>
-import { computed, onUnmounted, ref, watch } from "vue";
+import {
+  computed,
+  inject,
+  onMounted,
+  onUnmounted,
+  ref,
+  toRef,
+  watch,
+} from "vue";
+import { onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
+import { fileGitHubURL, toggleFileMode } from "@/helpers/file-editor.js";
+import { FileContent, FileDialog, FileToolbar } from "@/components/file";
+import useFileDocuments from "@/helpers/use-file-documents.js";
 import { getSessionFiles } from "@/api/index.js";
 import {
   changedFileTabs,
@@ -9,7 +21,11 @@ import {
 import FileTabs from "./FileTabs.vue";
 import FileDrawer from "./FileDrawer.vue";
 
-const props = defineProps({ session: { type: Object, required: true } });
+const props = defineProps({
+  session: { type: Object, required: true },
+  onSaved: { type: Function, required: true },
+  onDirtyChange: { type: Function, required: true },
+});
 const files = ref([]);
 const tabs = ref([]);
 const activeID = ref(null);
@@ -22,6 +38,94 @@ const activePath = computed(
   () => tabs.value.find((tab) => tab.id === activeID.value)?.path || null,
 );
 const openedPaths = computed(() => tabs.value.map((tab) => tab.path));
+const snackbar = inject("set-snackbar");
+const {
+  documents,
+  dirtyPaths,
+  loadMethod,
+  changeMethod,
+  historyMethod,
+  saveMethod,
+  forgetMethod,
+} = useFileDocuments(toRef(props, "session"), files, props.onSaved, snackbar);
+const activeDocument = computed(() => documents.value[activePath.value]);
+const activeChange = computed(
+  () => files.value.find((file) => file.path === activePath.value) || null,
+);
+const pending = ref(null);
+const savingDialog = ref(false);
+const validation = ref([]);
+const finishDialogMethod = (result) => {
+  const resolve = pending.value?.resolve;
+  pending.value = null;
+  resolve?.(result);
+};
+const confirmMethod = (paths) => {
+  if (pending.value) return Promise.resolve(false);
+  if (!paths.length) return Promise.resolve(true);
+  return new Promise(
+    (resolve) => (pending.value = { paths: [...paths], resolve }),
+  );
+};
+const saveActiveMethod = async (path = activePath.value) => {
+  if (!path) return false;
+  const saved = await saveMethod(path);
+  if (documents.value[path]?.validation.length) {
+    activeID.value = path;
+    validation.value = documents.value[path].validation;
+  }
+  return saved;
+};
+const savePendingMethod = async () => {
+  savingDialog.value = true;
+  for (const path of pending.value.paths) {
+    if (!(await saveActiveMethod(path))) {
+      savingDialog.value = false;
+      finishDialogMethod(false);
+      return;
+    }
+  }
+  savingDialog.value = false;
+  finishDialogMethod(true);
+};
+const guardMethod = () => confirmMethod(dirtyPaths.value);
+onBeforeRouteLeave(guardMethod);
+onBeforeRouteUpdate((to, from) =>
+  to.params.sessionNumber !== from.params.sessionNumber ? guardMethod() : true,
+);
+const unloadMethod = (event) => {
+  if (dirtyPaths.value.length) {
+    event.preventDefault();
+    event.returnValue = "";
+  }
+};
+const saveKeyMethod = (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+    event.preventDefault();
+    if (!pending.value && !validation.value.length) saveActiveMethod();
+  }
+};
+watch(
+  () => props.session.headSha,
+  () => {
+    for (const [path, doc] of Object.entries(documents.value)) {
+      if (!doc.loaded || doc.saving || doc.headSha === props.session.headSha)
+        continue;
+      if (dirtyPaths.value.includes(path)) doc.remoteChanged = true;
+      else loadMethod(path, true);
+    }
+  },
+);
+watch(activePath, (path) => {
+  if (path) loadMethod(path);
+});
+watch(dirtyPaths, (paths) => props.onDirtyChange(paths.length > 0), {
+  immediate: true,
+});
+onMounted(() => {
+  window.addEventListener("beforeunload", unloadMethod);
+  window.addEventListener("keydown", saveKeyMethod);
+});
 let initialized = false;
 let requestID = 0;
 let controller;
@@ -55,6 +159,7 @@ const loadChangesMethod = async () => {
   }
 };
 const openFileMethod = (path) => {
+  if (documents.value[path]) documents.value[path].diff = false;
   const tab = fileTab(path);
   if (!tabs.value.some((item) => item.id === tab.id)) tabs.value.push(tab);
   activeID.value = tab.id;
@@ -66,7 +171,10 @@ const closeDrawerMethod = (event) => {
     ?.querySelector('[aria-controls="session-file-drawer"]')
     ?.focus();
 };
-const closeFileMethod = (id) => {
+const closeFileMethod = async (id) => {
+  if (documents.value[id]?.saving) return;
+  if (!(await confirmMethod(dirtyPaths.value.includes(id) ? [id] : []))) return;
+  forgetMethod(id);
   const result = closeFileTab(tabs.value, activeID.value, id);
   tabs.value = result.tabs;
   activeID.value = result.activeID;
@@ -87,6 +195,10 @@ watch(
 onUnmounted(() => {
   requestID++;
   controller?.abort();
+  window.removeEventListener("beforeunload", unloadMethod);
+  window.removeEventListener("keydown", saveKeyMethod);
+  props.onDirtyChange(false);
+  finishDialogMethod(false);
 });
 </script>
 
@@ -94,6 +206,7 @@ onUnmounted(() => {
   <div class="file-workspace flex min-h-0 flex-1 flex-col">
     <FileTabs
       :tabs="tabs"
+      :dirty-paths="dirtyPaths"
       :active-id="activeID"
       :drawer-open="drawerOpen"
       :change-count="session.changedFiles"
@@ -116,6 +229,33 @@ onUnmounted(() => {
         Retry
       </button>
     </div>
+    <FileToolbar
+      v-if="activePath"
+      :path="activePath"
+      :doc="activeDocument"
+      :session="session"
+      :dirty="dirtyPaths.includes(activePath)"
+      :changed="activeChange"
+      :read-only="!session.canEdit || activeChange?.status === 'removed'"
+      :github-url="
+        fileGitHubURL(session, activePath, activeDocument, activeChange)
+      "
+      :on-mode="
+        (mode) =>
+          (activeDocument.mode = toggleFileMode(
+            activeDocument.mode,
+            mode,
+            activeDocument.preview,
+          ))
+      "
+      :on-save="() => saveActiveMethod()"
+      :on-diff="
+        () => {
+          if (activeDocument) activeDocument.diff = !activeDocument.diff;
+        }
+      "
+      :on-history="(direction) => historyMethod(activePath, direction)"
+    />
     <div class="relative flex min-h-0 flex-1" @keydown.esc="closeDrawerMethod">
       <FileDrawer
         :session="session"
@@ -131,8 +271,56 @@ onUnmounted(() => {
         :on-view="(view) => (drawerView = view)"
         :on-retry="loadChangesMethod"
       />
-      <!-- File content, preview and diff views are intentionally a later stage. -->
+      <FileContent
+        v-if="activePath"
+        :key="activePath"
+        :path="activePath"
+        :doc="activeDocument"
+        :session="session"
+        :changed="activeChange"
+        :on-change="(text) => changeMethod(activePath, text)"
+        :on-retry="
+          () => {
+            if (!dirtyPaths.includes(activePath)) loadMethod(activePath, true);
+            else
+              snackbar = {
+                text: 'Close this tab and save or discard its draft before reloading.',
+                status: 'error',
+              };
+          }
+        "
+        :on-history="(direction) => historyMethod(activePath, direction)"
+      />
+      <div
+        v-else-if="!loading"
+        class="flex min-w-0 flex-1 flex-col items-center justify-center gap-2 p-6 text-center"
+      >
+        <p class="text-sm font-semibold">Open a file to view it</p>
+        <p class="text-ui text-muted">
+          {{
+            files.length
+              ? "Pick a changed file from the Changes list."
+              : "Pick a file from the Files list."
+          }}
+        </p>
+      </div>
     </div>
+    <FileDialog
+      v-if="pending"
+      :paths="pending.paths"
+      :session-number="session.number"
+      :busy="savingDialog"
+      :can-save="session.canEdit"
+      :on-cancel="() => finishDialogMethod(false)"
+      :on-discard="() => finishDialogMethod(true)"
+      :on-save="savePendingMethod"
+    />
+    <FileDialog
+      v-else-if="validation.length"
+      :errors="validation"
+      :session-number="session.number"
+      :on-cancel="() => (validation = [])"
+    />
   </div>
 </template>
 

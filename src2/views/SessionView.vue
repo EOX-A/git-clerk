@@ -10,6 +10,7 @@ const route = useRoute();
 const sessionsStore = useSessionsStore();
 const session = ref(null);
 const error = ref("");
+const hasUnsaved = ref(false);
 let requestID = 0;
 let controller;
 let refreshTimer;
@@ -49,6 +50,17 @@ watch(
   () => querySessionDetailsMethod(),
   { immediate: true },
 );
+watch(
+  () =>
+    sessionsStore.sessions.find(
+      (item) => item.number === Number(route.params.sessionNumber),
+    ),
+  (updated) => {
+    if (updated && session.value?.number === updated.number) {
+      session.value = { ...session.value, ...updated };
+    }
+  },
+);
 onMounted(() => {
   window.addEventListener("focus", backgroundRefreshMethod);
   refreshTimer = window.setInterval(backgroundRefreshMethod, 30000);
@@ -68,6 +80,7 @@ onUnmounted(() => {
       :session="session"
       :failed="Boolean(error) && !session"
       :on-updated="refreshSessionMethod"
+      :has-unsaved="hasUnsaved"
     />
     <div v-if="error" class="p-6">
       <p role="alert">{{ error }}</p>
@@ -79,6 +92,12 @@ onUnmounted(() => {
         Retry
       </button>
     </div>
-    <FileWorkspace v-if="session" :key="session.number" :session="session" />
+    <FileWorkspace
+      v-if="session"
+      :key="session.number"
+      :session="session"
+      :on-saved="refreshSessionMethod"
+      :on-dirty-change="(value) => (hasUnsaved = value)"
+    />
   </section>
 </template>

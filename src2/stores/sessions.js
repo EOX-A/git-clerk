@@ -2,6 +2,7 @@ import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import {
   connectGitHub,
+  createSessionByName,
   getSessionsList,
   getSessionDetails,
 } from "@/api/index.js";
@@ -144,6 +145,28 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     collapsedGroups.value = closed;
   }
 
+  async function createSession(name, attempt, onProgress) {
+    await ensureConnected();
+    const session = await createSessionByName(name, attempt, onProgress);
+    const context = useOctokitStore().context;
+    const owner = context.githubUserData.login.toLowerCase();
+    if (context.scopeOwners && !context.scopeOwners.includes(owner))
+      context.scopeOwners.push(owner);
+    // Cancel older pages so they cannot erase the new session or stale the counts.
+    requestID++;
+    listController?.abort();
+    listController = null;
+    loading.value = false;
+    loadAllRequested = false;
+    pageInfo.value = null;
+    error.value = "";
+    sessions.value = [
+      session,
+      ...sessions.value.filter((item) => item.number !== session.number),
+    ];
+    return session;
+  }
+
   async function getSession(number, signal) {
     await ensureConnected();
     signal?.throwIfAborted();
@@ -162,6 +185,7 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     pageInfo,
     loadSessions,
     getSession,
+    createSession,
     statuses,
     sort,
     group,

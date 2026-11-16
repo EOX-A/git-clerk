@@ -6,7 +6,7 @@ const props = defineProps({
   updateWidth: { type: Function, required: true },
   minWidth: { type: Number, default: 240 },
   maxWidth: { type: Number, default: 360 },
-  defaultWidth: { type: Number, default: 264 },
+  defaultWidth: { type: Number, default: 280 },
 });
 
 const resizing = ref(false);

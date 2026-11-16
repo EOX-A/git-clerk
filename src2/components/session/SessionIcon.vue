@@ -71,6 +71,17 @@ defineProps({ name: { type: String, required: true } });
         stroke="none"
       />
     </g>
+    <g v-else-if="name === 'dots-h'">
+      <circle
+        v-for="x in [5, 12, 19]"
+        :key="x"
+        :cx="x"
+        cy="12"
+        r="1.5"
+        fill="currentColor"
+        stroke="none"
+      />
+    </g>
     <path v-else-if="name === 'menu'" d="M4 7h16M4 12h16M4 17h16" />
     <path v-else-if="name === 'edit'" d="m16 3 5 5-12 12-6 1 1-6zM13 6l5 5" />
     <g v-else-if="name === 'external'">

@@ -1,15 +1,18 @@
 <script setup>
-import { nextTick, onMounted, onUnmounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import SessionIcon from "./SessionIcon.vue";
 
 const props = defineProps({
   session: { type: Object, required: true },
   onAction: { type: Function, required: true },
+  compact: { type: Boolean, default: false },
+  label: { type: String, default: "Session options" },
 });
 const open = ref(false);
 const area = ref(null);
 const trigger = ref(null);
 const panel = ref(null);
+const menuId = computed(() => `session-options-${props.session.number}`);
 const closeMethod = (restore = true) => {
   open.value = false;
   if (restore) trigger.value?.focus();
@@ -65,21 +68,36 @@ onUnmounted(() => document.removeEventListener("pointerdown", outsideMethod));
     <button
       ref="trigger"
       type="button"
-      aria-label="Session options"
-      title="Session options"
+      :aria-label="label"
+      :title="compact ? 'More options' : label"
       aria-haspopup="menu"
       :aria-expanded="open"
-      aria-controls="session-options"
-      :class="open ? 'bg-hover' : ''"
-      class="flex size-11 items-center justify-center rounded-lg text-muted hover:bg-hover hover:text-text workspace:size-8"
-      @click="toggleMethod"
+      :aria-controls="menuId"
+      :class="[
+        compact
+          ? [
+              'size-[26px] rounded-[6px] hover:bg-border-soft',
+              open
+                ? 'bg-border-soft opacity-100 pointer-events-auto'
+                : 'opacity-0 pointer-events-none group-hover/row:opacity-100 group-hover/row:pointer-events-auto group-focus-within/row:opacity-100 group-focus-within/row:pointer-events-auto group-data-[selected=true]/row:opacity-100 group-data-[selected=true]/row:pointer-events-auto',
+            ]
+          : [
+              'size-11 rounded-lg hover:bg-hover workspace:size-8',
+              open ? 'bg-hover' : '',
+            ],
+      ]"
+      class="flex items-center justify-center text-muted hover:text-text focus-visible:opacity-100 focus-visible:pointer-events-auto"
+      @click.stop="toggleMethod"
       @keydown.down.prevent="toggleMethod"
     >
-      <SessionIcon name="dots" />
+      <SessionIcon
+        :name="compact ? 'dots-h' : 'dots'"
+        :class="compact ? 'size-4' : ''"
+      />
     </button>
     <div
       v-if="open"
-      id="session-options"
+      :id="menuId"
       ref="panel"
       role="menu"
       aria-label="Session options"

@@ -149,6 +149,85 @@ test("all-repo scope preserves all four statuses, with closed taking precedence 
   );
 });
 
+test("sidebar session rows include management and branch deletion permissions", async () => {
+  const result = await sessionsList(
+    context(
+      async () =>
+        page([
+          {
+            ...node(1, "alice", "OPEN", true),
+            viewerCanUpdate: true,
+            headRefName: "alice/feature",
+            headRef: { id: "REF_1" },
+            headRepository: {
+              name: "catalog",
+              owner: { login: "alice" },
+              viewerPermission: "WRITE",
+              defaultBranchRef: { name: "main" },
+            },
+          },
+          {
+            ...node(2, "alice", "CLOSED", false),
+            viewerCanUpdate: true,
+            headRefName: "alice/closed",
+            headRef: { id: "REF_2" },
+            headRepository: {
+              name: "catalog",
+              owner: { login: "alice" },
+              viewerPermission: "WRITE",
+              defaultBranchRef: { name: "main" },
+            },
+          },
+          {
+            ...node(3, "alice", "OPEN", false),
+            viewerCanUpdate: true,
+            headRefName: "main",
+            headRef: { id: "REF_3" },
+            headRepository: {
+              name: "catalog",
+              owner: { login: "alice" },
+              viewerPermission: "WRITE",
+              defaultBranchRef: { name: "main" },
+            },
+          },
+        ]),
+      null,
+    ),
+  );
+  assert.deepEqual(
+    result.data.map((s) => ({
+      number: s.number,
+      canManage: s.canManage,
+      canDelete: s.canDelete,
+      branch: s.branch,
+      headRepo: s.headRepo,
+    })),
+    [
+      {
+        number: 1,
+        canManage: true,
+        canDelete: true,
+        branch: "alice/feature",
+        headRepo: "catalog",
+      },
+      {
+        number: 2,
+        canManage: false,
+        canDelete: false,
+        branch: "alice/closed",
+        headRepo: "catalog",
+      },
+      {
+        number: 3,
+        canManage: true,
+        canDelete: false,
+        branch: "main",
+        headRepo: "catalog",
+      },
+    ],
+  );
+});
+
 test("no available fork scope uses v1's author fallback", async () => {
   const result = await sessionsList(
     context(

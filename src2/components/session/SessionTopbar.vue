@@ -9,6 +9,7 @@ import SessionActionDialog from "./SessionActionDialog.vue";
 const props = defineProps({
   session: { type: Object, default: null },
   failed: { type: Boolean, default: false },
+  hasUnsaved: Boolean,
   onUpdated: { type: Function, required: true },
 });
 const sidebar = inject("session-sidebar");
@@ -52,14 +53,16 @@ const checks = computed(() =>
   props.session ? sessionChecks(props.session) : null,
 );
 const submitEnabled = computed(
-  () => props.session && canSubmitSession(props.session),
+  () => props.session && !props.hasUnsaved && canSubmitSession(props.session),
 );
 const submitTip = computed(() =>
-  !props.session?.canManage
-    ? "This account cannot submit this session"
-    : !submitEnabled.value
-      ? "Checks must pass before submitting for review"
-      : `Move draft PR #${props.session.number} into review`,
+  props.hasUnsaved
+    ? "Save your file changes before submitting for review"
+    : !props.session?.canManage
+      ? "This account cannot submit this session"
+      : !submitEnabled.value
+        ? "Checks must pass before submitting for review"
+        : `Move draft PR #${props.session.number} into review`,
 );
 let resizeObserver;
 onMounted(() => {

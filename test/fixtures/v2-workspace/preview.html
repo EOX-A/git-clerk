@@ -1,0 +1,66 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        font: 14px/1.6 system-ui;
+        background: #fafbfc;
+        color: #12202d;
+        padding: 24px;
+      }
+      article {
+        max-width: 560px;
+        margin: auto;
+        padding: 28px;
+        border: 1px solid #e1e6ec;
+        border-radius: 14px;
+        background: white;
+      }
+      h1 {
+        font-size: 22px;
+      }
+      button {
+        padding: 8px 12px;
+        border: 1px solid #bfcad6;
+        border-radius: 8px;
+        background: white;
+      }
+    </style>
+  </head>
+  <body>
+    <article>
+      <small>Project · Preview fixture</small>
+      <h1 id="title"></h1>
+      <p id="description"></p>
+      <button id="update">Update from preview</button>
+    </article>
+    <script>
+      let current;
+      let targetOrigin;
+      window.addEventListener("message", (event) => {
+        if (
+          event.source !== parent ||
+          event.data?.type !== "SCHEMA_DATA_EDITOR_UPDATE"
+        )
+          return;
+        current = event.data.detail;
+        targetOrigin = event.origin;
+        document.getElementById("title").textContent =
+          current.title || "Markdown preview";
+        document.getElementById("description").textContent =
+          current.description || current.body || "";
+        document.getElementById("update").disabled = event.data.readOnly;
+      });
+      document.getElementById("update").addEventListener("click", () =>
+        parent.postMessage(
+          {
+            type: "SCHEMA_DATA_PREVIEW_UPDATE",
+            detail: { ...current, title: "Updated from preview" },
+          },
+          targetOrigin,
+        ),
+      );
+    </script>
+  </body>
+</html>

@@ -421,6 +421,12 @@ later. The starter accepts local draft text and removable file attachments, auto
 templates with editable blanks, and model selection from the design reference.
 Attachments stay in memory; nothing is uploaded. Repository selection is hidden,
 speech input is removed, and sending remains disabled until the backend is ready.
+The centered **Create Session** link below the composer opens a session-name modal
+with the v1 “What is a session?” explanation. Submitting creates a draft session in
+your personal fork and opens it, without an organization or repository selector.
+A missing personal fork is created automatically; an existing fork is validated and
+fast-forwarded without force before the session branch is created. Creation errors
+can be retried in the same dialog without duplicating its branch or PR.
 `src2/main.js` mounts the app configured in `src2/app.js`; `src2/App.vue`
 keeps navigation mounted around the router. Navigation components live in
 `src2/components/nav/` and support a collapsed rail, mobile drawer, and light/dark
@@ -457,16 +463,40 @@ default branches and unwritable forks cannot be deleted. Partial deletion errors
 are reported without hiding that the PR was closed.
 Missing configuration and request failures show a retryable message. GitHub
 operations stay behind `src2/api/index.js` so the UI can later use a backend.
-This flow does not create or sync forks. The conversation/Visualizer workspace
-and its mobile Chat/Files switch will be added separately.
+Loading sessions does not create or sync forks; manual session creation does.
+The conversation workspace and its
+mobile Chat/Files switch will be added separately.
+
+Session files open in tabs, with a Files/Changes drawer. Clicking either list
+opens a normal file; “View changes” explicitly opens its saved PR diff.
+Configured `schemaMap` previews use an iframe and the v1 postMessage contract.
+Preview is the default when available. Editor (a configured `eox-jsonform`) and
+Source are mutually exclusive and can both be switched off to show only the preview.
+Files without a preview start in Source; files without a schema have no Editor.
+The split divider supports dragging and arrow keys; narrow layouts show the
+selected editing pane at full width. The read-only status tag follows the filename,
+and “View file” opens GitHub.
+
+Drafts remain in memory across tab switches. Save changes or Ctrl/⌘+S validates
+configured schemas, commits to the actual head branch with SHA conflict protection,
+and refreshes session details. Closing dirty tabs or leaving the session offers
+Save/Discard/Cancel. Failed saves preserve drafts. Closed, merged, deleted and
+unwritable files remain read-only; deleted files show the base version. Binary,
+non-UTF-8 and files over 1 MiB use a GitHub fallback.
+
+For browser checks without credentials or real repository writes, run
+`npm run test:workspace:v2`, then open
+`http://127.0.0.1:3002/test/fixtures/v2-workspace/index.html`.
+The fixture provides mock saves, conflicts, configured previews and forms.
+Append `?create` to exercise manual session creation and redirection with mocked
+GitHub responses.
 
 Run the focused API regression tests with `npm run test:v2` (mocked GitHub data).
 
 Temporary design references live in `src2/docs/` and are excluded from Tailwind
 scanning and formatting. Design colours, typography, spacing, radii, and shadows
 are defined as Tailwind tokens in `src2/assets/main.css`. It follows v1's JavaScript, Vue Composition API,
-`@/` imports, and directory conventions, with empty directories reserved for
-future implementation. Tailwind replaces Vuetify in v2, using the
+`@/` imports, and directory conventions, with feature folders added as they are implemented. Tailwind replaces Vuetify in v2, using the
 [Tailwind Vite plugin](https://tailwindcss.com/docs/installation/using-vite).
 Each version resolves `@/` to its own source directory.
 

@@ -1,3 +1,5 @@
+import { createPersonalSession } from "./session-create.js";
+import { fileContent, saveFileContent, fileDiff } from "./file-content.js";
 import { initOctokit } from "./github.js";
 import { sessionsList, sessionDetails } from "./session.js";
 import { updateSession } from "./session-actions.js";
@@ -37,5 +39,29 @@ export function getBranchDirectory(source, treeSha, path, signal) {
     treeSha,
     path,
     signal,
+  );
+}
+
+export function getFileContent(session, path, signal) {
+  return fileContent(useOctokitStore().context, session, path, signal);
+}
+export function saveFile(session, path, text, sha) {
+  return saveFileContent(useOctokitStore().context, session, path, text, sha);
+}
+export function getFileDiff(session, path, signal) {
+  return fileDiff(useOctokitStore().context, session, path, signal);
+}
+export async function fetchFileSchema(url, signal) {
+  const response = await fetch(url, { signal });
+  if (!response.ok) throw new Error("Could not load the file schema.");
+  return response.json();
+}
+
+export function createSessionByName(name, attempt, onProgress) {
+  return createPersonalSession(
+    useOctokitStore().context,
+    name,
+    attempt,
+    onProgress,
   );
 }
