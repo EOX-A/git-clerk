@@ -419,7 +419,7 @@ V2 shows a centered chat starter at `/` and a selected session at
 `/:sessionNumber`, without reloading the page. The starter accepts local draft text and removable file attachments, automation
 templates with editable blanks, and model selection from the design reference.
 Attachments stay in memory; nothing is uploaded. Repository selection is hidden,
-speech input is removed, and sending from the root starter remains disabled until the backend is ready.
+speech input is removed, and both root and session composers support the console-only API test below.
 The centered **Create Session** link below the composer opens a session-name modal
 with the v1 “What is a session?” explanation. Submitting creates a draft session in
 your personal fork and opens it, without an organization or repository selector.
@@ -463,13 +463,122 @@ are reported without hiding that the PR was closed.
 Missing configuration and request failures show a retryable message. GitHub
 operations stay behind `src2/api/index.js` so the UI can later use a backend.
 Loading sessions does not create or sync forks; manual session creation does.
-Session chat uses local demo messages with no AI API calls or repository writes.
-It floats over the file workspace or docks beside it, with pointer resizing and a
+Chat Send streams OSC replies through the existing agentic backend's
+`POST /api/generate` (`profile: "chat"`, `output_format: "text_and_a2ui"`,
+`project_id: "earthcode-osc"`, `stream: true`). A compact prompt requests
+`{ message, draft: { title, files } }`; clarification replies use `draft: null`.
+The conversation and current file draft travel in the existing `history` field.
+This uses the chat profile because the backend's generic JSON profile ignores history.
+The frontend parses the requested JSON from the chat profile's text response,
+including fenced JSON and trailing citations. The conversational message is rendered
+progressively, while the file JSON remains internal.
+
+The request respects the backend's 400-character non-URL prompt limit and
+1000-character total limit. Formatting instructions consume part of that budget;
+overlong messages show the available limit and stay in the composer without a request.
+History and current files are never concatenated into `prompt`. HTTP validation
+errors show the backend's explanation instead of only a status code. No backend or MCP changes are required.
+`generateChatTest` and `generateOscTest` remain available as console-only smoke tests,
+but neither is wired to Send.
+
+On New Session, generated files are serialized as provided and published through
+`POST /api/mcp/call` with `server_id: "eox-git-broker"` and
+`tool_name: "git_publish_bundle"`. The broker creates the commit, unique branch and
+PR directly in the configured repository; write access is required. Git Clerk
+serializes each file as JSON text and forwards the signed-in GitHub token through
+`X-Git-Token`. Tokens are never included in chat prompts or persisted in chat state.
+Chat publishing omits the optional `author` field and uses the broker's default
+commit attribution (`EOxHub Author`). Explicit author overrides remain supported
+by the broker API helper.
+Git Clerk reuses the default branch loaded at sign-in. It does not check write
+access, existing branches/products, or base changes, and does not fetch or merge
+existing catalogues before publishing. These checks are deferred to future backend
+work; the current flow sends complete generated files, including catalogue links,
+as supplied. Octokit loads and verifies the returned PR; it does not publish AI drafts.
+The broker receives the same GitHub credential as the frontend, so it does not
+grant additional repository access. GitHub still requires repository write access;
+publishing failures are reported through the broker. Selecting a personal fork creates the broker's PR inside that fork, not
+against the original upstream repository.
+Manual session creation and manual file editing retain their existing Octokit flows.
+
+The current broker creates an open PR, not a draft PR. New AI sessions use a UUID
+branch. Follow-up edits to an open/draft PR within the configured repository use
+the existing session branch for both `base_branch` and `target_branch`. This is a
+compatibility path for the current GitHub provider: it builds the new tree and
+commit on the session head, then its PR-creation 422 fallback finds the existing
+open PR. The actual PR base, number, title and description are retained (an empty
+description is sent as a newline because the broker replaces empty strings).
+Only generated file paths are replaced; other branch files and prior commits stay.
+The returned PR number, branch, base and commit are checked before showing Saved.
+Cross-fork PRs still require the manual file editor. The broker still force-updates
+the branch and has no expected-head/concurrency option, so simultaneous writes
+can race; protecting those writes requires a future broker change.
+The app opens the published PR with the conversation and file cards intact.
+After a confirmed chat update, open files receive the saved contents immediately
+without re-fetching files or editor schemas. The current editor/preview mode is
+preserved; ordinary background metadata refreshes continue.
+Assistant replies use `vue-stream-markdown` inside the existing Tailwind chat layout
+for headings, lists, tables, links and code blocks. File cards appear incrementally
+as draft JSON arrives, with expandable, bounded JSON previews. Generated and publishing
+states remain separate from the confirmed Saved state; the PR result card appears
+only after publication succeeds. Raw HTML, embedded remote images and executable
+links are disabled. File previews remain plain text. Chat follows new content only
+while the reader remains at the bottom, including asynchronous Markdown rendering.
+After a page refresh, an empty session chat shows a Git Clerk greeting and a live
+PR summary with status, changed-file count, checks, branch and links to Changes
+and GitHub. This uses the already-loaded session metadata; it does not restore
+previous conversations or send a dummy message to the AI.
+Retries reconcile a lost response by reading the branch, its exact files and PR;
+they never blindly resend a request whose outcome is uncertain. A confirmed result
+is retained if loading the PR fails. No base-branch concurrency check runs before
+publishing. Saved chat file cards use “Saved” because the frontend no longer reads
+previous contents to classify files as added or modified. No live Git writes occur in tests.
+
+Start the existing agentic backend on port 8000 and `eox-git-broker-mcp` on port
+8015 (registered as `eox-git-broker`), then send an OSC request such as
+“Create a synthetic sample OSC product, project and variable.” AI publishing skips
+OSC schema and naming validation for now. Paths with spaces, Unicode, underscores
+or nested directories are passed through unchanged; no OSC folder, filename,
+content-type or per-file size/count rules block publication. Only the response
+envelope and repository-relative addressing are checked (no traversal segments).
+Strings are sent as file text; other JSON values are serialized. No schema fetch
+or JSON Form validation runs before AI publication. V2 supplies default
+OSC schemas for parent catalogues and child files in `products`, `projects`,
+`variables`, `themes` and `eo-missions`, using the official
+`esa-earthcode.github.io/open-science-catalog-validation/schemas` URLs. Matching
+runtime `schemaMap` entries override these defaults, including custom editors and
+previews for the manual file editor. Incomplete responses and streaming errors are
+shown in chat and do not start a save. Retry saving reuses the generated draft
+without another generation request.
+For a browser regression check of the manual file validator, run `npm run test:workspace:v2`
+and open `http://127.0.0.1:3002/test/fixtures/v2-workspace/validation.html`.
+It uses a local official product schema snapshot and synthetic data to check valid
+and invalid files, including spatial fields, without GitHub or LLM requests.
+The same page can validate a pasted `draft.files` object against the hosted default
+schemas. OSC IDs preserve uppercase/lowercase letters, digits and hyphens, including
+mission names such as `Sentinel-1` and `CryoSat-2`. Errors identify the rejected file.
+A failed broker request can leave a branch without a PR; retry checks the outcome
+and reports this partial result without overwriting the branch. Sandbox/dry-run
+responses never count as a live publication.
+The backend's summary-only responses are not treated as file bundles, and its
+self-reported validation scores do not authorize saving.
+The default API base URL is `http://localhost:8000`; optionally set
+`GITCLERK_AGENTIC_API_URL` in the frontend `.env` and restart Vite to change it.
+LLM credentials belong in the backend environment, never in the frontend `.env`.
+
+Conversation state is kept in memory per signed-in account, repository and PR,
+so it survives in-app navigation but not a page reload. Attachments are not yet
+supported by this OSC flow and block sending until removed. The prototype model
+selector is not sent to the backend; the backend uses its configured default model.
+AI publishing uses the existing broker tool through the agentic gateway. No direct
+OSC REST requests, backend source changes or additional MCP tools are required.
+
+Session chat floats over the file workspace or docks beside it, with pointer resizing and a
 keyboard-adjustable divider. The file workspace stays available for closed/merged
 sessions too; their chat composer becomes a read-only banner. There is no desktop
 full-chat mode or Visualizer toggle. Mobile Chat/Files controls switch panels while
 preserving drafts and open tabs. Session metadata refreshes preserve conversation
-history; navigating away cancels any pending demo reply.
+history; navigating away cancels the pending API request.
 
 Session files open in tabs, with a Files/Changes drawer. Clicking either list
 opens a normal file; “View changes” explicitly opens its saved PR diff.
@@ -495,6 +604,8 @@ The fixture provides mock saves, conflicts, configured previews and forms.
 Append `?create` to exercise manual session creation and redirection with mocked
 GitHub responses. Append `?chat` for floating/docked/mobile chat, metadata refresh,
 read-only state and unsaved-file navigation checks, also backed only by mocks.
+The fixture routes chat requests to its own mock endpoint; it never calls the live
+agentic backend or an LLM.
 
 Run the focused API regression tests with `npm run test:v2` (mocked GitHub data).
 

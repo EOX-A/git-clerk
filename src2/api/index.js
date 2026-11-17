@@ -1,3 +1,5 @@
+import { publishOscFiles } from "./osc-publish.js";
+import { generateChatTest, generateOscTest, streamOscChat } from "./agentic.js";
 import { createPersonalSession } from "./session-create.js";
 import { fileContent, saveFileContent, fileDiff } from "./file-content.js";
 import { initOctokit } from "./github.js";
@@ -64,4 +66,52 @@ export function createSessionByName(name, attempt, onProgress) {
     attempt,
     onProgress,
   );
+}
+
+export function sendChatTest(prompt, signal) {
+  return generateChatTest(prompt, signal);
+}
+
+export function sendOscTest(prompt, signal) {
+  return generateOscTest(prompt, signal);
+}
+
+export { streamOscChat };
+export function publishOscDraft(bundle, attempt, session) {
+  return publishOscFiles(useOctokitStore().context, bundle, attempt, session);
+}
+
+export async function readOscSessionDraft(session, signal) {
+  const context = useOctokitStore().context;
+  const { files, incomplete } = await sessionFiles(context, session, signal);
+  if (incomplete)
+    throw new Error(
+      "The changed-file list is incomplete. Refresh the session before using chat.",
+    );
+  const paths = files.filter(
+    (file) =>
+      file.status !== "removed" &&
+      /^(products|projects|variables|themes|eo-missions)\/.+\.json$/.test(
+        file.path,
+      ),
+  );
+  if (paths.length > 100)
+    throw new Error(
+      "This session has too many OSC files for one chat request.",
+    );
+  if (!paths.length) return null;
+  const contents = {};
+  let size = 0;
+  for (const { path } of paths) {
+    const content = await fileContent(context, session, path, signal);
+    if (content.text === null)
+      throw new Error(`Cannot read ${path} as OSC metadata.`);
+    size += content.text.length;
+    if (size > 200_000)
+      throw new Error(
+        "This session's OSC files are too large for one chat request.",
+      );
+    contents[path] = JSON.parse(content.text);
+  }
+  return { title: session.title, files: contents };
 }

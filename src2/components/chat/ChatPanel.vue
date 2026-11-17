@@ -1,9 +1,12 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import useScrollbar from "@/helpers/use-scrollbar.js";
+import useChatAutoscroll from "@/helpers/use-chat-autoscroll.js";
 import ChatComposer from "./ChatComposer.vue";
 import ChatIcon from "./ChatIcon.vue";
 import ChatMessageList from "./ChatMessageList.vue";
+import ChatProgress from "./ChatProgress.vue";
+import ChatSessionWelcome from "./ChatSessionWelcome.vue";
 
 const props = defineProps({
   session: {
@@ -19,6 +22,13 @@ const props = defineProps({
     default: () => [],
   },
   busy: Boolean,
+  phase: { type: String, default: "idle" },
+  progress: { type: String, default: "" },
+  error: { type: String, default: "" },
+  canRetry: Boolean,
+  canStop: Boolean,
+  onRetry: { type: Function, default: null },
+  onStop: { type: Function, default: null },
   active: { type: Boolean, default: true },
   compact: {
     type: Boolean,
@@ -52,6 +62,10 @@ const props = defineProps({
 
 const scroller = ref(null);
 const pinned = ref(true);
+const messageContent = useChatAutoscroll(
+  scroller,
+  computed(() => pinned.value && props.messages.length > 0),
+);
 const { isScrolling, scrollMethod } = useScrollbar();
 const scrollMessagesMethod = () => {
   scrollMethod();
@@ -61,12 +75,19 @@ const scrollMessagesMethod = () => {
 };
 const scrollBottomMethod = async () => {
   await nextTick();
-  if (scroller.value) scroller.value.scrollTop = scroller.value.scrollHeight;
+  if (scroller.value)
+    scroller.value.scrollTop = props.messages.length
+      ? scroller.value.scrollHeight
+      : 0;
 };
 watch(
-  () => props.messages.at(-1)?.id,
+  () => [
+    props.messages.at(-1)?.id,
+    props.messages.at(-1)?.text,
+    props.messages.at(-1)?.files?.length,
+  ],
   () => {
-    if (pinned.value || props.messages.at(-1)?.role === "status")
+    if (pinned.value || props.messages.at(-1)?.role === "user")
       scrollBottomMethod();
   },
 );
@@ -145,8 +166,17 @@ const headerPointerDownMethod = (event) => {
       class="nav-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain"
       @scroll="scrollMessagesMethod"
     >
-      <div class="mx-auto flex max-w-[744px] flex-col gap-5 px-6 py-5.5">
+      <div
+        ref="messageContent"
+        class="mx-auto flex min-w-0 max-w-[744px] flex-col gap-5 px-6 py-5.5"
+      >
+        <ChatSessionWelcome
+          v-if="!messages.length && session"
+          :session="session"
+          :on-open-changes="onOpenChanges"
+        />
         <ChatMessageList
+          v-else
           :messages="messages"
           :on-open-file="onOpenFile"
           :on-open-changes="onOpenChanges"
@@ -190,9 +220,17 @@ const headerPointerDownMethod = (event) => {
           </router-link>
         </div>
 
-        <p v-if="!isReadOnly" class="text-meta text-muted">
-          Demo chat · no files are changed
-        </p>
+        <ChatProgress
+          v-if="!isReadOnly"
+          :busy="busy"
+          :phase="phase"
+          :progress="progress"
+          :error="error"
+          :can-retry="canRetry"
+          :can-stop="canStop"
+          :on-retry="onRetry"
+          :on-stop="onStop"
+        />
         <!-- Active Composer -->
         <ChatComposer
           v-if="!isReadOnly"

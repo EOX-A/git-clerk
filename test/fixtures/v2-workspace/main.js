@@ -34,5 +34,11 @@ const app = createApp(chat ? ChatFixture : creation ? App : RouterView)
   .use(createPinia())
   .use(router);
 if (creation) installCreationFixture();
-if (chat) await router.replace("/7");
+if (chat)
+  await router.replace({
+    path: /^\/\d+$/.test(window.location.pathname)
+      ? window.location.pathname
+      : "/7",
+    query: { chat: "" },
+  });
 app.mount("#app");

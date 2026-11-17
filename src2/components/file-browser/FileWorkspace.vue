@@ -24,6 +24,7 @@ import FileDrawer from "./FileDrawer.vue";
 
 const props = defineProps({
   session: { type: Object, required: true },
+  publication: { type: Object, default: null },
   active: { type: Boolean, default: true },
   onReveal: { type: Function, default: null },
   onSaved: { type: Function, required: true },
@@ -46,11 +47,18 @@ const {
   documents,
   dirtyPaths,
   loadMethod,
+  applyPublicationMethod,
   changeMethod,
   historyMethod,
   saveMethod,
   forgetMethod,
-} = useFileDocuments(toRef(props, "session"), files, props.onSaved, snackbar);
+} = useFileDocuments(
+  toRef(props, "session"),
+  files,
+  props.onSaved,
+  snackbar,
+  toRef(props, "publication"),
+);
 const activeDocument = computed(() => documents.value[activePath.value]);
 const activeChange = computed(
   () => files.value.find((file) => file.path === activePath.value) || null,
@@ -112,13 +120,13 @@ const saveKeyMethod = (event) => {
   }
 };
 watch(
-  () => props.session.headSha,
+  () => [props.session.headSha, props.publication],
   () => {
     for (const [path, doc] of Object.entries(documents.value)) {
       if (!doc.loaded || doc.saving || doc.headSha === props.session.headSha)
         continue;
       if (dirtyPaths.value.includes(path)) doc.remoteChanged = true;
-      else loadMethod(path, true);
+      else if (!applyPublicationMethod(path)) loadMethod(path, true);
     }
   },
 );

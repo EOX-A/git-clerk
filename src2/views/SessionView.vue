@@ -1,10 +1,10 @@
 <script setup>
-import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
-import { useRoute } from "vue-router";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { onBeforeRouteLeave, useRoute } from "vue-router";
 import useSessionsStore from "@/stores/sessions.js";
 import sessionError from "@/helpers/session-error.js";
 import useChatLayout from "@/helpers/use-chat-layout.js";
-import useSessionChat from "@/helpers/use-session-chat.js";
+import useChatStore from "@/stores/chat.js";
 import { SessionTopbar } from "@/components/session";
 import { FileWorkspace } from "@/components/file-browser";
 import { ChatPanel, ChatResizeHandles } from "@/components/chat";
@@ -34,7 +34,48 @@ const {
   dockedKeyMethod,
   toggleDockMethod,
 } = useChatLayout(workspaceContainer, mobileView);
-const { messages, busy, sendMethod } = useSessionChat(session);
+const chatStore = useChatStore();
+const conversation = computed(() =>
+  chatStore.getConversation(Number(route.params.sessionNumber)),
+);
+const chat = computed(() => conversation.value.state);
+const messages = computed(() => chat.value.messages);
+const busy = computed(() => chat.value.busy || hasUnsaved.value);
+const sendMethod = (payload) => {
+  if (hasUnsaved.value || !session.value?.canEdit) return false;
+  return conversation.value.sendMethod(payload, session.value);
+};
+const retryChatMethod = () => {
+  if (!hasUnsaved.value && session.value?.canEdit)
+    conversation.value.retryMethod();
+};
+watch(
+  () => chat.value.completed,
+  () => {
+    const published = chat.value.publication?.session;
+    if (published?.number !== Number(route.params.sessionNumber)) return;
+    // Publication already verified these details; discard older in-flight reads.
+    requestID++;
+    controller?.abort();
+    loading = false;
+    error.value = "";
+    session.value = { ...published };
+  },
+);
+watch(conversation, (_current, previous) => previous?.cancelMethod());
+watch(
+  () => session.value?.canEdit,
+  (editable) => {
+    if (editable === false) conversation.value.cancelMethod();
+  },
+);
+onBeforeRouteLeave(() => conversation.value.cancelMethod());
+const chatUnloadMethod = (event) => {
+  if (chat.value.phase === "saving") {
+    event.preventDefault();
+    event.returnValue = "";
+  }
+};
 let requestID = 0;
 let controller;
 let refreshTimer;
@@ -109,11 +150,14 @@ watch(
 );
 
 onMounted(() => {
+  window.addEventListener("beforeunload", chatUnloadMethod);
   window.addEventListener("focus", backgroundRefreshMethod);
   refreshTimer = window.setInterval(backgroundRefreshMethod, 30000);
 });
 
 onUnmounted(() => {
+  conversation.value.cancelMethod();
+  window.removeEventListener("beforeunload", chatUnloadMethod);
   requestID++;
   controller?.abort();
   window.clearInterval(refreshTimer);
@@ -171,6 +215,17 @@ onUnmounted(() => {
           :session="session"
           :messages="messages"
           :busy="busy"
+          :phase="chat.phase"
+          :progress="
+            hasUnsaved
+              ? 'Save or discard your file edits before asking for another change.'
+              : chat.progress
+          "
+          :error="chat.error"
+          :can-retry="Boolean(chat.pending) && !hasUnsaved"
+          :can-stop="chat.busy && chat.phase !== 'saving'"
+          :on-retry="retryChatMethod"
+          :on-stop="conversation.cancelMethod"
           :active="!narrow || mobileView === 'chat'"
           :compact="
             mode === 'floating'
@@ -207,13 +262,15 @@ onUnmounted(() => {
       </div>
       <div
         v-show="!narrow || mobileView === 'files'"
+        :inert="chat.busy || undefined"
         class="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-bg"
       >
         <FileWorkspace
           ref="fileWorkspaceRef"
           :key="session.number"
           :session="session"
-          :active="!narrow || mobileView === 'files'"
+          :active="(!narrow || mobileView === 'files') && !chat.busy"
+          :publication="chat.publication"
           :on-reveal="() => (mobileView = 'files')"
           :on-saved="refreshSessionMethod"
           :on-dirty-change="(value) => (hasUnsaved = value)"

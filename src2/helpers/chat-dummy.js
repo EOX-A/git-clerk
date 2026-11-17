@@ -1,10 +1,10 @@
-// Sample conversation only. Never imply that the demo has changed a repository.
+// Introductory UI message; API test responses are logged only in the console.
 export const getDummyMessages = () => [
   {
     id: "demo-intro",
     role: "assistant",
     showChanges: true,
-    text: "Try the chat here. Replies are examples only; sending a message won’t change your files or branch.",
+    text: "Send a message to test the chat API. The response appears only in the browser console.",
   },
 ];
 

@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>OSC validation regression</title>
+  </head>
+  <body>
+    <h1>OSC validation regression</h1>
+    <button id="run">Run validation</button>
+    <pre id="result">Ready</pre>
+    <label for="files">Draft files JSON</label>
+    <textarea id="files" rows="4" cols="80"></textarea>
+    <button id="check-files">Validate draft files (no Git writes)</button>
+    <pre id="files-result">
+Paste a path-to-content object to check a generated draft.</pre
+    >
+    <script type="module" src="./validation.js"></script>
+  </body>
+</html>

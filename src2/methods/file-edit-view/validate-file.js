@@ -1,7 +1,12 @@
 // Use the same JSON Editor validation as the visible form, including while Source is active.
 export default async function validateFileMethod(value, meta, interfaces) {
   if (!meta?.schema) return [];
-  await import("@eox/jsonform");
+  // Spatial fields need the same registered elements as the visible FileForm.
+  await Promise.all([
+    import("@eox/jsonform"),
+    import("@eox/map"),
+    import("@eox/drawtools"),
+  ]);
   return new Promise((resolve) => {
     const form = document.createElement("eox-jsonform");
     form.style.display = "none";

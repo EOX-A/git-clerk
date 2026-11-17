@@ -174,6 +174,10 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     const scopeChanged =
       context.scopeOwners && !context.scopeOwners.includes(owner);
     if (scopeChanged) context.scopeOwners.push(owner);
+    return rememberSession(session, scopeChanged);
+  }
+
+  function rememberSession(session, scopeChanged = false) {
     // Cancel older pages so they cannot erase the new session or stale the counts.
     requestID++;
     listController?.abort();
@@ -210,7 +214,9 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     pageInfo,
     loadSessions,
     getSession,
+    ensureConnected,
     createSession,
+    rememberSession,
     statuses,
     sort,
     group,

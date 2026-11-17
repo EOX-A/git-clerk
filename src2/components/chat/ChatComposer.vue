@@ -14,6 +14,7 @@ const props = defineProps({
     default: false,
   },
   busy: Boolean,
+  showAutomation: Boolean,
   active: { type: Boolean, default: true },
   onSend: {
     type: Function,
@@ -147,7 +148,7 @@ watch(
     @submit.prevent="sendMethod"
   >
     <div
-      v-if="automation && !hintHidden"
+      v-if="showAutomation && automation && !hintHidden"
       role="status"
       class="-mt-3 -mr-3 mb-1 -ml-[18px] flex items-center gap-1.5 rounded-t-[19px] bg-tint px-[18px] py-1 text-meta font-medium text-primary"
     >
@@ -238,6 +239,7 @@ watch(
         @change="attachFilesMethod"
       />
       <button
+        v-if="showAutomation"
         type="button"
         :aria-label="`Automation: ${automation || 'none'}`"
         aria-haspopup="listbox"
@@ -296,7 +298,7 @@ watch(
       </button>
     </div>
     <ChatMenu
-      v-if="menu"
+      v-if="menu && (menu !== 'automation' || showAutomation)"
       :key="menu"
       :title="menu === 'automation' ? 'Automation' : 'Model'"
       :items="menu === 'automation' ? CHAT_AUTOMATIONS : CHAT_MODELS"

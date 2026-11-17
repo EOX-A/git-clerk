@@ -54,5 +54,11 @@ export async function initOctokit(
     scopeOwners = [...new Set(scopeOwners.map((owner) => owner.toLowerCase()))];
   }
 
-  return { octokit, githubConfig, githubUserData, scopeOwners };
+  return {
+    octokit,
+    githubConfig,
+    githubUserData,
+    githubTargetRepo,
+    scopeOwners,
+  };
 }

@@ -1,6 +1,8 @@
 <script setup>
 import ChatIcon from "./ChatIcon.vue";
-import { splitFilePath } from "@/helpers/chat-dummy.js";
+import ChatMarkdown from "./ChatMarkdown.vue";
+import ChatFileCard from "./ChatFileCard.vue";
+import ChatPullRequest from "./ChatPullRequest.vue";
 
 defineProps({
   onOpenFile: { type: Function, default: null },
@@ -17,7 +19,7 @@ defineProps({
     <div
       v-for="(msg, index) in messages"
       :key="msg.id || index"
-      class="relative flex flex-col pl-[22px]"
+      class="relative flex min-w-0 flex-col pl-[22px]"
     >
       <!-- Timeline rail line connecting messages -->
       <span
@@ -66,82 +68,28 @@ defineProps({
 
       <!-- Assistant message body -->
       <template v-else-if="msg.role === 'assistant'">
-        <div
-          class="max-w-[68ch] whitespace-pre-wrap break-words text-sm leading-[22px] text-pretty text-text"
+        <ChatMarkdown :text="msg.text" :streaming="msg.streaming" />
+        <ChatPullRequest v-if="msg.pr" :pr="msg.pr" />
+        <ChatFileCard
+          v-if="msg.files?.length"
+          :files="msg.files"
+          :stage="msg.fileStage || 'saved'"
+          :on-open-file="onOpenFile"
+          :on-open-changes="onOpenChanges"
+        />
+        <button
+          v-else-if="msg.showChanges && onOpenChanges"
+          type="button"
+          class="mt-2 self-start rounded-md px-2 py-1 text-ui text-primary hover:bg-hover"
+          @click="onOpenChanges()"
         >
-          {{ msg.text }}
-        </div>
-
-        <!-- Changed-files card -->
-        <div
-          v-if="msg.files?.length || msg.showChanges"
-          class="mt-3.5 flex max-w-[580px] flex-col items-start gap-1.5"
-        >
-          <div
-            v-if="msg.files?.length"
-            class="flex w-full flex-col gap-[1px] overflow-hidden rounded-xl border border-border-soft bg-border-soft"
-          >
-            <button
-              v-for="file in msg.files"
-              :key="file.path"
-              type="button"
-              :aria-label="`Open ${file.path}, ${file.status}`"
-              :title="file.path"
-              class="flex w-full items-center gap-2.5 bg-elev px-3 py-2 text-left text-text hover:bg-hover"
-              @click="onOpenFile?.(file.path)"
-              :disabled="!onOpenFile"
-            >
-              <span
-                :class="
-                  file.status === 'Added'
-                    ? 'text-add-fg'
-                    : file.status === 'Deleted'
-                      ? 'text-del-fg'
-                      : 'text-warn'
-                "
-                class="flex shrink-0"
-              >
-                <ChatIcon
-                  :name="file.status === 'Added' ? 'file-plus' : 'file-diff'"
-                  class="size-4"
-                />
-              </span>
-              <span
-                class="flex min-w-0 flex-1 font-mono text-[12.5px] leading-5 whitespace-nowrap"
-              >
-                <span class="min-w-0 shrink truncate text-muted">{{
-                  splitFilePath(file.path).dir
-                }}</span>
-                <span class="min-w-0 truncate font-medium">{{
-                  splitFilePath(file.path).name
-                }}</span>
-              </span>
-              <span
-                :class="
-                  file.status === 'Added'
-                    ? 'text-add-fg'
-                    : file.status === 'Deleted'
-                      ? 'text-del-fg'
-                      : 'text-warn'
-                "
-                class="shrink-0 text-meta font-medium"
-              >
-                {{ file.status }}
-              </span>
-            </button>
-          </div>
-          <button
-            type="button"
-            class="-ml-2 inline-flex h-[30px] shrink-0 items-center gap-1.5 rounded-lg px-2 text-[12.5px] font-medium text-primary hover:bg-hover"
-            @click="onOpenChanges?.()"
-            :disabled="!onOpenChanges"
-          >
-            <ChatIcon name="diff" class="size-[15px]" />
-            <span>View changes</span>
-          </button>
-        </div>
+          View changes
+        </button>
       </template>
 
+      <p v-else-if="msg.role === 'error'" class="text-ui text-del-fg">
+        {{ msg.text }}
+      </p>
       <!-- Status message -->
       <div
         v-else-if="msg.role === 'status'"

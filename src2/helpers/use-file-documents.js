@@ -8,12 +8,14 @@ import {
   previewAddress,
 } from "./file-editor.js";
 import { validateFileMethod } from "@/methods/file-edit-view";
+import { applyPublishedFile, publishedFile } from "./file-publication.js";
 
 export default function useFileDocuments(
   session,
   changedFiles,
   onSaved,
   snackbar,
+  publication = ref(null),
 ) {
   const documents = ref({});
   const controllers = new Map();
@@ -61,7 +63,9 @@ export default function useFileDocuments(
             headSha: currentSession.baseSha,
           }
         : currentSession;
-      const file = await getFileContent(readSession, path, controller.signal);
+      const file =
+        publishedFile(publication.value, readSession, path) ||
+        (await getFileContent(readSession, path, controller.signal));
       const config = fileConfiguration(path);
       let meta = config.meta;
       let schemaError = "";
@@ -91,6 +95,9 @@ export default function useFileDocuments(
         }
       }
       if (disposed || controller.signal.aborted) return;
+      // An older request must not restore content from before a completed save.
+      if (session.value.headSha !== currentSession.headSha)
+        return loadMethod(path, true);
       const preview = previewAddress(meta?.preview, window.location.href);
       Object.assign(doc, {
         ...file,
@@ -115,6 +122,15 @@ export default function useFileDocuments(
           error: "Could not load this file. It may have moved or been deleted.",
         });
     }
+  };
+  const applyPublicationMethod = (path) => {
+    const applied = applyPublishedFile(
+      documents.value[path],
+      publishedFile(publication.value, session.value, path),
+      session.value.headSha,
+    );
+    if (applied) controllers.get(path)?.abort();
+    return applied;
   };
   const changeMethod = (path, text) => {
     const doc = documents.value[path];
@@ -223,6 +239,7 @@ export default function useFileDocuments(
     documents,
     dirtyPaths,
     loadMethod,
+    applyPublicationMethod,
     changeMethod,
     historyMethod,
     saveMethod,

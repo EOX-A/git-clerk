@@ -1,21 +1,18 @@
-import { computed, onScopeDispose, ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { getDummyMessages } from "./chat-dummy.js";
+import useChatApiTest from "./use-chat-api-test.js";
 
-export default function useSessionChat(session) {
+export default function useSessionChat(session, request) {
   const messages = ref([]);
-  const busy = ref(false);
   const readOnly = computed(() =>
     ["closed", "merged"].includes(session.value?.status),
   );
-  let timer;
+  const {
+    busy,
+    sendMethod: sendTestMethod,
+    cancelMethod,
+  } = useChatApiTest(request);
   let nextID = 0;
-  const cancelMethod = () => {
-    clearTimeout(timer);
-    messages.value = messages.value.filter(
-      (message) => message.role !== "status",
-    );
-    busy.value = false;
-  };
   watch(
     () => session.value?.number,
     () => {
@@ -28,41 +25,21 @@ export default function useSessionChat(session) {
     if (value) cancelMethod();
   });
   const sendMethod = ({ text, attachments = [], model, automation }) => {
-    if (!text.trim() || busy.value || readOnly.value) return false;
-    messages.value.push(
-      {
-        id: `user-${++nextID}`,
-        role: "user",
-        text: text.trim(),
-        // Retain metadata for the UI, never read/upload attachment contents.
-        attachments: attachments.map(({ name, size, type }) => ({
-          name,
-          size,
-          type,
-        })),
-        model,
-        automation,
-      },
-      {
-        id: `pending-${nextID}`,
-        role: "status",
-        text: "Preparing a demo reply…",
-      },
-    );
-    busy.value = true;
-    timer = setTimeout(() => {
-      messages.value = messages.value.filter(
-        (message) => message.role !== "status",
-      );
-      messages.value.push({
-        id: `assistant-${nextID}`,
-        role: "assistant",
-        text: "This is a sample reply. Your message was added to this demo conversation; no files or branches were changed.",
-      });
-      busy.value = false;
-    }, 500);
+    if (readOnly.value || !sendTestMethod({ text })) return false;
+    messages.value.push({
+      id: `user-${++nextID}`,
+      role: "user",
+      text: text.trim(),
+      // Attachments and model selections remain local during this text-only test.
+      attachments: attachments.map(({ name, size, type }) => ({
+        name,
+        size,
+        type,
+      })),
+      model,
+      automation,
+    });
     return true;
   };
-  onScopeDispose(cancelMethod);
   return { messages, busy, sendMethod };
 }

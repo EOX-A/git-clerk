@@ -1,20 +1,22 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { effectScope, nextTick, ref } from "vue";
+import { effectScope, nextTick, ref, toRaw } from "vue";
 import {
   clampDockedWidth,
   clampFloatingBounds,
   resizeFloatingBounds,
 } from "../src2/helpers/chat-layout.js";
 import { getDummyMessages, splitFilePath } from "../src2/helpers/chat-dummy.js";
+import { generateChatTest, generateOscTest } from "../src2/api/agentic.js";
+import useChatApiTest from "../src2/helpers/use-chat-api-test.js";
 import useSessionChat from "../src2/helpers/use-session-chat.js";
 
-test("demo copy does not invent repository actions or depend on PR numbers", () => {
+test("test intro explains console-only responses without depending on PR numbers", () => {
   assert.deepEqual(
     getDummyMessages({ number: 176 }),
     getDummyMessages({ number: 999 }),
   );
-  assert.match(getDummyMessages()[0].text, /won’t change your files/);
+  assert.match(getDummyMessages()[0].text, /browser console/);
   assert.deepEqual(splitFilePath("projects/example/collection.json"), {
     dir: "projects/example/",
     name: "collection.json",
@@ -53,74 +55,205 @@ test("resizing top/left keeps the opposite edges anchored until a viewport bound
   assert.equal(small.x + small.w, start.x + start.w);
 });
 
+const flushRequest = async () => {
+  await new Promise((resolve) => setImmediate(resolve));
+};
 const setupChat = (t) => {
-  t.mock.timers.enable({ apis: ["setTimeout"] });
+  const calls = [];
+  const request = (text, signal) =>
+    new Promise((resolve, reject) => {
+      calls.push({ text, signal, resolve, reject });
+    });
+  const logs = t.mock.method(console, "log", () => {});
+  const errors = t.mock.method(console, "error", () => {});
   const scope = effectScope();
   const session = ref({ number: 7, status: "draft" });
-  const chat = scope.run(() => useSessionChat(session));
+  const chat = scope.run(() => useSessionChat(session, request));
   t.after(() => scope.stop());
-  return { scope, session, chat };
+  return { scope, session, chat, calls, logs, errors, request };
 };
 
-test("one send adds one turn, keeps attachment metadata, blocks overlapping sends", (t) => {
-  const { chat } = setupChat(t);
+test("OSC chat requests an EarthCODE JSON draft and only logs the response", async (t) => {
+  const response = {
+    data: { id: "test-product" },
+    metadata: { isAiGenerated: true },
+  };
+  const fetchMock = t.mock.method(
+    globalThis,
+    "fetch",
+    async () => new Response(JSON.stringify(response)),
+  );
+  const logs = t.mock.method(console, "log", () => {});
+  const scope = effectScope();
+  t.after(() => scope.stop());
+  const chat = scope.run(() =>
+    useSessionChat(ref({ number: 7, status: "draft" }), generateOscTest),
+  );
+  const prompt = "Draft OSC metadata for a glacier product";
+  assert.equal(chat.sendMethod({ text: prompt }), true);
+  await flushRequest();
+  assert.equal(fetchMock.mock.callCount(), 1);
+  const [url, options] = fetchMock.mock.calls[0].arguments;
+  assert.equal(url, "http://localhost:8000/api/generate");
+  assert.equal(options.method, "POST");
+  assert.deepEqual(options.headers, { "Content-Type": "application/json" });
+  assert.ok(options.signal instanceof AbortSignal);
+  assert.deepEqual(JSON.parse(options.body), {
+    prompt,
+    profile: "chat",
+    output_format: "json",
+    project_id: "earthcode-osc",
+    stream: false,
+  });
+  assert.equal(logs.mock.callCount(), 1);
+  assert.deepEqual(logs.mock.calls[0].arguments, [
+    "[Git Clerk chat test] Response:",
+    response,
+  ]);
+  assert.equal(chat.messages.value.length, 2);
+  assert.equal(chat.busy.value, false);
+});
+
+test("OSC test propagates HTTP and invalid JSON errors", async (t) => {
+  const fetchMock = t.mock.method(
+    globalThis,
+    "fetch",
+    async () => new Response("Unavailable", { status: 503 }),
+  );
+  await assert.rejects(
+    generateOscTest("Draft OSC metadata"),
+    /OSC request failed.*503/,
+  );
+  fetchMock.mock.mockImplementation(async () => new Response("invalid json"));
+  await assert.rejects(generateOscTest("Draft OSC metadata"), SyntaxError);
+});
+
+test("chat test POSTs only text to the backend and returns the entire JSON response", async (t) => {
+  const response = {
+    message: "Example response",
+    metadata: { isAiGenerated: true },
+  };
+  const fetchMock = t.mock.method(
+    globalThis,
+    "fetch",
+    async () => new Response(JSON.stringify(response)),
+  );
+  const controller = new AbortController();
+  assert.deepEqual(
+    await generateChatTest("Explain satellite imagery", controller.signal),
+    response,
+  );
+  const [url, options] = fetchMock.mock.calls[0].arguments;
+  assert.equal(url, "http://localhost:8000/api/generate");
+  assert.equal(options.method, "POST");
+  assert.equal(options.signal, controller.signal);
+  assert.deepEqual(options.headers, { "Content-Type": "application/json" });
+  assert.deepEqual(JSON.parse(options.body), {
+    prompt: "Explain satellite imagery",
+    profile: "chat",
+    output_format: "text",
+    project_id: "generic-eox",
+    stream: false,
+  });
+});
+
+test("HTTP errors and invalid JSON reject rather than becoming successful chat responses", async (t) => {
+  const mocked = t.mock.method(
+    globalThis,
+    "fetch",
+    async () => new Response("internal details", { status: 500 }),
+  );
+  await assert.rejects(generateChatTest("Hello"), /HTTP 500/);
+  mocked.mock.mockImplementation(async () => new Response("not JSON"));
+  await assert.rejects(generateChatTest("Hello"), SyntaxError);
+});
+
+test("sending logs one response, adds no assistant reply, and blocks overlapping sends", async (t) => {
+  const { chat, calls, logs } = setupChat(t);
   assert.equal(chat.sendMethod({ text: " " }), false);
   assert.equal(
     chat.sendMethod({
       text: " A change ",
-      attachments: [
-        {
-          name: "notes.txt",
-          size: 12,
-          type: "text/plain",
-          secret: "not retained",
-        },
-      ],
+      attachments: [{ name: "notes.txt", size: 12, type: "text/plain" }],
       model: "Auto",
     }),
     true,
   );
   assert.equal(chat.busy.value, true);
   assert.equal(chat.sendMethod({ text: "duplicate" }), false);
-  assert.equal(chat.messages.value.filter((m) => m.role === "user").length, 1);
-  assert.deepEqual(chat.messages.value[1].attachments, [
-    { name: "notes.txt", size: 12, type: "text/plain" },
-  ]);
-  t.mock.timers.tick(500);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].text, "A change");
+  const messages = structuredClone(toRaw(chat.messages.value));
+  calls[0].resolve({ message: "Backend result", metadata: { test: true } });
+  await flushRequest();
   assert.equal(chat.busy.value, false);
-  assert.equal(chat.messages.value.length, 3);
-  assert.match(
-    chat.messages.value.at(-1).text,
-    /no files or branches were changed/,
-  );
+  assert.deepEqual(chat.messages.value, messages);
+  assert.deepEqual(logs.mock.calls[0].arguments, [
+    "[Git Clerk chat test] Response:",
+    { message: "Backend result", metadata: { test: true } },
+  ]);
 });
 
-test("metadata refresh keeps conversation; navigation cancels pending replies", async (t) => {
-  const { chat, session } = setupChat(t);
-  chat.sendMethod({ text: "Keep this conversation" });
-  session.value = { ...session.value, title: "Renamed", updatedAt: "new" };
+test("metadata refresh preserves requests; navigation aborts and ignores stale responses", async (t) => {
+  const { chat, session, calls, logs } = setupChat(t);
+  chat.sendMethod({ text: "First session" });
+  session.value = { ...session.value, title: "Renamed" };
   await nextTick();
-  assert.equal(chat.messages.value[1].text, "Keep this conversation");
+  assert.equal(calls[0].signal.aborted, false);
   session.value = { number: 8, status: "draft" };
   await nextTick();
-  t.mock.timers.tick(1000);
-  assert.deepEqual(chat.messages.value, getDummyMessages());
+  assert.equal(calls[0].signal.aborted, true);
+  chat.sendMethod({ text: "Next session" });
+  calls[0].resolve({ message: "Late reply" });
+  await flushRequest();
+  assert.equal(logs.mock.callCount(), 0);
+  assert.equal(chat.busy.value, true);
+  calls[1].resolve({ message: "Current reply" });
+  await flushRequest();
+  assert.equal(logs.mock.callCount(), 1);
   assert.equal(chat.busy.value, false);
 });
 
-test("closing or disposing the session cancels demo replies", async (t) => {
-  const { chat, session, scope } = setupChat(t);
+test("request failure only logs an error and allows another send", async (t) => {
+  const { chat, calls, errors, logs } = setupChat(t);
+  chat.sendMethod({ text: "Try this" });
+  calls[0].reject(new Error("Network unavailable"));
+  await flushRequest();
+  assert.equal(chat.busy.value, false);
+  assert.equal(logs.mock.callCount(), 0);
+  assert.deepEqual(errors.mock.calls[0].arguments, [
+    "[Git Clerk chat test] Request failed:",
+    "Network unavailable",
+  ]);
+  assert.equal(chat.messages.value.length, 2);
+  assert.equal(chat.sendMethod({ text: "Retry" }), true);
+});
+
+test("closed sessions and unmounted composers cancel pending API requests", async (t) => {
+  const { chat, session, scope, calls, logs } = setupChat(t);
   chat.sendMethod({ text: "Pending" });
   session.value.status = "closed";
   await nextTick();
-  t.mock.timers.tick(1000);
-  assert.equal(chat.messages.value.length, 2);
+  assert.equal(calls[0].signal.aborted, true);
   assert.equal(chat.sendMethod({ text: "Blocked" }), false);
+  calls[0].resolve({ message: "Late" });
+  await flushRequest();
+  assert.equal(logs.mock.callCount(), 0);
   session.value.status = "draft";
   await nextTick();
   chat.sendMethod({ text: "Leaving" });
   scope.stop();
-  t.mock.timers.tick(1000);
-  assert.equal(chat.messages.value.at(-1).text, "Leaving");
-  assert.equal(chat.busy.value, false);
+  assert.equal(calls[1].signal.aborted, true);
+});
+
+test("root composer can run the same test without creating a session", async (t) => {
+  const { request, calls, logs } = setupChat(t);
+  const scope = effectScope();
+  const root = scope.run(() => useChatApiTest(request));
+  t.after(() => scope.stop());
+  assert.equal(root.sendMethod({ text: "Root prompt" }), true);
+  calls[0].resolve({ message: "Root result" });
+  await flushRequest();
+  assert.equal(root.busy.value, false);
+  assert.equal(logs.mock.callCount(), 1);
 });

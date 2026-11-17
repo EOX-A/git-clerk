@@ -130,7 +130,7 @@ export async function sessionDetails(context, number, signal) {
       repository(owner: $owner, name: $repo) {
         pullRequest(number: $number) {
           ${SESSION_FIELDS}
-          headRefOid baseRefOid changedFiles reviewDecision
+          headRefOid baseRefOid baseRefName body changedFiles reviewDecision
           statusCheckRollup { state }
         }
       }
@@ -153,6 +153,8 @@ export async function sessionDetails(context, number, signal) {
     ...mapSession(node, githubConfig),
     headSha: node.headRefOid,
     baseSha: node.baseRefOid,
+    baseBranch: node.baseRefName,
+    body: node.body || "",
     changedFiles: node.changedFiles ?? 0,
     checks: node.statusCheckRollup?.state || null,
     reviewDecision: node.reviewDecision,

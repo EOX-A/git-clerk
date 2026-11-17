@@ -239,3 +239,70 @@ test("source highlighting preserves text and treats markup as text", () => {
     source + "\n",
   );
 });
+
+test("OSC schema defaults cover parent and child files without custom configuration", () => {
+  const dirs = {
+    products: "collection.json",
+    projects: "collection.json",
+    variables: "catalog.json",
+    themes: "catalog.json",
+    "eo-missions": "catalog.json",
+  };
+  const config = {
+    gitClerkConfig: {
+      schemaMap: [{ path: "/foo/bar/<id>.json", schema: { type: "object" } }],
+    },
+  };
+  for (const [dir, file] of Object.entries(dirs)) {
+    const child = fileConfiguration(
+      `${dir}/antarctic-ice-sheet-surface-flow-velocity-mos/${file}`,
+      config,
+    );
+    assert.equal(
+      child.meta.url,
+      `https://esa-earthcode.github.io/open-science-catalog-validation/schemas/${dir}/children.json`,
+    );
+    assert.equal(
+      fileConfiguration(`${dir}/catalog.json`, {}).meta.url,
+      `https://esa-earthcode.github.io/open-science-catalog-validation/schemas/${dir}/parent.json`,
+    );
+  }
+  for (const path of [
+    "products/a/catalog.json",
+    "variables/a/collection.json",
+    "products/../collection.json",
+    "products/a/b/collection.json",
+    "products/catalogXjson",
+    "unknown/a/catalog.json",
+    "README.md",
+  ])
+    assert.equal(fileConfiguration(path, {}).meta, null);
+  assert.equal(config.gitClerkConfig.schemaMap.length, 1);
+  for (const id of ["Sentinel-1", "CryoSat-2"])
+    assert.equal(
+      fileConfiguration(`eo-missions/${id}/catalog.json`, {}).meta.url,
+      "https://esa-earthcode.github.io/open-science-catalog-validation/schemas/eo-missions/children.json",
+    );
+});
+
+test("custom OSC schema and preview configuration override built-in defaults without mutation", () => {
+  const meta = {
+    path: "/products/<id>/collection.json",
+    schema: { type: "object", required: ["custom"] },
+    preview: "https://preview.example/",
+  };
+  const root = { schemaMap: [meta] };
+  const result = fileConfiguration("products/demo/collection.json", root);
+  assert.equal(result.meta.url, undefined);
+  assert.equal(result.meta.preview, meta.preview);
+  result.meta.schema.required.push("edited");
+  assert.deepEqual(meta.schema.required, ["custom"]);
+  const other = fileConfiguration("products/demo/collection.json", {
+    gitClerkConfig: {
+      schemaMap: [
+        { path: meta.path, url: "https://schemas.example/product.json" },
+      ],
+    },
+  });
+  assert.equal(other.meta.url, "https://schemas.example/product.json");
+});
