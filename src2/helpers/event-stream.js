@@ -1,5 +1,5 @@
 // Consume SSE incrementally; network chunks need not end at frame/UTF-8 boundaries.
-export async function readEventStream(response, onEvent, signal) {
+export async function checkChatResponse(response) {
   if (!response.ok) {
     let detail = "";
     if ([400, 422, 429].includes(response.status)) {
@@ -21,6 +21,10 @@ export async function readEventStream(response, onEvent, signal) {
       `Chat request failed (HTTP ${response.status}).${detail ? ` ${detail}` : ""}`,
     );
   }
+}
+
+export async function readEventStream(response, onEvent, signal) {
+  await checkChatResponse(response);
   if (
     !response.headers.get("content-type")?.includes("text/event-stream") ||
     !response.body

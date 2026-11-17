@@ -1,5 +1,5 @@
-import { publishOscFiles } from "./osc-publish.js";
-import { generateChatTest, generateOscTest, streamOscChat } from "./agentic.js";
+import { publishChatFiles } from "./chat-publish.js";
+import { generateChatTest, generatePresetTest, streamChat } from "./agentic.js";
 import { createPersonalSession } from "./session-create.js";
 import { fileContent, saveFileContent, fileDiff } from "./file-content.js";
 import { initOctokit } from "./github.js";
@@ -7,6 +7,10 @@ import { sessionsList, sessionDetails } from "./session.js";
 import { updateSession } from "./session-actions.js";
 import { sessionFiles, branchRoot, branchDirectory } from "./file.js";
 import useOctokitStore from "@/stores/octokit.js";
+import {
+  chatContextIncludes,
+  chatContextContent,
+} from "@/helpers/chat-config.js";
 
 // Keep the UI-facing contract here when GitHub operations move to the backend.
 export async function connectGitHub() {
@@ -72,16 +76,16 @@ export function sendChatTest(prompt, signal) {
   return generateChatTest(prompt, signal);
 }
 
-export function sendOscTest(prompt, signal) {
-  return generateOscTest(prompt, signal);
+export function sendPresetTest(prompt, signal) {
+  return generatePresetTest(prompt, signal);
 }
 
-export { streamOscChat };
-export function publishOscDraft(bundle, attempt, session) {
-  return publishOscFiles(useOctokitStore().context, bundle, attempt, session);
+export { streamChat };
+export function publishChatDraft(bundle, attempt, session) {
+  return publishChatFiles(useOctokitStore().context, bundle, attempt, session);
 }
 
-export async function readOscSessionDraft(session, signal) {
+export async function readSessionDraft(session, signal) {
   const context = useOctokitStore().context;
   const { files, incomplete } = await sessionFiles(context, session, signal);
   if (incomplete)
@@ -89,29 +93,22 @@ export async function readOscSessionDraft(session, signal) {
       "The changed-file list is incomplete. Refresh the session before using chat.",
     );
   const paths = files.filter(
-    (file) =>
-      file.status !== "removed" &&
-      /^(products|projects|variables|themes|eo-missions)\/.+\.json$/.test(
-        file.path,
-      ),
+    (file) => file.status !== "removed" && chatContextIncludes(file.path),
   );
   if (paths.length > 100)
-    throw new Error(
-      "This session has too many OSC files for one chat request.",
-    );
+    throw new Error("This session has too many files for one chat request.");
   if (!paths.length) return null;
   const contents = {};
   let size = 0;
   for (const { path } of paths) {
     const content = await fileContent(context, session, path, signal);
-    if (content.text === null)
-      throw new Error(`Cannot read ${path} as OSC metadata.`);
+    if (content.text === null) continue;
     size += content.text.length;
     if (size > 200_000)
       throw new Error(
-        "This session's OSC files are too large for one chat request.",
+        "This session's files are too large for one chat request.",
       );
-    contents[path] = JSON.parse(content.text);
+    contents[path] = chatContextContent(content.text, path);
   }
   return { title: session.title, files: contents };
 }

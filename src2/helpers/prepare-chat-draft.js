@@ -1,5 +1,5 @@
-// Prepare the transport bundle only. OSC schema validation is deferred.
-export function prepareOscDraft(draft, signal) {
+// Prepare the transport bundle only; content validation belongs to the backend.
+export function prepareChatDraft(draft, signal) {
   signal?.throwIfAborted();
   if (
     !draft ||
@@ -8,7 +8,7 @@ export function prepareOscDraft(draft, signal) {
     !draft.files
   )
     throw new Error(
-      "The response did not include a session title and complete OSC files. Ask for complete files.",
+      "The response did not include a session title and complete files. Ask for complete files.",
     );
   const bundle = { draft, staged_files: draft.files };
   return bundle;

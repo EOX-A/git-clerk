@@ -1,16 +1,18 @@
 import { reactive } from "vue";
 import { streamedMessage } from "./event-stream.js";
-import { buildOscPrompt } from "./osc-request.js";
+import { buildChatPrompt } from "./chat-request.js";
 import { createChatDraftStream } from "./chat-draft-stream.js";
+import { getChatConfig } from "./chat-config.js";
 
 // State belongs to the conversation, so switching from New Session to a PR retains it.
-export function createOscConversation({
+export function createChatConversation({
   connect,
   generate,
   prepare,
   publish,
   onSaved,
   loadDraft = async () => null,
+  config = getChatConfig(),
 }) {
   const state = reactive({
     messages: [],
@@ -42,6 +44,12 @@ export function createOscConversation({
     });
   };
   const saveMethod = async () => {
+    if (!config.publishing.enabled)
+      throw new Error("Chat publishing is disabled for this instance.");
+    if (state.session && !config.publishing.updateExistingSession)
+      throw new Error(
+        "Chat updates to existing sessions are disabled for this instance.",
+      );
     state.phase = "preparing";
     state.progress = "Preparing files for Git…";
     const bundle = await prepare(state.pending, controller.signal);
@@ -137,7 +145,7 @@ export function createOscConversation({
         });
         state.messages.push(assistant);
         state.phase = "generating";
-        state.progress = "Generating OSC metadata…";
+        state.progress = config.preset.ui.generating;
         raw = "";
         const readDraftChunk = createChatDraftStream((file) => {
           const index = assistant.files.findIndex(
@@ -147,14 +155,19 @@ export function createOscConversation({
           else assistant.files[index] = file;
         });
         const result = await generate(
-          { prompt: payload.text.trim(), history, draft: state.draft },
+          {
+            prompt: payload.text.trim(),
+            history,
+            draft: state.draft,
+            model: payload.model,
+          },
           (event, data) => {
             if (current.signal.aborted) return;
             if (event === "TEXT_MESSAGE_CONTENT") {
               raw += data.chunk || "";
               if (raw.length > 2_000_000)
                 throw new Error(
-                  "The OSC response is too large. Request fewer files at a time.",
+                  "The response is too large. Request fewer files at a time.",
                 );
               assistant.text = /^\s*(?:```(?:json)?\s*)?\{/i.test(raw)
                 ? streamedMessage(raw)
@@ -184,7 +197,12 @@ export function createOscConversation({
         saveAttempt = {};
         if (session) state.session = { ...session };
       }
-      if (state.pending) await saveMethod();
+      if (
+        state.pending &&
+        config.publishing.enabled &&
+        (!payload || config.publishing.automatic)
+      )
+        await saveMethod();
     } catch (cause) {
       if (!current.signal.aborted) errorMethod(cause);
     } finally {
@@ -198,6 +216,7 @@ export function createOscConversation({
     }
   };
   const sendMethod = (payload, session) => {
+    if (!config.enabled) return false;
     if (state.busy || !payload.text?.trim() || (session && !session.canEdit))
       return false;
     if (state.pending && saveAttempt.requested) {
@@ -206,14 +225,14 @@ export function createOscConversation({
       return false;
     }
     try {
-      buildOscPrompt(payload.text);
+      buildChatPrompt(payload.text, config);
     } catch (cause) {
       state.error = cause.message;
       return false;
     }
     if (payload.attachments?.length) {
       state.error =
-        "Attachments are not sent to the OSC API yet. Remove them and include the details in your message.";
+        "Attachments are not sent to the chat API yet. Remove them and include the details in your message.";
       return false;
     }
     // Start a new generation, retaining any already-created PR after a failed save.

@@ -463,12 +463,21 @@ are reported without hiding that the PR was closed.
 Missing configuration and request failures show a retryable message. GitHub
 operations stay behind `src2/api/index.js` so the UI can later use a backend.
 Loading sessions does not create or sync forks; manual session creation does.
-Chat Send streams OSC replies through the existing agentic backend's
+V2 chat is configured by one `globalThis.gitClerkConfig.chat.preset` per instance
+in `public/config.js`; there is no preset picker or registry. Existing configuration
+sections (GitHub, schemaMap, previews, authentication) remain independent.
+The shared application has no OSC/narrative branches or built-in project IDs.
+`projectId` is sent to the backend; it does not select frontend behaviour. Set it
+explicitly for a deployment, or omit it to use the backend's default project.
+Prompts, file examples, context filters and chat wording come from the single
+preset. Editor schemas and automation workflows remain in the existing top-level
+`schemaMap` and `automation` configuration, independently of chat. `contentType` is no longer used.
+The supplied OSC example sends replies through the existing agentic backend's
 `POST /api/generate` (`profile: "chat"`, `output_format: "text_and_a2ui"`,
 `project_id: "earthcode-osc"`, `stream: true`). A compact prompt requests
 `{ message, draft: { title, files } }`; clarification replies use `draft: null`.
 The conversation and current file draft travel in the existing `history` field.
-This uses the chat profile because the backend's generic JSON profile ignores history.
+The OSC example uses the chat profile because the backend's generic JSON profile ignores history.
 The frontend parses the requested JSON from the chat profile's text response,
 including fenced JSON and trailing citations. The conversational message is rendered
 progressively, while the file JSON remains internal.
@@ -478,7 +487,7 @@ The request respects the backend's 400-character non-URL prompt limit and
 overlong messages show the available limit and stay in the composer without a request.
 History and current files are never concatenated into `prompt`. HTTP validation
 errors show the backend's explanation instead of only a status code. No backend or MCP changes are required.
-`generateChatTest` and `generateOscTest` remain available as console-only smoke tests,
+`generateChatTest` and `generatePresetTest` remain available as console-only smoke tests,
 but neither is wired to Send.
 
 On New Session, generated files are serialized as provided and published through
@@ -542,11 +551,11 @@ or nested directories are passed through unchanged; no OSC folder, filename,
 content-type or per-file size/count rules block publication. Only the response
 envelope and repository-relative addressing are checked (no traversal segments).
 Strings are sent as file text; other JSON values are serialized. No schema fetch
-or JSON Form validation runs before AI publication. V2 supplies default
-OSC schemas for parent catalogues and child files in `products`, `projects`,
+or JSON Form validation runs before AI publication. The top-level `schemaMap` example supplies
+OSC manual-editor schemas for parent catalogues and child files in `products`, `projects`,
 `variables`, `themes` and `eo-missions`, using the official
 `esa-earthcode.github.io/open-science-catalog-validation/schemas` URLs. Matching
-runtime `schemaMap` entries override these defaults, including custom editors and
+runtime `schemaMap` entries configure custom editors and
 previews for the manual file editor. Incomplete responses and streaming errors are
 shown in chat and do not start a save. Retry saving reuses the generated draft
 without another generation request.
@@ -555,21 +564,74 @@ and open `http://127.0.0.1:3002/test/fixtures/v2-workspace/validation.html`.
 It uses a local official product schema snapshot and synthetic data to check valid
 and invalid files, including spatial fields, without GitHub or LLM requests.
 The same page can validate a pasted `draft.files` object against the hosted default
-schemas. OSC IDs preserve uppercase/lowercase letters, digits and hyphens, including
-mission names such as `Sentinel-1` and `CryoSat-2`. Errors identify the rejected file.
+schemas from the top-level example configuration. Schema path placeholders match one directory
+segment, including spaces and Unicode, without enforcing OSC ID rules. Errors
+identify the rejected file.
 A failed broker request can leave a branch without a PR; retry checks the outcome
 and reports this partial result without overwriting the branch. Sandbox/dry-run
 responses never count as a live publication.
 The backend's summary-only responses are not treated as file bundles, and its
 self-reported validation scores do not authorize saving.
-The default API base URL is `http://localhost:8000`; optionally set
-`GITCLERK_AGENTIC_API_URL` in the frontend `.env` and restart Vite to change it.
+Both generation and broker calls use `gitClerkConfig.chat.backend.baseUrl`
+(default `http://localhost:8000`). The former agentic URL environment variable is
+no longer read. `backend.stream` defaults to `true`; setting it to `false` uses the
+backend's JSON response instead of SSE. Reload the app after editing config.js.
 LLM credentials belong in the backend environment, never in the frontend `.env`.
 
-Conversation state is kept in memory per signed-in account, repository and PR,
+The chat configuration supports:
+
+| Setting                                        | Behaviour                                                                                                                                                                                         |
+| ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `enabled`                                      | Show/hide AI chat; manual sessions and file editing remain available.                                                                                                                             |
+| `preset.projectId`, `profile`, `output_format` | Values sent to `/api/generate`. The project must exist on the backend.                                                                                                                            |
+| `preset.fileExample`                           | File map example embedded in the shared draft contract; defaults to a path with complete text content. The OSC preset supplies a JSON object example.                                             |
+| `preset.prBody`                                | New-PR description for this preset. An explicit `publishing.prBody` overrides it.                                                                                                                 |
+| `preset.promptInstructions`                    | Short content-specific instruction before the shared response contract. Counts toward the backend prompt limit.                                                                                   |
+| `preset.context.inputField`                    | Optional backend field receiving the current `outputFile` text; use `markdownSection` for the Markdown editor. Unset by default.                                                                  |
+| `preset.context.extensions`                    | Which changed files supply follow-up context; `[]` includes readable text files. This does not restrict publication paths. JSON is decoded when possible; Markdown and other text remain strings. |
+| `preset.ui`                                    | Assistant/panel names, heading, description, initial/follow-up placeholders, session title, welcome/read-only welcome, progress wording, footer, disabled message and suggestion buttons.         |
+| `features`                                     | Attachments and model selector visibility; manual session creation visibility. Attachments remain local-only and block sending if selected.                                                       |
+| `preset.models`                                | Model options `{ label, value, description }`; the selected nonempty `value` is sent as `model`. Auto omits it. Use models supported by the backend.                                              |
+| `publishing.enabled`, `automatic`              | Disable publishing, or set `automatic: false` to show **Publish changes** after generation.                                                                                                       |
+| `publishing.updateExistingSession`             | Allow or disable follow-up publication into an existing PR.                                                                                                                                       |
+| `publishing.serverId`, `toolName`, `prBody`    | Broker route and new-PR description. Replacement tools must implement the same publish-bundle contract.                                                                                           |
+
+`public/config.js` includes two complete chat examples: OSC and the narrative
+editor (`NARRATIVE_CHAT_CONFIG`). Switch by commenting out one assignment and
+uncommenting the other; keep only one active and reload the app. The narrative example uses `generic-eox`,
+`profile: "markdown_editor"`, `output_format: "markdown"`, and
+`outputFile: "stories/narrative.md"`. Change that explicit destination in config
+when using a different file. Follow-up requests send the current file in
+`preset.context.inputField: "markdownSection"`, matching the existing backend.
+Other raw-output profiles can configure their own input field (for example `markdown`).
+
+The top-level `schemaMap` entry for `/stories/<name>.md` uses `output: "Story"`:
+the form edits `{ Story: markdown }`, while Git receives the original Markdown text.
+Author metadata is not required. Its `/narrative-preview.html` iframe is based on
+the supplied storytelling preview, preserving its pinned EOX storytelling, chart,
+JSON Form and map imports. The companion `narrative-preview.js` connects
+`SCHEMA_DATA_EDITOR_UPDATE` and `SCHEMA_DATA_PREVIEW_UPDATE` with `detail.Story`,
+checks the parent window/origin, suppresses update echoes, and respects read-only
+sessions. The preview opens by default; Source and Editor can be opened alongside it.
+If CDN imports fail, the page shows the source with a loading error. Image uploads
+are not connected in v2; the upload callback reports this instead of waiting for an
+unsupported `FILE_UPLOADED` reply. Existing image URLs can still be used in narratives.
+
+Missing fields inherit generic defaults: no project ID and no context extension
+filter. Replacing the preset changes chat behaviour only; editor schemas and
+automation workflows remain controlled by their top-level configuration. V2 chat
+automation UI remains unavailable until workflow integration is implemented. The shared `{ message, draft }` envelope supports
+both JSON objects and complete file-text strings. For a raw-output backend profile,
+`preset.outputFile` explicitly maps its result into one repository file (for example
+`stories/example.md` with a Markdown profile, or a JSON file with `output_format: "a2ui"`).
+Without that mapping, ordinary text is displayed as a reply and does not publish.
+Raw A2UI output can be saved as JSON; Git Clerk does not render an A2UI canvas.
+Changing output format does not add backend capabilities or change its profile routing.
+No frontend schema or OSC naming validation is enabled by this configuration.
+
+Conversation state is kept in memory per backend, project/profile/format, signed-in account, repository and PR,
 so it survives in-app navigation but not a page reload. Attachments are not yet
-supported by this OSC flow and block sending until removed. The prototype model
-selector is not sent to the backend; the backend uses its configured default model.
+uploaded by this flow and block sending until removed.
 AI publishing uses the existing broker tool through the agentic gateway. No direct
 OSC REST requests, backend source changes or additional MCP tools are required.
 

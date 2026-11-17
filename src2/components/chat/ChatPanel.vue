@@ -7,6 +7,8 @@ import ChatIcon from "./ChatIcon.vue";
 import ChatMessageList from "./ChatMessageList.vue";
 import ChatProgress from "./ChatProgress.vue";
 import ChatSessionWelcome from "./ChatSessionWelcome.vue";
+import { getChatConfig } from "@/helpers/chat-config.js";
+const chatConfig = getChatConfig();
 
 const props = defineProps({
   session: {
@@ -130,7 +132,7 @@ const headerPointerDownMethod = (event) => {
       <span
         class="min-w-0 flex-1 truncate text-[13.5px] font-semibold tracking-[-0.01em]"
       >
-        Git Clerk AI Assistant
+        {{ chatConfig.preset.ui.panelTitle }}
       </span>
       <button
         v-if="mode === 'floating'"
@@ -226,7 +228,7 @@ const headerPointerDownMethod = (event) => {
           :phase="phase"
           :progress="progress"
           :error="error"
-          :can-retry="canRetry"
+          :can-retry="chatConfig.publishing.enabled && canRetry"
           :can-stop="canStop"
           :on-retry="onRetry"
           :on-stop="onStop"
@@ -234,7 +236,7 @@ const headerPointerDownMethod = (event) => {
         <!-- Active Composer -->
         <ChatComposer
           v-if="!isReadOnly"
-          placeholder="Ask for another change…"
+          :placeholder="chatConfig.preset.ui.followUpPlaceholder"
           :compact="compact"
           :busy="busy"
           :active="active"

@@ -1,7 +1,8 @@
 import validateFileMethod from "@/methods/file-edit-view/validate-file.js";
 import schema from "./osc-product-schema.json";
-import { checkOscFiles } from "@/api/osc-files.js";
+import { checkDraftFiles } from "@/api/draft-files.js";
 import { fileConfiguration } from "@/helpers/file-editor.js";
+import { schemaMap } from "virtual:example-chat-config";
 // Official product schema snapshot, retrieved 2026-11-17 from:
 // https://esa-earthcode.github.io/open-science-catalog-validation/schemas/products/children.json
 const product = {
@@ -37,13 +38,15 @@ document
     output.textContent = "Checking draft files…";
     try {
       const files = JSON.parse(document.querySelector("#files").value);
-      const entries = checkOscFiles({
+      const entries = checkDraftFiles({
         staged_files: files,
         validation: { valid: true },
       });
       output.textContent = `PASS: ${entries.length} file paths and content types accepted; casing preserved.`;
       for (const [path, value] of entries) {
-        const { meta } = fileConfiguration(path, {});
+        const { meta } = fileConfiguration(path, {
+          gitClerkConfig: { schemaMap },
+        });
         if (!meta?.url) throw new Error(`${path}: no schema mapping`);
         const response = await fetch(meta.url);
         if (!response.ok)

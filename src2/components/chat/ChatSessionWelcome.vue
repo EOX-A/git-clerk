@@ -4,6 +4,8 @@ import ChatIcon from "./ChatIcon.vue";
 import { SESSION_STATUS } from "@/helpers/session-status.js";
 import { sessionChecks } from "@/helpers/session-checks.js";
 import { chatPullRequestUrl } from "@/helpers/chat-markdown.js";
+import { getChatConfig } from "@/helpers/chat-config.js";
+const ui = getChatConfig().preset.ui;
 
 const props = defineProps({
   session: { type: Object, required: true },
@@ -33,14 +35,10 @@ const updated = computed(() => {
     <p
       class="mb-2 text-[11px] font-semibold tracking-[0.07em] text-primary uppercase"
     >
-      Git Clerk
+      {{ ui.assistantName }}
     </p>
     <p class="text-sm leading-[22px] text-text">
-      {{
-        readOnly
-          ? "This session is read-only. You can explore its files and review the current PR below."
-          : "What would you like to edit or add? Tell me what you have in mind, or explore the current changes below."
-      }}
+      {{ readOnly ? ui.readOnlyWelcome : ui.welcome }}
     </p>
     <section
       aria-label="Current pull request summary"

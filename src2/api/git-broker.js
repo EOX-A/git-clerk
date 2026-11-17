@@ -1,3 +1,4 @@
+import { getChatConfig } from "../helpers/chat-config.js";
 // Publishing goes through the existing agentic gateway, never directly to the MCP server.
 export async function publishGitBundle({
   repo,
@@ -5,7 +6,7 @@ export async function publishGitBundle({
   targetBranch,
   title,
   prTitle = title,
-  prBody = "OSC metadata generated in Git Clerk. Schema validation has not been performed.",
+  prBody = getChatConfig().publishing.prBody,
   existingPrNumber,
   files,
   author,
@@ -24,9 +25,10 @@ export async function publishGitBundle({
     throw new Error("Choose a separate session branch before publishing.");
   if (!dryRun && !token)
     throw new Error("Connect GitHub before publishing through the Git broker.");
-  const baseURL = (
-    import.meta.env?.GITCLERK_AGENTIC_API_URL || "http://localhost:8000"
-  ).replace(/\/+$/, "");
+  const config = getChatConfig();
+  if (!config.publishing.enabled)
+    throw new Error("Chat publishing is disabled for this instance.");
+  const baseURL = config.backend.baseUrl;
   let response;
   try {
     response = await fetch(`${baseURL}/api/mcp/call`, {
@@ -36,8 +38,8 @@ export async function publishGitBundle({
         ...(token ? { "X-Git-Token": token } : {}),
       },
       body: JSON.stringify({
-        server_id: "eox-git-broker",
-        tool_name: "git_publish_bundle",
+        server_id: config.publishing.serverId,
+        tool_name: config.publishing.toolName,
         arguments: {
           repo,
           base_branch: baseBranch,

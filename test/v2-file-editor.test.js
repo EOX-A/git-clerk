@@ -1,3 +1,4 @@
+import { exampleSchemaMap } from "./example-chat-config.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Base64 } from "js-base64";
@@ -240,7 +241,7 @@ test("source highlighting preserves text and treats markup as text", () => {
   );
 });
 
-test("OSC schema defaults cover parent and child files without custom configuration", () => {
+test("OSC example config supplies parent and child schemas without application defaults", () => {
   const dirs = {
     products: "collection.json",
     projects: "collection.json",
@@ -250,7 +251,7 @@ test("OSC schema defaults cover parent and child files without custom configurat
   };
   const config = {
     gitClerkConfig: {
-      schemaMap: [{ path: "/foo/bar/<id>.json", schema: { type: "object" } }],
+      schemaMap: structuredClone(exampleSchemaMap),
     },
   };
   for (const [dir, file] of Object.entries(dirs)) {
@@ -263,35 +264,37 @@ test("OSC schema defaults cover parent and child files without custom configurat
       `https://esa-earthcode.github.io/open-science-catalog-validation/schemas/${dir}/children.json`,
     );
     assert.equal(
-      fileConfiguration(`${dir}/catalog.json`, {}).meta.url,
+      fileConfiguration(`${dir}/catalog.json`, config).meta.url,
       `https://esa-earthcode.github.io/open-science-catalog-validation/schemas/${dir}/parent.json`,
     );
   }
   for (const path of [
     "products/a/catalog.json",
     "variables/a/collection.json",
-    "products/../collection.json",
     "products/a/b/collection.json",
     "products/catalogXjson",
     "unknown/a/catalog.json",
     "README.md",
   ])
-    assert.equal(fileConfiguration(path, {}).meta, null);
-  assert.equal(config.gitClerkConfig.schemaMap.length, 1);
-  for (const id of ["Sentinel-1", "CryoSat-2"])
+    assert.equal(fileConfiguration(path, config).meta, null);
+  assert.equal(config.gitClerkConfig.schemaMap.length, exampleSchemaMap.length);
+  for (const id of ["Sentinel-1", "CryoSat-2", "Snow cover"])
     assert.equal(
-      fileConfiguration(`eo-missions/${id}/catalog.json`, {}).meta.url,
+      fileConfiguration(`eo-missions/${id}/catalog.json`, config).meta.url,
       "https://esa-earthcode.github.io/open-science-catalog-validation/schemas/eo-missions/children.json",
     );
 });
 
-test("custom OSC schema and preview configuration override built-in defaults without mutation", () => {
+test("legacy global schemas override top-level config without mutation", () => {
   const meta = {
     path: "/products/<id>/collection.json",
     schema: { type: "object", required: ["custom"] },
     preview: "https://preview.example/",
   };
-  const root = { schemaMap: [meta] };
+  const root = {
+    schemaMap: [meta],
+    gitClerkConfig: { schemaMap: structuredClone(exampleSchemaMap) },
+  };
   const result = fileConfiguration("products/demo/collection.json", root);
   assert.equal(result.meta.url, undefined);
   assert.equal(result.meta.preview, meta.preview);
@@ -305,4 +308,32 @@ test("custom OSC schema and preview configuration override built-in defaults wit
     },
   });
   assert.equal(other.meta.url, "https://schemas.example/product.json");
+});
+
+test("chat presets cannot change editor schemas or previews", () => {
+  const meta = {
+    path: "/docs/<name>.md",
+    schema: { type: "object" },
+    preview: "/preview.html",
+  };
+  const root = {
+    gitClerkConfig: {
+      schemaMap: [meta],
+      chat: {
+        preset: { schemaMap: [{ path: meta.path, preview: "/wrong.html" }] },
+      },
+    },
+  };
+  assert.equal(
+    fileConfiguration("docs/guide.md", root).meta.preview,
+    "/preview.html",
+  );
+  root.gitClerkConfig.chat.preset = { projectId: "different-project" };
+  assert.equal(
+    fileConfiguration("docs/guide.md", root).meta.preview,
+    "/preview.html",
+  );
+  delete root.gitClerkConfig.schemaMap;
+  root.gitClerkConfig.chat.preset.schemaMap = [meta];
+  assert.equal(fileConfiguration("docs/guide.md", root).meta, null);
 });

@@ -1,15 +1,19 @@
-import oscSchema from "./osc-schema.js";
-
 // Match v1's runtime schema/preview contracts without importing its application state.
 export function fileConfiguration(path, root = globalThis) {
   const config = root.gitClerkConfig || {};
   const schemas = root.schemaMap || config.schemaMap || [];
-  const match =
-    schemas.find((item) =>
-      new RegExp(`^${item.path.replace(/<[^>]+>/g, "[^/]+")}$`).test(
-        `/${path}`,
-      ),
-    ) || oscSchema(path);
+  const match = schemas.find((item) => {
+    // Paths are literal except for single-segment <placeholders>.
+    const pattern = item.path
+      .split(/(<[^>]+>)/g)
+      .map((part) =>
+        /^<[^>]+>$/.test(part)
+          ? "[^/]+"
+          : part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+      )
+      .join("");
+    return new RegExp(`^${pattern}$`).test(`/${path}`);
+  });
   return {
     meta: match
       ? {

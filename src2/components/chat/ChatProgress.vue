@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from "vue";
 import ChatIcon from "./ChatIcon.vue";
+import { getChatConfig } from "@/helpers/chat-config.js";
 const props = defineProps({
   busy: Boolean,
   phase: { type: String, default: "idle" },
@@ -11,7 +12,9 @@ const props = defineProps({
   onRetry: { type: Function, default: null },
   onStop: { type: Function, default: null },
 });
-const steps = ["Generate", "Prepare", "Publish"];
+const steps = getChatConfig().publishing.enabled
+  ? ["Generate", "Prepare", "Publish"]
+  : ["Generate"];
 const step = computed(() =>
   ["generating", "preparing", "saving"].indexOf(props.phase),
 );
@@ -61,7 +64,7 @@ const step = computed(() =>
       class="self-start rounded-lg px-3 py-1.5 text-primary hover:bg-hover"
       @click="onRetry?.()"
     >
-      Retry saving draft
+      {{ error ? "Retry saving draft" : "Publish changes" }}
     </button>
   </div>
 </template>

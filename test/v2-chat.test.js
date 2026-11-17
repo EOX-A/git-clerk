@@ -1,3 +1,4 @@
+import exampleChatConfig from "./example-chat-config.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { effectScope, nextTick, ref, toRaw } from "vue";
@@ -7,7 +8,7 @@ import {
   resizeFloatingBounds,
 } from "../src2/helpers/chat-layout.js";
 import { getDummyMessages, splitFilePath } from "../src2/helpers/chat-dummy.js";
-import { generateChatTest, generateOscTest } from "../src2/api/agentic.js";
+import { generateChatTest, generatePresetTest } from "../src2/api/agentic.js";
 import useChatApiTest from "../src2/helpers/use-chat-api-test.js";
 import useSessionChat from "../src2/helpers/use-session-chat.js";
 
@@ -73,7 +74,12 @@ const setupChat = (t) => {
   return { scope, session, chat, calls, logs, errors, request };
 };
 
-test("OSC chat requests an EarthCODE JSON draft and only logs the response", async (t) => {
+test("preset smoke test uses the configured profile and only logs the response", async (t) => {
+  const original = globalThis.gitClerkConfig;
+  globalThis.gitClerkConfig = { chat: structuredClone(exampleChatConfig) };
+  t.after(() => {
+    globalThis.gitClerkConfig = original;
+  });
   const response = {
     data: { id: "test-product" },
     metadata: { isAiGenerated: true },
@@ -87,7 +93,7 @@ test("OSC chat requests an EarthCODE JSON draft and only logs the response", asy
   const scope = effectScope();
   t.after(() => scope.stop());
   const chat = scope.run(() =>
-    useSessionChat(ref({ number: 7, status: "draft" }), generateOscTest),
+    useSessionChat(ref({ number: 7, status: "draft" }), generatePresetTest),
   );
   const prompt = "Draft OSC metadata for a glacier product";
   assert.equal(chat.sendMethod({ text: prompt }), true);
@@ -101,7 +107,7 @@ test("OSC chat requests an EarthCODE JSON draft and only logs the response", asy
   assert.deepEqual(JSON.parse(options.body), {
     prompt,
     profile: "chat",
-    output_format: "json",
+    output_format: "text_and_a2ui",
     project_id: "earthcode-osc",
     stream: false,
   });
@@ -114,18 +120,18 @@ test("OSC chat requests an EarthCODE JSON draft and only logs the response", asy
   assert.equal(chat.busy.value, false);
 });
 
-test("OSC test propagates HTTP and invalid JSON errors", async (t) => {
+test("preset test propagates HTTP and invalid JSON errors", async (t) => {
   const fetchMock = t.mock.method(
     globalThis,
     "fetch",
     async () => new Response("Unavailable", { status: 503 }),
   );
   await assert.rejects(
-    generateOscTest("Draft OSC metadata"),
-    /OSC request failed.*503/,
+    generatePresetTest("Draft OSC metadata"),
+    /Preset request failed.*503/,
   );
   fetchMock.mock.mockImplementation(async () => new Response("invalid json"));
-  await assert.rejects(generateOscTest("Draft OSC metadata"), SyntaxError);
+  await assert.rejects(generatePresetTest("Draft OSC metadata"), SyntaxError);
 });
 
 test("chat test POSTs only text to the backend and returns the entire JSON response", async (t) => {
@@ -152,7 +158,6 @@ test("chat test POSTs only text to the backend and returns the entire JSON respo
     prompt: "Explain satellite imagery",
     profile: "chat",
     output_format: "text",
-    project_id: "generic-eox",
     stream: false,
   });
 });

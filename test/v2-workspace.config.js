@@ -1,4 +1,9 @@
 import oscDraft from "./fixtures/v2-workspace/osc-draft.js";
+import exampleChatConfig, {
+  exampleSchemaMap,
+  narrativeChatConfig,
+} from "./example-chat-config.js";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
@@ -7,16 +12,38 @@ export default defineConfig({
   root: fileURLToPath(new URL("..", import.meta.url)),
   envDir: false,
   publicDir: false,
-  define: {
-    "import.meta.env.GITCLERK_AGENTIC_API_URL": JSON.stringify("/test/agentic"),
-  },
   optimizeDeps: { entries: ["test/fixtures/v2-workspace/*.html"] },
   cacheDir: "node_modules/.vite-workspace-test",
   plugins: [
     {
+      name: "example-chat-config",
+      resolveId(id) {
+        if (id === "virtual:example-chat-config") return "\0" + id;
+      },
+      load(id) {
+        if (id === "\0virtual:example-chat-config")
+          return `export default ${JSON.stringify(exampleChatConfig)}; export const schemaMap = ${JSON.stringify(exampleSchemaMap)}; export const narrativeConfig = ${JSON.stringify(narrativeChatConfig)};`;
+      },
+    },
+    {
       name: "mock-chat-api",
       configureServer(server) {
         let publishCount = 0;
+        // Serve only the supplied public preview, without other public configuration.
+        server.middlewares.use((req, res, next) => {
+          const path = req.url?.split("?")[0];
+          if (
+            !["/narrative-preview.html", "/narrative-preview.js"].includes(path)
+          )
+            return next();
+          const source = new URL(`../public${path}`, import.meta.url);
+          const content = readFileSync(source, "utf8");
+          res.setHeader(
+            "Content-Type",
+            path.endsWith(".html") ? "text/html" : "text/javascript",
+          );
+          res.end(content);
+        });
         // Session URL refreshes must load the v2 fixture, not the repository's v1 index.
         server.middlewares.use((req, _res, next) => {
           if (
@@ -78,15 +105,42 @@ export default defineConfig({
                     `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`,
                   );
                 emit("RUN_STARTED", { profile: "json" });
+                if (request.profile === "markdown_editor") {
+                  const markdown = request.markdownSection
+                    ? "# Ocean observation\n\nAn updated synthetic introduction.\n\n## What we observe\n\n- Sea surface temperature\n- Seasonal changes\n"
+                    : "# Ocean observation\n\nA **synthetic narrative** for testing the live preview.\n\n## What we observe\n\n- Sea surface temperature\n- Seasonal changes\n\n> Earth observation helps us tell a clearer story.\n\n| Observation | Frequency |\n| --- | --- |\n| Temperature | Daily |\n";
+                  for (let i = 0; i < markdown.length; i += 35) {
+                    if (res.destroyed) return;
+                    emit("TEXT_MESSAGE_CONTENT", {
+                      chunk: markdown.slice(i, i + 35),
+                    });
+                    await new Promise((resolve) => setTimeout(resolve, 40));
+                  }
+                  emit("STATE_DELTA", { markdown });
+                  emit("RUN_FINISHED", { status: "success" });
+                  res.end();
+                  return;
+                }
                 const result = {
                   message:
                     '### Synthetic ocean monitoring\n\nI’m preparing a **sample OSC bundle** with linked metadata.\n\n- A sea-surface-temperature product\n- An ocean-monitoring project\n- A linked climate variable\n\n| Entity | File |\n| --- | --- |\n| Product | `collection.json` |\n| Variable | `catalog.json` |\n\n```json\n{"id": "sample-ocean", "synthetic": true}\n```\n\nThese files are **generated, not yet saved**. [STAC reference](https://stacspec.org).',
                   draft: oscDraft,
                 };
+                const narrative = request.project_id === "generic-eox";
+                if (narrative) {
+                  result.message = "A synthetic ocean story is ready.";
+                  result.draft = {
+                    title: "Sample ocean story",
+                    files: {
+                      "stories/sample.md":
+                        "# Ocean story\n\nA synthetic story for testing.\n",
+                    },
+                  };
+                }
                 // Follow-ups return just one edited file; the branch keeps the rest.
                 if (
                   request.history?.some(({ content }) =>
-                    content?.startsWith("Current OSC draft"),
+                    /^Current (?:OSC )?draft/.test(content || ""),
                   )
                 ) {
                   result.message =
@@ -101,6 +155,16 @@ export default defineConfig({
                       },
                     },
                   };
+                  if (narrative) {
+                    result.message = "Updated the story introduction.";
+                    result.draft = {
+                      title: "Update story",
+                      files: {
+                        "stories/sample.md":
+                          "# Ocean story\n\nAn updated synthetic introduction.\n",
+                      },
+                    };
+                  }
                 }
                 const text = JSON.stringify(result);
                 for (let i = 0; i < text.length; i += 35) {

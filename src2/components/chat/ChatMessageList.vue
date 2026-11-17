@@ -3,6 +3,8 @@ import ChatIcon from "./ChatIcon.vue";
 import ChatMarkdown from "./ChatMarkdown.vue";
 import ChatFileCard from "./ChatFileCard.vue";
 import ChatPullRequest from "./ChatPullRequest.vue";
+import { getChatConfig } from "@/helpers/chat-config.js";
+const ui = getChatConfig().preset.ui;
 
 defineProps({
   onOpenFile: { type: Function, default: null },
@@ -38,7 +40,7 @@ defineProps({
         :class="msg.role === 'user' ? 'text-muted' : 'text-primary'"
         class="mb-1 text-[11px] leading-[15px] font-semibold tracking-[0.07em] uppercase"
       >
-        {{ msg.role === "user" ? "YOU" : "GIT CLERK" }}
+        {{ msg.role === "user" ? "YOU" : ui.assistantName }}
       </div>
 
       <!-- User message body -->

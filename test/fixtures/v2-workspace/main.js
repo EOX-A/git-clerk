@@ -8,6 +8,19 @@ import NewSessionView from "../../../src2/views/NewSessionView.vue";
 import SessionView from "../../../src2/views/SessionView.vue";
 import installCreationFixture from "./create-session.js";
 import "../../../src2/assets/main.css";
+import exampleChatConfig, {
+  schemaMap,
+  narrativeConfig,
+} from "virtual:example-chat-config";
+
+const narrative =
+  new URLSearchParams(window.location.search).get("preset") === "narrative";
+globalThis.gitClerkConfig ||= {};
+globalThis.gitClerkConfig.schemaMap = schemaMap;
+globalThis.gitClerkConfig.chat = {
+  ...(narrative ? narrativeConfig : exampleChatConfig),
+  backend: { baseUrl: "/test/agentic" },
+};
 
 const chat = new URLSearchParams(window.location.search).has("chat");
 const creation = new URLSearchParams(window.location.search).has("create");
@@ -33,7 +46,11 @@ const router = createRouter({
 const app = createApp(chat ? ChatFixture : creation ? App : RouterView)
   .use(createPinia())
   .use(router);
-if (creation) installCreationFixture();
+if (creation) {
+  installCreationFixture();
+  // Keep the fixture's offline schemas and exercise the real inline editor entries.
+  globalThis.schemaMap.push(...schemaMap.filter((entry) => entry.schema));
+}
 if (chat)
   await router.replace({
     path: /^\/\d+$/.test(window.location.pathname)

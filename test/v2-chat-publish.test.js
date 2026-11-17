@@ -1,8 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Base64 } from "js-base64";
-import { publishOscFiles } from "../src2/api/osc-publish.js";
-import { prepareOscDraft } from "../src2/helpers/prepare-osc-draft.js";
+import { publishChatFiles } from "../src2/api/chat-publish.js";
+import { prepareChatDraft } from "../src2/helpers/prepare-chat-draft.js";
 
 const bundle = {
   draft: { title: "Add synthetic OSC" },
@@ -36,10 +36,10 @@ test("AI files publish without schema fetches or schema validation", async (t) =
     title: "Sample",
     files: { "products/new/collection.json": { id: "new" } },
   };
-  const prepared = prepareOscDraft(draft);
+  const prepared = prepareChatDraft(draft);
   assert.equal(prepared.validation, undefined);
   const f = fixture();
-  await publishOscFiles(f.context, prepared, {}, null, f.publish, f.details);
+  await publishChatFiles(f.context, prepared, {}, null, f.publish, f.details);
   assert.equal(
     JSON.parse(f.request().files["products/new/collection.json"]).id,
     "new",
@@ -56,9 +56,9 @@ test("the reported Snow cover path and non-schema file contents reach the broker
     "experiments/nested/data.json": [1, 2],
   };
   const f = fixture();
-  await publishOscFiles(
+  await publishChatFiles(
     f.context,
-    prepareOscDraft({ title: "Sample", files }),
+    prepareChatDraft({ title: "Sample", files }),
     {},
     null,
     f.publish,
@@ -174,7 +174,7 @@ test("new OSC publication sends exact generated files without preflight reads", 
       api[method] = async () => {
         throw new Error("Unexpected GitHub preflight request");
       };
-  const result = await publishOscFiles(
+  const result = await publishChatFiles(
     f.context,
     bundle,
     {},
@@ -211,10 +211,10 @@ test("lost broker responses reconcile by reads without resending or overwriting 
     throw new Error("Lost reply");
   };
   await assert.rejects(
-    publishOscFiles(f.context, bundle, attempt, null, publish, f.details),
+    publishChatFiles(f.context, bundle, attempt, null, publish, f.details),
     /Lost reply/,
   );
-  const result = await publishOscFiles(
+  const result = await publishChatFiles(
     f.context,
     bundle,
     attempt,
@@ -233,12 +233,19 @@ test("PR loading retries reuse a confirmed broker response", async () => {
   const f = fixture();
   const attempt = {};
   await assert.rejects(
-    publishOscFiles(f.context, bundle, attempt, null, f.publish, async () => {
+    publishChatFiles(f.context, bundle, attempt, null, f.publish, async () => {
       throw new Error("Read failed");
     }),
     /Read failed/,
   );
-  await publishOscFiles(f.context, bundle, attempt, null, f.publish, f.details);
+  await publishChatFiles(
+    f.context,
+    bundle,
+    attempt,
+    null,
+    f.publish,
+    f.details,
+  );
   assert.equal(f.calls.filter((call) => call === "broker").length, 1);
 });
 test("existing-session edits start from the PR branch and retain PR identity and description", async () => {
@@ -248,7 +255,7 @@ test("existing-session edits start from the PR branch and retain PR identity and
       api[method] = async () => {
         throw new Error("Unexpected preflight read");
       };
-  const result = await publishOscFiles(
+  const result = await publishChatFiles(
     f.context,
     bundle,
     {},
@@ -276,7 +283,7 @@ test("existing-session retries reconcile against the actual PR base without anot
     throw new Error("Lost reply");
   };
   await assert.rejects(
-    publishOscFiles(
+    publishChatFiles(
       f.context,
       bundle,
       attempt,
@@ -292,7 +299,7 @@ test("existing-session retries reconcile against the actual PR base without anot
     assert.equal(args.head, `upstream:${existingSession.branch}`);
     return list(args);
   };
-  const result = await publishOscFiles(
+  const result = await publishChatFiles(
     f.context,
     bundle,
     attempt,
@@ -316,7 +323,7 @@ test("closed, cross-fork, default and incomplete session targets cannot be updat
     { headSha: undefined },
   ])
     await assert.rejects(
-      publishOscFiles(
+      publishChatFiles(
         f.context,
         bundle,
         {},
@@ -331,7 +338,7 @@ test("an unchanged old head cannot confirm a failed update even if the files alr
   const f = fixture();
   const attempt = {};
   await assert.rejects(
-    publishOscFiles(
+    publishChatFiles(
       f.context,
       bundle,
       attempt,
@@ -346,7 +353,7 @@ test("an unchanged old head cannot confirm a failed update even if the files alr
     data: { object: { sha: "previous" } },
   });
   await assert.rejects(
-    publishOscFiles(
+    publishChatFiles(
       f.context,
       bundle,
       attempt,
@@ -362,7 +369,7 @@ test("an update result for a different PR or base is never reported as saved", a
   for (const change of [{ number: 8 }, { baseBranch: "develop" }]) {
     const f = fixture();
     await assert.rejects(
-      publishOscFiles(
+      publishChatFiles(
         f.context,
         bundle,
         {},
@@ -378,7 +385,7 @@ test("an uncertain update cannot be retried against a different session", async 
   const f = fixture();
   const attempt = {};
   await assert.rejects(
-    publishOscFiles(
+    publishChatFiles(
       f.context,
       bundle,
       attempt,
@@ -390,7 +397,7 @@ test("an uncertain update cannot be retried against a different session", async 
     ),
   );
   await assert.rejects(
-    publishOscFiles(
+    publishChatFiles(
       f.context,
       bundle,
       attempt,
@@ -405,7 +412,7 @@ test("an uncertain update cannot be retried against a different session", async 
 test("publication reuses the configured repository's non-main default branch", async () => {
   const f = fixture();
   f.context.githubTargetRepo.default_branch = "develop";
-  await publishOscFiles(f.context, bundle, {}, null, f.publish, f.details);
+  await publishChatFiles(f.context, bundle, {}, null, f.publish, f.details);
   assert.equal(f.request().baseBranch, "develop");
 });
 
@@ -413,7 +420,7 @@ test("an uncertain request with no confirmed branch is never blindly resubmitted
   const f = fixture();
   const attempt = {};
   await assert.rejects(
-    publishOscFiles(
+    publishChatFiles(
       f.context,
       bundle,
       attempt,
@@ -425,7 +432,7 @@ test("an uncertain request with no confirmed branch is never blindly resubmitted
     ),
   );
   await assert.rejects(
-    publishOscFiles(f.context, bundle, attempt, null, f.publish, f.details),
+    publishChatFiles(f.context, bundle, attempt, null, f.publish, f.details),
     /no confirmed branch/,
   );
   assert.ok(!f.calls.includes("broker"));
@@ -437,7 +444,7 @@ test("broker file serialization preserves uppercase mission IDs and paths", asyn
     "eo-missions/Sentinel-1/catalog.json": { id: "Sentinel-1" },
     "eo-missions/CryoSat-2/catalog.json": { id: "CryoSat-2" },
   };
-  await publishOscFiles(
+  await publishChatFiles(
     f.context,
     { ...bundle, staged_files: files },
     {},

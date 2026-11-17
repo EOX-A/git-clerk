@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Narrative preview</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+      }
+      body {
+        margin: 0;
+        overflow-y: auto;
+        font-family: system-ui, sans-serif;
+      }
+      #preview-status,
+      #preview-source {
+        margin: 24px;
+      }
+      #preview-source {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      #storytelling-preview eox-storytelling-editor {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <eox-storytelling
+      disable-autosave
+      no-shadow
+      show-nav
+      id="storytelling-preview"
+    ></eox-storytelling>
+    <p id="preview-status" role="status">Loading narrative preview…</p>
+    <pre id="preview-source" hidden></pre>
+    <script type="module">
+      import { mountNarrativePreview } from "./narrative-preview.js";
+      const preview = mountNarrativePreview(window);
+      Promise.all([
+        import("https://cdn.jsdelivr.net/npm/@eox/storytelling@1.11.0/dist/eox-storytelling.js"),
+        import("https://cdn.jsdelivr.net/npm/@eox/chart@1.1.0/dist/eox-chart.js"),
+        import("https://cdn.jsdelivr.net/npm/@eox/jsonform@1.9.1/dist/eox-jsonform.js"),
+        import("https://cdn.jsdelivr.net/npm/@eox/map@2.4.0/dist/eox-map.js"),
+        import("https://cdn.jsdelivr.net/npm/@eox/map@2.4.0/dist/eox-map-advanced-layers-and-sources.js"),
+      ])
+        .then(() => preview.ready())
+        .catch(() => preview.showUnavailable());
+      window.addEventListener("pagehide", () => preview.dispose(), {
+        once: true,
+      });
+    </script>
+  </body>
+</html>

@@ -14,6 +14,10 @@ import useSessionsStore from "@/stores/sessions.js";
 import useChatAutoscroll from "@/helpers/use-chat-autoscroll.js";
 import { CreateSessionDialog } from "@/components/session";
 import { ChatComposer, ChatMessageList, ChatProgress } from "@/components/chat";
+import { getChatConfig } from "@/helpers/chat-config.js";
+const chatConfig = getChatConfig();
+const ui = chatConfig.preset.ui;
+const composer = ref(null);
 
 const router = useRouter();
 const chatStore = useChatStore();
@@ -88,7 +92,7 @@ onMounted(async () => {
   try {
     await sessionsStore.ensureConnected();
   } catch {
-    state.value.error = "Connect GitHub before creating an OSC session.";
+    state.value.error = "Connect GitHub before creating a session.";
   } finally {
     connecting.value = false;
   }
@@ -117,12 +121,31 @@ onUnmounted(() => {
         "
         class="mb-4 font-semibold text-balance"
       >
-        {{
-          state.messages.length
-            ? "New OSC session"
-            : "What would you like to change?"
-        }}
+        {{ state.messages.length ? ui.sessionTitle : ui.heading }}
       </h1>
+      <p
+        v-if="!state.messages.length && ui.description"
+        class="text-center text-sm text-muted"
+      >
+        {{ ui.description }}
+      </p>
+      <div
+        v-if="
+          chatConfig.enabled && !state.messages.length && ui.suggestions.length
+        "
+        class="flex flex-wrap justify-center gap-2"
+      >
+        <button
+          v-for="suggestion in ui.suggestions"
+          :key="suggestion"
+          type="button"
+          :disabled="connecting"
+          class="rounded-lg border border-border-soft px-3 py-2 text-ui text-primary hover:bg-hover"
+          @click="composer?.setMessage(suggestion)"
+        >
+          {{ suggestion }}
+        </button>
+      </div>
       <div
         v-if="state.messages.length"
         ref="scroller"
@@ -142,7 +165,7 @@ onUnmounted(() => {
           :phase="state.phase"
           :progress="state.progress"
           :error="state.error"
-          :can-retry="Boolean(state.pending)"
+          :can-retry="chatConfig.publishing.enabled && Boolean(state.pending)"
           :can-stop="state.busy && state.phase !== 'saving'"
           :on-retry="conversation.retryMethod"
           :on-stop="conversation.cancelMethod"
@@ -155,12 +178,24 @@ onUnmounted(() => {
         >
           Open PR #{{ state.session.number }}
         </button>
-        <ChatComposer :busy="state.busy || connecting" :on-send="sendMethod" />
-        <p class="text-center text-meta text-muted">
-          OSC files are published as a PR in the configured repository. Chat
-          stays in this app session.
+        <ChatComposer
+          v-if="chatConfig.enabled"
+          ref="composer"
+          :busy="state.busy || connecting"
+          :on-send="sendMethod"
+        />
+        <p v-else class="text-center text-ui text-muted">
+          {{ ui.disabledMessage }}
         </p>
-        <p v-if="!state.messages.length" class="text-center text-ui text-muted">
+        <p class="text-center text-meta text-muted">
+          {{ ui.footer }}
+        </p>
+        <p
+          v-if="
+            !state.messages.length && chatConfig.features.manualSessionCreation
+          "
+          class="text-center text-ui text-muted"
+        >
           Want to manually create session without AI?
           <button
             type="button"

@@ -1,11 +1,12 @@
 import { Base64 } from "js-base64";
-import { checkOscFiles } from "./osc-files.js";
+import { checkDraftFiles } from "./draft-files.js";
 import { publishGitBundle } from "./git-broker.js";
 import { sessionDetails } from "./session.js";
 import { gitBlobSha } from "../helpers/file-publication.js";
+import { getChatConfig } from "../helpers/chat-config.js";
 
 // Octokit reads context and verifies the result; all Git writes belong to the broker.
-export async function publishOscFiles(
+export async function publishChatFiles(
   context,
   bundle,
   attempt = {},
@@ -13,7 +14,13 @@ export async function publishOscFiles(
   publish = publishGitBundle,
   details = sessionDetails,
 ) {
-  const entries = checkOscFiles(bundle);
+  const config = getChatConfig();
+  if (
+    !config.publishing.enabled ||
+    (session && !config.publishing.updateExistingSession)
+  )
+    throw new Error("Chat publishing is disabled for this operation.");
+  const entries = checkDraftFiles(bundle);
   const { octokit, githubConfig, githubUserData: user } = context;
   const repo = { owner: githubConfig.username, repo: githubConfig.repo };
   const fullName = `${repo.owner}/${repo.repo}`;

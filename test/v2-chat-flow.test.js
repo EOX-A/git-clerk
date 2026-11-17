@@ -1,17 +1,19 @@
 import {
-  buildOscPrompt,
-  buildOscHistory,
-  parseOscReply,
-} from "../src2/helpers/osc-request.js";
+  buildChatPrompt,
+  buildChatHistory,
+  parseChatReply,
+} from "../src2/helpers/chat-request.js";
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
   readEventStream,
   streamedMessage,
 } from "../src2/helpers/event-stream.js";
-import { streamOscChat } from "../src2/api/agentic.js";
-import { createOscConversation } from "../src2/helpers/osc-conversation.js";
-import { checkOscFiles, mergeOscFile } from "../src2/api/osc-files.js";
+import { streamChat } from "../src2/api/agentic.js";
+import { createChatConversation } from "../src2/helpers/chat-conversation.js";
+import { checkDraftFiles } from "../src2/api/draft-files.js";
+
+import exampleChatConfig from "./example-chat-config.js";
 
 const frame = (event, data) =>
   `event: ${event}\r\ndata: ${JSON.stringify(data)}\r\n\r\n`;
@@ -77,6 +79,11 @@ test("SSE preserves split UTF-8, CRLF, multiline data and frame boundaries", asy
 });
 
 test("OSC stream uses existing chat profile, includes context, and rejects hidden backend errors", async (t) => {
+  const original = globalThis.gitClerkConfig;
+  globalThis.gitClerkConfig = { chat: structuredClone(exampleChatConfig) };
+  t.after(() => {
+    globalThis.gitClerkConfig = original;
+  });
   const body =
     frame("TEXT_MESSAGE_CONTENT", { chunk: '{"message":"Working"}' }) +
     frame("STATE_DELTA", {
@@ -88,7 +95,7 @@ test("OSC stream uses existing chat profile, includes context, and rejects hidde
     responseFor(body),
   );
   const events = [];
-  const result = await streamOscChat(
+  const result = await streamChat(
     {
       prompt: "Generate sample OSC",
       history: [{ role: "user", content: "Previous" }],
@@ -105,7 +112,7 @@ test("OSC stream uses existing chat profile, includes context, and rejects hidde
   assert.ok(Array.from(request.prompt).length <= 400);
   assert.doesNotMatch(request.prompt, /Previous/);
   assert.equal(request.history[0].content, "Previous");
-  assert.match(request.history.at(-1).content, /Current OSC draft/);
+  assert.match(request.history.at(-1).content, /Current draft/);
   assert.equal(events.length, 3);
   mock.mock.mockImplementation(async () =>
     responseFor(
@@ -114,7 +121,7 @@ test("OSC stream uses existing chat profile, includes context, and rejects hidde
     ),
   );
   await assert.rejects(
-    streamOscChat({ prompt: "Retry" }, () => {}),
+    streamChat({ prompt: "Retry" }, () => {}),
     /generation failed/,
   );
   mock.mock.mockImplementation(async () =>
@@ -124,21 +131,21 @@ test("OSC stream uses existing chat profile, includes context, and rejects hidde
     ),
   );
   await assert.rejects(
-    streamOscChat({ prompt: "Retry" }, () => {}),
+    streamChat({ prompt: "Retry" }, () => {}),
     /complete draft/,
   );
   mock.mock.mockImplementation(async () =>
     responseFor(frame("STATE_DELTA", { data: { message: "Partial", draft } })),
   );
   await assert.rejects(
-    streamOscChat({ prompt: "Retry" }, () => {}),
+    streamChat({ prompt: "Retry" }, () => {}),
     /complete draft/,
   );
 });
 
 function conversationFixture(overrides = {}) {
   const calls = [];
-  const conversation = createOscConversation({
+  const conversation = createChatConversation({
     connect: async () => {},
     generate: async (_input, event) => {
       calls.push("generate");
@@ -321,14 +328,14 @@ test("publishing rejects only malformed or non-relative file addressing", () => 
     "products/invalid\0.json",
   ]) {
     assert.throws(
-      () => checkOscFiles({ ...bundle, staged_files: { [path]: {} } }),
+      () => checkDraftFiles({ ...bundle, staged_files: { [path]: {} } }),
       (error) =>
-        error.code === "OSC_SAVE" &&
+        error.code === "DRAFT_SAVE" &&
         error.message.includes(JSON.stringify(path)),
     );
   }
   for (const files of [null, [], "{}", 42, {}])
-    assert.throws(() => checkOscFiles({ staged_files: files }));
+    assert.throws(() => checkDraftFiles({ staged_files: files }));
 });
 test("OSC names, folders, file types and content are not validated in the frontend", () => {
   const files = {
@@ -341,38 +348,19 @@ test("OSC names, folders, file types and content are not validated in the fronte
     "eo-missions/Sentinel-1/catalog.json.bak": {},
   };
   assert.deepEqual(
-    checkOscFiles({ staged_files: files }),
+    checkDraftFiles({ staged_files: files }),
     Object.entries(files),
   );
   const many = Object.fromEntries(
     Array.from({ length: 101 }, (_, i) => [`products/${i}.json`, {}]),
   );
-  assert.equal(checkOscFiles({ staged_files: many }).length, 101);
+  assert.equal(checkDraftFiles({ staged_files: many }).length, 101);
   assert.equal(
-    checkOscFiles({
+    checkDraftFiles({
       staged_files: { "data/large.json": "x".repeat(1024 * 1024 + 1) },
     }).length,
     1,
   );
-});
-
-test("catalogue merging preserves existing metadata and links, deduplicating relative links", () => {
-  const current = {
-    title: "Existing",
-    links: [{ rel: "child", href: "./older/collection.json", title: "Keep" }],
-  };
-  const generated = {
-    title: "AI title",
-    links: [
-      { rel: "child", href: "older/collection.json" },
-      { rel: "child", href: "./new/collection.json" },
-    ],
-  };
-  const merged = mergeOscFile("products/catalog.json", current, generated);
-  assert.equal(merged.title, "Existing");
-  assert.equal(merged.links.length, 2);
-  assert.equal(merged.links[0].title, "Keep");
-  assert.equal(current.links.length, 1);
 });
 
 test("follow-up chat uses freshly read PR files instead of overwriting saved manual edits", async () => {
@@ -404,10 +392,10 @@ test("follow-up chat uses freshly read PR files instead of overwriting saved man
 test("the reported OSC request fits the backend perimeter even with large history and drafts", () => {
   const message =
     "Add a new product, project and session in any topic you feel like";
-  const prompt = buildOscPrompt(message);
+  const prompt = buildChatPrompt(message);
   assert.ok(Array.from(prompt).length <= 400);
   assert.ok(prompt.endsWith(message));
-  const history = buildOscHistory(
+  const history = buildChatHistory(
     [{ role: "assistant", content: "Long conversation ".repeat(200) }],
     {
       title: "Existing",
@@ -420,22 +408,22 @@ test("the reported OSC request fits the backend perimeter even with large histor
   );
   assert.equal(history.length, 2);
   assert.ok(history.at(-1).content.length > 400);
-  assert.equal(buildOscPrompt(message), prompt);
-  const capacity = 400 - Array.from(buildOscPrompt("x")).length + 1;
-  assert.equal(Array.from(buildOscPrompt("🌍".repeat(capacity))).length, 400);
+  assert.equal(buildChatPrompt(message), prompt);
+  const capacity = 400 - Array.from(buildChatPrompt("x")).length + 1;
+  assert.equal(Array.from(buildChatPrompt("🌍".repeat(capacity))).length, 400);
   assert.throws(
-    () => buildOscPrompt("🌍".repeat(capacity + 1)),
+    () => buildChatPrompt("🌍".repeat(capacity + 1)),
     /400 characters/,
   );
   assert.ok(
-    buildOscPrompt("Inspect https://example.org/" + "a".repeat(500)).length >
+    buildChatPrompt("Inspect https://example.org/" + "a".repeat(500)).length >
       400,
   );
   assert.throws(
-    () => buildOscPrompt("Inspect https://example.org/" + "a".repeat(1000)),
+    () => buildChatPrompt("Inspect https://example.org/" + "a".repeat(1000)),
     /1000 characters/,
   );
-  assert.throws(() => buildOscPrompt("   "), /Enter a message/);
+  assert.throws(() => buildChatPrompt("   "), /Enter a message/);
 });
 
 test("overlong composer messages are retained and cannot start generation or saving", () => {
@@ -472,25 +460,27 @@ test("HTTP validation errors explain the backend refusal; non-JSON errors still 
 
 test("chat profile replies support JSON drafts, fenced JSON and plain clarification text", () => {
   const result = { message: "Ready", draft };
-  assert.deepEqual(parseOscReply({ message: JSON.stringify(result) }), result);
+  assert.deepEqual(parseChatReply({ message: JSON.stringify(result) }), result);
   assert.deepEqual(
-    parseOscReply({ message: JSON.stringify(result) + "\nSources: reference" }),
+    parseChatReply({
+      message: JSON.stringify(result) + "\nSources: reference",
+    }),
     result,
   );
   assert.deepEqual(
-    parseOscReply({ message: "```json\n" + JSON.stringify(result) + "\n```" }),
+    parseChatReply({ message: "```json\n" + JSON.stringify(result) + "\n```" }),
     result,
   );
   assert.deepEqual(
-    parseOscReply({
+    parseChatReply({
       message: "Which region should the product cover?",
       components: [],
     }),
     { message: "Which region should the product cover?", draft: null },
   );
   assert.equal(
-    parseOscReply({ message: '{"message":"Partial", "draft":' }),
+    parseChatReply({ message: '{"message":"Partial", "draft":' }),
     null,
   );
-  assert.equal(parseOscReply({ data: null, raw_text: "" }), null);
+  assert.equal(parseChatReply({ data: null, raw_text: "" }), null);
 });

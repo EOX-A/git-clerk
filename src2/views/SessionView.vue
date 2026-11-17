@@ -8,6 +8,8 @@ import useChatStore from "@/stores/chat.js";
 import { SessionTopbar } from "@/components/session";
 import { FileWorkspace } from "@/components/file-browser";
 import { ChatPanel, ChatResizeHandles } from "@/components/chat";
+import { getChatConfig } from "@/helpers/chat-config.js";
+const chatConfig = getChatConfig();
 
 const route = useRoute();
 const sessionsStore = useSessionsStore();
@@ -177,7 +179,7 @@ onUnmounted(() => {
       :on-updated="refreshSessionMethod"
       :has-unsaved="hasUnsaved"
       :mobile-view="mobileView"
-      :show-view-switch="narrow"
+      :show-view-switch="narrow && chatConfig.enabled"
       :on-mobile-view="(view) => (mobileView = view)"
     />
     <div v-if="error" class="shrink-0 px-6 py-3">
@@ -193,7 +195,7 @@ onUnmounted(() => {
     <!-- Keep both panels mounted across layout changes to retain drafts and tabs. -->
     <div v-if="session" class="relative flex min-h-0 flex-1 overflow-hidden">
       <aside
-        v-show="!narrow || mobileView === 'chat'"
+        v-show="chatConfig.enabled && (!narrow || mobileView === 'chat')"
         aria-label="Session chat"
         :style="style"
         :class="
@@ -243,7 +245,7 @@ onUnmounted(() => {
         />
       </aside>
       <div
-        v-if="mode === 'docked'"
+        v-if="chatConfig.enabled && mode === 'docked'"
         role="separator"
         aria-orientation="vertical"
         aria-label="Chat width"
@@ -261,7 +263,7 @@ onUnmounted(() => {
         <span class="h-full w-px bg-border-soft" />
       </div>
       <div
-        v-show="!narrow || mobileView === 'files'"
+        v-show="!chatConfig.enabled || !narrow || mobileView === 'files'"
         :inert="chat.busy || undefined"
         class="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-bg"
       >
@@ -269,7 +271,10 @@ onUnmounted(() => {
           ref="fileWorkspaceRef"
           :key="session.number"
           :session="session"
-          :active="(!narrow || mobileView === 'files') && !chat.busy"
+          :active="
+            (!chatConfig.enabled || !narrow || mobileView === 'files') &&
+            !chat.busy
+          "
           :publication="chat.publication"
           :on-reveal="() => (mobileView = 'files')"
           :on-saved="refreshSessionMethod"
