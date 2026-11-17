@@ -1,6 +1,7 @@
 <script setup>
 import {
   computed,
+  nextTick,
   inject,
   onMounted,
   onUnmounted,
@@ -23,6 +24,8 @@ import FileDrawer from "./FileDrawer.vue";
 
 const props = defineProps({
   session: { type: Object, required: true },
+  active: { type: Boolean, default: true },
+  onReveal: { type: Function, default: null },
   onSaved: { type: Function, required: true },
   onDirtyChange: { type: Function, required: true },
 });
@@ -60,9 +63,11 @@ const finishDialogMethod = (result) => {
   pending.value = null;
   resolve?.(result);
 };
-const confirmMethod = (paths) => {
+const confirmMethod = async (paths) => {
   if (pending.value) return Promise.resolve(false);
   if (!paths.length) return Promise.resolve(true);
+  props.onReveal?.();
+  await nextTick();
   return new Promise(
     (resolve) => (pending.value = { paths: [...paths], resolve }),
   );
@@ -100,6 +105,7 @@ const unloadMethod = (event) => {
   }
 };
 const saveKeyMethod = (event) => {
+  if (!props.active) return;
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
     event.preventDefault();
     if (!pending.value && !validation.value.length) saveActiveMethod();
@@ -143,8 +149,13 @@ const loadChangesMethod = async () => {
     incomplete.value = result.incomplete;
     // Auto-open once per session; refreshes preserve the user's closed tabs.
     if (!initialized) {
-      tabs.value = changedFileTabs(result.files);
-      activeID.value = tabs.value[0]?.id || null;
+      // A chat file link may have opened a tab while this first request was pending.
+      const existing = new Set(tabs.value.map((tab) => tab.id));
+      tabs.value = [
+        ...tabs.value,
+        ...changedFileTabs(result.files).filter((tab) => !existing.has(tab.id)),
+      ];
+      activeID.value ||= tabs.value[0]?.id || null;
       initialized = true;
       if (!tabs.value.length) {
         drawerView.value = "files";
@@ -164,6 +175,14 @@ const openFileMethod = (path) => {
   if (!tabs.value.some((item) => item.id === tab.id)) tabs.value.push(tab);
   activeID.value = tab.id;
 };
+const openChangesMethod = () => {
+  drawerView.value = "changes";
+  drawerOpen.value = true;
+};
+defineExpose({
+  openFile: openFileMethod,
+  openChanges: openChangesMethod,
+});
 const closeDrawerMethod = (event) => {
   drawerOpen.value = false;
   event.currentTarget

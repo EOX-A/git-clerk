@@ -1,8 +1,25 @@
 <script setup>
-import { computed, nextTick, ref, shallowRef } from "vue";
+import { computed, nextTick, ref, shallowRef, watch } from "vue";
 import ChatIcon from "./ChatIcon.vue";
 import ChatMenu from "./ChatMenu.vue";
 import { CHAT_AUTOMATIONS, CHAT_MODELS } from "@/helpers/chat-options.js";
+
+const props = defineProps({
+  placeholder: {
+    type: String,
+    default: "Describe a change to your repository…",
+  },
+  compact: {
+    type: Boolean,
+    default: false,
+  },
+  busy: Boolean,
+  active: { type: Boolean, default: true },
+  onSend: {
+    type: Function,
+    default: null,
+  },
+});
 
 const message = ref("");
 const textarea = ref(null);
@@ -16,8 +33,16 @@ const menu = ref("");
 const menuTrigger = shallowRef(null);
 const hasBlanks = computed(() => /\[ [^\[\]\n]+ \]/.test(message.value));
 const segments = computed(() => message.value.split(/(\[ [^\[\]\n]+ \])/g));
+const canSend = computed(
+  () =>
+    Boolean(props.onSend) &&
+    !props.busy &&
+    message.value.trim().length > 0 &&
+    !hasBlanks.value,
+);
 
 const resizeInputMethod = () => {
+  if (!textarea.value) return;
   textarea.value.style.height = "auto";
   textarea.value.style.height = `${Math.min(260, Math.max(60, textarea.value.scrollHeight))}px`;
 };
@@ -72,22 +97,54 @@ const selectOptionMethod = async (item) => {
   resizeInputMethod();
   if (template) selectBlankMethod(message.value.length - template.length);
 };
+
+const sendMethod = () => {
+  if (!canSend.value) return;
+  const payload = {
+    text: message.value.trim(),
+    attachments: [...attachments.value],
+    model: model.value,
+    automation: automation.value,
+  };
+  if (props.onSend(payload) === false) return;
+  message.value = "";
+  attachments.value = [];
+  automation.value = "";
+  hintHidden.value = false;
+  nextTick(() => {
+    resizeInputMethod();
+    textarea.value?.focus();
+  });
+};
+
 const inputKeyMethod = (event) => {
   if (event.isComposing || event.shiftKey) return;
   if ((event.key === "Tab" || event.key === "Enter") && hasBlanks.value) {
     if (selectBlankMethod(textarea.value.selectionEnd)) event.preventDefault();
   } else if (event.key === "Enter") {
-    // Preserve the draft until sending is connected. Shift+Enter adds a line.
     event.preventDefault();
+    if (canSend.value) {
+      sendMethod();
+    }
   }
 };
+watch(
+  () => props.active,
+  async (active) => {
+    closeMenuMethod(false);
+    if (active) {
+      await nextTick();
+      resizeInputMethod();
+    }
+  },
+);
 </script>
 
 <template>
   <form
-    aria-label="New session message"
+    :aria-label="onSend ? 'Session message' : 'New session message'"
     class="relative flex flex-col gap-1.5 rounded-composer border border-border bg-elev pt-3 pr-3 pb-2.5 pl-[18px] shadow-composer focus-within:border-primary"
-    @submit.prevent
+    @submit.prevent="sendMethod"
   >
     <div
       v-if="automation && !hintHidden"
@@ -98,7 +155,9 @@ const inputKeyMethod = (event) => {
       <span class="min-w-0 flex-1">{{
         hasBlanks
           ? "Fill in the blue blanks before sending · Tab jumps to the next one"
-          : "All filled in"
+          : onSend
+            ? "All filled in · press Enter to send"
+            : "All filled in"
       }}</span>
       <button
         type="button"
@@ -150,7 +209,7 @@ const inputKeyMethod = (event) => {
         ref="textarea"
         v-model="message"
         aria-label="Describe a change"
-        placeholder="Describe a change to your repository…"
+        :placeholder="placeholder"
         rows="2"
         class="relative col-start-1 row-start-1 min-h-[60px] w-full max-w-full resize-none border-0 bg-transparent py-1 text-sm leading-[22px] break-words text-transparent caret-text outline-none selection:bg-tint selection:text-text placeholder:text-muted focus-visible:outline-none"
         style="height: 60px; max-height: 260px"
@@ -190,9 +249,9 @@ const inputKeyMethod = (event) => {
         @keydown.down.prevent="openMenuMethod('automation', $event)"
         @keydown.up.prevent="openMenuMethod('automation', $event)"
       >
-        <ChatIcon name="bolt" class="size-[15px]" /><span class="truncate">{{
-          automation || "Automation"
-        }}</span
+        <ChatIcon name="bolt" class="size-[15px]" /><span
+          :class="compact ? 'sr-only' : 'truncate'"
+          >{{ automation || "Automation" }}</span
         ><ChatIcon name="chev-down" class="size-[13px]" />
       </button>
       <button
@@ -206,17 +265,32 @@ const inputKeyMethod = (event) => {
         @keydown.down.prevent="openMenuMethod('model', $event)"
         @keydown.up.prevent="openMenuMethod('model', $event)"
       >
-        <ChatIcon name="model" class="size-[15px]" /><span class="truncate">{{
-          model
-        }}</span
+        <ChatIcon name="model" class="size-[15px]" /><span
+          :class="compact ? 'sr-only' : 'truncate'"
+          >{{ model }}</span
         ><ChatIcon name="chev-down" class="size-[13px]" />
       </button>
       <button
         type="submit"
-        disabled
-        aria-label="Send (coming soon)"
-        title="Sending messages is coming soon"
-        class="ml-auto flex size-9 shrink-0 items-center justify-center rounded-full bg-hover text-muted"
+        :disabled="!canSend"
+        :aria-label="
+          !onSend ? 'Send (coming soon)' : canSend ? 'Send (Enter)' : 'Send'
+        "
+        :title="
+          !onSend
+            ? 'Sending messages is coming soon'
+            : busy
+              ? 'Wait for the reply'
+              : canSend
+                ? 'Send (Enter)'
+                : 'Type a message to send'
+        "
+        :class="
+          canSend
+            ? 'cursor-pointer bg-primary text-on-primary hover:brightness-110'
+            : 'cursor-default bg-hover text-muted'
+        "
+        class="ml-auto flex size-9 shrink-0 items-center justify-center rounded-full transition-colors"
       >
         <ChatIcon name="send" />
       </button>

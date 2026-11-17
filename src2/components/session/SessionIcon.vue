@@ -93,5 +93,11 @@ defineProps({ name: { type: String, required: true } });
       v-else-if="name === 'trash'"
       d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"
     />
+    <g v-else-if="name === 'files'">
+      <path d="M9 7V5a2 2 0 0 1 2-2h5l4 4v9a2 2 0 0 1-2 2h-2" />
+      <path
+        d="M4 9a2 2 0 0 1 2-2h4.5L15 11.5V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"
+      />
+    </g>
   </svg>
 </template>

@@ -21,6 +21,7 @@ const {
   group,
   collapsedGroups,
   filtersActive,
+  allLoaded,
   loading,
   error,
   pageInfo,
@@ -151,7 +152,7 @@ const updatedSessionMethod = async () => {
       :on-close="closeActionMethod"
       :on-updated="updatedSessionMethod"
     />
-    <div v-if="loading" role="status">
+    <div v-if="loading && !allLoaded" role="status">
       <span class="sr-only">{{
         filtersActive
           ? "Loading sessions for these filters…"

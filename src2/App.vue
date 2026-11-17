@@ -22,7 +22,7 @@ provide("session-sidebar", {
   openMethod: openSidebarMethod,
 });
 
-onMounted(() => useSessionsStore().loadSessions());
+onMounted(() => useSessionsStore().loadSessions(false, true));
 
 const closeSidebarMethod = async () => {
   mobileSidebarOpen.value = false;

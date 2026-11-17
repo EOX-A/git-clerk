@@ -45,8 +45,8 @@ const closeMethod = (restoreFocus = false) => {
 const toggleMethod = async () => {
   if (open.value) return closeMethod(true);
   open.value = true;
-  // Counts and sorting must include matching sessions from every GitHub page.
-  sessionsStore.loadSessions(false, true);
+  // Counts and sorting must include fresh matching sessions from every GitHub page.
+  sessionsStore.loadSessions(false, true, true);
   await nextTick();
   positionPanelMethod();
   panel.value?.querySelector("button")?.focus();
@@ -75,6 +75,9 @@ watch(
 );
 
 onMounted(() => {
+  if (!allLoaded.value && !loading.value) {
+    sessionsStore.loadSessions(false, true);
+  }
   document.addEventListener("pointerdown", outsideMethod);
   window.addEventListener("resize", positionPanelMethod);
   resizeObserver = new ResizeObserver(positionPanelMethod);

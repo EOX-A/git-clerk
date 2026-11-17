@@ -1,9 +1,20 @@
 import useOctokitStore from "../../../src2/stores/octokit.js";
 
 // Exercise the real root, dialog, store and redirect without credentials or GitHub writes.
-export default function installCreationFixture() {
+export default function installCreationFixture({ chat = false } = {}) {
   const branches = new Map([["main", "base"]]);
-  let pr = null;
+  let pr = chat
+    ? {
+        node_id: "PR_7",
+        number: 7,
+        title: "Chat workspace demo",
+        state: "open",
+        draft: true,
+        html_url: "https://github.com/upstream/catalog/pull/7",
+        updated_at: "initial",
+        head: { ref: "main", repo: { owner: { login: "alice" } } },
+      }
+    : null;
   const user = { login: "alice", name: "Alice", email: "alice@example.test" };
   const graphqlPR = () =>
     pr && {
@@ -20,7 +31,7 @@ export default function installCreationFixture() {
       headRefOid: "initial",
       baseRefOid: "base",
       headRef: branches.has(pr.head.ref) ? { id: "REF_7" } : null,
-      changedFiles: 0,
+      changedFiles: chat ? 1 : 0,
       viewerCanUpdate: true,
       headRepository: {
         name: "catalog",
@@ -34,7 +45,7 @@ export default function installCreationFixture() {
     githubUserData: user,
     scopeOwners: ["alice"],
     octokit: {
-      graphql: async (query) => ({
+      graphql: async (query, variables) => ({
         repository: query.includes("pullRequests(")
           ? {
               pullRequests: {
@@ -42,10 +53,28 @@ export default function installCreationFixture() {
                 pageInfo: { hasNextPage: false, endCursor: null },
               },
             }
-          : { pullRequest: graphqlPR() },
+          : {
+              pullRequest: chat
+                ? {
+                    ...graphqlPR(),
+                    number: variables.number,
+                    id: `PR_${variables.number}`,
+                  }
+                : graphqlPR(),
+            },
       }),
       rest: {
         repos: {
+          getContent: async () => ({
+            data: {
+              type: "file",
+              path: "README.md",
+              sha: "readme",
+              size: 20,
+              encoding: "base64",
+              content: btoa("# Fixture document\n"),
+            },
+          }),
           get: async ({ owner }) => ({
             data: {
               id: owner === "upstream" ? 1 : 2,
@@ -87,7 +116,20 @@ export default function installCreationFixture() {
         },
         pulls: {
           list: async () => ({ data: pr ? [pr] : [] }),
-          listFiles: async () => ({ data: [], headers: {} }),
+          listFiles: async () => ({
+            data: chat
+              ? [
+                  {
+                    filename: "README.md",
+                    status: "modified",
+                    additions: 1,
+                    deletions: 1,
+                    patch: "@@ -1 +1 @@\n-old\n+new",
+                  },
+                ]
+              : [],
+            headers: {},
+          }),
           update: async ({ title, state }) => {
             if (pr) {
               if (title) pr.title = title;
@@ -115,4 +157,9 @@ export default function installCreationFixture() {
       },
     },
   });
+  return {
+    toggleClosed: () => {
+      pr.state = pr.state === "closed" ? "open" : "closed";
+    },
+  };
 }

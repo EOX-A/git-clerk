@@ -1,16 +1,40 @@
 <script setup>
-import { onMounted, onUnmounted, ref, watch } from "vue";
+import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute } from "vue-router";
 import useSessionsStore from "@/stores/sessions.js";
 import sessionError from "@/helpers/session-error.js";
+import useChatLayout from "@/helpers/use-chat-layout.js";
+import useSessionChat from "@/helpers/use-session-chat.js";
 import { SessionTopbar } from "@/components/session";
 import { FileWorkspace } from "@/components/file-browser";
+import { ChatPanel, ChatResizeHandles } from "@/components/chat";
 
 const route = useRoute();
 const sessionsStore = useSessionsStore();
 const session = ref(null);
 const error = ref("");
 const hasUnsaved = ref(false);
+
+const fileWorkspaceRef = ref(null);
+const workspaceContainer = ref(null);
+
+const mobileView = ref("chat");
+const {
+  mode,
+  style,
+  bounds,
+  narrow,
+  dockedWidth,
+  containerWidth,
+  dragging,
+  resetMethod,
+  startDragMethod,
+  startResizeMethod,
+  startDockedResizeMethod,
+  dockedKeyMethod,
+  toggleDockMethod,
+} = useChatLayout(workspaceContainer, mobileView);
+const { messages, busy, sendMethod } = useSessionChat(session);
 let requestID = 0;
 let controller;
 let refreshTimer;
@@ -28,13 +52,16 @@ const querySessionDetailsMethod = async (refresh = false) => {
       Number(route.params.sessionNumber),
       controller.signal,
     );
-    if (currentRequest === requestID) session.value = data;
+    if (currentRequest === requestID) {
+      session.value = data;
+    }
   } catch (cause) {
     if (currentRequest === requestID) error.value = sessionError(cause);
   } finally {
     if (currentRequest === requestID) loading = false;
   }
 };
+
 const refreshSessionMethod = () => querySessionDetailsMethod(true);
 const backgroundRefreshMethod = () => {
   if (
@@ -45,9 +72,28 @@ const backgroundRefreshMethod = () => {
   )
     refreshSessionMethod();
 };
+
+const handleOpenFileMethod = (path) => {
+  if (narrow.value) mobileView.value = "files";
+  nextTick(() => {
+    fileWorkspaceRef.value?.openFile(path);
+  });
+};
+
+const handleOpenChangesMethod = () => {
+  if (narrow.value) mobileView.value = "files";
+  nextTick(() => {
+    fileWorkspaceRef.value?.openChanges();
+  });
+};
+
 watch(
   () => route.params.sessionNumber,
-  () => querySessionDetailsMethod(),
+  () => {
+    resetMethod();
+    hasUnsaved.value = false;
+    querySessionDetailsMethod();
+  },
   { immediate: true },
 );
 watch(
@@ -61,10 +107,12 @@ watch(
     }
   },
 );
+
 onMounted(() => {
   window.addEventListener("focus", backgroundRefreshMethod);
   refreshTimer = window.setInterval(backgroundRefreshMethod, 30000);
 });
+
 onUnmounted(() => {
   requestID++;
   controller?.abort();
@@ -74,30 +122,103 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <section class="flex h-full min-h-0 flex-col">
+  <section
+    ref="workspaceContainer"
+    class="relative flex h-full min-h-0 flex-col overflow-hidden"
+  >
     <SessionTopbar
       :key="route.params.sessionNumber"
       :session="session"
       :failed="Boolean(error) && !session"
       :on-updated="refreshSessionMethod"
       :has-unsaved="hasUnsaved"
+      :mobile-view="mobileView"
+      :show-view-switch="narrow"
+      :on-mobile-view="(view) => (mobileView = view)"
     />
-    <div v-if="error" class="p-6">
+    <div v-if="error" class="shrink-0 px-6 py-3">
       <p role="alert">{{ error }}</p>
       <button
         type="button"
-        class="mt-3 rounded-lg px-3 py-2 text-primary hover:bg-hover"
+        class="mt-2 rounded-lg px-3 py-2 text-primary hover:bg-hover"
         @click="refreshSessionMethod"
       >
         Retry
       </button>
     </div>
-    <FileWorkspace
-      v-if="session"
-      :key="session.number"
-      :session="session"
-      :on-saved="refreshSessionMethod"
-      :on-dirty-change="(value) => (hasUnsaved = value)"
-    />
+    <!-- Keep both panels mounted across layout changes to retain drafts and tabs. -->
+    <div v-if="session" class="relative flex min-h-0 flex-1 overflow-hidden">
+      <aside
+        v-show="!narrow || mobileView === 'chat'"
+        aria-label="Session chat"
+        :style="style"
+        :class="
+          mode === 'floating'
+            ? 'fixed z-[45] rounded-2xl border border-border-soft shadow-floating'
+            : mode === 'docked'
+              ? 'relative h-full shrink-0 border-r border-border-soft'
+              : 'h-full w-full'
+        "
+        class="flex min-h-0 min-w-0 flex-col bg-elev"
+      >
+        <ChatResizeHandles
+          v-if="mode === 'floating'"
+          :on-resize="startResizeMethod"
+        />
+        <ChatPanel
+          :key="session.number"
+          :mode="mode"
+          :session="session"
+          :messages="messages"
+          :busy="busy"
+          :active="!narrow || mobileView === 'chat'"
+          :compact="
+            mode === 'floating'
+              ? bounds.w < 470
+              : mode === 'docked'
+                ? dockedWidth < 470
+                : containerWidth < 470
+          "
+          :on-dock="() => toggleDockMethod(true)"
+          :on-float="() => toggleDockMethod(false)"
+          :on-drag-start="startDragMethod"
+          :on-open-file="handleOpenFileMethod"
+          :on-open-changes="handleOpenChangesMethod"
+          :on-send="sendMethod"
+        />
+      </aside>
+      <div
+        v-if="mode === 'docked'"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Chat width"
+        :aria-valuemin="320"
+        :aria-valuemax="Math.max(320, containerWidth - 380)"
+        :aria-valuenow="dockedWidth"
+        :aria-valuetext="`${dockedWidth} pixels`"
+        tabindex="0"
+        title="Drag or use arrow keys to resize. Press Enter to reset."
+        :class="dragging ? 'bg-tint' : 'bg-transparent'"
+        class="relative z-10 -mx-[3px] flex w-[7px] shrink-0 cursor-col-resize touch-none justify-center hover:bg-tint focus-visible:bg-tint"
+        @pointerdown="startDockedResizeMethod"
+        @keydown="dockedKeyMethod"
+      >
+        <span class="h-full w-px bg-border-soft" />
+      </div>
+      <div
+        v-show="!narrow || mobileView === 'files'"
+        class="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-bg"
+      >
+        <FileWorkspace
+          ref="fileWorkspaceRef"
+          :key="session.number"
+          :session="session"
+          :active="!narrow || mobileView === 'files'"
+          :on-reveal="() => (mobileView = 'files')"
+          :on-saved="refreshSessionMethod"
+          :on-dirty-change="(value) => (hasUnsaved = value)"
+        />
+      </div>
+    </div>
   </section>
 </template>

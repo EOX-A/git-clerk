@@ -416,11 +416,10 @@ npm run start:v2
 ```
 
 V2 shows a centered chat starter at `/` and a selected session at
-`/:sessionNumber`, without reloading the page. The conversation workspace comes
-later. The starter accepts local draft text and removable file attachments, automation
+`/:sessionNumber`, without reloading the page. The starter accepts local draft text and removable file attachments, automation
 templates with editable blanks, and model selection from the design reference.
 Attachments stay in memory; nothing is uploaded. Repository selection is hidden,
-speech input is removed, and sending remains disabled until the backend is ready.
+speech input is removed, and sending from the root starter remains disabled until the backend is ready.
 The centered **Create Session** link below the composer opens a session-name modal
 with the v1 “What is a session?” explanation. Submitting creates a draft session in
 your personal fork and opens it, without an organization or repository selector.
@@ -464,8 +463,13 @@ are reported without hiding that the PR was closed.
 Missing configuration and request failures show a retryable message. GitHub
 operations stay behind `src2/api/index.js` so the UI can later use a backend.
 Loading sessions does not create or sync forks; manual session creation does.
-The conversation workspace and its
-mobile Chat/Files switch will be added separately.
+Session chat uses local demo messages with no AI API calls or repository writes.
+It floats over the file workspace or docks beside it, with pointer resizing and a
+keyboard-adjustable divider. The file workspace stays available for closed/merged
+sessions too; their chat composer becomes a read-only banner. There is no desktop
+full-chat mode or Visualizer toggle. Mobile Chat/Files controls switch panels while
+preserving drafts and open tabs. Session metadata refreshes preserve conversation
+history; navigating away cancels any pending demo reply.
 
 Session files open in tabs, with a Files/Changes drawer. Clicking either list
 opens a normal file; “View changes” explicitly opens its saved PR diff.
@@ -489,7 +493,8 @@ For browser checks without credentials or real repository writes, run
 `http://127.0.0.1:3002/test/fixtures/v2-workspace/index.html`.
 The fixture provides mock saves, conflicts, configured previews and forms.
 Append `?create` to exercise manual session creation and redirection with mocked
-GitHub responses.
+GitHub responses. Append `?chat` for floating/docked/mobile chat, metadata refresh,
+read-only state and unsaved-file navigation checks, also backed only by mocks.
 
 Run the focused API regression tests with `npm run test:v2` (mocked GitHub data).
 

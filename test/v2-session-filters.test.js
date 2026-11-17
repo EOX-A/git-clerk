@@ -333,6 +333,31 @@ test("retry finishes a full count scan even before any filters are changed", asy
   assert.equal(store.sessions.length, 3);
 });
 
+test("opening the filter popover refreshes counts across all pages even after completion", async () => {
+  let round = 0;
+  const cursors = [];
+  const store = createStore(async (_, { after }) => {
+    cursors.push(after);
+    if (after === null) {
+      round++;
+      return page(1, round === 1 ? "OPEN" : "MERGED", true, "next");
+    }
+    return page(2, "CLOSED");
+  });
+  await store.loadSessions(false, true);
+  assert.equal(store.allLoaded, true);
+  assert.equal(store.statusCounts.open, 1);
+  assert.equal(store.statusCounts.merged, 0);
+  assert.equal(store.statusCounts.closed, 1);
+
+  await store.loadSessions(false, true, true);
+  assert.deepEqual(cursors, [null, "next", null, "next"]);
+  assert.equal(store.allLoaded, true);
+  assert.equal(store.statusCounts.open, 0);
+  assert.equal(store.statusCounts.merged, 1);
+  assert.equal(store.statusCounts.closed, 1);
+});
+
 test("opening a session fetches fresh details even when its sidebar row is cached", async () => {
   let requests = 0;
   const store = createStore(async (query, variables) => {

@@ -58,17 +58,21 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     await connecting;
   }
 
-  async function loadSessions(reset = false, all = filtersActive.value) {
+  async function loadSessions(
+    reset = false,
+    all = filtersActive.value,
+    refresh = false,
+  ) {
     if (reset) {
       listController?.abort();
       loadAllRequested = all;
       sessions.value = [];
       pageInfo.value = null;
     } else {
-      // Opening the popover can extend the current request to all pages.
+      // Opening the popover can extend the current request or refresh all pages.
       loadAllRequested ||= all;
       if (loading.value) return;
-      if (allLoaded.value) {
+      if (allLoaded.value && !refresh) {
         loadAllRequested = false;
         return;
       }
@@ -81,23 +85,40 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     try {
       await ensureConnected();
       if (currentRequest !== requestID) return;
-      do {
-        const result = await getSessionsList(
-          pageInfo.value?.endCursor ?? null,
-          controller.signal,
-        );
-        // Aborted or delayed responses must not replace the latest selection.
-        if (currentRequest !== requestID) return;
+      if (refresh) {
+        let cursor = null;
+        let nextPageInfo = null;
+        const fresh = [];
+        do {
+          const result = await getSessionsList(cursor, controller.signal);
+          if (currentRequest !== requestID) return;
+          fresh.push(...result.data);
+          nextPageInfo = result.pageInfo;
+          cursor = result.pageInfo.endCursor;
+        } while (nextPageInfo.hasNextPage);
         sessions.value = [
-          ...new Map(
-            [...sessions.value, ...result.data].map((session) => [
-              session.id,
-              session,
-            ]),
-          ).values(),
+          ...new Map(fresh.map((session) => [session.id, session])).values(),
         ];
-        pageInfo.value = result.pageInfo;
-      } while (loadAllRequested && pageInfo.value.hasNextPage);
+        pageInfo.value = nextPageInfo;
+      } else {
+        do {
+          const result = await getSessionsList(
+            pageInfo.value?.endCursor ?? null,
+            controller.signal,
+          );
+          // Aborted or delayed responses must not replace the latest selection.
+          if (currentRequest !== requestID) return;
+          sessions.value = [
+            ...new Map(
+              [...sessions.value, ...result.data].map((session) => [
+                session.id,
+                session,
+              ]),
+            ).values(),
+          ];
+          pageInfo.value = result.pageInfo;
+        } while (loadAllRequested && pageInfo.value.hasNextPage);
+      }
       loadAllRequested = false;
     } catch (cause) {
       if (currentRequest === requestID) error.value = sessionError(cause);
@@ -150,15 +171,18 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     const session = await createSessionByName(name, attempt, onProgress);
     const context = useOctokitStore().context;
     const owner = context.githubUserData.login.toLowerCase();
-    if (context.scopeOwners && !context.scopeOwners.includes(owner))
-      context.scopeOwners.push(owner);
+    const scopeChanged =
+      context.scopeOwners && !context.scopeOwners.includes(owner);
+    if (scopeChanged) context.scopeOwners.push(owner);
     // Cancel older pages so they cannot erase the new session or stale the counts.
     requestID++;
     listController?.abort();
     listController = null;
     loading.value = false;
     loadAllRequested = false;
-    pageInfo.value = null;
+    if (scopeChanged || pageInfo.value?.hasNextPage !== false) {
+      pageInfo.value = null;
+    }
     error.value = "";
     sessions.value = [
       session,
@@ -172,9 +196,10 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     signal?.throwIfAborted();
     // Sidebar rows are summaries; the header always needs fresh PR details.
     const session = await getSessionDetails(number, signal);
-    sessions.value = sessions.value.map((item) =>
-      item.number === number ? session : item,
-    );
+    const exists = sessions.value.some((item) => item.number === number);
+    sessions.value = exists
+      ? sessions.value.map((item) => (item.number === number ? session : item))
+      : [session, ...sessions.value];
     return session;
   }
 

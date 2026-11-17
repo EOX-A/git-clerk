@@ -11,6 +11,9 @@ const props = defineProps({
   failed: { type: Boolean, default: false },
   hasUnsaved: Boolean,
   onUpdated: { type: Function, required: true },
+  showViewSwitch: Boolean,
+  mobileView: { type: String, default: "chat" },
+  onMobileView: { type: Function, default: null },
 });
 const sidebar = inject("session-sidebar");
 const snackbar = inject("set-snackbar");
@@ -175,6 +178,39 @@ onUnmounted(() => {
             />
           </button>
         </div>
+      </div>
+      <div
+        v-if="showViewSwitch && onMobileView"
+        role="group"
+        aria-label="Workspace view"
+        class="flex shrink-0 gap-0.5 rounded-[10px] bg-hover p-[3px]"
+      >
+        <button
+          :aria-pressed="mobileView === 'chat'"
+          type="button"
+          :class="
+            mobileView === 'chat'
+              ? 'bg-elev text-text shadow-sm'
+              : 'text-muted hover:text-text'
+          "
+          class="h-[34px] rounded-lg px-3 text-[12.5px] font-medium"
+          @click="onMobileView('chat')"
+        >
+          Chat
+        </button>
+        <button
+          :aria-pressed="mobileView === 'files'"
+          type="button"
+          :class="
+            mobileView === 'files'
+              ? 'bg-elev text-text shadow-sm'
+              : 'text-muted hover:text-text'
+          "
+          class="h-[34px] rounded-lg px-3 text-[12.5px] font-medium"
+          @click="onMobileView('files')"
+        >
+          Files
+        </button>
       </div>
       <button
         v-if="session.status === 'draft' && session.changedFiles > 0"
