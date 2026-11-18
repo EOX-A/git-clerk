@@ -6,6 +6,7 @@ import {
   onMounted,
   onUnmounted,
   ref,
+  shallowRef,
   toRef,
   watch,
 } from "vue";
@@ -13,10 +14,17 @@ import { onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
 import { fileRepositoryUrl, toggleFileMode } from "@/helpers/file-editor.js";
 import { FileContent, FileDialog, FileToolbar } from "@/components/file";
 import useFileDocuments from "@/helpers/use-file-documents.js";
-import { getSessionFiles } from "@/api/index.js";
+import {
+  branchFilePath,
+  createFileInSession,
+  getSessionFiles,
+  removeFileFromSession,
+  renameFileInSession,
+} from "@/api/index.js";
 import {
   changedFileTabs,
   closeFileTab,
+  fileDirectory,
   fileTab,
 } from "@/helpers/file-workspace.js";
 import FileTabs from "./FileTabs.vue";
@@ -29,6 +37,7 @@ const props = defineProps({
   onReveal: { type: Function, default: null },
   onSaved: { type: Function, required: true },
   onDirtyChange: { type: Function, required: true },
+  onOperationChange: { type: Function, default: null },
 });
 const files = ref([]);
 const tabs = ref([]);
@@ -38,6 +47,27 @@ const drawerView = ref("changes");
 const loading = ref(false);
 const error = ref("");
 const incomplete = ref(false);
+const fileOperationPending = ref(false);
+const confirmedHead = shallowRef(null);
+const fileSession = computed(() => {
+  const headSha = confirmedHead.value?.commitSha;
+  return headSha && headSha !== props.session.headSha
+    ? { ...props.session, headSha }
+    : props.session;
+});
+watch(
+  () => props.session.headSha,
+  (headSha) => {
+    const confirmed = confirmedHead.value;
+    if (
+      confirmed &&
+      headSha &&
+      headSha !== confirmed.commitSha &&
+      !confirmed.previous.has(headSha)
+    )
+      confirmedHead.value = null;
+  },
+);
 const activePath = computed(
   () => tabs.value.find((tab) => tab.id === activeID.value)?.path || null,
 );
@@ -53,11 +83,17 @@ const {
   saveMethod,
   forgetMethod,
 } = useFileDocuments(
-  toRef(props, "session"),
+  fileSession,
   files,
   props.onSaved,
   snackbar,
   toRef(props, "publication"),
+);
+const canMutateFiles = computed(
+  () =>
+    props.active &&
+    props.session.canEdit &&
+    !Object.values(documents.value).some((doc) => doc.saving),
 );
 const activeDocument = computed(() => documents.value[activePath.value]);
 const activeChange = computed(
@@ -81,7 +117,7 @@ const confirmMethod = async (paths) => {
   );
 };
 const saveActiveMethod = async (path = activePath.value) => {
-  if (!path) return false;
+  if (!path || fileOperationPending.value) return false;
   const saved = await saveMethod(path);
   if (documents.value[path]?.validation.length) {
     activeID.value = path;
@@ -101,13 +137,14 @@ const savePendingMethod = async () => {
   savingDialog.value = false;
   finishDialogMethod(true);
 };
-const guardMethod = () => confirmMethod(dirtyPaths.value);
+const guardMethod = () =>
+  fileOperationPending.value ? false : confirmMethod(dirtyPaths.value);
 onBeforeRouteLeave(guardMethod);
 onBeforeRouteUpdate((to, from) =>
   to.params.sessionNumber !== from.params.sessionNumber ? guardMethod() : true,
 );
 const unloadMethod = (event) => {
-  if (dirtyPaths.value.length) {
+  if (fileOperationPending.value || dirtyPaths.value.length) {
     event.preventDefault();
     event.returnValue = "";
   }
@@ -119,17 +156,15 @@ const saveKeyMethod = (event) => {
     if (!pending.value && !validation.value.length) saveActiveMethod();
   }
 };
-watch(
-  () => [props.session.headSha, props.publication],
-  () => {
-    for (const [path, doc] of Object.entries(documents.value)) {
-      if (!doc.loaded || doc.saving || doc.headSha === props.session.headSha)
-        continue;
-      if (dirtyPaths.value.includes(path)) doc.remoteChanged = true;
-      else if (!applyPublicationMethod(path)) loadMethod(path, true);
-    }
-  },
-);
+watch([() => fileSession.value.headSha, () => props.publication], () => {
+  for (const [path, doc] of Object.entries(documents.value)) {
+    if (!doc.loaded || doc.saving || doc.headSha === fileSession.value.headSha)
+      continue;
+    if (dirtyPaths.value.includes(path)) doc.remoteChanged = true;
+    else if (!applyPublicationMethod(path))
+      loadMethod(path, { background: true });
+  }
+});
 watch(activePath, (path) => {
   if (path) loadMethod(path);
 });
@@ -140,7 +175,7 @@ onMounted(() => {
   window.addEventListener("beforeunload", unloadMethod);
   window.addEventListener("keydown", saveKeyMethod);
 });
-let initialized = false;
+const initialized = ref(false);
 let requestID = 0;
 let controller;
 
@@ -156,7 +191,7 @@ const loadChangesMethod = async () => {
     files.value = result.files;
     incomplete.value = result.incomplete;
     // Auto-open once per session; refreshes preserve the user's closed tabs.
-    if (!initialized) {
+    if (!initialized.value) {
       // A chat file link may have opened a tab while this first request was pending.
       const existing = new Set(tabs.value.map((tab) => tab.id));
       tabs.value = [
@@ -164,7 +199,7 @@ const loadChangesMethod = async () => {
         ...changedFileTabs(result.files).filter((tab) => !existing.has(tab.id)),
       ];
       activeID.value ||= tabs.value[0]?.id || null;
-      initialized = true;
+      initialized.value = true;
       if (!tabs.value.length) {
         drawerView.value = "files";
         drawerOpen.value = true;
@@ -192,6 +227,7 @@ defineExpose({
   openChanges: openChangesMethod,
 });
 const closeDrawerMethod = (event) => {
+  if (fileOperationPending.value) return;
   drawerOpen.value = false;
   event.currentTarget
     .closest(".file-workspace")
@@ -199,7 +235,7 @@ const closeDrawerMethod = (event) => {
     ?.focus();
 };
 const closeFileMethod = async (id) => {
-  if (documents.value[id]?.saving) return;
+  if (fileOperationPending.value || documents.value[id]?.saving) return;
   if (!(await confirmMethod(dirtyPaths.value.includes(id) ? [id] : []))) return;
   forgetMethod(id);
   const result = closeFileTab(tabs.value, activeID.value, id);
@@ -208,6 +244,76 @@ const closeFileMethod = async (id) => {
   if (!tabs.value.length) {
     drawerView.value = files.value.length ? "changes" : "files";
     drawerOpen.value = true;
+  }
+};
+const fileOperationMethod = async (action, entry, name) => {
+  if (!canMutateFiles.value || fileOperationPending.value)
+    throw new Error("Wait for the current file action before trying again.");
+  const { path, sha } = entry;
+  if (action !== "create" && dirtyPaths.value.includes(path))
+    throw new Error("Save or discard this file's edits before continuing.");
+  const destination =
+    action === "delete"
+      ? null
+      : branchFilePath(
+          action === "create" ? path : fileDirectory(path).replace(/\/$/, ""),
+          name,
+        );
+  const session = fileSession.value;
+  fileOperationPending.value = true;
+  props.onOperationChange?.(true);
+  try {
+    let result;
+    if (action === "create")
+      result = await createFileInSession(session, destination);
+    else if (action === "rename")
+      result = await renameFileInSession(session, path, destination, sha);
+    else if (action === "delete")
+      result = await removeFileFromSession(session, path, sha);
+    if (!result) return;
+
+    // Repo and file reads can use the commit now, even if the PR API still
+    // reports the old head or the intermediate copy commit during a rename.
+    const previous = new Set([
+      ...(confirmedHead.value?.previous || []),
+      props.session.headSha,
+      session.headSha,
+      result.copyCommitSha,
+    ]);
+    confirmedHead.value = { commitSha: result.commitSha, previous };
+    if (action !== "create") {
+      forgetMethod(path);
+      const result = closeFileTab(tabs.value, activeID.value, path);
+      tabs.value = result.tabs;
+      activeID.value = result.activeID;
+    }
+    if (destination) {
+      // A previously removed file can still have an open tab for its base version.
+      forgetMethod(destination);
+      files.value = files.value.filter(
+        (file) => file.path !== destination || file.status !== "removed",
+      );
+      openFileMethod(destination);
+      loadMethod(destination);
+    }
+    void props.onSaved();
+    snackbar.value = {
+      text:
+        action === "create"
+          ? "File created"
+          : action === "rename"
+            ? "File renamed"
+            : "File deleted",
+      description: destination || path,
+      status: "success",
+    };
+  } catch (cause) {
+    if (cause.refresh || cause.status >= 500 || cause.status === 409)
+      await props.onSaved();
+    throw cause;
+  } finally {
+    fileOperationPending.value = false;
+    props.onOperationChange?.(false);
   }
 };
 // Compare revisions and counts by value so metadata refreshes don't reload files.
@@ -226,6 +332,7 @@ onUnmounted(() => {
   window.removeEventListener("beforeunload", unloadMethod);
   window.removeEventListener("keydown", saveKeyMethod);
   props.onDirtyChange(false);
+  props.onOperationChange?.(false);
   finishDialogMethod(false);
 });
 </script>
@@ -238,10 +345,14 @@ onUnmounted(() => {
       :active-id="activeID"
       :drawer-open="drawerOpen"
       :change-count="session.changedFiles"
-      :loading="loading"
+      :loading="loading && !initialized"
       :on-select="(id) => (activeID = id)"
       :on-close="closeFileMethod"
-      :on-toggle-drawer="() => (drawerOpen = !drawerOpen)"
+      :on-toggle-drawer="
+        () => {
+          if (!fileOperationPending) drawerOpen = !drawerOpen;
+        }
+      "
     />
     <div
       v-if="error && !drawerOpen"
@@ -261,7 +372,8 @@ onUnmounted(() => {
       v-if="activePath"
       :path="activePath"
       :doc="activeDocument"
-      :session="session"
+      :inert="fileOperationPending || undefined"
+      :session="fileSession"
       :dirty="dirtyPaths.includes(activePath)"
       :changed="activeChange"
       :read-only="!session.canEdit || activeChange?.status === 'removed'"
@@ -286,7 +398,7 @@ onUnmounted(() => {
     />
     <div class="relative flex min-h-0 flex-1" @keydown.esc="closeDrawerMethod">
       <FileDrawer
-        :session="session"
+        :session="fileSession"
         :open="drawerOpen"
         :view="drawerView"
         :files="files"
@@ -298,18 +410,26 @@ onUnmounted(() => {
         :on-open="openFileMethod"
         :on-view="(view) => (drawerView = view)"
         :on-retry="loadChangesMethod"
+        :can-mutate="canMutateFiles"
+        :on-file-operation="fileOperationMethod"
       />
       <FileContent
         v-if="activePath"
         :key="activePath"
         :path="activePath"
         :doc="activeDocument"
-        :session="session"
+        :inert="fileOperationPending || undefined"
+        :session="fileSession"
         :changed="activeChange"
-        :on-change="(text) => changeMethod(activePath, text)"
+        :on-change="
+          (text) => {
+            if (!fileOperationPending) changeMethod(activePath, text);
+          }
+        "
         :on-retry="
           () => {
-            if (!dirtyPaths.includes(activePath)) loadMethod(activePath, true);
+            if (!dirtyPaths.includes(activePath))
+              loadMethod(activePath, { force: true, background: true });
             else
               snackbar = {
                 text: 'Close this tab and save or discard its draft before reloading.',
@@ -317,10 +437,14 @@ onUnmounted(() => {
               };
           }
         "
-        :on-history="(direction) => historyMethod(activePath, direction)"
+        :on-history="
+          (direction) => {
+            if (!fileOperationPending) historyMethod(activePath, direction);
+          }
+        "
       />
       <div
-        v-else-if="!loading"
+        v-else-if="initialized || !loading"
         class="flex min-w-0 flex-1 flex-col items-center justify-center gap-2 p-6 text-center"
       >
         <p class="text-sm font-semibold">Open a file to view it</p>

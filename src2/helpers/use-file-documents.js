@@ -25,32 +25,51 @@ export default function useFileDocuments(
       .map(([path]) => path),
   );
   let disposed = false;
-  const loadMethod = async (path, force = false) => {
-    if (
-      !force &&
-      (documents.value[path]?.loaded || documents.value[path]?.loading)
-    )
+  const loadMethod = async (
+    path,
+    { force = false, background = false } = {},
+  ) => {
+    const existing = documents.value[path];
+    if (!force && !background && (existing?.loaded || existing?.loading))
       return;
+    const refreshing = background && existing?.loaded;
+    const previousHead = existing?.headSha;
     controllers.get(path)?.abort();
     const controller = new AbortController();
     controllers.set(path, controller);
     const currentSession = session.value;
-    documents.value[path] = {
-      loading: true,
-      loaded: false,
-      error: "",
-      text: "",
-      savedText: "",
-      mode: "source",
-      meta: null,
-      preview: null,
-      interfaces: [],
-      saving: false,
-      validation: [],
-      history: [],
-      historyIndex: 0,
-    };
+    if (!refreshing)
+      documents.value[path] = {
+        loading: true,
+        loaded: false,
+        error: "",
+        text: "",
+        savedText: "",
+        mode: "source",
+        meta: null,
+        preview: null,
+        interfaces: [],
+        saving: false,
+        validation: [],
+        history: [],
+        historyIndex: 0,
+      };
     const doc = documents.value[path];
+    const canUpdate = () => {
+      if (disposed || controller.signal.aborted) return false;
+      // A delayed refresh cannot restore an older revision or overwrite a draft.
+      if (session.value.headSha !== currentSession.headSha) {
+        loadMethod(path, { force: force || !background, background });
+        return false;
+      }
+      if (refreshing && (doc.saving || doc.headSha !== previousHead))
+        return false;
+      if (refreshing && doc.text !== doc.savedText) {
+        doc.remoteChanged = true;
+        return false;
+      }
+      return true;
+    };
     try {
       const removed =
         changedFiles.value.find((file) => file.path === path)?.status ===
@@ -67,6 +86,23 @@ export default function useFileDocuments(
       const file =
         publishedFile(publication.value, readSession, path) ||
         (await getFileContent(readSession, path, controller.signal));
+      if (!canUpdate()) return;
+      if (
+        !force &&
+        refreshing &&
+        file.sha &&
+        file.sha === doc.sha &&
+        removed === doc.removed
+      ) {
+        // An unrelated commit should not remount the editor or reload its schema.
+        Object.assign(doc, {
+          headSha: currentSession.headSha,
+          error: "",
+          refreshError: "",
+          remoteChanged: false,
+        });
+        return;
+      }
       const config = fileConfiguration(path);
       let meta = config.meta;
       let schemaError = "";
@@ -95,10 +131,7 @@ export default function useFileDocuments(
           meta = { ...meta, schema: null };
         }
       }
-      if (disposed || controller.signal.aborted) return;
-      // An older request must not restore content from before a completed save.
-      if (session.value.headSha !== currentSession.headSha)
-        return loadMethod(path, true);
+      if (!canUpdate()) return;
       const preview = previewAddress(meta?.preview, window.location.href);
       Object.assign(doc, {
         ...file,
@@ -108,16 +141,28 @@ export default function useFileDocuments(
         removed,
         loading: false,
         loaded: true,
+        error: "",
+        refreshError: "",
+        remoteChanged: false,
+        saved: false,
+        validation: [],
         meta,
         preview,
         schemaError,
         interfaces: config.interfaces,
-        mode: initialFileMode(preview),
+        mode:
+          refreshing && (doc.mode !== "none" || preview)
+            ? doc.mode
+            : initialFileMode(preview),
         history: [file.text ?? ""],
         historyIndex: 0,
       });
-    } catch {
-      if (!disposed && !controller.signal.aborted)
+    } catch (cause) {
+      if (!canUpdate()) return;
+      if (refreshing && cause?.status !== 404)
+        doc.refreshError =
+          "Could not refresh this file. Showing the last loaded version.";
+      else
         Object.assign(doc, {
           loading: false,
           error: "Could not load this file. It may have moved or been deleted.",

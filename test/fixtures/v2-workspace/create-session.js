@@ -87,7 +87,18 @@ export default function installCreationFixture({ chat = false } = {}) {
             body.draft,
             body.body,
           );
-        return { pull_requests: [...prs.values()] };
+        return {
+          pull_requests: [...prs.values()].map((pr) => ({
+            number: pr.number,
+            title: pr.title,
+            state: pr.state,
+            draft: pr.draft,
+            head_branch: pr.head_branch,
+            base_branch: pr.base_branch,
+            updated_at: pr.updated_at,
+            html_url: pr.html_url,
+          })),
+        };
       }
       if (path === "/publish") {
         const pr = [...prs.values()].find(

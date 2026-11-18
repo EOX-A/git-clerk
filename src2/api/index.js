@@ -7,6 +7,12 @@ import {
   deleteFileContent,
   fileDiff,
 } from "./file-content.js";
+import {
+  createBranchFile,
+  renameBranchFile,
+  removeBranchFile,
+} from "./file-operations.js";
+export { branchFilePath } from "./file-operations.js";
 import { initGitBroker } from "./git-broker.js";
 import { sessionsList, sessionDetails } from "./session.js";
 import { updateSession } from "./session-actions.js";
@@ -50,6 +56,21 @@ export function saveFile(session, path, text, sha) {
 }
 export function deleteFile(session, path, sha) {
   return deleteFileContent(useGitStore().context, session, path, sha);
+}
+export function createFileInSession(session, path) {
+  return createBranchFile(useGitStore().context, session, path);
+}
+export function renameFileInSession(session, path, destination, sha) {
+  return renameBranchFile(
+    useGitStore().context,
+    session,
+    path,
+    destination,
+    sha,
+  );
+}
+export function removeFileFromSession(session, path, sha) {
+  return removeBranchFile(useGitStore().context, session, path, sha);
 }
 export function getFileDiff(session, path, signal) {
   return fileDiff(useGitStore().context, session, path, signal);

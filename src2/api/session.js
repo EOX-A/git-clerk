@@ -85,7 +85,7 @@ export async function sessionsList(context, after = null, signal) {
 export async function sessionDetails(context, number, signal) {
   const data = await context.request(`/pulls/${number}`, { signal });
   signal?.throwIfAborted();
-  return mapSession(context, data);
+  return { ...mapSession(context, data), hasDetails: true };
 }
 
 export async function findSessionBranch(context, branch) {

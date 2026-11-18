@@ -13,6 +13,13 @@ import {
   saveFileContent,
 } from "../src2/api/file-content.js";
 import { publishChatFiles } from "../src2/api/chat-publish.js";
+import {
+  branchFilePath,
+  createBranchFile,
+  renameBranchFile,
+  removeBranchFile,
+} from "../src2/api/file-operations.js";
+import { gitBlobSha } from "../src2/helpers/file-publication.js";
 
 const user = {
   username: "Alice.Example",
@@ -326,6 +333,133 @@ test("manual saves preserve the GitHub session branch, send author, and check fo
   assert.deepEqual(remove.body.author, user);
   assert.equal(remove.body.sha, "new-blob");
   assert.equal(remove.method, "DELETE");
+});
+
+async function fileOperationFixture(beforeDelete) {
+  const files = new Map([["stories/old.txt", "Café\r\n"]]);
+  const { context, log } = await fixture(
+    async ({ path, method, body, query }) => {
+      if (path === "/pulls/7") return pr;
+      if (path === "/file" && method === "GET") {
+        assert.equal(query.get("ref"), pr.head_branch);
+        if (!files.has(query.get("path")))
+          return Response.json({}, { status: 404 });
+        const content = files.get(query.get("path"));
+        return {
+          encoding: "base64",
+          content: Base64.encode(content),
+          sha: await gitBlobSha(content),
+        };
+      }
+      if (path === "/publish") {
+        const files_committed = [];
+        for (const [name, content] of Object.entries(body.files)) {
+          files.set(name, content);
+          files_committed.push({ path: name, sha: await gitBlobSha(content) });
+        }
+        await beforeDelete?.(files);
+        return {
+          pr_number: 7,
+          branch: pr.head_branch,
+          commit_sha: "new",
+          files_committed,
+        };
+      }
+      if (path === "/file" && method === "DELETE") {
+        assert.equal(body.sha, await gitBlobSha(files.get(body.path)));
+        files.delete(body.path);
+        return {
+          status: "deleted",
+          branch: body.branch,
+          path: body.path,
+          commit_sha: "deleted",
+        };
+      }
+      assert.fail(`Unexpected ${method} ${path}`);
+    },
+  );
+  return { context, log, files, session: await sessionDetails(context, 7) };
+}
+
+test("create saves a blank file in the selected folder and rejects duplicates and read-only targets", async () => {
+  const { context, log, session, files } = await fileOperationFixture();
+  const path = branchFilePath("stories", " New note.txt ");
+  assert.deepEqual(await createBranchFile(context, session, path), {
+    commitSha: "new",
+  });
+  assert.equal(files.get("stories/New note.txt"), "");
+  await assert.rejects(createBranchFile(context, session, path), {
+    status: 409,
+  });
+  await assert.rejects(
+    createBranchFile(context, { ...session, canEdit: false }, "blocked.txt"),
+    /read-only/,
+  );
+  for (const name of ["", "..", "nested/a.txt", "a#b", "a%2fb"])
+    assert.throws(() => branchFilePath("stories", name));
+  const writes = log.filter(({ method }) => method === "POST");
+  assert.equal(writes.length, 1);
+  assert.deepEqual(writes[0].body.author, user);
+  assert.equal(writes[0].body.target_branch, session.branch);
+});
+
+test("rename preserves text, confirms the copy before deletion, and uses the current blob for delete", async () => {
+  const { context, log, session, files } = await fileOperationFixture();
+  const source = "stories/old.txt";
+  const destination = "stories/renamed.txt";
+  const original = files.get(source);
+  assert.deepEqual(
+    await renameBranchFile(
+      context,
+      session,
+      source,
+      destination,
+      await gitBlobSha(original),
+    ),
+    { commitSha: "deleted", copyCommitSha: "new" },
+  );
+  assert.equal(files.get(destination), original);
+  assert.equal(files.has(source), false);
+  await assert.rejects(
+    removeBranchFile(context, session, destination, "stale"),
+    { status: 409 },
+  );
+  await removeBranchFile(
+    context,
+    session,
+    destination,
+    await gitBlobSha(original),
+  );
+  const writes = log.filter(({ method }) => method !== "GET");
+  assert.deepEqual(
+    writes.map(({ method, path }) => [method, path]),
+    [
+      ["POST", "/publish"],
+      ["DELETE", "/file"],
+      ["DELETE", "/file"],
+    ],
+  );
+  assert.ok(
+    writes.every(
+      ({ headers }) => headers["X-Git-Session-Branch"] === session.branch,
+    ),
+  );
+  assert.deepEqual(writes[1].body.author, user);
+  assert.equal(files.has(destination), false);
+});
+
+test("rename keeps the original if the new copy cannot be verified", async () => {
+  const { context, log, session, files } = await fileOperationFixture(
+    (files) => {
+      files.set("stories/new.txt", "Something else");
+    },
+  );
+  await assert.rejects(
+    renameBranchFile(context, session, "stories/old.txt", "stories/new.txt"),
+    { refresh: true },
+  );
+  assert.equal(files.get("stories/old.txt"), "Café\r\n");
+  assert.ok(!log.some(({ method }) => method === "DELETE"));
 });
 
 const draft = {

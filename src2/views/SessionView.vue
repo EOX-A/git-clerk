@@ -16,6 +16,7 @@ const sessionsStore = useSessionsStore();
 const session = ref(null);
 const error = ref("");
 const hasUnsaved = ref(false);
+const fileOperationPending = ref(false);
 
 const fileWorkspaceRef = ref(null);
 const workspaceContainer = ref(null);
@@ -43,16 +44,18 @@ const conversation = computed(() =>
 const chat = computed(() => conversation.value.state);
 const messages = computed(() => chat.value.messages);
 const blockedReason = computed(() =>
-  hasUnsaved.value
-    ? "Save or discard your file edits before asking for another change."
-    : "",
+  fileOperationPending.value
+    ? "Wait for the file operation to finish before asking for another change."
+    : hasUnsaved.value
+      ? "Save or discard your file edits before asking for another change."
+      : "",
 );
 const sendMethod = (payload) => {
-  if (hasUnsaved.value || !session.value?.canEdit) return false;
+  if (blockedReason.value || !session.value?.canEdit) return false;
   return conversation.value.sendMethod(payload, session.value);
 };
 const retryChatMethod = () => {
-  if (!hasUnsaved.value && session.value?.canEdit)
+  if (!blockedReason.value && session.value?.canEdit)
     conversation.value.retryMethod();
 };
 watch(
@@ -149,9 +152,9 @@ watch(
       (item) => item.number === Number(route.params.sessionNumber),
     ),
   (updated) => {
-    if (updated && session.value?.number === updated.number) {
-      session.value = { ...session.value, ...updated };
-    }
+    // Sidebar actions load details too, but list summaries lack commit information.
+    if (updated?.hasDetails && session.value?.number === updated.number)
+      session.value = updated;
   },
 );
 
@@ -181,7 +184,7 @@ onUnmounted(() => {
       :session="session"
       :failed="Boolean(error) && !session"
       :on-updated="refreshSessionMethod"
-      :has-unsaved="hasUnsaved"
+      :has-unsaved="hasUnsaved || fileOperationPending"
       :mobile-view="mobileView"
       :show-view-switch="narrow && chatConfig.enabled"
       :on-mobile-view="(view) => (mobileView = view)"
@@ -225,7 +228,7 @@ onUnmounted(() => {
           :progress="chat.progress"
           :blocked-reason="blockedReason"
           :error="chat.error"
-          :can-retry="Boolean(chat.pending) && !hasUnsaved"
+          :can-retry="Boolean(chat.pending) && !blockedReason"
           :can-stop="chat.busy && chat.phase !== 'saving'"
           :on-retry="retryChatMethod"
           :on-stop="conversation.cancelMethod"
@@ -280,6 +283,7 @@ onUnmounted(() => {
           :on-reveal="() => (mobileView = 'files')"
           :on-saved="refreshSessionMethod"
           :on-dirty-change="(value) => (hasUnsaved = value)"
+          :on-operation-change="(value) => (fileOperationPending = value)"
         />
       </div>
     </div>

@@ -62,6 +62,14 @@ const previewChangeMethod = (value) => {
     </p>
     <template v-else>
       <p
+        v-if="doc.refreshError"
+        role="alert"
+        class="px-4 py-2 text-ui text-warn"
+      >
+        {{ doc.refreshError }}
+        <button type="button" class="underline" @click="onRetry">Retry</button>
+      </p>
+      <p
         v-if="doc.remoteChanged"
         role="status"
         class="border-b border-border-soft px-4 py-2 text-meta text-warn"

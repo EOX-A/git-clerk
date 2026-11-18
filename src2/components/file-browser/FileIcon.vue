@@ -15,6 +15,11 @@ defineProps({ name: { type: String, default: "file" } });
   >
     <path v-if="name === 'close'" d="m6 6 12 12M18 6 6 18" />
     <path v-else-if="name === 'chevron'" d="m9 5 7 7-7 7" />
+    <path v-else-if="name === 'edit'" d="m4 16-1 5 5-1L20 8l-4-4zM14 6l4 4" />
+    <path
+      v-else-if="name === 'trash'"
+      d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 10v7m4-7v7"
+    />
     <path
       v-else-if="name === 'folder'"
       d="M3 7V5a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"

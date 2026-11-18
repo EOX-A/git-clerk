@@ -34,6 +34,7 @@ export function applyPublishedFile(doc, file, headSha) {
     headSha,
     loading: false,
     error: "",
+    refreshError: "",
     unavailable: "",
     removed: false,
     remoteChanged: false,

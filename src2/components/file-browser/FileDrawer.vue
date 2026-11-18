@@ -1,9 +1,12 @@
 <script setup>
-import { computed, onUnmounted, ref, watch } from "vue";
+import { computed, nextTick, onUnmounted, ref, shallowRef, watch } from "vue";
 import { getBranchDirectory } from "@/api/index.js";
+import { fileDirectory } from "@/helpers/file-workspace.js";
 import useScrollbar from "@/helpers/use-scrollbar.js";
 import ChangesList from "./ChangesList.vue";
 import FileTree from "./FileTree.vue";
+import FileTreeActionMenu from "./FileTreeActionMenu.vue";
+import FileTreeDeleteDialog from "./FileTreeDeleteDialog.vue";
 import FileTreePlaceholder from "./FileTreePlaceholder.vue";
 import FileIcon from "./FileIcon.vue";
 
@@ -20,10 +23,20 @@ const props = defineProps({
   onOpen: { type: Function, required: true },
   onView: { type: Function, required: true },
   onRetry: { type: Function, required: true },
+  canMutate: Boolean,
+  onFileOperation: { type: Function, required: true },
 });
 const { isScrolling, scrollMethod } = useScrollbar();
 const directories = ref({});
 const expanded = ref({});
+const newFileButton = ref(null);
+const menu = shallowRef(null);
+const edit = shallowRef(null);
+const operationError = ref("");
+const working = ref(false);
+const rootFolder = { type: "folder", path: "" };
+let actionID = 0;
+let origin;
 const changes = computed(() =>
   Object.fromEntries(props.files.map((file) => [file.path, file])),
 );
@@ -35,24 +48,54 @@ const loadDirectoryMethod = async (entry = null) => {
   if (directories.value[path]?.loading) return;
   const currentGeneration = generation;
   const signal = controller.signal;
-  directories.value[path] = { loading: true, entries: [], error: false };
+  directories.value[path] = {
+    ...directories.value[path],
+    loading: true,
+    error: false,
+  };
   try {
     const entries = await getBranchDirectory(props.session, path, signal);
     if (currentGeneration === generation)
-      directories.value[path] = { loading: false, entries, error: false };
+      directories.value[path] = {
+        loaded: true,
+        loading: false,
+        entries,
+        error: false,
+      };
   } catch {
     if (currentGeneration === generation)
-      directories.value[path] = { loading: false, entries: [], error: true };
+      directories.value[path] = {
+        ...directories.value[path],
+        loading: false,
+        error: true,
+      };
   }
 };
 const toggleDirectoryMethod = (entry, retry = false) => {
+  if (working.value) return;
   expanded.value[entry.path] = retry || !expanded.value[entry.path];
-  if (expanded.value[entry.path] && (!directories.value[entry.path] || retry))
+  if (
+    expanded.value[entry.path] &&
+    (!directories.value[entry.path]?.loaded || retry)
+  )
     loadDirectoryMethod(entry);
+  else if (
+    !expanded.value[entry.path] &&
+    edit.value &&
+    (edit.value.entry.path === entry.path ||
+      edit.value.entry.path.startsWith(entry.path + "/"))
+  )
+    finishOperationMethod();
 };
 const loadRootMethod = () => {
-  if (props.open && props.view === "files" && !directories.value[""])
-    loadDirectoryMethod();
+  if (!props.open || props.view !== "files") return;
+  for (const path of [
+    "",
+    ...Object.keys(expanded.value).filter((key) => expanded.value[key]),
+  ]) {
+    const directory = directories.value[path];
+    if (!(directory?.loaded || directory?.error)) loadDirectoryMethod({ path });
+  }
 };
 watch(
   () => props.session.headSha,
@@ -60,13 +103,24 @@ watch(
     generation++;
     controller.abort();
     controller = new AbortController();
-    directories.value = {};
-    expanded.value = {};
+    // Keep expanded folders and their rows visible while refreshing the tree.
+    directories.value = Object.fromEntries(
+      Object.entries(directories.value).map(([path, directory]) => [
+        path,
+        { entries: directory.entries },
+      ]),
+    );
     loadRootMethod();
   },
   { immediate: true },
 );
-watch(() => [props.open, props.view], loadRootMethod);
+watch([() => props.open, () => props.view, () => props.canMutate], () => {
+  if (!props.open || props.view !== "files" || !props.canMutate) {
+    closeMenuMethod(false);
+    if (!working.value) edit.value = null;
+  }
+  loadRootMethod();
+});
 onUnmounted(() => {
   generation++;
   controller.abort();
@@ -85,6 +139,92 @@ const switchViewMethod = (event) => {
   props.onView(view);
   event.currentTarget.querySelector(`[data-view="${view}"]`)?.focus();
 };
+
+const closeMenuMethod = (restore = true) => {
+  const trigger = menu.value?.trigger;
+  menu.value = null;
+  if (restore && trigger?.isConnected) trigger.focus({ preventScroll: true });
+};
+const openMenuMethod = (event, entry) => {
+  if (
+    !props.canMutate ||
+    working.value ||
+    !["file", "folder"].includes(entry.type)
+  )
+    return;
+  event.preventDefault();
+  event.stopPropagation();
+  const trigger = event.currentTarget;
+  const rect = trigger.getBoundingClientRect();
+  menu.value = {
+    id: ++actionID,
+    entry,
+    trigger,
+    x: event.clientX ?? rect.left,
+    y: event.clientY ?? rect.bottom,
+  };
+};
+const beginOperationMethod = (action, entry, trigger) => {
+  if (!props.canMutate || working.value) return;
+  origin = trigger;
+  closeMenuMethod(false);
+  operationError.value = "";
+  if (action === "create" && entry.path) {
+    expanded.value[entry.path] = true;
+    if (!directories.value[entry.path]?.loaded) loadDirectoryMethod(entry);
+  }
+  edit.value = { id: ++actionID, action, entry };
+};
+const finishOperationMethod = async () => {
+  edit.value = null;
+  operationError.value = "";
+  await nextTick();
+  const focusTarget = origin?.isConnected ? origin : newFileButton.value;
+  focusTarget?.focus({ preventScroll: true });
+};
+const submitOperationMethod = async (name) => {
+  if (!edit.value || !props.canMutate || working.value) return;
+  const { action, entry } = edit.value;
+  operationError.value = "";
+  if (action === "rename" && name.trim() === entry.name) {
+    finishOperationMethod();
+    return;
+  }
+  if (action !== "delete") {
+    const folder =
+      action === "create"
+        ? entry.path
+        : fileDirectory(entry.path).replace(/\/$/, "");
+    if (
+      directories.value[folder]?.entries?.some(
+        (item) => item.name === name.trim(),
+      )
+    ) {
+      operationError.value = "A file or folder already has that name.";
+      return;
+    }
+  }
+  working.value = true;
+  try {
+    await props.onFileOperation(action, entry, name);
+    await finishOperationMethod();
+  } catch (error) {
+    operationError.value = error.message || "Could not update this file.";
+  } finally {
+    working.value = false;
+  }
+};
+const inlineEditor = computed(() =>
+  edit.value && edit.value.action !== "delete"
+    ? {
+        ...edit.value,
+        busy: working.value,
+        error: operationError.value,
+        onSubmit: submitOperationMethod,
+        onCancel: finishOperationMethod,
+      }
+    : null,
+);
 </script>
 
 <template>
@@ -133,6 +273,20 @@ const switchViewMethod = (event) => {
       <span class="truncate font-mono" :title="session.branch">{{
         session.branch
       }}</span>
+      <button
+        v-if="canMutate || working"
+        ref="newFileButton"
+        type="button"
+        aria-label="New file in repository root"
+        title="New file in repository root"
+        :disabled="working"
+        class="ml-auto flex size-7 shrink-0 items-center justify-center rounded-md hover:bg-ws-hover disabled:opacity-40"
+        @click="
+          beginOperationMethod('create', rootFolder, $event.currentTarget)
+        "
+      >
+        <FileIcon name="file-plus" class="size-3.5" />
+      </button>
     </div>
     <p v-else class="shrink-0 px-3.5 pt-0.5 pb-2 text-meta text-muted">
       Files changed in PR #{{ session.number }}
@@ -144,6 +298,7 @@ const switchViewMethod = (event) => {
       class="nav-scrollbar min-h-0 flex-1 overflow-auto px-1.5 pb-2.5"
       :class="{ 'is-scrolling': isScrolling }"
       @scroll.passive="scrollMethod"
+      @contextmenu.self="view === 'files' && openMenuMethod($event, rootFolder)"
     >
       <template v-if="view === 'changes'">
         <div
@@ -189,7 +344,25 @@ const switchViewMethod = (event) => {
         </p>
       </template>
       <template v-else>
-        <FileTreePlaceholder v-if="directories['']?.loading" />
+        <FileTree
+          v-if="
+            directories['']?.entries?.length ||
+            inlineEditor?.action === 'create'
+          "
+          :entries="directories['']?.entries || []"
+          :directories="directories"
+          :expanded="expanded"
+          :changes="changes"
+          :active-path="activePath"
+          :opened-paths="openedPaths"
+          :on-toggle="toggleDirectoryMethod"
+          :on-open="onOpen"
+          :editor="inlineEditor"
+          :on-menu="canMutate && !working ? openMenuMethod : null"
+        />
+        <FileTreePlaceholder
+          v-if="directories['']?.loading && !directories['']?.entries?.length"
+        />
         <div
           v-else-if="directories['']?.error"
           role="alert"
@@ -204,19 +377,31 @@ const switchViewMethod = (event) => {
             Retry
           </button>
         </div>
-        <FileTree
-          v-else-if="directories['']?.entries?.length"
-          :entries="directories[''].entries"
-          :directories="directories"
-          :expanded="expanded"
-          :changes="changes"
-          :active-path="activePath"
-          :opened-paths="openedPaths"
-          :on-toggle="toggleDirectoryMethod"
-          :on-open="onOpen"
-        />
-        <p v-else class="p-2 text-ui text-muted">No files in this branch.</p>
+        <p
+          v-else-if="!directories['']?.entries?.length && !inlineEditor"
+          class="p-2 text-ui text-muted"
+        >
+          No files in this branch.
+        </p>
       </template>
     </div>
+    <FileTreeActionMenu
+      v-if="menu"
+      :key="menu.id"
+      :entry="menu.entry"
+      :anchor="menu"
+      :on-action="
+        (action) => beginOperationMethod(action, menu.entry, menu.trigger)
+      "
+      :on-close="closeMenuMethod"
+    />
+    <FileTreeDeleteDialog
+      v-if="edit?.action === 'delete'"
+      :path="edit.entry.path"
+      :busy="working"
+      :error="operationError"
+      :on-cancel="finishOperationMethod"
+      :on-delete="submitOperationMethod"
+    />
   </aside>
 </template>

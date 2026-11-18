@@ -1,6 +1,7 @@
 <script setup>
 import { FILE_STATUS } from "@/helpers/file-workspace.js";
 import FileIcon from "./FileIcon.vue";
+import FileTreeName from "./FileTreeName.vue";
 import FileTreePlaceholder from "./FileTreePlaceholder.vue";
 
 defineProps({
@@ -13,13 +14,31 @@ defineProps({
   openedPaths: { type: Array, required: true },
   onToggle: { type: Function, required: true },
   onOpen: { type: Function, required: true },
+  folder: { type: String, default: "" },
+  editor: { type: Object, default: null },
+  onMenu: { type: Function, default: null },
 });
+
+const menuKeyMethod = (event, entry, onMenu) => {
+  if (event.key === "ContextMenu" || (event.shiftKey && event.key === "F10"))
+    onMenu?.(event, entry);
+};
 </script>
 
 <template>
   <ul>
+    <li v-if="editor?.action === 'create' && editor.entry.path === folder">
+      <FileTreeName :key="editor.id" :editor="editor" :depth="depth" />
+    </li>
     <li v-for="entry in entries" :key="entry.path">
+      <FileTreeName
+        v-if="editor?.action === 'rename' && editor.entry.path === entry.path"
+        :key="editor.id"
+        :editor="editor"
+        :depth="depth"
+      />
       <button
+        v-else
         type="button"
         :title="
           entry.type === 'submodule' ? `${entry.path} (submodule)` : entry.path
@@ -28,11 +47,16 @@ defineProps({
           entry.type === 'folder' ? Boolean(expanded[entry.path]) : undefined
         "
         :aria-current="activePath === entry.path ? 'true' : undefined"
+        :aria-haspopup="
+          onMenu && ['folder', 'file'].includes(entry.type) ? 'menu' : undefined
+        "
         :disabled="entry.type === 'submodule'"
         class="flex h-7 w-full items-center gap-[5px] rounded-md pr-2 text-left text-[12.5px] hover:bg-ws-hover disabled:cursor-default disabled:opacity-60"
         :class="activePath === entry.path ? 'bg-tint' : ''"
         :style="{ paddingLeft: `${8 + depth * 14}px` }"
         @click="entry.type === 'folder' ? onToggle(entry) : onOpen(entry.path)"
+        @contextmenu="onMenu?.($event, entry)"
+        @keydown="menuKeyMethod($event, entry, onMenu)"
       >
         <FileIcon
           v-if="entry.type === 'folder'"
@@ -70,6 +94,24 @@ defineProps({
         >
       </button>
       <template v-if="entry.type === 'folder' && expanded[entry.path]">
+        <FileTree
+          v-if="
+            directories[entry.path]?.entries?.length ||
+            (editor?.action === 'create' && editor.entry.path === entry.path)
+          "
+          :entries="directories[entry.path]?.entries || []"
+          :directories="directories"
+          :expanded="expanded"
+          :changes="changes"
+          :depth="depth + 1"
+          :active-path="activePath"
+          :opened-paths="openedPaths"
+          :on-toggle="onToggle"
+          :on-open="onOpen"
+          :folder="entry.path"
+          :editor="editor"
+          :on-menu="onMenu"
+        />
         <FileTreePlaceholder
           v-if="directories[entry.path]?.loading"
           :depth="depth + 1"
@@ -84,19 +126,15 @@ defineProps({
         >
           Could not load folder. Retry
         </button>
-        <FileTree
-          v-else-if="directories[entry.path]?.entries?.length"
-          :entries="directories[entry.path].entries"
-          :directories="directories"
-          :expanded="expanded"
-          :changes="changes"
-          :depth="depth + 1"
-          :active-path="activePath"
-          :opened-paths="openedPaths"
-          :on-toggle="onToggle"
-          :on-open="onOpen"
-        />
-        <p v-else class="px-6 py-1 text-meta text-muted">Empty folder</p>
+        <p
+          v-else-if="
+            !directories[entry.path]?.entries?.length &&
+            !(editor?.action === 'create' && editor.entry.path === entry.path)
+          "
+          class="px-6 py-1 text-meta text-muted"
+        >
+          Empty folder
+        </p>
       </template>
     </li>
   </ul>
