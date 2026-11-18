@@ -7,7 +7,6 @@ import {
   chatContextContent,
 } from "../src2/helpers/chat-config.js";
 import { streamChat } from "../src2/api/agentic.js";
-import { publishGitBundle } from "../src2/api/git-broker.js";
 import {
   buildChatPrompt,
   buildChatHistory,
@@ -205,12 +204,14 @@ test("generation uses config baseUrl, project, profile, output_format and select
     response({ message: JSON.stringify({ message: "Ready", draft }) }),
   );
   const result = await streamChat(
-    { prompt: "Write a story", model: "gemini" },
+    { prompt: "Write a story", model: "gemini", branch: "session/alice/story" },
     () => {},
   );
   assert.deepEqual(result.draft, draft);
   const [url, options] = mock.mock.calls[0].arguments;
   assert.equal(url, "https://agent.test/api/generate");
+  assert.equal(options.headers["X-Git-Session-Branch"], "session/alice/story");
+  assert.equal(options.headers["X-Git-Token"], undefined);
   const body = JSON.parse(options.body);
   assert.equal(body.project_id, "gtif-at");
   assert.equal(body.profile, "chat");
@@ -275,43 +276,6 @@ test("raw output is not published without an explicit destination and errors nev
     { data: null, raw_text: "" },
   ])
     assert.equal(parseChatReply(payload, config), null);
-});
-
-test("publishing uses the same backend and configurable broker names", async (t) => {
-  install(t, {
-    backend: { baseUrl: "/gateway" },
-    publishing: {
-      serverId: "custom-broker",
-      toolName: "publish",
-      prBody: "Story changes",
-    },
-  });
-  const mock = t.mock.method(globalThis, "fetch", async () =>
-    Response.json({
-      status: "published",
-      mode: "github_live",
-      provider: "github",
-      repo: "alice/repo",
-      branch: "story",
-      commit_sha: "a".repeat(40),
-      pr_number: 7,
-      pr_url: "https://github.com/alice/repo/pull/7",
-    }),
-  );
-  await publishGitBundle({
-    repo: "alice/repo",
-    baseBranch: "main",
-    targetBranch: "story",
-    title: "Story",
-    files: draft.files,
-    token: "test-token",
-  });
-  const [url, options] = mock.mock.calls[0].arguments;
-  const body = JSON.parse(options.body);
-  assert.equal(url, "/gateway/api/mcp/call");
-  assert.equal(body.server_id, "custom-broker");
-  assert.equal(body.tool_name, "publish");
-  assert.equal(body.arguments.pr_body, "Story changes");
 });
 
 const tick = () => new Promise((resolve) => setImmediate(resolve));

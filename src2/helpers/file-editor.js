@@ -1,8 +1,7 @@
-// Match v1's runtime schema/preview contracts without importing its application state.
-export function fileConfiguration(path, root = globalThis) {
+export function matchFileSchema(path, root = globalThis) {
   const config = root.gitClerkConfig || {};
   const schemas = root.schemaMap || config.schemaMap || [];
-  const match = schemas.find((item) => {
+  return schemas.find((item) => {
     // Paths are literal except for single-segment <placeholders>.
     const pattern = item.path
       .split(/(<[^>]+>)/g)
@@ -14,6 +13,12 @@ export function fileConfiguration(path, root = globalThis) {
       .join("");
     return new RegExp(`^${pattern}$`).test(`/${path}`);
   });
+}
+
+// Match v1's runtime schema/preview contracts without importing its application state.
+export function fileConfiguration(path, root = globalThis) {
+  const config = root.gitClerkConfig || {};
+  const match = matchFileSchema(path, root);
   return {
     meta: match
       ? {
@@ -127,7 +132,19 @@ export function sourceTokens(text, path) {
   return tokens;
 }
 
-export function fileGitHubURL(session, path, doc, changed) {
-  if (doc?.diff || changed?.status === "removed") return `${session.url}/files`;
-  return `https://github.com/${encodeURIComponent(doc?.owner || session.headOwner || session.owner)}/${encodeURIComponent(doc?.repo || session.headRepo || session.repo)}/blob/${encodeURIComponent(doc?.headSha || session.headSha)}/${path.split("/").map(encodeURIComponent).join("/")}`;
+export function fileRepositoryUrl(session, path, doc, changed) {
+  const provider = session.provider || "github";
+  if (doc?.diff || changed?.status === "removed")
+    return session.url
+      ? `${session.url}/${provider === "gitlab" ? "diffs" : "files"}`
+      : null;
+  if (!session.repositoryUrl) return session.url || null;
+  const ref = encodeURIComponent(
+    doc?.headSha || session.headSha || session.branch,
+  );
+  const file = path.split("/").map(encodeURIComponent).join("/");
+  const route =
+    { gitlab: `-/blob/${ref}`, forgejo: `src/commit/${ref}` }[provider] ||
+    `blob/${ref}`;
+  return `${session.repositoryUrl.replace(/\/$/, "")}/${route}/${file}`;
 }

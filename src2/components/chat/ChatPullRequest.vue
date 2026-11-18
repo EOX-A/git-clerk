@@ -7,12 +7,18 @@ const url = computed(() => chatPullRequestUrl(props.pr));
 </script>
 <template>
   <section
-    aria-label="Published pull request"
+    aria-label="Pull request"
     class="mt-3 rounded-xl border border-border-soft bg-elev p-3.5"
   >
     <div class="mb-2 flex items-center gap-2 text-meta font-medium text-add-fg">
       <ChatIcon name="check-circle" class="size-4" />
-      {{ pr.updated ? "Pull request updated" : "Pull request created" }}
+      {{
+        pr.updated
+          ? "Pull request updated"
+          : pr.draft
+            ? "Draft pull request created"
+            : "Pull request created"
+      }}
     </div>
     <router-link
       :to="{ name: 'session', params: { sessionNumber: pr.number } }"
@@ -33,7 +39,7 @@ const url = computed(() => chatPullRequestUrl(props.pr));
       target="_blank"
       rel="noopener noreferrer"
       class="mt-3 inline-flex rounded-md text-meta font-medium text-primary underline-offset-4 hover:underline"
-      >View on GitHub ↗</a
+      >View in repository ↗</a
     >
   </section>
 </template>

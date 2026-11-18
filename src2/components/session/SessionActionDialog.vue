@@ -42,13 +42,10 @@ const submitMethod = async () => {
     await props.onUpdated();
     props.onClose();
   } catch (cause) {
-    if (cause.code === "SESSION_BRANCH_DELETE_FAILED") {
-      error.value =
-        "The PR was closed, but its branch could not be deleted. Open the PR on GitHub to finish removing the branch.";
-    } else {
-      error.value =
-        "GitHub could not complete this action. Check your access and the session's current state, then try again.";
-    }
+    error.value =
+      cause.status === 403
+        ? "The Git broker denied this action. Check your access to this session."
+        : "The Git broker could not confirm the action. Check the session's current state before retrying.";
     await props.onUpdated();
   } finally {
     busy.value = false;
@@ -93,7 +90,7 @@ onUnmounted(() => {
                 session.branch
               }}</span
             ></template
-          >. The PR and its discussion remain on GitHub.</template
+          >. The PR and its discussion remain in the repository.</template
         >
         <template v-else-if="action === 'review'"
           >Move draft PR #{{ session.number }} into review?</template

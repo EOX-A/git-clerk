@@ -1,97 +1,120 @@
-import { getChatConfig } from "../helpers/chat-config.js";
-// Publishing goes through the existing agentic gateway, never directly to the MCP server.
-export async function publishGitBundle({
-  repo,
-  baseBranch,
-  targetBranch,
-  title,
-  prTitle = title,
-  prBody = getChatConfig().publishing.prBody,
-  existingPrNumber,
-  files,
-  author,
-  token,
-  dryRun = false,
-}) {
-  const updating =
-    Number.isSafeInteger(existingPrNumber) && existingPrNumber > 0;
-  if (
-    !repo ||
-    !baseBranch ||
-    !targetBranch ||
-    (updating ? targetBranch !== baseBranch : targetBranch === baseBranch) ||
-    (existingPrNumber !== undefined && !updating)
-  )
-    throw new Error("Choose a separate session branch before publishing.");
-  if (!dryRun && !token)
-    throw new Error("Connect GitHub before publishing through the Git broker.");
-  const config = getChatConfig();
-  if (!config.publishing.enabled)
-    throw new Error("Chat publishing is disabled for this instance.");
-  const baseURL = config.backend.baseUrl;
-  let response;
-  try {
-    response = await fetch(`${baseURL}/api/mcp/call`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { "X-Git-Token": token } : {}),
-      },
-      body: JSON.stringify({
-        server_id: config.publishing.serverId,
-        tool_name: config.publishing.toolName,
-        arguments: {
-          repo,
-          base_branch: baseBranch,
-          target_branch: targetBranch,
-          files,
-          commit_message: title,
-          pr_title: prTitle,
-          // The broker substitutes a default description for an empty string.
-          pr_body: prBody || "\n",
-          author,
-          provider: "github",
-          dry_run: dryRun,
-        },
-      }),
+const setting = (value) => value?.trim() || "";
+
+export function gitBrokerConfig(root = globalThis, env = import.meta.env) {
+  const config = root.gitClerkConfig || {};
+  return {
+    baseUrl: (config.gitBrokerUrl ?? "http://localhost:8015").replace(
+      /\/+$/,
+      "",
+    ),
+    provider: config.gitBroker?.provider,
+    repo: config.gitBroker?.repo,
+    user: {
+      name: setting(env?.GITCLERK_PROFILE_NAME),
+      email: setting(env?.GITCLERK_EMAIL),
+      username: setting(env?.GITCLERK_USERNAME),
+    },
+  };
+}
+
+export function brokerBranchPrefix(user) {
+  const slug = user.username
+    ?.toLowerCase()
+    .replace(/[^a-z0-9_-]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+  return slug ? `session/${slug}/` : "";
+}
+
+export function brokerAuthor(context) {
+  const { name, email, username } = context.user;
+  if (!name || !email || !username)
+    throw Object.assign(
+      new Error(
+        "Set GITCLERK_PROFILE_NAME, GITCLERK_EMAIL and GITCLERK_USERNAME before writing files.",
+      ),
+      { status: 400, code: "BROKER_AUTHOR_REQUIRED" },
+    );
+  return { name, email, username };
+}
+
+export function createGitBrokerRequest(config, fetchImpl = globalThis.fetch) {
+  return async (path, { method = "GET", query, body, signal, branch } = {}) => {
+    const target = Object.fromEntries(
+      Object.entries({ provider: config.provider, repo: config.repo }).filter(
+        ([, value]) => value,
+      ),
+    );
+    const params = new URLSearchParams({
+      ...(body === undefined ? target : {}),
+      ...query,
     });
-  } catch {
-    throw new Error(
-      "The Git broker connection failed. Check the session branch before retrying; publishing may have completed.",
+    const response = await fetchImpl(
+      `${config.baseUrl}/api/git${path}${params.size ? `?${params}` : ""}`,
+      {
+        method,
+        credentials: "same-origin",
+        headers: {
+          Accept: "application/json",
+          ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+          ...(branch ? { "X-Git-Session-Branch": branch } : {}),
+        },
+        signal,
+        ...(body === undefined
+          ? {}
+          : { body: JSON.stringify({ ...target, ...body }) }),
+      },
     );
-  }
-  if (!response.ok)
+    if (!response.ok) {
+      const data = await response.json().catch(() => null);
+      throw Object.assign(
+        new Error(
+          typeof data?.detail === "string"
+            ? data.detail
+            : `Git broker request failed (HTTP ${response.status}).`,
+        ),
+        { status: response.status },
+      );
+    }
+    const result = await response.json();
+    signal?.throwIfAborted();
+    if (method !== "GET" && result.mode === "sandbox_dry_run")
+      throw Object.assign(
+        new Error(
+          "The Git broker simulated this write. Configure provider credentials on the broker.",
+        ),
+        { status: 400, code: "BROKER_DRY_RUN" },
+      );
+    return result;
+  };
+}
+
+export async function initGitBroker(config = gitBrokerConfig(), fetchImpl) {
+  const request = createGitBrokerRequest(config, fetchImpl);
+  const repository = await request("/repo").catch((error) => {
+    if (error.status === 404) error.code = "BROKER_REPO_UNAVAILABLE";
+    throw error;
+  });
+  if (!repository.repo || !repository.default_branch)
     throw new Error(
-      `Git broker publishing failed (HTTP ${response.status}). Check the session branch before retrying.`,
+      "The Git broker did not return a repository and default branch.",
     );
-  let result;
-  try {
-    result = await response.json();
-  } catch {
-    throw new Error(
-      "The Git broker returned an unreadable response. Check the session branch before retrying.",
-    );
-  }
-  if (result.status !== "published")
-    throw new Error(
-      "The Git broker did not confirm publication. Check its configuration and the session branch before retrying.",
-    );
-  if (!dryRun && result.mode !== "github_live")
-    throw new Error(
-      "The Git broker returned a simulation; no live PR was confirmed. Check its GitHub authentication.",
-    );
-  if (
-    result.provider !== "github" ||
-    result.repo !== repo ||
-    result.branch !== targetBranch ||
-    !/^[a-f0-9]{40}$/.test(result.commit_sha || "") ||
-    !Number.isSafeInteger(result.pr_number) ||
-    result.pr_number < 1 ||
-    (updating && result.pr_number !== existingPrNumber) ||
-    result.pr_url !== `https://github.com/${repo}/pull/${result.pr_number}`
-  )
-    throw new Error(
-      "The Git broker response does not match the requested repository and branch. Check the session branch before retrying.",
-    );
-  return result;
+  return { config, repository, user: config.user, request };
+}
+
+export function publishGitBundle(context, body, session) {
+  const provider = context.repository.provider || context.config?.provider;
+  return context.request("/publish", {
+    method: "POST",
+    branch: session?.branch,
+    body: {
+      ...body,
+      // The GitHub broker builds from base_branch and looks up an existing PR on 422.
+      // The other providers commit against the target branch directly.
+      base_branch:
+        session && (!provider || provider === "github")
+          ? session.branch
+          : session?.baseBranch || context.repository.default_branch,
+      author: brokerAuthor(context),
+    },
+  });
 }

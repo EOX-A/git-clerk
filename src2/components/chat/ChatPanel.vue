@@ -26,6 +26,7 @@ const props = defineProps({
   busy: Boolean,
   phase: { type: String, default: "idle" },
   progress: { type: String, default: "" },
+  blockedReason: { type: String, default: "" },
   error: { type: String, default: "" },
   canRetry: Boolean,
   canStop: Boolean,
@@ -101,8 +102,11 @@ watch(
 );
 onMounted(scrollBottomMethod);
 
-const isReadOnly = computed(() =>
+const isClosed = computed(() =>
   ["merged", "closed"].includes(props.session?.status?.toLowerCase()),
+);
+const isReadOnly = computed(
+  () => isClosed.value || props.session?.canEdit === false,
 );
 
 const headerPointerDownMethod = (event) => {
@@ -210,10 +214,14 @@ const headerPointerDownMethod = (event) => {
             "
             class="size-4 shrink-0"
           />
-          <span
-            >PR #{{ session?.number }} is {{ session?.status?.toLowerCase() }}.
-            Start a new session to make more changes.</span
-          >
+          <span>
+            {{
+              isClosed
+                ? `PR #${session?.number} is ${session?.status?.toLowerCase()}.`
+                : `PR #${session?.number} is read-only for this account.`
+            }}
+            Start a new session to make changes.
+          </span>
           <router-link
             to="/"
             class="rounded-md px-1.5 py-1 text-ui font-medium text-primary hover:bg-hover"
@@ -233,12 +241,19 @@ const headerPointerDownMethod = (event) => {
           :on-retry="onRetry"
           :on-stop="onStop"
         />
-        <!-- Active Composer -->
+        <p
+          v-if="!isReadOnly && blockedReason"
+          role="status"
+          class="text-ui text-muted"
+        >
+          {{ blockedReason }}
+        </p>
         <ChatComposer
           v-if="!isReadOnly"
           :placeholder="chatConfig.preset.ui.followUpPlaceholder"
           :compact="compact"
           :busy="busy"
+          :blocked-reason="blockedReason"
           :active="active"
           :on-send="onSend"
         />

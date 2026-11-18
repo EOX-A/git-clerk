@@ -11,6 +11,7 @@ import {
 import { onBeforeRouteLeave, useRouter } from "vue-router";
 import useChatStore from "@/stores/chat.js";
 import useSessionsStore from "@/stores/sessions.js";
+import sessionError from "@/helpers/session-error.js";
 import useChatAutoscroll from "@/helpers/use-chat-autoscroll.js";
 import { CreateSessionDialog } from "@/components/session";
 import { ChatComposer, ChatMessageList, ChatProgress } from "@/components/chat";
@@ -91,8 +92,8 @@ onMounted(async () => {
   window.addEventListener("beforeunload", unloadMethod);
   try {
     await sessionsStore.ensureConnected();
-  } catch {
-    state.value.error = "Connect GitHub before creating a session.";
+  } catch (cause) {
+    state.value.error = sessionError(cause);
   } finally {
     connecting.value = false;
   }
@@ -176,7 +177,7 @@ onUnmounted(() => {
           class="rounded px-3 py-2 text-primary hover:bg-hover"
           @click="openMethod"
         >
-          Open PR #{{ state.session.number }}
+          View PR #{{ state.session.number }}
         </button>
         <ChatComposer
           v-if="chatConfig.enabled"

@@ -421,11 +421,9 @@ templates with editable blanks, and model selection from the design reference.
 Attachments stay in memory; nothing is uploaded. Repository selection is hidden,
 speech input is removed, and both root and session composers support the console-only API test below.
 The centered **Create Session** link below the composer opens a session-name modal
-with the v1 “What is a session?” explanation. Submitting creates a draft session in
-your personal fork and opens it, without an organization or repository selector.
-A missing personal fork is created automatically; an existing fork is validated and
-fast-forwarded without force before the session branch is created. Creation errors
-can be retried in the same dialog without duplicating its branch or PR.
+with the v1 “What is a session?” explanation. The Git broker creates a draft PR
+on a `session/<user_slug>/<session_slug>` branch in the configured repository.
+A retry checks uncertain results without creating a duplicate session.
 `src2/main.js` mounts the app configured in `src2/app.js`; `src2/App.vue`
 keeps navigation mounted around the router. Navigation components live in
 `src2/components/nav/` and support a collapsed rail, mobile drawer, and light/dark
@@ -433,36 +431,28 @@ appearance. The sidebar starts at 264 px; drag its right edge to resize
 between 240 and 360 px on desktop. Double-click the edge to reset, or focus it
 and use the arrow keys (Enter resets).
 
-V2 loads the shared `/config.js` and accepts the same GitHub configuration as v1:
-`globalThis.ghConfig` or `globalThis.gitClerkConfig.ghConfig`, with `githubRepo`
-(`owner/repository`) and `githubAuthToken` (string or sync/async function).
-`GITCLERK_GITHUB_REPO` and `GITCLERK_GITHUB_TOKEN` remain the local `.env` fallbacks.
-Keep credentials out of source control.
+V2 uses the Git broker for repository requests. In `public/config.js`, set
+`globalThis.gitClerkConfig.gitBrokerUrl` to the workspace gateway path, for example
+`/services/eoxhub-gateway/<workspace>/eox-git-broker-mcp`. For local development it
+uses `http://localhost:8015`. Optional `gitBroker: { provider, repo }` settings override
+the backend's repository selection; set `provider` explicitly for GitLab or Forgejo.
+V1 continues to use its own GitHub configuration and credentials.
 
-The sidebar uses Octokit to read PR sessions, newest activity first, including
-Draft, Open, Merged, and Closed. Repository writers see all PRs; other accounts
-see sessions from their enabled personal and writable organization forks, using
-the existing `forkingLocation` config. Load more walks subsequent GitHub pages.
-Use the Sessions filter button to toggle Draft/Open/Merged/Closed, sort by
-recent activity, PR number, title, or status. Grouping is hidden for now,
-until organization support is introduced. The active-filter summary clears all options
-back to the defaults. Opening filters finishes loading the remaining scoped sessions for complete
-counts. Changing status or sort, or clearing those filters, fetches a fresh list
-from page one. Older requests are cancelled and cannot overwrite newer results.
-Filtering and sorting apply to the freshly fetched scoped pages; grouping reuses
-them. Failed requests can be retried.
-Preferences stay in the current app session across navigation and sidebar collapse.
-Selecting a row loads a fresh two-line session header: title, PR status, checks,
-repository, PR link, and branch name. Active PRs refresh every 30 seconds while
-visible and on window focus. The session options menu supports rename, open on
-GitHub, and delete (close the PR and delete its head branch), with confirmation
-dialogs and permission checks. Drafts with changes can be submitted for review
-when checks pass or no checks are configured. Closed/merged sessions are read-only;
-default branches and unwritable forks cannot be deleted. Partial deletion errors
-are reported without hiding that the PR was closed.
-Missing configuration and request failures show a retryable message. GitHub
-operations stay behind `src2/api/index.js` so the UI can later use a backend.
-Loading sessions does not create or sync forks; manual session creation does.
+Set `GITCLERK_PROFILE_NAME`, `GITCLERK_EMAIL`, and `GITCLERK_USERNAME` in Git Clerk's
+`.env` file and restart Vite. V2 uses these values for the profile and sends them
+as `author: { name, email, username }` on file publish and delete requests. The
+username must resolve to the user slug the gateway enforces. The gateway supplies
+identity to the broker; v2 does not send provider credentials. For local development,
+configure repository access on the broker and run the updated version that exposes
+`GET /api/git/repo` and the remaining Git REST routes.
+
+The sidebar shows every PR returned by the broker, regardless of author or branch.
+Filter and sort changes fetch fresh pages. Selecting a session loads its current
+branch, checks and review status. Session actions use the broker's rename, review
+submission, and close/delete routes. File edits still require an open session in
+the user's branch namespace. `src2/api/index.js` keeps these operations behind the
+UI boundary.
+
 V2 chat is configured by one `globalThis.gitClerkConfig.chat.preset` per instance
 in `public/config.js`; there is no preset picker or registry. Existing configuration
 sections (GitHub, schemaMap, previews, authentication) remain independent.
@@ -479,50 +469,22 @@ The supplied OSC example sends replies through the existing agentic backend's
 The conversation and current file draft travel in the existing `history` field.
 The OSC example uses the chat profile because the backend's generic JSON profile ignores history.
 The frontend parses the requested JSON from the chat profile's text response,
-including fenced JSON and trailing citations. The conversational message is rendered
-progressively, while the file JSON remains internal.
+including fenced JSON and trailing citations. Follow-up chat requests include
+`X-Git-Session-Branch` so the agentic backend can
+constrain Git tools to the currently open branch. The frontend sends final files
+to `POST /api/git/publish` on the Git broker, reads back the corresponding PR,
+and uses the confirmed commit to refresh the editor. Chat and Git use separate URLs.
 
-The request respects the backend's 400-character non-URL prompt limit and
-1000-character total limit. Formatting instructions consume part of that budget;
-overlong messages show the available limit and stay in the composer without a request.
-History and current files are never concatenated into `prompt`. HTTP validation
-errors show the backend's explanation instead of only a status code. No backend or MCP changes are required.
-`generateChatTest` and `generatePresetTest` remain available as console-only smoke tests,
-but neither is wired to Send.
-
-On New Session, generated files are serialized as provided and published through
-`POST /api/mcp/call` with `server_id: "eox-git-broker"` and
-`tool_name: "git_publish_bundle"`. The broker creates the commit, unique branch and
-PR directly in the configured repository; write access is required. Git Clerk
-serializes each file as JSON text and forwards the signed-in GitHub token through
-`X-Git-Token`. Tokens are never included in chat prompts or persisted in chat state.
-Chat publishing omits the optional `author` field and uses the broker's default
-commit attribution (`EOxHub Author`). Explicit author overrides remain supported
-by the broker API helper.
-Git Clerk reuses the default branch loaded at sign-in. It does not check write
-access, existing branches/products, or base changes, and does not fetch or merge
-existing catalogues before publishing. These checks are deferred to future backend
-work; the current flow sends complete generated files, including catalogue links,
-as supplied. Octokit loads and verifies the returned PR; it does not publish AI drafts.
-The broker receives the same GitHub credential as the frontend, so it does not
-grant additional repository access. GitHub still requires repository write access;
-publishing failures are reported through the broker. Selecting a personal fork creates the broker's PR inside that fork, not
-against the original upstream repository.
-Manual session creation and manual file editing retain their existing Octokit flows.
-
-The current broker creates an open PR, not a draft PR. New AI sessions use a UUID
-branch. Follow-up edits to an open/draft PR within the configured repository use
-the existing session branch for both `base_branch` and `target_branch`. This is a
-compatibility path for the current GitHub provider: it builds the new tree and
-commit on the session head, then its PR-creation 422 fallback finds the existing
-open PR. The actual PR base, number, title and description are retained (an empty
-description is sent as a newline because the broker replaces empty strings).
-Only generated file paths are replaced; other branch files and prior commits stay.
-The returned PR number, branch, base and commit are checked before showing Saved.
-Cross-fork PRs still require the manual file editor. The broker still force-updates
-the branch and has no expected-head/concurrency option, so simultaneous writes
-can race; protecting those writes requires a future broker change.
-The app opens the published PR with the conversation and file cards intact.
+Publishing sends complete generated files without schema checks or repository
+preflight requests. For GitHub updates, the broker builds from the session branch
+and looks up the existing PR if PR creation returns 422. This keeps existing files
+and commits in the session. The broker currently has no expected-head guard;
+concurrent writes can still race. Both manual and AI sessions start as draft PRs.
+For a new AI session, Git Clerk creates the draft with `POST /api/git/pulls`, then
+saves generated files to its branch with `POST /api/git/publish`. This supports
+updates to existing files and sends the configured author for the file commit.
+The app opens the draft PR with the conversation and file cards intact. Use
+**Submit for review** to mark it ready.
 After a confirmed chat update, open files receive the saved contents immediately
 without re-fetching files or editor schemas. The current editor/preview mode is
 preserved; ordinary background metadata refreshes continue.
@@ -535,7 +497,7 @@ links are disabled. File previews remain plain text. Chat follows new content on
 while the reader remains at the bottom, including asynchronous Markdown rendering.
 After a page refresh, an empty session chat shows a Git Clerk greeting and a live
 PR summary with status, changed-file count, checks, branch and links to Changes
-and GitHub. This uses the already-loaded session metadata; it does not restore
+and the repository. This uses the already-loaded session metadata; it does not restore
 previous conversations or send a dummy message to the AI.
 Retries reconcile a lost response by reading the branch, its exact files and PR;
 they never blindly resend a request whose outcome is uncertain. A confirmed result
@@ -543,8 +505,8 @@ is retained if loading the PR fails. No base-branch concurrency check runs befor
 publishing. Saved chat file cards use “Saved” because the frontend no longer reads
 previous contents to classify files as added or modified. No live Git writes occur in tests.
 
-Start the existing agentic backend on port 8000 and `eox-git-broker-mcp` on port
-8015 (registered as `eox-git-broker`), then send an OSC request such as
+Start the agentic backend on port 8000 and the Git broker on port 8015 for local
+development, then send an OSC request such as
 “Create a synthetic sample OSC product, project and variable.” AI publishing skips
 OSC schema and naming validation for now. Paths with spaces, Unicode, underscores
 or nested directories are passed through unchanged; no OSC folder, filename,
@@ -650,26 +612,27 @@ Source are mutually exclusive and can both be switched off to show only the prev
 Files without a preview start in Source; files without a schema have no Editor.
 The split divider supports dragging and arrow keys; narrow layouts show the
 selected editing pane at full width. The read-only status tag follows the filename,
-and “View file” opens GitHub.
+and “View file” opens the configured repository.
 
 Drafts remain in memory across tab switches. Save changes or Ctrl/⌘+S validates
-configured schemas, commits to the actual head branch with SHA conflict protection,
+configured schemas, compares the current blob SHA with the opened version, commits
+to the session branch through the Git broker,
 and refreshes session details. Closing dirty tabs or leaving the session offers
 Save/Discard/Cancel. Failed saves preserve drafts. Closed, merged, deleted and
-unwritable files remain read-only; deleted files show the base version. Binary,
-non-UTF-8 and files over 1 MiB use a GitHub fallback.
+unwritable files remain read-only; deleted files open on the base ref when it is available.
+Binary, non-UTF-8 and files over 1 MiB can be opened in the repository.
 
 For browser checks without credentials or real repository writes, run
 `npm run test:workspace:v2`, then open
 `http://127.0.0.1:3002/test/fixtures/v2-workspace/index.html`.
 The fixture provides mock saves, conflicts, configured previews and forms.
 Append `?create` to exercise manual session creation and redirection with mocked
-GitHub responses. Append `?chat` for floating/docked/mobile chat, metadata refresh,
+broker responses. Append `?chat` for floating/docked/mobile chat, metadata refresh,
 read-only state and unsaved-file navigation checks, also backed only by mocks.
 The fixture routes chat requests to its own mock endpoint; it never calls the live
 agentic backend or an LLM.
 
-Run the focused API regression tests with `npm run test:v2` (mocked GitHub data).
+Run the focused API regression tests with `npm run test:v2` (mocked broker and agentic responses).
 
 Temporary design references live in `src2/docs/` and are excluded from Tailwind
 scanning and formatting. Design colours, typography, spacing, radii, and shadows

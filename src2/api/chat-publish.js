@@ -1,203 +1,158 @@
-import { Base64 } from "js-base64";
 import { checkDraftFiles } from "./draft-files.js";
-import { publishGitBundle } from "./git-broker.js";
+import { brokerAuthor, publishGitBundle } from "./git-broker.js";
+import { createDraftSession } from "./session-create.js";
 import { sessionDetails } from "./session.js";
+import { fileContent } from "./file-content.js";
 import { gitBlobSha } from "../helpers/file-publication.js";
 import { getChatConfig } from "../helpers/chat-config.js";
 
-// Octokit reads context and verifies the result; all Git writes belong to the broker.
-export async function publishChatFiles(
-  context,
-  bundle,
-  attempt = {},
-  session,
-  publish = publishGitBundle,
-  details = sessionDetails,
-) {
+export async function publishChatFiles(context, bundle, attempt = {}, session) {
   const config = getChatConfig();
   if (
     !config.publishing.enabled ||
     (session && !config.publishing.updateExistingSession)
   )
     throw new Error("Chat publishing is disabled for this operation.");
-  const entries = checkDraftFiles(bundle);
-  const { octokit, githubConfig, githubUserData: user } = context;
-  const repo = { owner: githubConfig.username, repo: githubConfig.repo };
-  const fullName = `${repo.owner}/${repo.repo}`;
-  if (session) {
-    if (!session.canEdit || !["open", "draft"].includes(session.status))
-      throw new Error(
-        "This session is read-only. Reopen it before saving AI edits.",
-      );
-    if (
-      `${session.headOwner}/${session.headRepo}`.toLowerCase() !==
-      fullName.toLowerCase()
-    )
-      throw new Error(
-        "The Git broker can update PRs within the configured repository only. Use the file editor for this cross-fork PR.",
-      );
-    if (
-      !Number.isSafeInteger(session.number) ||
-      session.number < 1 ||
+  if (
+    session &&
+    (!session.canEdit ||
       !session.branch ||
-      !session.baseBranch ||
-      !session.headSha ||
       session.branch === session.baseBranch ||
-      session.branch === context.githubTargetRepo?.default_branch
+      session.branch === context.repository.default_branch)
+  )
+    throw new Error(
+      "This session is read-only. Reopen it before saving AI edits.",
+    );
+
+  const entries = checkDraftFiles(bundle);
+  const files = Object.fromEntries(
+    entries.map(([path, content]) => [
+      path,
+      typeof content === "string"
+        ? content
+        : JSON.stringify(content, null, 2) + "\n",
+    ]),
+  );
+  const target = `${context.repository.repo}:${session?.number ?? "new"}:${session?.branch ?? ""}`;
+  if (attempt.target && attempt.target !== target)
+    throw new Error("Return to the original session to retry this save.");
+  attempt.target = target;
+
+  if (!session && !attempt.draftSession) {
+    brokerAuthor(context);
+    attempt.creation ||= {};
+    try {
+      // The broker's initial_files only creates files. Publish also handles updates.
+      attempt.draftSession = await createDraftSession(
+        context,
+        { title: bundle.draft.title, body: config.publishing.prBody },
+        attempt.creation,
+      );
+    } catch (error) {
+      attempt.requested = Boolean(
+        attempt.creation.number || attempt.creation.uncertain,
+      );
+      throw error;
+    }
+  }
+  const targetSession = session || attempt.draftSession;
+  if (!session) {
+    attempt.requested = true;
+    if (
+      targetSession.status !== "draft" ||
+      !targetSession.canEdit ||
+      !targetSession.headSha ||
+      targetSession.branch !== attempt.creation.branch
+    )
+      throw new Error("The broker did not confirm the expected draft PR.");
+  }
+
+  if (!attempt.result && attempt.uncertain) {
+    // A failed connection can hide a completed write. Retry only the readback.
+    const saved = await sessionDetails(context, targetSession.number);
+    if (
+      !saved.headSha ||
+      saved.branch !== targetSession.branch ||
+      saved.headSha === targetSession.headSha
     )
       throw new Error(
-        "Refresh the session to load a separate, existing PR branch before saving AI edits.",
+        "The broker has not confirmed the previous save. Refresh the session or inspect the repository before retrying.",
       );
-  }
-  if (
-    attempt.repo &&
-    (attempt.repo !== fullName ||
-      attempt.login !== user.login ||
-      attempt.sessionNumber !== (session?.number || null) ||
-      (session && attempt.branch !== session.branch))
-  )
-    throw new Error(
-      "The publishing account, repository or session changed. Return to the original session to check this request.",
-    );
-  attempt.repo ||= fullName;
-  attempt.login ||= user.login;
-  attempt.sessionNumber ??= session?.number || null;
-  attempt.previousHead ||= session?.headSha;
-  attempt.branch ||=
-    session?.branch || `session/${user.login}/${crypto.randomUUID()}`;
-  // Reuse repository metadata loaded at sign-in; publication needs no preflight reads.
-  attempt.baseBranch ||=
-    session?.baseBranch || context.githubTargetRepo?.default_branch;
-  if (!attempt.baseBranch || attempt.baseBranch === attempt.branch)
-    throw new Error(
-      "The repository has no usable default branch for publishing.",
-    );
-
-  const readBranch = async () => {
-    try {
-      const { data } = await octokit.rest.git.getRef({
-        ...repo,
-        ref: `heads/${attempt.branch}`,
-      });
-      return data.object.sha;
-    } catch (error) {
-      if (error.status !== 404) throw error;
-      return null;
-    }
-  };
-  const readFile = async (path, ref) => {
-    try {
-      const { data } = await octokit.rest.repos.getContent({
-        ...repo,
-        path,
-        ref,
-      });
-      if (
-        data.type !== "file" ||
-        data.encoding !== "base64" ||
-        data.size > 1024 * 1024
-      )
-        throw new Error(`${path}: cannot safely read existing content.`);
-      return Base64.decode(data.content);
-    } catch (error) {
-      if (error.status !== 404) throw error;
-      return null;
-    }
-  };
-
-  if (!attempt.result && attempt.requested) {
-    // Reconcile uncertain writes by reads only, including updates to an existing PR.
-    const sha = await readBranch();
-    if (!sha || sha === attempt.previousHead)
-      throw new Error(
-        "The previous publish request has no confirmed branch yet. Retry checking later; Git Clerk will not resend an uncertain publish request.",
-      );
-    for (const [path, text] of Object.entries(attempt.files))
-      if ((await readFile(path, sha)) !== text)
+    for (const [path, text] of Object.entries(files)) {
+      if ((await fileContent(context, saved, path)).text !== text)
         throw new Error(
-          "The published branch differs from this draft. Inspect it on GitHub before continuing; no files were overwritten.",
+          "The session does not match the attempted save. Refresh it before making more edits.",
         );
-    const { data: prs } = await octokit.rest.pulls.list({
-      ...repo,
-      head: `${repo.owner}:${attempt.branch}`,
-      base: attempt.baseBranch,
-      state: "open",
-      per_page: 100,
-    });
-    const pr = prs.find(
-      (item) =>
-        item.head.sha === sha &&
-        item.head.repo?.full_name === fullName &&
-        item.base.ref === attempt.baseBranch &&
-        (!attempt.sessionNumber || item.number === attempt.sessionNumber),
-    );
-    if (!pr)
-      throw new Error(
-        "The broker created a branch but no matching open PR is confirmed. Check the broker logs; retry will only check the result, not overwrite the branch.",
-      );
-    attempt.result = { pr_number: pr.number, commit_sha: sha };
-  }
-
-  if (!attempt.result) {
-    const files = Object.create(null);
-    const documents = Object.create(null);
-    const changed = [];
-    for (const [path, generated] of entries) {
-      files[path] =
-        typeof generated === "string"
-          ? generated
-          : JSON.stringify(generated, null, 2) + "\n";
-      documents[path] = {
-        text: files[path],
-        sha: await gitBlobSha(files[path]),
-      };
-      changed.push({ path, status: "Saved" });
     }
-    const auth = await octokit.auth();
-    if (!auth.token)
-      throw new Error(
-        "Connect GitHub before publishing through the Git broker.",
-      );
-    attempt.files = files;
-    attempt.documents = documents;
-    attempt.changed = changed;
-    attempt.requested = true;
-    attempt.result = await publish({
-      repo: fullName,
-      // This broker uses base_branch for both commit ancestry and PR creation.
-      // Starting from the current head preserves its tree/history; its 422 fallback
-      // finds the existing open PR without changing that PR's actual base branch.
-      baseBranch: session ? attempt.branch : attempt.baseBranch,
-      targetBranch: attempt.branch,
-      title: bundle.draft.title,
-      ...(session
-        ? {
-            existingPrNumber: session.number,
-            prTitle: session.title,
-            prBody: session.body || "",
-          }
-        : {}),
-      files,
-      token: auth.token,
-    });
+    attempt.result = {
+      pr_number: saved.number,
+      commit_sha: saved.headSha,
+      branch: saved.branch,
+    };
+    attempt.session = saved;
   }
-  const published = await details(context, attempt.result.pr_number);
+  if (!attempt.result) {
+    attempt.requested = true;
+    try {
+      const result = await publishGitBundle(
+        context,
+        {
+          target_branch: targetSession.branch,
+          files,
+          commit_message: `${session ? "Update" : "Create"} ${bundle.draft.title}`,
+          pr_title: targetSession.title,
+          pr_body: targetSession.body ?? config.publishing.prBody,
+        },
+        targetSession,
+      );
+      if (
+        !result.commit_sha ||
+        result.branch !== targetSession.branch ||
+        result.pr_number !== targetSession.number
+      )
+        throw new Error(
+          "The broker did not confirm the expected PR and commit.",
+        );
+      attempt.result = result;
+    } catch (error) {
+      attempt.uncertain = !error.status || error.status >= 500;
+      attempt.requested = Boolean(attempt.draftSession) || attempt.uncertain;
+      throw error;
+    }
+  }
+  const {
+    pr_number: number,
+    commit_sha: commitSha,
+    files_committed: committed,
+  } = attempt.result;
+  const published = attempt.session || (await sessionDetails(context, number));
   if (
-    published.headOwner !== repo.owner ||
-    published.headRepo !== repo.repo ||
-    published.branch !== attempt.branch ||
-    published.headSha !== attempt.result.commit_sha ||
-    (attempt.sessionNumber &&
-      (published.number !== attempt.sessionNumber ||
-        published.baseBranch !== attempt.baseBranch))
+    published.branch !== targetSession.branch ||
+    published.headSha !== commitSha ||
+    (!session && published.status !== "draft")
   )
     throw new Error(
-      "The returned PR no longer matches the published branch. Inspect it on GitHub before continuing.",
+      "The PR no longer matches the confirmed save. Refresh the session to see its current state.",
     );
+  const documents = Object.fromEntries(
+    await Promise.all(
+      Object.entries(files).map(async ([path, text]) => [
+        path,
+        {
+          text,
+          owner: published.headOwner,
+          repo: published.headRepo,
+          sha:
+            committed?.find((file) => file.path === path)?.sha ||
+            (await gitBlobSha(text)),
+        },
+      ]),
+    ),
+  );
   return {
     session: published,
-    commitSha: attempt.result.commit_sha,
-    files: attempt.changed,
-    documents: attempt.documents,
+    commitSha,
+    files: entries.map(([path]) => ({ path })),
+    documents,
   };
 }

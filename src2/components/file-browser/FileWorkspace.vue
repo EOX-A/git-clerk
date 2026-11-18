@@ -10,7 +10,7 @@ import {
   watch,
 } from "vue";
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
-import { fileGitHubURL, toggleFileMode } from "@/helpers/file-editor.js";
+import { fileRepositoryUrl, toggleFileMode } from "@/helpers/file-editor.js";
 import { FileContent, FileDialog, FileToolbar } from "@/components/file";
 import useFileDocuments from "@/helpers/use-file-documents.js";
 import { getSessionFiles } from "@/api/index.js";
@@ -210,11 +210,12 @@ const closeFileMethod = async (id) => {
     drawerOpen.value = true;
   }
 };
+// Compare revisions and counts by value so metadata refreshes don't reload files.
 watch(
-  () => [
-    props.session.headSha,
-    props.session.changedFiles,
-    props.session.updatedAt,
+  [
+    () => props.session.headSha || props.session.branch,
+    () => props.session.baseSha || props.session.baseBranch,
+    () => props.session.changedFiles,
   ],
   loadChangesMethod,
   { immediate: true },
@@ -264,8 +265,8 @@ onUnmounted(() => {
       :dirty="dirtyPaths.includes(activePath)"
       :changed="activeChange"
       :read-only="!session.canEdit || activeChange?.status === 'removed'"
-      :github-url="
-        fileGitHubURL(session, activePath, activeDocument, activeChange)
+      :repository-url="
+        fileRepositoryUrl(session, activePath, activeDocument, activeChange)
       "
       :on-mode="
         (mode) =>

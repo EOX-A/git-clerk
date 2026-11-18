@@ -20,7 +20,7 @@ registerHooks({
 });
 const { default: useSessionsStore } =
   await import("../src2/stores/sessions.js");
-const { default: useOctokitStore } = await import("../src2/stores/octokit.js");
+const { default: useGitStore } = await import("../src2/stores/git.js");
 
 const statuses = ["draft", "open", "merged", "closed"];
 const sessions = [
@@ -121,36 +121,42 @@ test("summary distinguishes defaults, cleared statuses, sorting, and grouping", 
   );
 });
 
-function createStore(graphql) {
+function createStore(request) {
   setActivePinia(createPinia());
-  useOctokitStore().setOctokit({
-    octokit: { graphql },
-    githubConfig: { username: "earth", repo: "catalog" },
-    githubUserData: { login: "alice" },
-    scopeOwners: ["alice"],
+  useGitStore().setContext({
+    request: (path, options) =>
+      request(path, {
+        ...options,
+        after: options?.query?.page === 1 ? null : options?.query?.page,
+      }),
+    repository: { repo: "earth/catalog", default_branch: "main" },
+    user: { username: "alice" },
   });
   return useSessionsStore();
 }
 
-function page(number, state, hasNextPage = false, endCursor = null) {
+function page(number, state, hasNextPage = false) {
+  const pr = {
+    number,
+    title: `Session ${number}`,
+    state: state.toLowerCase(),
+    draft: false,
+    updated_at: "2026-11-14",
+    head_branch: "session/alice/demo",
+  };
   return {
-    repository: {
-      pullRequests: {
-        nodes: [
-          {
-            id: `PR_${number}`,
-            number,
-            title: `Session ${number}`,
-            state,
-            isDraft: false,
-            updatedAt: "2026-11-14",
-            author: { login: "alice" },
-            headRepositoryOwner: { login: "alice" },
-          },
-        ],
-        pageInfo: { hasNextPage, endCursor },
-      },
-    },
+    pull_requests: hasNextPage
+      ? [
+          pr,
+          ...Array.from({ length: 19 }, (_, index) => ({
+            ...pr,
+            number: number * 100 + index,
+            title: `Other PR ${number * 100 + index}`,
+            state: "closed",
+            head_branch: `feature/other-${number * 100 + index}`,
+          })),
+        ]
+      : [pr],
   };
 }
 
@@ -187,28 +193,28 @@ test("status changes abort the old request, restart at page one, and ignore its 
   const latestLoad = store.toggleStatus("closed");
   await freshStarted.promise;
   store.setGroup("org");
-  assert.equal(calls[0].request.signal.aborted, true);
+  assert.equal(calls[0].signal.aborted, true);
   assert.deepEqual(
     calls.map((call) => call.after),
     [null, null],
   );
-  old.resolve(page(1, "CLOSED", true, "stale-cursor"));
+  old.resolve(page(1, "CLOSED", true));
   await initialLoad;
   assert.equal(store.loading, true);
   assert.equal(store.error, "");
   assert.equal(store.sessions.length, 0);
-  fresh.resolve(page(2, "OPEN", true, "fresh-next"));
+  fresh.resolve(page(2, "OPEN", true));
   await latestLoad;
   assert.deepEqual(
     calls.map((call) => call.after),
-    [null, null, "fresh-next"],
+    [null, null, 2],
   );
   assert.equal(store.allLoaded, true);
   assert.deepEqual(
     store.visibleSessions.map((session) => session.number),
     [2],
   );
-  assert.equal(store.statusCounts.closed, 1);
+  assert.equal(store.statusCounts.closed, 20);
   assert.equal(store.statusCounts.open, 1);
   assert.equal(store.sessionGroups[0].label, "earth");
 });
@@ -221,7 +227,7 @@ test("sort changes discard old pages and ignore an obsolete pagination error", a
   const calls = [];
   const store = createStore(async (_, options) => {
     calls.push(options);
-    if (calls.length === 1) return page(1, "CLOSED", true, "old-next");
+    if (calls.length === 1) return page(1, "CLOSED", true);
     if (calls.length === 2) {
       oldStarted.resolve();
       return old.promise;
@@ -243,16 +249,17 @@ test("sort changes discard old pages and ignore an obsolete pagination error", a
   await olderLoad;
   assert.equal(store.error, "");
   assert.equal(store.loading, true);
-  fresh.resolve(page(9, "OPEN", true, "new-next"));
+  fresh.resolve(page(9, "OPEN", true));
   await latestLoad;
   assert.deepEqual(
     calls.map((call) => call.after),
-    [null, "old-next", null, "new-next"],
+    [null, 2, null, 2],
   );
   assert.deepEqual(
-    store.visibleSessions.map((session) => session.number),
+    store.visibleSessions.slice(-2).map((session) => session.number),
     [10, 9],
   );
+  assert.equal(store.visibleSessions.length, 21);
 });
 
 test("completed lists refresh on status and sort changes and when clearing them", async () => {
@@ -291,7 +298,7 @@ test("an incomplete filtered scan retains its cursor and retries without duplica
   const cursors = [];
   const store = createStore(async (_, { after }) => {
     cursors.push(after);
-    if (after === null) return page(1, "CLOSED", true, "next");
+    if (after === null) return page(1, "CLOSED", true);
     if (fail) throw new Error("offline");
     return page(2, "OPEN");
   });
@@ -299,15 +306,15 @@ test("an incomplete filtered scan retains its cursor and retries without duplica
   await store.loadSessions(false, true);
   assert.ok(store.error);
   assert.equal(store.allLoaded, false);
-  assert.equal(store.sessions.length, 1);
+  assert.equal(store.sessions.length, 20);
   fail = false;
   await store.loadSessions();
   assert.equal(store.error, "");
   assert.equal(store.allLoaded, true);
-  assert.deepEqual(cursors, [null, "next", "next"]);
+  assert.deepEqual(cursors, [null, 2, 2]);
   assert.deepEqual(
     store.sessions.map((s) => s.number),
-    [1, 2],
+    [1, ...Array.from({ length: 19 }, (_, index) => 100 + index), 2],
   );
 });
 
@@ -316,10 +323,10 @@ test("retry finishes a full count scan even before any filters are changed", asy
   const cursors = [];
   const store = createStore(async (_, { after }) => {
     cursors.push(after);
-    if (after === null) return page(1, "CLOSED", true, "second");
-    if (after === "second") {
+    if (after === null) return page(1, "CLOSED", true);
+    if (after === 2) {
       if (fail) throw new Error("offline");
-      return page(2, "OPEN", true, "third");
+      return page(2, "OPEN", true);
     }
     return page(3, "MERGED");
   });
@@ -329,8 +336,8 @@ test("retry finishes a full count scan even before any filters are changed", asy
   fail = false;
   await store.loadSessions();
   assert.equal(store.allLoaded, true);
-  assert.deepEqual(cursors, [null, "second", "second", "third"]);
-  assert.equal(store.sessions.length, 3);
+  assert.deepEqual(cursors, [null, 2, 2, 3]);
+  assert.equal(store.sessions.length, 41);
 });
 
 test("opening the filter popover refreshes counts across all pages even after completion", async () => {
@@ -340,7 +347,7 @@ test("opening the filter popover refreshes counts across all pages even after co
     cursors.push(after);
     if (after === null) {
       round++;
-      return page(1, round === 1 ? "OPEN" : "MERGED", true, "next");
+      return page(1, round === 1 ? "OPEN" : "MERGED", true);
     }
     return page(2, "CLOSED");
   });
@@ -348,37 +355,29 @@ test("opening the filter popover refreshes counts across all pages even after co
   assert.equal(store.allLoaded, true);
   assert.equal(store.statusCounts.open, 1);
   assert.equal(store.statusCounts.merged, 0);
-  assert.equal(store.statusCounts.closed, 1);
+  assert.equal(store.statusCounts.closed, 20);
 
   await store.loadSessions(false, true, true);
-  assert.deepEqual(cursors, [null, "next", null, "next"]);
+  assert.deepEqual(cursors, [null, 2, null, 2]);
   assert.equal(store.allLoaded, true);
   assert.equal(store.statusCounts.open, 0);
   assert.equal(store.statusCounts.merged, 1);
-  assert.equal(store.statusCounts.closed, 1);
+  assert.equal(store.statusCounts.closed, 20);
 });
 
 test("opening a session fetches fresh details even when its sidebar row is cached", async () => {
   let requests = 0;
-  const store = createStore(async (query, variables) => {
+  const store = createStore(async (query) => {
     requests++;
-    assert.equal(variables.number, 7);
-    assert.match(query, /headRefName/);
+    assert.equal(query, "/pulls/7");
     return {
-      repository: {
-        pullRequest: {
-          id: "PR_7",
-          number: 7,
-          title: "Fresh title",
-          state: "OPEN",
-          isDraft: true,
-          headRepositoryOwner: { login: "alice" },
-          headRefName: "gc/seven",
-          changedFiles: 3,
-          viewerCanUpdate: true,
-          statusCheckRollup: { state: "PENDING" },
-        },
-      },
+      number: 7,
+      title: "Fresh title",
+      state: "open",
+      draft: true,
+      head_branch: "session/alice/seven",
+      changed_files: 3,
+      ci_status: "pending",
     };
   });
   store.sessions = [
@@ -386,7 +385,7 @@ test("opening a session fetches fresh details even when its sidebar row is cache
   ];
   const session = await store.getSession(7);
   assert.equal(requests, 1);
-  assert.equal(session.branch, "gc/seven");
+  assert.equal(session.branch, "session/alice/seven");
   assert.equal(session.checks, "PENDING");
   assert.equal(store.sessions[0].title, "Fresh title");
   assert.equal(store.sessions[0].status, "draft");

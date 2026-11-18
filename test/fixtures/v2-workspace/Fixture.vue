@@ -7,7 +7,7 @@ import {
   FileTreePlaceholder,
 } from "@/components/file-browser";
 import Toast from "@/components/global/Toast.vue";
-import useOctokitStore from "@/stores/octokit.js";
+import useGitStore from "@/stores/git.js";
 const loadingPreview = ref(false);
 const snackbar = ref(false);
 provide("set-snackbar", snackbar);
@@ -74,6 +74,8 @@ const session = ref({
   headRepo: "catalog",
   headSha: "head",
   baseSha: "base",
+  baseBranch: "main",
+  repositoryUrl: "https://github.com/fixture/catalog",
   changedFiles: changes.length,
   canEdit: true,
   canManage: true,
@@ -82,72 +84,49 @@ const session = ref({
 const saved = ref(0),
   failSave = ref(false),
   dirty = ref(false);
-useOctokitStore().setOctokit({
-  githubConfig: { username: "fixture", repo: "catalog" },
-  githubUserData: { login: "fixture" },
-  scopeOwners: null,
-  octokit: {
-    graphql: async () => ({
-      repository: {
-        pullRequest: {
-          id: "PR_7",
-          number: 7,
-          title: session.value.title,
-          url: session.value.url,
-          state: session.value.status === "closed" ? "CLOSED" : "OPEN",
-          isDraft: true,
-          headRefName: "test",
-          headRefOid: session.value.headSha,
-          headRef: { id: "ref" },
-          headRepositoryOwner: { login: "fixture" },
-          headRepository: {
-            name: "catalog",
-            owner: { login: "fixture" },
-            viewerPermission: "WRITE",
-          },
-          viewerCanUpdate: true,
-        },
-      },
-    }),
-    rest: {
-      pulls: { listFiles: async () => ({ data: changes, headers: {} }) },
-      repos: {
-        getContent: async ({ path }) => ({
-          data: {
-            type: "file",
-            name: path,
-            path,
-            sha: `blob-${saved.value}`,
-            size: texts[path].length,
-            encoding: "base64",
-            content: Base64.encode(texts[path]),
-          },
-        }),
-        createOrUpdateFileContents: async ({ path, content }) => {
-          if (failSave.value)
-            throw Object.assign(new Error("Fixture conflict"), { status: 409 });
-          texts[path] = Base64.decode(content);
-          saved.value++;
-          return {
-            data: {
-              content: { sha: `blob-${saved.value}` },
-              commit: { sha: `head-${saved.value}` },
-            },
-          };
-        },
-      },
-      git: {
-        getCommit: async () => ({ data: { tree: { sha: "tree" } } }),
-        getTree: async () => ({
-          data: {
-            tree: Object.keys(texts)
-              .filter((path) => path !== "removed.txt")
-              .map((path) => ({ path, type: "blob", sha: path })),
-            truncated: false,
-          },
-        }),
-      },
-    },
+useGitStore().setContext({
+  repository: {
+    repo: "fixture/catalog",
+    default_branch: "main",
+    provider: "github",
+  },
+  user: { username: "fixture", name: "Fixture", email: "fixture@example.test" },
+  async request(path, { query, body } = {}) {
+    if (path.endsWith("/files")) return { files: changes };
+    if (path.endsWith("/diff"))
+      return changes.find((change) => change.filename === query.path);
+    if (path === "/file") {
+      const text = texts[query.path];
+      return {
+        path: query.path,
+        encoding: "base64",
+        content: Base64.encode(text),
+        size: text.length,
+        sha: `blob-${saved.value}`,
+      };
+    }
+    if (path === "/tree")
+      return {
+        entries: Object.keys(texts)
+          .filter((path) => path !== "removed.txt")
+          .map((path) => ({ name: path, path, type: "file", sha: path })),
+      };
+    if (path === "/publish") {
+      if (failSave.value)
+        throw Object.assign(new Error("Fixture conflict"), { status: 409 });
+      Object.assign(texts, body.files);
+      saved.value++;
+      return {
+        commit_sha: `head-${saved.value}`,
+        pr_number: 7,
+        branch: body.target_branch,
+        files_committed: Object.keys(body.files).map((path) => ({
+          path,
+          sha: `blob-${saved.value}`,
+        })),
+      };
+    }
+    throw new Error(`Unexpected fixture path: ${path}`);
   },
 });
 const refresh = async () => {

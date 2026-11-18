@@ -28,7 +28,6 @@ export default defineConfig({
     {
       name: "mock-chat-api",
       configureServer(server) {
-        let publishCount = 0;
         // Serve only the supplied public preview, without other public configuration.
         server.middlewares.use((req, res, next) => {
           const path = req.url?.split("?")[0];
@@ -57,38 +56,6 @@ export default defineConfig({
           }
           next();
         });
-        server.middlewares.use(
-          "/test/agentic/api/mcp/call",
-          async (req, res, next) => {
-            if (req.method !== "POST") return next();
-            let body = "";
-            for await (const chunk of req) body += chunk;
-            const request = JSON.parse(body);
-            if (
-              request.server_id !== "eox-git-broker" ||
-              request.tool_name !== "git_publish_bundle" ||
-              req.headers["x-git-token"] !== "fixture-token"
-            ) {
-              res.statusCode = 400;
-              res.end("Invalid mock broker request");
-              return;
-            }
-            const args = request.arguments;
-            res.setHeader("Content-Type", "application/json");
-            res.end(
-              JSON.stringify({
-                status: "published",
-                provider: "github",
-                mode: "github_live",
-                repo: args.repo,
-                branch: args.target_branch,
-                commit_sha: (++publishCount).toString(16).padStart(40, "0"),
-                pr_number: 7,
-                pr_url: `https://github.com/${args.repo}/pull/7`,
-              }),
-            );
-          },
-        );
         server.middlewares.use(
           "/test/agentic/api/generate",
           async (req, res, next) => {

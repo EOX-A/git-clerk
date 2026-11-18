@@ -1,6 +1,6 @@
 <script setup>
 import { computed, onUnmounted, ref, watch } from "vue";
-import { getBranchRoot, getBranchDirectory } from "@/api/index.js";
+import { getBranchDirectory } from "@/api/index.js";
 import useScrollbar from "@/helpers/use-scrollbar.js";
 import ChangesList from "./ChangesList.vue";
 import FileTree from "./FileTree.vue";
@@ -24,7 +24,6 @@ const props = defineProps({
 const { isScrolling, scrollMethod } = useScrollbar();
 const directories = ref({});
 const expanded = ref({});
-const source = ref(null);
 const changes = computed(() =>
   Object.fromEntries(props.files.map((file) => [file.path, file])),
 );
@@ -38,17 +37,7 @@ const loadDirectoryMethod = async (entry = null) => {
   const signal = controller.signal;
   directories.value[path] = { loading: true, entries: [], error: false };
   try {
-    if (!source.value) {
-      const root = await getBranchRoot(props.session, signal);
-      if (currentGeneration !== generation) return;
-      source.value = root;
-    }
-    const entries = await getBranchDirectory(
-      source.value,
-      entry?.sha || source.value.treeSha,
-      path,
-      signal,
-    );
+    const entries = await getBranchDirectory(props.session, path, signal);
     if (currentGeneration === generation)
       directories.value[path] = { loading: false, entries, error: false };
   } catch {
@@ -73,7 +62,6 @@ watch(
     controller = new AbortController();
     directories.value = {};
     expanded.value = {};
-    source.value = null;
     loadRootMethod();
   },
   { immediate: true },
@@ -185,7 +173,7 @@ const switchViewMethod = (event) => {
         </div>
         <p v-if="incomplete" role="status" class="p-2 text-meta text-warn">
           Showing {{ files.length }} of {{ session.changedFiles }} changed
-          files. GitHub did not return the full list.
+          files. The Git broker did not return the full list.
         </p>
         <ChangesList
           :files="files"

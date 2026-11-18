@@ -66,7 +66,8 @@ const previewChangeMethod = (value) => {
         role="status"
         class="border-b border-border-soft px-4 py-2 text-meta text-warn"
       >
-        The branch changed on GitHub. Your local draft has been preserved.
+        The branch changed in the repository. Your local draft has been
+        preserved.
       </p>
       <p
         v-if="doc.schemaError"

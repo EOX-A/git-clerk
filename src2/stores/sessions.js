@@ -1,12 +1,12 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
 import {
-  connectGitHub,
+  connectGitBroker,
   createSessionByName,
   getSessionsList,
   getSessionDetails,
 } from "@/api/index.js";
-import useOctokitStore from "@/stores/octokit.js";
+import useGitStore from "@/stores/git.js";
 import sessionError from "@/helpers/session-error.js";
 import { SESSION_STATUS } from "@/helpers/session-status.js";
 import {
@@ -49,10 +49,10 @@ const useSessionsStore = defineStore("sessions-v2", () => {
   let listController = null;
 
   async function ensureConnected() {
-    if (useOctokitStore().context) return;
+    if (useGitStore().context) return;
     // The sidebar and a directly opened session can initialize at the same time.
     if (!connecting)
-      connecting = connectGitHub().finally(() => {
+      connecting = connectGitBroker().finally(() => {
         connecting = null;
       });
     await connecting;
@@ -169,22 +169,17 @@ const useSessionsStore = defineStore("sessions-v2", () => {
   async function createSession(name, attempt, onProgress) {
     await ensureConnected();
     const session = await createSessionByName(name, attempt, onProgress);
-    const context = useOctokitStore().context;
-    const owner = context.githubUserData.login.toLowerCase();
-    const scopeChanged =
-      context.scopeOwners && !context.scopeOwners.includes(owner);
-    if (scopeChanged) context.scopeOwners.push(owner);
-    return rememberSession(session, scopeChanged);
+    return rememberSession(session);
   }
 
-  function rememberSession(session, scopeChanged = false) {
+  function rememberSession(session) {
     // Cancel older pages so they cannot erase the new session or stale the counts.
     requestID++;
     listController?.abort();
     listController = null;
     loading.value = false;
     loadAllRequested = false;
-    if (scopeChanged || pageInfo.value?.hasNextPage !== false) {
+    if (pageInfo.value?.hasNextPage !== false) {
       pageInfo.value = null;
     }
     error.value = "";

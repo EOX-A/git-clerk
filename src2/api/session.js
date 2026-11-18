@@ -1,162 +1,100 @@
-const SESSION_FIELDS = `
-  id title number url state isDraft updatedAt
-  author { login }
-  headRepositoryOwner { login }
-  headRefName viewerCanUpdate
-  headRef { id }
-  headRepository {
-    name owner { login } viewerPermission defaultBranchRef { name }
-  }
-`;
+import { brokerBranchPrefix } from "./git-broker.js";
 
-export async function affiliatedForkOwners(octokit, githubConfig) {
-  const owners = [];
-  let after = null;
-  do {
-    const response = await octokit.graphql(
-      `query($owner: String!, $repo: String!, $after: String) {
-        repository(owner: $owner, name: $repo) {
-          forks(first: 100, after: $after, affiliations: [OWNER, COLLABORATOR, ORGANIZATION_MEMBER]) {
-            pageInfo { hasNextPage endCursor }
-            nodes { name viewerPermission owner { login __typename } }
-          }
-        }
-      }`,
-      { owner: githubConfig.username, repo: githubConfig.repo, after },
-    );
-    const { nodes, pageInfo } = response.repository.forks;
-    for (const fork of nodes) {
-      if (
-        fork.name === githubConfig.repo &&
-        fork.owner.__typename === "Organization" &&
-        ["ADMIN", "MAINTAIN", "WRITE"].includes(fork.viewerPermission)
-      )
-        owners.push(fork.owner.login);
-    }
-    after = pageInfo.hasNextPage ? pageInfo.endCursor : null;
-  } while (after);
-  return owners;
+const checkStates = {
+  success: "SUCCESS",
+  passing: "SUCCESS",
+  passed: "SUCCESS",
+  failure: "FAILURE",
+  failed: "FAILURE",
+  error: "ERROR",
+  pending: "PENDING",
+  running: "PENDING",
+  expected: "EXPECTED",
+};
+
+export function ownsBranch(context, branch) {
+  const prefix = brokerBranchPrefix(context.user);
+  return Boolean(
+    prefix && branch?.startsWith(prefix) && branch.length > prefix.length,
+  );
 }
 
-function matchesScope(node, { scopeOwners, githubUserData }) {
-  if (scopeOwners === null) return true;
-  // V1 falls back to the authenticated author's PRs when no fork scope exists.
-  if (!scopeOwners.length) {
-    return (
-      node.author?.login?.toLowerCase() === githubUserData.login.toLowerCase()
-    );
-  }
-  return scopeOwners.includes(node.headRepositoryOwner?.login?.toLowerCase());
-}
-
-function mapSession(node, githubConfig) {
+export function mapSession(context, data) {
+  const number = data.number ?? data.pr_number;
+  const branch = data.head_branch;
+  const open = data.state === "open" || data.state === "opened";
+  const repoPath = data.repo || context.repository.repo;
+  const repo = repoPath.split("/").at(-1);
+  const owner = repoPath.slice(0, -(repo.length + 1));
+  const writable =
+    ownsBranch(context, branch) &&
+    branch !== context.repository.default_branch &&
+    branch !== data.base_branch;
   const status =
-    node.state === "OPEN"
-      ? node.isDraft
-        ? "draft"
-        : "open"
-      : node.state.toLowerCase();
-  const canManage =
-    Boolean(node.viewerCanUpdate) && ["draft", "open"].includes(status);
-  const head = node.headRepository;
+    data.merged || data.state === "merged"
+      ? "merged"
+      : open
+        ? data.draft
+          ? "draft"
+          : "open"
+        : "closed";
   return {
-    id: node.id,
-    number: node.number,
-    title: node.title,
-    url: node.url,
+    id: number,
+    number,
+    title: data.title,
+    url: data.html_url || data.pr_url,
+    updatedAt: data.updated_at,
+    author: data.author,
     status,
-    updatedAt: node.updatedAt,
-    repo: githubConfig.repo,
-    owner: githubConfig.username,
-    branch: node.headRefName,
-    headRefID: node.headRef?.id || null,
-    headOwner: head?.owner.login || node.headRepositoryOwner?.login,
-    headRepo: head?.name,
-    canManage,
-    canEdit:
-      canManage &&
-      Boolean(node.headRef) &&
-      ["ADMIN", "MAINTAIN", "WRITE"].includes(head?.viewerPermission),
-    // Never offer branch deletion for a default branch or an unwritable fork.
-    canDelete:
-      canManage &&
-      (!node.headRef ||
-        Boolean(
-          head?.defaultBranchRef?.name &&
-          node.headRefName !== head.defaultBranchRef.name &&
-          ["ADMIN", "MAINTAIN", "WRITE"].includes(head.viewerPermission),
-        )),
+    branch,
+    baseBranch: data.base_branch,
+    headSha: data.head_sha,
+    baseSha: data.base_sha,
+    owner,
+    repo,
+    headOwner: owner,
+    headRepo: repo,
+    provider: data.provider || context.repository.provider,
+    repositoryUrl: context.repository.html_url,
+    canManage: writable && status !== "merged",
+    canEdit: writable && open,
+    canDelete: writable && open,
+    body: data.body,
+    changedFiles: data.changed_files,
+    checks: checkStates[data.ci_status?.toLowerCase()],
+    reviewDecision: data.review_status?.toUpperCase(),
   };
 }
 
 export async function sessionsList(context, after = null, signal) {
-  const { octokit, githubConfig } = context;
-  let pageInfo;
-  let nodes;
-  do {
-    signal?.throwIfAborted();
-    const response = await octokit.graphql(
-      `query($owner: String!, $repo: String!, $after: String) {
-        repository(owner: $owner, name: $repo) {
-          pullRequests(first: 100, after: $after, states: [OPEN, CLOSED, MERGED], orderBy: { field: UPDATED_AT, direction: DESC }) {
-            pageInfo { hasNextPage endCursor }
-            nodes { ${SESSION_FIELDS} }
-          }
-        }
-      }`,
-      {
-        owner: githubConfig.username,
-        repo: githubConfig.repo,
-        after,
-        request: { signal },
-      },
-    );
-    signal?.throwIfAborted();
-    ({ pageInfo, nodes } = response.repository.pullRequests);
-    nodes = nodes.filter((node) => matchesScope(node, context));
-    after = pageInfo.endCursor;
-    // A GitHub page can contain only other people's forks; keep looking.
-  } while (!nodes.length && pageInfo.hasNextPage);
+  const page = after ?? 1;
+  const perPage = 20;
+  const result = await context.request("/pulls", {
+    query: { state: "all", page, per_page: perPage },
+    signal,
+  });
+  signal?.throwIfAborted();
+  const data = result.pull_requests.map((pr) => mapSession(context, pr));
+  const hasNextPage = data.length === perPage;
   return {
-    data: nodes.map((node) => mapSession(node, githubConfig)),
-    pageInfo,
+    data,
+    pageInfo: { hasNextPage, endCursor: hasNextPage ? page + 1 : null },
   };
 }
 
 export async function sessionDetails(context, number, signal) {
-  const { octokit, githubConfig } = context;
-  const response = await octokit.graphql(
-    `query($owner: String!, $repo: String!, $number: Int!) {
-      repository(owner: $owner, name: $repo) {
-        pullRequest(number: $number) {
-          ${SESSION_FIELDS}
-          headRefOid baseRefOid baseRefName body changedFiles reviewDecision
-          statusCheckRollup { state }
-        }
-      }
-    }`,
-    {
-      owner: githubConfig.username,
-      repo: githubConfig.repo,
-      number,
-      request: { signal },
-    },
-  );
+  const data = await context.request(`/pulls/${number}`, { signal });
   signal?.throwIfAborted();
-  const node = response.repository?.pullRequest;
-  if (!node || !matchesScope(node, context)) {
-    const error = new Error("Session not found in the current scope.");
-    error.status = 404;
-    throw error;
-  }
-  return {
-    ...mapSession(node, githubConfig),
-    headSha: node.headRefOid,
-    baseSha: node.baseRefOid,
-    baseBranch: node.baseRefName,
-    body: node.body || "",
-    changedFiles: node.changedFiles ?? 0,
-    checks: node.statusCheckRollup?.state || null,
-    reviewDecision: node.reviewDecision,
-  };
+  return mapSession(context, data);
+}
+
+export async function findSessionBranch(context, branch) {
+  let cursor = null;
+  do {
+    const result = await sessionsList(context, cursor);
+    const match = result.data.find((session) => session.branch === branch);
+    if (match) return sessionDetails(context, match.number);
+    cursor = result.pageInfo.endCursor;
+  } while (cursor);
+  return null;
 }

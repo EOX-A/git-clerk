@@ -1,49 +1,20 @@
 import { Base64 } from "js-base64";
-import { sessionDetails } from "./session.js";
+import { brokerAuthor, publishGitBundle } from "./git-broker.js";
 
 export async function fileContent(context, session, path, signal) {
-  signal?.throwIfAborted();
-  const target = {
-    owner: context.githubConfig.username,
-    repo: context.githubConfig.repo,
-  };
-  let source = {
-    owner: session.headOwner || target.owner,
-    repo: session.headRepo || target.repo,
-  };
-  const params = {
-    path: path.replace(/^\//, ""),
-    ref: session.headSha,
-    request: { signal },
-  };
-  let response;
-  try {
-    response = await context.octokit.rest.repos.getContent({
-      ...source,
-      ...params,
-    });
-  } catch (error) {
-    if (
-      error.status !== 404 ||
-      (source.owner === target.owner && source.repo === target.repo)
-    )
-      throw error;
-    signal?.throwIfAborted();
-    source = target;
-    response = await context.octokit.rest.repos.getContent({
-      ...source,
-      ...params,
-    });
-  }
-  signal?.throwIfAborted();
-  const data = response.data;
-  if (Array.isArray(data) || data.type !== "file")
-    throw new Error("This path is not a regular file.");
+  const data = await context.request("/file", {
+    query: {
+      path: path.replace(/^\//, ""),
+      ref: session.headSha || session.branch,
+    },
+    signal,
+  });
   let text = null;
   let unavailable = "";
-  if (data.encoding !== "base64" || data.size > 1024 * 1024)
-    unavailable = "This file is too large to edit here. Open it on GitHub.";
-  else {
+  if (data.encoding !== "base64" || data.size > 1024 * 1024) {
+    unavailable =
+      "This file is too large to edit here. Open it in the repository.";
+  } else {
     try {
       text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
         Base64.toUint8Array(data.content),
@@ -52,62 +23,74 @@ export async function fileContent(context, session, path, signal) {
     } catch {
       text = null;
       unavailable =
-        "This file is binary or is not UTF-8 text. Open it on GitHub.";
+        "This file is binary or is not UTF-8 text. Open it in the repository.";
     }
   }
-  return { ...data, text, unavailable, owner: source.owner, repo: source.repo };
+  return {
+    ...data,
+    text,
+    unavailable,
+    owner: session.headOwner,
+    repo: session.headRepo,
+  };
 }
 
 export async function saveFileContent(context, session, path, text, sha) {
-  // Recheck scope and write permissions immediately before committing to the actual head.
-  const fresh = await sessionDetails(context, session.number);
-  if (
-    !fresh.canEdit ||
-    fresh.headOwner !== session.headOwner ||
-    fresh.headRepo !== session.headRepo ||
-    fresh.branch !== session.branch
-  ) {
-    throw Object.assign(new Error("This session is no longer writable."), {
-      status: 403,
+  if (!session.canEdit) throw new Error("This session is read-only.");
+  // Publish does not take an expected blob SHA, so compare it with the current branch first.
+  const latest = await context
+    .request("/file", { query: { path, ref: session.branch } })
+    .catch((error) => {
+      if (error.status !== 404) throw error;
+      return null;
     });
-  }
-  if (!sha || typeof text !== "string")
-    throw new Error("An existing file SHA and text are required.");
-  const { data } = await context.octokit.rest.repos.createOrUpdateFileContents({
-    owner: fresh.headOwner,
-    repo: fresh.headRepo,
-    branch: fresh.branch,
-    path,
-    sha,
-    content: Base64.encode(text),
-    message: `chores: file updated - ${path}`,
-  });
-  return { sha: data.content.sha, commitSha: data.commit.sha };
+  if (!sha || latest?.sha !== sha)
+    throw Object.assign(new Error("The file changed since it was opened."), {
+      status: 409,
+    });
+  const result = await publishGitBundle(
+    context,
+    {
+      files: { [path]: text },
+      commit_message: `chore: update ${path}`,
+      target_branch: session.branch,
+      pr_title: session.title,
+      pr_body: session.body,
+    },
+    session,
+  );
+  const file = result.files_committed?.find((entry) => entry.path === path);
+  if (
+    !file?.sha ||
+    !result.commit_sha ||
+    result.branch !== session.branch ||
+    result.pr_number !== session.number
+  )
+    throw new Error(
+      "The Git broker did not confirm the file save. Refresh the session to check its current state.",
+    );
+  return { sha: file.sha, commitSha: result.commit_sha };
 }
 
-export async function fileDiff(context, session, path, signal) {
-  let page = 1;
-  while (true) {
-    signal?.throwIfAborted();
-    const { data, headers } = await context.octokit.rest.pulls.listFiles({
-      owner: context.githubConfig.username,
-      repo: context.githubConfig.repo,
-      pull_number: session.number,
-      per_page: 100,
-      page,
-      request: { signal },
-    });
-    signal?.throwIfAborted();
-    const file = data.find((file) => file.filename === path);
-    if (file)
-      return {
-        patch: file.patch ?? null,
-        additions: file.additions,
-        deletions: file.deletions,
-        status: file.status,
-      };
-    if (!/rel="next"/.test(headers?.link || ""))
-      return { patch: "", additions: 0, deletions: 0 };
-    page++;
-  }
+export function fileDiff(context, session, path, signal) {
+  return context.request(`/pulls/${session.number}/diff`, {
+    query: { path },
+    signal,
+  });
+}
+
+export function deleteFileContent(context, session, path, sha) {
+  if (!session.canEdit) throw new Error("This session is read-only.");
+  if (!sha) throw new Error("Reload this file before deleting it.");
+  return context.request("/file", {
+    method: "DELETE",
+    branch: session.branch,
+    body: {
+      branch: session.branch,
+      path,
+      sha,
+      commit_message: `chore: delete ${path}`,
+      author: brokerAuthor(context),
+    },
+  });
 }

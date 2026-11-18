@@ -1,3 +1,5 @@
+import { matchFileSchema } from "./file-editor.js";
+
 export const FILE_STATUS = {
   added: {
     label: "Added",
@@ -52,8 +54,14 @@ export function fileDirectory(path) {
 export function fileTab(path) {
   return { id: path, path };
 }
-export function changedFileTabs(files) {
-  return files.map((file) => fileTab(file.path));
+export function changedFileTabs(files, root = globalThis) {
+  // The broker's draft marker is available in the drawer but never auto-opens.
+  const tabs = files
+    .filter(({ path }) => path !== ".gitclerk-session")
+    .map(({ path }) => fileTab(path));
+  const priority = tabs.findIndex(({ path }) => matchFileSchema(path, root));
+  if (priority > 0) tabs.unshift(...tabs.splice(priority, 1));
+  return tabs;
 }
 export function closeFileTab(tabs, activeID, id) {
   const index = tabs.findIndex((tab) => tab.id === id);

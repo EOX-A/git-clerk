@@ -48,8 +48,6 @@ const app = createApp(chat ? ChatFixture : creation ? App : RouterView)
   .use(router);
 if (creation) {
   installCreationFixture();
-  // Keep the fixture's offline schemas and exercise the real inline editor entries.
-  globalThis.schemaMap.push(...schemaMap.filter((entry) => entry.schema));
 }
 if (chat)
   await router.replace({

@@ -45,7 +45,7 @@ const closeMethod = (restoreFocus = false) => {
 const toggleMethod = async () => {
   if (open.value) return closeMethod(true);
   open.value = true;
-  // Counts and sorting must include fresh matching sessions from every GitHub page.
+  // Counts and sorting include fresh sessions from every broker page.
   sessionsStore.loadSessions(false, true, true);
   await nextTick();
   positionPanelMethod();

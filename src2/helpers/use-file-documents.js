@@ -61,6 +61,7 @@ export default function useFileDocuments(
             headOwner: currentSession.owner,
             headRepo: currentSession.repo,
             headSha: currentSession.baseSha,
+            branch: currentSession.baseBranch,
           }
         : currentSession;
       const file =
@@ -217,7 +218,7 @@ export default function useFileDocuments(
       snackbar.value = {
         text:
           cause.status === 409 || cause.status === 422
-            ? "The file changed on GitHub. Your draft is preserved; compare it with the latest version before retrying."
+            ? "The file changed in the repository. Your draft is preserved; compare it with the latest version before retrying."
             : "Could not save this file. Your draft is preserved. Check your access and try again.",
         status: "error",
       };

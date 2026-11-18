@@ -54,8 +54,8 @@ onUnmounted(() => {
       {{ error }} <button class="underline" @click="loadMethod">Retry</button>
     </p>
     <p v-else-if="result?.patch === null" class="p-6 text-ui text-muted">
-      GitHub did not provide a text diff for this file. Open it on GitHub to
-      review the changes.
+      The Git broker did not return a text diff. Open the file in the repository
+      to review the changes.
     </p>
     <p v-else-if="!rows.length" class="p-6 text-ui text-muted">
       No saved changes in this file.

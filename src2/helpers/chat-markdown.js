@@ -12,11 +12,19 @@ export const chatMarkdownParser = {
 export function chatPullRequestUrl(pr) {
   try {
     const url = new URL(pr.url);
-    return url.protocol === "https:" &&
-      url.hostname === "github.com" &&
+    const repository = pr.repositoryUrl ? new URL(pr.repositoryUrl) : null;
+    const route =
+      { gitlab: "/-/merge_requests/", forgejo: "/pulls/" }[pr.provider] ||
+      "/pull/";
+    return ["https:", "http:"].includes(url.protocol) &&
+      (repository
+        ? url.origin === repository.origin &&
+          url.pathname ===
+            `${repository.pathname.replace(/\/$/, "")}${route}${pr.number}`
+        : url.protocol === "https:" && url.hostname === "github.com") &&
       !url.username &&
       !url.password &&
-      url.pathname.endsWith(`/pull/${pr.number}`)
+      url.pathname.endsWith(`${route}${pr.number}`)
       ? url.href
       : null;
   } catch {

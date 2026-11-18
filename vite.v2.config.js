@@ -24,7 +24,7 @@ export default defineConfig({
     port: 3001,
     strictPort: true,
   },
-  envPrefix: "GITCLERK_",
+  envPrefix: ["GITCLERK_USERNAME", "GITCLERK_EMAIL", "GITCLERK_PROFILE_NAME"],
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src2", import.meta.url)),

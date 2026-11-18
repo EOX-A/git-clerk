@@ -1,61 +1,58 @@
 import { publishChatFiles } from "./chat-publish.js";
 import { generateChatTest, generatePresetTest, streamChat } from "./agentic.js";
-import { createPersonalSession } from "./session-create.js";
-import { fileContent, saveFileContent, fileDiff } from "./file-content.js";
-import { initOctokit } from "./github.js";
+import { createSession } from "./session-create.js";
+import {
+  fileContent,
+  saveFileContent,
+  deleteFileContent,
+  fileDiff,
+} from "./file-content.js";
+import { initGitBroker } from "./git-broker.js";
 import { sessionsList, sessionDetails } from "./session.js";
 import { updateSession } from "./session-actions.js";
-import { sessionFiles, branchRoot, branchDirectory } from "./file.js";
-import useOctokitStore from "@/stores/octokit.js";
+import { sessionFiles, branchDirectory } from "./file.js";
+import useGitStore from "@/stores/git.js";
 import {
   chatContextIncludes,
   chatContextContent,
 } from "@/helpers/chat-config.js";
 
-// Keep the UI-facing contract here when GitHub operations move to the backend.
-export async function connectGitHub() {
-  const context = await initOctokit();
-  useOctokitStore().setOctokit(context);
+export async function connectGitBroker() {
+  const store = useGitStore();
+  store.setContext(await initGitBroker(store.config));
 }
 
 export function getSessionsList(after = null, signal) {
-  return sessionsList(useOctokitStore().context, after, signal);
+  return sessionsList(useGitStore().context, after, signal);
 }
 
 export function getSessionDetails(number, signal) {
-  return sessionDetails(useOctokitStore().context, number, signal);
+  return sessionDetails(useGitStore().context, number, signal);
 }
 
 export function updateSessionDetails(number, action, title) {
-  return updateSession(useOctokitStore().context, number, action, title);
+  return updateSession(useGitStore().context, number, action, title);
 }
 
 export function getSessionFiles(session, signal) {
-  return sessionFiles(useOctokitStore().context, session, signal);
+  return sessionFiles(useGitStore().context, session, signal);
 }
 
-export function getBranchRoot(session, signal) {
-  return branchRoot(useOctokitStore().context, session, signal);
-}
-
-export function getBranchDirectory(source, treeSha, path, signal) {
-  return branchDirectory(
-    useOctokitStore().context,
-    source,
-    treeSha,
-    path,
-    signal,
-  );
+export function getBranchDirectory(session, path, signal) {
+  return branchDirectory(useGitStore().context, session, path, signal);
 }
 
 export function getFileContent(session, path, signal) {
-  return fileContent(useOctokitStore().context, session, path, signal);
+  return fileContent(useGitStore().context, session, path, signal);
 }
 export function saveFile(session, path, text, sha) {
-  return saveFileContent(useOctokitStore().context, session, path, text, sha);
+  return saveFileContent(useGitStore().context, session, path, text, sha);
+}
+export function deleteFile(session, path, sha) {
+  return deleteFileContent(useGitStore().context, session, path, sha);
 }
 export function getFileDiff(session, path, signal) {
-  return fileDiff(useOctokitStore().context, session, path, signal);
+  return fileDiff(useGitStore().context, session, path, signal);
 }
 export async function fetchFileSchema(url, signal) {
   const response = await fetch(url, { signal });
@@ -64,12 +61,7 @@ export async function fetchFileSchema(url, signal) {
 }
 
 export function createSessionByName(name, attempt, onProgress) {
-  return createPersonalSession(
-    useOctokitStore().context,
-    name,
-    attempt,
-    onProgress,
-  );
+  return createSession(useGitStore().context, name, attempt, onProgress);
 }
 
 export function sendChatTest(prompt, signal) {
@@ -82,11 +74,11 @@ export function sendPresetTest(prompt, signal) {
 
 export { streamChat };
 export function publishChatDraft(bundle, attempt, session) {
-  return publishChatFiles(useOctokitStore().context, bundle, attempt, session);
+  return publishChatFiles(useGitStore().context, bundle, attempt, session);
 }
 
 export async function readSessionDraft(session, signal) {
-  const context = useOctokitStore().context;
+  const context = useGitStore().context;
   const { files, incomplete } = await sessionFiles(context, session, signal);
   if (incomplete)
     throw new Error(

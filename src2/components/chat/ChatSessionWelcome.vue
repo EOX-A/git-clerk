@@ -100,7 +100,7 @@ const updated = computed(() => {
           target="_blank"
           rel="noopener noreferrer"
           class="rounded-sm hover:underline underline-offset-4"
-          >View on GitHub ↗</a
+          >View in repository ↗</a
         >
       </div>
     </section>

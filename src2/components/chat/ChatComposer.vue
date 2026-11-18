@@ -16,6 +16,7 @@ const props = defineProps({
     default: false,
   },
   busy: Boolean,
+  blockedReason: { type: String, default: "" },
   active: { type: Boolean, default: true },
   onSend: {
     type: Function,
@@ -31,7 +32,11 @@ const model = ref(models[0]?.label || "Auto");
 const menu = ref("");
 const menuTrigger = shallowRef(null);
 const canSend = computed(
-  () => Boolean(props.onSend) && !props.busy && message.value.trim().length > 0,
+  () =>
+    Boolean(props.onSend) &&
+    !props.busy &&
+    !props.blockedReason &&
+    message.value.trim().length > 0,
 );
 
 const resizeInputMethod = () => {
@@ -99,7 +104,7 @@ watch(
 );
 defineExpose({
   setMessage: (text) => {
-    if (props.busy) return;
+    if (props.busy || props.blockedReason) return;
     message.value = text;
     nextTick(() => {
       resizeInputMethod();
@@ -191,13 +196,14 @@ defineExpose({
           !onSend ? 'Send (coming soon)' : canSend ? 'Send (Enter)' : 'Send'
         "
         :title="
-          !onSend
+          blockedReason ||
+          (!onSend
             ? 'Sending messages is coming soon'
             : busy
               ? 'Wait for the reply'
               : canSend
                 ? 'Send (Enter)'
-                : 'Type a message to send'
+                : 'Type a message to send')
         "
         :class="
           canSend

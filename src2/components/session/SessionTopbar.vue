@@ -115,7 +115,11 @@ onUnmounted(() => {
           >
           <a
             v-if="checks"
-            :href="`${session.url}/checks`"
+            :href="
+              session.provider === 'github'
+                ? `${session.url}/checks`
+                : session.url
+            "
             target="_blank"
             rel="noopener noreferrer"
             :title="checks.label"

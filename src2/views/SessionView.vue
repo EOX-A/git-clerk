@@ -42,7 +42,11 @@ const conversation = computed(() =>
 );
 const chat = computed(() => conversation.value.state);
 const messages = computed(() => chat.value.messages);
-const busy = computed(() => chat.value.busy || hasUnsaved.value);
+const blockedReason = computed(() =>
+  hasUnsaved.value
+    ? "Save or discard your file edits before asking for another change."
+    : "",
+);
 const sendMethod = (payload) => {
   if (hasUnsaved.value || !session.value?.canEdit) return false;
   return conversation.value.sendMethod(payload, session.value);
@@ -216,13 +220,10 @@ onUnmounted(() => {
           :mode="mode"
           :session="session"
           :messages="messages"
-          :busy="busy"
+          :busy="chat.busy"
           :phase="chat.phase"
-          :progress="
-            hasUnsaved
-              ? 'Save or discard your file edits before asking for another change.'
-              : chat.progress
-          "
+          :progress="chat.progress"
+          :blocked-reason="blockedReason"
           :error="chat.error"
           :can-retry="Boolean(chat.pending) && !hasUnsaved"
           :can-stop="chat.busy && chat.phase !== 'saving'"

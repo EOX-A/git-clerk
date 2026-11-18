@@ -1,7 +1,7 @@
 import { defineStore } from "pinia";
 import { shallowReactive } from "vue";
 import useSessionsStore from "./sessions.js";
-import useOctokitStore from "./octokit.js";
+import useGitStore from "./git.js";
 import { publishChatDraft, streamChat, readSessionDraft } from "@/api/index.js";
 import { prepareChatDraft } from "@/helpers/prepare-chat-draft.js";
 import { createChatConversation } from "@/helpers/chat-conversation.js";
@@ -11,10 +11,13 @@ export default defineStore("chat-v2", () => {
   const conversations = shallowReactive({});
   const sessions = useSessionsStore();
   const scopeMethod = () => {
-    const context = useOctokitStore().context;
-    const identity = context
-      ? `${context.githubUserData.login}:${context.githubConfig.username}/${context.githubConfig.repo}`
-      : "connecting";
+    const { config } = useGitStore();
+    const identity = [
+      config.user.username,
+      config.baseUrl,
+      config.provider,
+      config.repo,
+    ].join(":");
     return `${chatScopeKey()}:${identity}`;
   };
   const getConversation = (number = "new") => {

@@ -5,8 +5,7 @@ import NavIcon from "@/components/nav/NavIcon.vue";
 import SessionList from "@/components/nav/SessionList.vue";
 import SessionFilters from "@/components/nav/SessionFilters.vue";
 import SidebarResizeHandle from "@/components/nav/SidebarResizeHandle.vue";
-import useOctokitStore from "@/stores/octokit.js";
-import { storeToRefs } from "pinia";
+import useGitStore from "@/stores/git.js";
 
 const props = defineProps({
   theme: { type: String, required: true },
@@ -16,17 +15,13 @@ const props = defineProps({
 });
 
 const router = useRouter();
-const { githubUserData } = storeToRefs(useOctokitStore());
+const { user } = useGitStore();
 const narrowViewport = window.matchMedia("(max-width: 859px)");
 const isNarrow = ref(narrowViewport.matches);
 const isCollapsed = ref(false);
 const sidebarWidth = ref(280);
 const isRail = computed(() => isCollapsed.value && !isNarrow.value);
 const accountOpen = ref(false);
-const avatarFailed = ref(false);
-const avatarUrl = computed(() =>
-  !avatarFailed.value ? githubUserData.value?.avatar_url || "" : "",
-);
 const sidebar = ref(null);
 const toggleButton = ref(null);
 const accountArea = ref(null);
@@ -114,13 +109,6 @@ const viewportChangeMethod = (event) => {
   closeAccountMethod();
   if (props.mobileOpen) props.closeSidebar();
 };
-
-watch(
-  () => githubUserData.value?.avatar_url,
-  () => {
-    avatarFailed.value = false;
-  },
-);
 
 watch(
   () => props.mobileOpen,
@@ -249,9 +237,7 @@ onUnmounted(() => {
           >
             <p class="px-2 pt-1.5 pb-2 text-meta text-muted">
               {{
-                githubUserData
-                  ? "Signed in with GitHub"
-                  : "GitHub account not connected"
+                user.username ? `@${user.username}` : "No profile configured"
               }}
             </p>
             <fieldset
@@ -298,27 +284,17 @@ onUnmounted(() => {
             class="flex w-full items-center rounded-control text-left hover:bg-hover"
             @click="toggleAccountMethod"
           >
-            <img
-              v-if="avatarUrl"
-              :src="avatarUrl"
-              alt=""
-              aria-hidden="true"
-              class="size-[26px] shrink-0 rounded-full object-cover"
-              @error="avatarFailed = true"
-            />
             <span
-              v-else
               aria-hidden="true"
               class="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-on-primary"
-              >{{ githubUserData?.login?.[0]?.toUpperCase() || "G" }}</span
+              >{{ (user.name || user.username)[0]?.toUpperCase() || "G" }}</span
             >
             <span v-if="!isRail" class="min-w-0 flex-1">
               <span class="block truncate text-ui font-medium">{{
-                githubUserData ? `@${githubUserData.login}` : "Account"
+                user.name || (user.username ? `@${user.username}` : "Account")
               }}</span>
               <span class="block truncate text-meta text-muted">{{
-                githubUserData?.email ||
-                (githubUserData ? "GitHub account" : "Not connected")
+                user.email || "Git Clerk profile"
               }}</span>
             </span>
             <NavIcon

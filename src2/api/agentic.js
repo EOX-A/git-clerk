@@ -52,7 +52,7 @@ export async function generatePresetTest(prompt, signal) {
 
 // Keep prompt text within the existing backend limit; the chat profile reads history.
 export async function streamChat(
-  { prompt, history, draft, model },
+  { prompt, history, draft, model, branch },
   onEvent,
   signal,
 ) {
@@ -65,7 +65,9 @@ export async function streamChat(
     headers: {
       "Content-Type": "application/json",
       Accept: config.backend.stream ? "text/event-stream" : "application/json",
+      ...(branch ? { "X-Git-Session-Branch": branch } : {}),
     },
+    credentials: "same-origin",
     signal,
     body: JSON.stringify({
       prompt: requestPrompt,

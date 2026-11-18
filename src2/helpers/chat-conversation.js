@@ -34,9 +34,15 @@ export function createChatConversation({
 
   const errorMethod = (cause) => {
     if (assistant?.files?.length) assistant.fileStage = "failed";
-    state.error = cause.status
-      ? "GitHub could not save the draft. Check your access and connection, then retry saving."
-      : cause.message || "The request failed. Please retry.";
+    state.error = ["BROKER_DRY_RUN", "BROKER_AUTHOR_REQUIRED"].includes(
+      cause.code,
+    )
+      ? cause.message
+      : cause.status === 403
+        ? "The Git broker denied the save. Check your repository access and session branch."
+        : cause.status
+          ? "The Git broker could not save the draft. Retry saving to check the result."
+          : cause.message || "The request failed. Please retry.";
     state.messages.push({
       id: crypto.randomUUID(),
       role: "error",
@@ -59,7 +65,7 @@ export function createChatConversation({
     const updating = Boolean(state.session);
     state.progress = state.session
       ? `Updating files in PR #${state.session.number} through the Git broker…`
-      : "Publishing files and creating the PR through the Git broker…";
+      : "Creating a draft PR and saving files through the Git broker…";
     const result = await publish(
       bundle,
       saveAttempt,
@@ -87,10 +93,13 @@ export function createChatConversation({
       fileStage: "saved",
       pr: {
         updated: updating,
+        draft: state.session.status === "draft",
         number: state.session.number,
         title: state.session.title || bundle.draft.title,
         branch: state.session.branch,
         url: state.session.url,
+        provider: state.session.provider,
+        repositoryUrl: state.session.repositoryUrl,
       },
     });
     // Move the same generated file previews into the confirmed publication message.
@@ -160,6 +169,7 @@ export function createChatConversation({
             history,
             draft: state.draft,
             model: payload.model,
+            branch: session?.branch,
           },
           (event, data) => {
             if (current.signal.aborted) return;

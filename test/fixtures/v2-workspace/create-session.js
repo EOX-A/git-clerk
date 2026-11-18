@@ -1,17 +1,51 @@
-import useOctokitStore from "../../../src2/stores/octokit.js";
+import { Base64 } from "js-base64";
+import useGitStore from "../../../src2/stores/git.js";
+import { gitBlobSha } from "../../../src2/helpers/file-publication.js";
 
-// Exercise the real root, dialog, store and redirect without credentials or GitHub writes.
+// Exercise the real v2 stores, dialogs and chat without provider credentials or writes.
 export default function installCreationFixture({ chat = false } = {}) {
   const slowFiles = new URLSearchParams(window.location.search).has(
     "slowfiles",
   );
-  const branches = new Map([
-    ["main", "base"],
-    ["alice/chat", "initial"],
-  ]);
-  const files = new Map();
-  let stagedTree = [];
+  const user = {
+    name: "Alice",
+    email: "alice@example.test",
+    username: "alice",
+  };
+  const repository = {
+    provider: "github",
+    repo: "upstream/catalog",
+    default_branch: "main",
+    html_url: "https://github.com/upstream/catalog",
+  };
+  const prs = new Map();
+  const documents = new Map();
   let commits = 0;
+  function create(number, title, branch, draft, body = "") {
+    const pr = {
+      number,
+      title,
+      body,
+      repo: repository.repo,
+      state: "open",
+      draft,
+      html_url: `${repository.html_url}/pull/${number}`,
+      head_branch: branch,
+      head_sha: `initial-${number}`,
+      base_branch: "main",
+      author: "git-broker",
+      updated_at: new Date().toISOString(),
+      ci_status: "success",
+    };
+    prs.set(number, pr);
+    documents.set(number, new Map());
+    return pr;
+  }
+  if (chat) {
+    create(7, "Chat workspace demo", "session/alice/chat", true);
+    create(8, "Other session demo", "session/alice/other", true);
+    documents.get(7).set("README.md", "# Fixture repository\n");
+  }
   globalThis.schemaMap = ["products", "projects", "variables"].flatMap(
     (dir) => [
       {
@@ -30,235 +64,108 @@ export default function installCreationFixture({ chat = false } = {}) {
         path: `/${dir}/catalog.json`,
         schema: { type: "object", required: ["type", "id", "links"] },
       },
+      ...globalThis.gitClerkConfig.schemaMap.filter(
+        (entry) => entry.schema && entry.path.startsWith("/stories/"),
+      ),
     ],
   );
-  let pr = chat
-    ? {
-        node_id: "PR_7",
-        number: 7,
-        title: "Chat workspace demo",
-        state: "open",
-        draft: true,
-        html_url: "https://github.com/upstream/catalog/pull/7",
-        updated_at: "initial",
-        head: { ref: "alice/chat", repo: { owner: { login: "alice" } } },
+
+  const store = useGitStore();
+  Object.assign(store.user, user);
+  store.setContext({
+    repository,
+    user,
+    async request(path, { method = "GET", query, body } = {}) {
+      const match = /^\/pulls\/(\d+)(?:\/(\w+))?$/.exec(path);
+      const number = Number(match?.[1]);
+      if (path === "/pulls") {
+        if (method === "POST")
+          return create(
+            Math.max(6, ...prs.keys()) + 1,
+            body.title,
+            body.head_branch,
+            body.draft,
+            body.body,
+          );
+        return { pull_requests: [...prs.values()] };
       }
-    : null;
-  const user = { login: "alice", name: "Alice", email: "alice@example.test" };
-  const graphqlPR = () =>
-    pr && {
-      id: pr.node_id,
-      number: pr.number,
-      title: pr.title,
-      url: pr.html_url,
-      state: pr.state === "closed" ? "CLOSED" : "OPEN",
-      isDraft: pr.draft,
-      updatedAt: pr.updated_at,
-      author: { login: "alice" },
-      headRepositoryOwner: { login: pr.head.repo.owner.login },
-      headRefName: pr.head.ref,
-      headRefOid: branches.get(pr.head.ref),
-      baseRefOid: "base",
-      baseRefName: pr.base?.ref || "main",
-      body: pr.body || "",
-      headRef: branches.has(pr.head.ref) ? { id: "REF_7" } : null,
-      changedFiles: files.size || (chat ? 1 : 0),
-      viewerCanUpdate: true,
-      headRepository: {
-        name: "catalog",
-        owner: { login: pr.head.repo.owner.login },
-        viewerPermission: "WRITE",
-        defaultBranchRef: { name: "main" },
-      },
-    };
-  useOctokitStore().setOctokit({
-    githubTargetRepo: { default_branch: "main" },
-    githubConfig: { username: "upstream", repo: "catalog" },
-    githubUserData: user,
-    scopeOwners: null,
-    octokit: {
-      auth: async () => ({ token: "fixture-token" }),
-      graphql: async (query, variables) => ({
-        repository: query.includes("pullRequests(")
-          ? {
-              pullRequests: {
-                nodes: pr ? [graphqlPR()] : [],
-                pageInfo: { hasNextPage: false, endCursor: null },
-              },
-            }
-          : {
-              pullRequest: chat
-                ? {
-                    ...graphqlPR(),
-                    number: variables.number,
-                    id: `PR_${variables.number}`,
-                  }
-                : graphqlPR(),
-            },
-      }),
-      rest: {
-        repos: {
-          getContent: async ({ path }) => {
-            if (slowFiles)
-              await new Promise((resolve) => setTimeout(resolve, 3000));
-            const content =
-              files.get(path) ||
-              (path === "README.md" ? "# Fixture document\n" : null);
-            if (content === null)
-              throw Object.assign(new Error("Fixture file missing"), {
-                status: 404,
-              });
-            return {
-              data: {
-                type: "file",
-                path,
-                sha: `file-${commits}`,
-                size: content.length,
-                encoding: "base64",
-                content: btoa(unescape(encodeURIComponent(content))),
-              },
-            };
-          },
-          get: async ({ owner }) => ({
-            data: {
-              id: owner === "upstream" ? 1 : 2,
-              name: "catalog",
-              owner: { login: owner },
-              default_branch: "main",
-              fork: owner === "alice",
-              parent: { id: 1 },
-              permissions: { push: true },
-            },
-          }),
-        },
-        git: {
-          getRef: async ({ owner, ref }) => {
-            const sha =
-              owner === "upstream" && ref === "heads/main"
-                ? "base"
-                : branches.get(ref.slice(6));
-            if (!sha)
-              throw Object.assign(new Error("Fixture branch missing"), {
-                status: 404,
-              });
-            return { data: { object: { sha } } };
-          },
-          getCommit: async () => ({ data: { tree: { sha: "tree" } } }),
-          createTree: async ({ tree }) => {
-            stagedTree = tree;
-            return { data: { sha: "generated-tree" } };
-          },
-          createCommit: async ({ tree }) => ({
-            data: {
-              sha:
-                tree === "generated-tree"
-                  ? `generated-${++commits}`
-                  : "initial",
-            },
-          }),
-          updateRef: async ({ ref, sha, force }) => {
-            if (force) throw new Error("Fixture rejects forced writes");
-            branches.set(ref.slice(6), sha);
-            for (const file of stagedTree) files.set(file.path, file.content);
-            return {};
-          },
-          createRef: async ({ ref, sha }) => {
-            branches.set(ref.slice(11), sha);
-            return {};
-          },
-          deleteRef: async ({ ref }) => {
-            branches.delete(ref.slice(6));
-            return {};
-          },
-          getTree: async () => ({
-            data: {
-              tree: [{ path: "README.md", type: "blob", sha: "readme" }],
-              truncated: false,
-            },
-          }),
-        },
-        pulls: {
-          list: async () => ({ data: pr ? [pr] : [] }),
-          listFiles: async () => ({
-            data: files.size
-              ? [...files.keys()].map((filename) => ({
-                  filename,
-                  status: "added",
-                  additions: 1,
-                  deletions: 0,
-                }))
-              : chat
-                ? [
-                    {
-                      filename: "README.md",
-                      status: "modified",
-                      additions: 1,
-                      deletions: 1,
-                      patch: "@@ -1 +1 @@\n-old\n+new",
-                    },
-                  ]
-                : [],
-            headers: {},
-          }),
-          update: async ({ title, state }) => {
-            if (pr) {
-              if (title) pr.title = title;
-              if (state) pr.state = state;
-            }
-            return { data: pr };
-          },
-          create: async ({ title, head }) => {
-            pr = {
-              node_id: "PR_7",
-              number: 7,
-              title,
-              html_url: "https://github.com/upstream/catalog/pull/7",
-              state: "open",
-              draft: true,
-              updated_at: new Date().toISOString(),
-              head: {
-                ref: head.split(":")[1],
-                repo: { owner: { login: "alice" } },
-              },
-            };
-            return { data: pr };
-          },
-        },
-      },
+      if (path === "/publish") {
+        const pr = [...prs.values()].find(
+          (item) => item.head_branch === body.target_branch,
+        );
+        if (!pr) throw new Error("Create a draft PR before publishing files.");
+        const files = documents.get(pr.number);
+        const files_committed = [];
+        for (const [path, text] of Object.entries(body.files)) {
+          files.set(path, text);
+          files_committed.push({ path, sha: await gitBlobSha(text) });
+        }
+        pr.head_sha = `generated-${++commits}`;
+        pr.updated_at = new Date().toISOString();
+        return {
+          pr_number: pr.number,
+          branch: pr.head_branch,
+          commit_sha: pr.head_sha,
+          files_committed,
+        };
+      }
+      if (path === "/file" || path === "/tree") {
+        const pr = [...prs.values()].find((item) =>
+          [item.head_sha, item.head_branch].includes(query.ref),
+        );
+        const files = documents.get(pr?.number) || new Map();
+        if (path === "/file") {
+          const text = files.get(query.path);
+          if (slowFiles)
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+          if (text === undefined)
+            throw Object.assign(new Error("Fixture file not found"), {
+              status: 404,
+            });
+          return {
+            path: query.path,
+            encoding: "base64",
+            content: Base64.encode(text),
+            size: text.length,
+            sha: await gitBlobSha(text),
+          };
+        }
+        const prefix = query.path ? `${query.path}/` : "";
+        const entries = new Map();
+        for (const file of files.keys()) {
+          if (!file.startsWith(prefix)) continue;
+          const [name, ...children] = file.slice(prefix.length).split("/");
+          entries.set(name, {
+            name,
+            path: `${prefix}${name}`,
+            type: children.length ? "dir" : "file",
+          });
+        }
+        return { entries: [...entries.values()] };
+      }
+      const pr = prs.get(number);
+      if (!pr)
+        throw Object.assign(new Error("Session not found"), { status: 404 });
+      if (match[2] === "rename") pr.title = body.title;
+      if (match[2] === "submit") pr.draft = false;
+      if (match[2] === "state") pr.state = body.state;
+      if (method === "DELETE") pr.state = "closed";
+      if (match[2] === "diff") return { patch: "@@ -1 +1 @@\n-old\n+new" };
+      if (match[2] === "files")
+        return {
+          files: [...documents.get(number).keys()].map((filename) => ({
+            filename,
+            status: "added",
+            additions: 1,
+            deletions: 0,
+          })),
+        };
+      return { ...pr, changed_files: documents.get(number).size };
     },
   });
-  // Mirror only the local mock gateway's result into the mock GitHub read model.
-  const originalFetch = globalThis.fetch.bind(globalThis);
-  globalThis.fetch = async (url, options) => {
-    const response = await originalFetch(url, options);
-    if (url === "/test/agentic/api/mcp/call" && response.ok) {
-      const { arguments: args } = JSON.parse(options.body);
-      const result = await response.clone().json();
-      for (const [path, content] of Object.entries(args.files))
-        files.set(path, content);
-      branches.set(result.branch, result.commit_sha);
-      pr = {
-        node_id: "PR_7",
-        number: 7,
-        title: args.pr_title,
-        state: "open",
-        draft: args.base_branch === args.target_branch ? pr.draft : false,
-        base: {
-          ref:
-            args.base_branch === args.target_branch
-              ? pr.base?.ref || "main"
-              : args.base_branch,
-        },
-        body: args.pr_body,
-        html_url: result.pr_url,
-        updated_at: new Date().toISOString(),
-        head: { ref: result.branch, repo: { owner: { login: "upstream" } } },
-      };
-    }
-    return response;
-  };
   return {
     toggleClosed: () => {
+      const pr = prs.get(7);
       pr.state = pr.state === "closed" ? "open" : "closed";
     },
   };

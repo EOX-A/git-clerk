@@ -340,6 +340,9 @@ const forkingLocation = {
 const allowedOrigins = [import.meta.url.replace("/config.js", "")];
 
 globalThis.gitClerkConfig = {
+  // V2 only. Use the workspace gateway URL in a hosted deployment.
+  gitBrokerUrl: "http://localhost:8015",
+  // gitBroker: { provider: "github", repo: "owner/repository" },
   ghConfig,
   basePath,
   schemaMap,
@@ -395,8 +398,6 @@ globalThis.gitClerkConfig = {
 //     enabled: true,
 //     automatic: true,
 //     updateExistingSession: true,
-//     serverId: "eox-git-broker",
-//     toolName: "git_publish_bundle",
 //   },
 // };
 
@@ -444,8 +445,6 @@ globalThis.gitClerkConfig.chat = {
     enabled: true,
     automatic: true,
     updateExistingSession: true,
-    serverId: "eox-git-broker",
-    toolName: "git_publish_bundle",
   },
 };
 // NARRATIVE_CHAT_CONFIG */

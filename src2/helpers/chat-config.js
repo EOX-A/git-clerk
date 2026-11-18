@@ -21,8 +21,6 @@ export function getChatConfig(root = globalThis) {
       enabled: true,
       automatic: true,
       updateExistingSession: true,
-      serverId: "eox-git-broker",
-      toolName: "git_publish_bundle",
       prBody:
         preset.prBody ??
         "Content generated in Git Clerk. Schema validation has not been performed.",

@@ -50,16 +50,15 @@ const createMethod = async () => {
     };
     props.onClose();
   } catch (cause) {
-    if (cause.code?.startsWith("SESSION_")) error.value = cause.message;
-    else if (cause.code?.startsWith("GITHUB_CONFIG_"))
+    if (cause.status === 401)
+      error.value = "Your workspace session expired. Sign in again and retry.";
+    else if (cause.status === 403)
       error.value =
-        "Connect a GitHub account and configure a repository before creating a session.";
-    else if (cause.status === 401)
-      error.value = "GitHub authentication expired. Reconnect and retry.";
+        "The Git broker denied session creation. Check your workspace access and configured username.";
     else
-      error.value = attempt.branchReady
-        ? "The branch is ready, but GitHub could not finish creating the session. Retry to continue with the same branch."
-        : "Could not create the session. Check your GitHub access and connection, then retry.";
+      error.value =
+        cause.message ||
+        "Could not create the session. Check the Git broker connection and retry.";
   } finally {
     busy.value = false;
     started.value = Boolean(attempt.title);
