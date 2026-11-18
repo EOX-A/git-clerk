@@ -17,7 +17,7 @@ export function createSession(context, name, attempt, onProgress) {
 
 export async function createDraftSession(
   context,
-  { title: name, body },
+  { title: name, body, branchTitle },
   attempt = {},
   onProgress = () => {},
 ) {
@@ -38,7 +38,7 @@ export async function createDraftSession(
       );
     return session;
   }
-  attempt.branch ||= newSessionBranch(context, title);
+  attempt.branch ||= newSessionBranch(context, branchTitle ?? title);
   onProgress("Creating the session through the Git broker…");
   try {
     const result = await context.request("/pulls", {

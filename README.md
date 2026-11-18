@@ -406,7 +406,7 @@ npm run start
 This starts both versions in separate Vite servers:
 
 - v1: `src/`, Vue and Vuetify, at http://localhost:3000.
-- v2: `src2/`, Vue and Tailwind CSS, at http://localhost:3001.
+- v2: `src-v2/`, Vue and Tailwind CSS, at http://localhost:3001.
 
 To run either version independently:
 
@@ -424,19 +424,19 @@ The centered **Create Session** link below the composer opens a session-name mod
 with the v1 “What is a session?” explanation. The Git broker creates a draft PR
 on a `session/<user_slug>/<session_slug>` branch in the configured repository.
 A retry checks uncertain results without creating a duplicate session.
-`src2/main.js` mounts the app configured in `src2/app.js`; `src2/App.vue`
+`src-v2/main.js` mounts the app configured in `src-v2/app.js`; `src-v2/App.vue`
 keeps navigation mounted around the router. Navigation components live in
-`src2/components/nav/` and support a collapsed rail, mobile drawer, and light/dark
+`src-v2/components/nav/` and support a collapsed rail, mobile drawer, and light/dark
 appearance. The sidebar starts at 264 px; drag its right edge to resize
 between 240 and 360 px on desktop. Double-click the edge to reset, or focus it
 and use the arrow keys (Enter resets).
 
-V2 uses the Git broker for repository requests. In `public/config.js`, set
+V2 uses the Git broker for repository requests. In `public/config-v2.js`, set
 `globalThis.gitClerkConfig.gitBrokerUrl` to the workspace gateway path, for example
 `/services/eoxhub-gateway/<workspace>/eox-git-broker-mcp`. For local development it
 uses `http://localhost:8015`. Optional `gitBroker: { provider, repo }` settings override
 the backend's repository selection; set `provider` explicitly for GitLab or Forgejo.
-V1 continues to use its own GitHub configuration and credentials.
+V1 continues to use `public/config.js` and its own GitHub configuration and credentials.
 
 Set `GITCLERK_PROFILE_NAME`, `GITCLERK_EMAIL`, and `GITCLERK_USERNAME` in Git Clerk's
 `.env` file and restart Vite. V2 uses these values for the profile and sends them
@@ -450,11 +450,11 @@ The sidebar shows every PR returned by the broker, regardless of author or branc
 Filter and sort changes fetch fresh pages. Selecting a session loads its current
 branch, checks and review status. Session actions use the broker's rename, review
 submission, and close/delete routes. File edits still require an open session in
-the user's branch namespace. `src2/api/index.js` keeps these operations behind the
+the user's branch namespace. `src-v2/api/index.js` keeps these operations behind the
 UI boundary.
 
 V2 chat is configured by one `globalThis.gitClerkConfig.chat.preset` per instance
-in `public/config.js`; there is no preset picker or registry. Existing configuration
+in `public/config-v2.js`; there is no preset picker or registry. Existing configuration
 sections (GitHub, schemaMap, previews, authentication) remain independent.
 The shared application has no OSC/narrative branches or built-in project IDs.
 `projectId` is sent to the backend; it does not select frontend behaviour. Set it
@@ -537,7 +537,7 @@ self-reported validation scores do not authorize saving.
 Both generation and broker calls use `gitClerkConfig.chat.backend.baseUrl`
 (default `http://localhost:8000`). The former agentic URL environment variable is
 no longer read. `backend.stream` defaults to `true`; setting it to `false` uses the
-backend's JSON response instead of SSE. Reload the app after editing config.js.
+backend's JSON response instead of SSE. Reload the app after editing config-v2.js.
 LLM credentials belong in the backend environment, never in the frontend `.env`.
 
 The chat configuration supports:
@@ -548,6 +548,7 @@ The chat configuration supports:
 | `preset.projectId`, `profile`, `output_format` | Values sent to `/api/generate`. The project must exist on the backend.                                                                                                                            |
 | `preset.fileExample`                           | File map example embedded in the shared draft contract; defaults to a path with complete text content. The OSC preset supplies a JSON object example.                                             |
 | `preset.prBody`                                | New-PR description for this preset. An explicit `publishing.prBody` overrides it.                                                                                                                 |
+| `preset.prTitle`                               | Title template for new AI PRs. Default: `<title> (<username>)`. `<id>` is also available. An explicit `publishing.prTitle` overrides it.                                                          |
 | `preset.promptInstructions`                    | Short content-specific instruction before the shared response contract. Counts toward the backend prompt limit.                                                                                   |
 | `preset.context.inputField`                    | Optional backend field receiving the current `outputFile` text; use `markdownSection` for the Markdown editor. Unset by default.                                                                  |
 | `preset.context.extensions`                    | Which changed files supply follow-up context; `[]` includes readable text files. This does not restrict publication paths. JSON is decoded when possible; Markdown and other text remain strings. |
@@ -558,16 +559,17 @@ The chat configuration supports:
 | `publishing.updateExistingSession`             | Allow or disable follow-up publication into an existing PR.                                                                                                                                       |
 | `publishing.serverId`, `toolName`, `prBody`    | Broker route and new-PR description. Replacement tools must implement the same publish-bundle contract.                                                                                           |
 
-`public/config.js` includes two complete chat examples: OSC and the narrative
+`public/config-v2.js` includes two complete chat examples: OSC and the narrative
 editor (`NARRATIVE_CHAT_CONFIG`). Switch by commenting out one assignment and
 uncommenting the other; keep only one active and reload the app. The narrative example uses `generic-eox`,
 `profile: "markdown_editor"`, `output_format: "markdown"`, and
-`outputFile: "stories/narrative.md"`. Change that explicit destination in config
-when using a different file. Follow-up requests send the current file in
+`outputFile: "stories/<id>.md"`. The backend's draft ID fills in `<id>` for new
+files. The preset's PR title is `Publish: <title> (<username>)`. Follow-up requests
+keep the existing file path and send the current file in
 `preset.context.inputField: "markdownSection"`, matching the existing backend.
 Other raw-output profiles can configure their own input field (for example `markdown`).
 
-The top-level `schemaMap` entry for `/stories/<name>.md` uses `output: "Story"`:
+The top-level `schemaMap` entry for `/stories/<id>.md` uses `output: "Story"`:
 the form edits `{ Story: markdown }`, while Git receives the original Markdown text.
 Author metadata is not required. Its `/narrative-preview.html` iframe is based on
 the supplied storytelling preview, preserving its pinned EOX storytelling, chart,
@@ -634,9 +636,9 @@ agentic backend or an LLM.
 
 Run the focused API regression tests with `npm run test:v2` (mocked broker and agentic responses).
 
-Temporary design references live in `src2/docs/` and are excluded from Tailwind
+Temporary design references live in `src-v2/docs/` and are excluded from Tailwind
 scanning and formatting. Design colours, typography, spacing, radii, and shadows
-are defined as Tailwind tokens in `src2/assets/main.css`. It follows v1's JavaScript, Vue Composition API,
+are defined as Tailwind tokens in `src-v2/assets/main.css`. It follows v1's JavaScript, Vue Composition API,
 `@/` imports, and directory conventions, with feature folders added as they are implemented. Tailwind replaces Vuetify in v2, using the
 [Tailwind Vite plugin](https://tailwindcss.com/docs/installation/using-vite).
 Each version resolves `@/` to its own source directory.
@@ -647,11 +649,13 @@ Each version resolves `@/` to its own source directory.
 npm run build
 ```
 
-The default build remains v1 in `dist/`. Build and preview v2 separately with:
+The default release build compiles v2 into `dist-v2/` (used by `Dockerfile` and the release workflow). You can also run the explicit version scripts:
 
 ```sh
 npm run build:v2
 npm run preview:v2
+npm run build:v1
+npm run preview:v1
 ```
 
-V2 builds into `dist-v2/`, keeping the existing v1 release output separate.
+V2 builds into `dist-v2/`, while `build:v1` builds v1 into `dist/`.

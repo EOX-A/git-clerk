@@ -21,6 +21,7 @@ export function createChatConversation({
     progress: "",
     error: "",
     draft: null,
+    draftIdentity: null,
     pending: null,
     session: null,
     completed: 0,
@@ -168,6 +169,7 @@ export function createChatConversation({
             prompt: payload.text.trim(),
             history,
             draft: state.draft,
+            draftIdentity: state.draftIdentity,
             model: payload.model,
             branch: session?.branch,
           },
@@ -190,6 +192,12 @@ export function createChatConversation({
         current.signal.throwIfAborted();
         assistant.text = result.message;
         assistant.streaming = false;
+        if (result.draftIdentity) state.draftIdentity = result.draftIdentity;
+        else if (result.draft?.id)
+          state.draftIdentity = {
+            id: result.draft.id,
+            title: result.draft.title,
+          };
         if (!result.draft) {
           assistant.files = [];
           return;

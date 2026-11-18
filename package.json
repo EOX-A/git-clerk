@@ -5,8 +5,10 @@
   "type": "module",
   "scripts": {
     "start": "concurrently --kill-others --names v1,v2 \"npm:start:v1\" \"npm:start:v2\"",
-    "build": "vite build",
-    "preview": "vite preview",
+    "build": "vite build --config vite.v2.config.js",
+    "preview": "vite preview --config vite.v2.config.js",
+    "build:v1": "vite build",
+    "preview:v1": "vite preview",
     "lint": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

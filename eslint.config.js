@@ -5,10 +5,10 @@ export default [
   ...eox,
   ...pluginVue.configs["flat/recommended"],
   {
-    ignores: ["public/", "dist/", "dist-v2/", "src2/docs/"],
+    ignores: ["public/", "dist/", "dist-v2/", "src-v2/docs/"],
   },
   {
-    files: ["src/**/*.vue", "src2/**/*.vue"],
+    files: ["src/**/*.vue", "src-v2/**/*.vue"],
     rules: {
       "vue/no-deprecated-html-element-is": "warn",
       "vue/multi-word-component-names": "off",

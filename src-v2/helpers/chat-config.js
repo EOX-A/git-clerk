@@ -1,4 +1,4 @@
-// One deployment selects one preset. Read config at call/setup time, after config.js.
+// One deployment selects one preset. Read config at call/setup time, after config-v2.js.
 export function getChatConfig(root = globalThis) {
   const chat = root.gitClerkConfig?.chat || {};
   const preset = chat.preset || {};
@@ -21,6 +21,7 @@ export function getChatConfig(root = globalThis) {
       enabled: true,
       automatic: true,
       updateExistingSession: true,
+      prTitle: preset.prTitle ?? "<title> (<username>)",
       prBody:
         preset.prBody ??
         "Content generated in Git Clerk. Schema validation has not been performed.",

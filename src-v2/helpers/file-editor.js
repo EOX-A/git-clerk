@@ -1,18 +1,20 @@
+export function matchesFilePath(path, template) {
+  // Paths are literal except for single-segment <placeholders>.
+  const pattern = template
+    .split(/(<[^>]+>)/g)
+    .map((part) =>
+      /^<[^>]+>$/.test(part)
+        ? "[^/]+"
+        : part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+    )
+    .join("");
+  return new RegExp(`^${pattern}$`).test(path);
+}
+
 export function matchFileSchema(path, root = globalThis) {
   const config = root.gitClerkConfig || {};
   const schemas = root.schemaMap || config.schemaMap || [];
-  return schemas.find((item) => {
-    // Paths are literal except for single-segment <placeholders>.
-    const pattern = item.path
-      .split(/(<[^>]+>)/g)
-      .map((part) =>
-        /^<[^>]+>$/.test(part)
-          ? "[^/]+"
-          : part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
-      )
-      .join("");
-    return new RegExp(`^${pattern}$`).test(`/${path}`);
-  });
+  return schemas.find((item) => matchesFilePath(`/${path}`, item.path));
 }
 
 // Match v1's runtime schema/preview contracts without importing its application state.

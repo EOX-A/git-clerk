@@ -2,10 +2,13 @@
 import { computed, ref } from "vue";
 import ChatIcon from "./ChatIcon.vue";
 import { splitFilePath } from "@/helpers/chat-dummy.js";
+import { matchesFilePath } from "@/helpers/file-editor.js";
 
 const props = defineProps({
   files: { type: Array, default: () => [] },
   stage: { type: String, default: "saved" },
+  pathTemplate: { type: String, default: null },
+  pending: Boolean,
   onOpenFile: { type: Function, default: null },
   onOpenChanges: { type: Function, default: null },
 });
@@ -21,6 +24,8 @@ const label = computed(
       saved: "Saved files",
     })[props.stage] || "Generated files",
 );
+const usesTemplate = (path) =>
+  props.pathTemplate && matchesFilePath(path, props.pathTemplate);
 const fileStatus = (file) =>
   props.stage === "saved"
     ? file.status || "Saved"
@@ -57,10 +62,26 @@ const toggleMethod = (path, open) => {
       <span class="flex-1 text-ui font-medium">{{ label }}</span>
       <span
         class="rounded bg-hover px-1.5 py-0.5 text-meta tabular-nums text-muted"
-        >{{ files.length }}</span
+        >{{ pending ? 1 : files.length }}</span
       >
     </div>
-    <div class="nav-scrollbar max-h-[360px] overflow-y-auto overscroll-contain">
+    <div v-if="pending" class="flex items-center gap-2 px-3 py-2.5">
+      <ChatIcon name="file" class="size-3.5 shrink-0 text-muted" />
+      <span
+        class="min-w-0 flex-1 font-mono text-[12px] text-muted [overflow-wrap:anywhere]"
+      >
+        {{ pathTemplate }}
+      </span>
+      <span
+        class="shrink-0 rounded bg-surface px-1.5 py-0.5 text-[10px] font-medium text-muted"
+      >
+        Generating
+      </span>
+    </div>
+    <div
+      v-else
+      class="nav-scrollbar max-h-[360px] overflow-y-auto overscroll-contain"
+    >
       <details
         v-for="file in files"
         :key="file.path"
@@ -75,12 +96,20 @@ const toggleMethod = (path, open) => {
             class="size-3.5 text-muted transition-transform group-open:rotate-90"
           />
           <span class="min-w-0 flex-1" :title="file.path">
-            <span class="block truncate font-mono text-[12px] font-medium">{{
-              splitFilePath(file.path).name
-            }}</span>
-            <span class="block truncate font-mono text-[10.5px] text-muted">{{
-              splitFilePath(file.path).dir
-            }}</span>
+            <span
+              class="block font-mono text-[12px] font-medium"
+              :class="
+                usesTemplate(file.path)
+                  ? '[overflow-wrap:anywhere]'
+                  : 'truncate'
+              "
+              >{{ splitFilePath(file.path).name }}</span
+            >
+            <span
+              v-if="!usesTemplate(file.path)"
+              class="block truncate font-mono text-[10.5px] text-muted"
+              >{{ splitFilePath(file.path).dir }}</span
+            >
           </span>
           <span
             class="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium"
@@ -101,17 +130,23 @@ const toggleMethod = (path, open) => {
           v-if="expanded.has(file.path)"
           class="border-t border-border-soft bg-bg"
         >
+          <p
+            v-if="usesTemplate(file.path)"
+            class="px-3 pt-2 font-mono text-meta text-muted [overflow-wrap:anywhere]"
+          >
+            {{ file.path }}
+          </p>
           <pre
             v-if="file.content !== undefined"
             tabindex="0"
-            :aria-label="`JSON preview of ${file.path}`"
+            :aria-label="`File preview of ${file.path}`"
             class="nav-scrollbar max-h-64 overflow-auto p-3 font-mono text-[11px] leading-5 text-text"
           ><code>{{ preview(file) }}</code></pre>
           <p v-else class="p-3 text-meta text-muted">
             {{
               stage === "generating"
                 ? "Receiving file content…"
-                : "No JSON preview available."
+                : "No file preview available."
             }}
           </p>
           <p

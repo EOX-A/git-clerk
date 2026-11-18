@@ -1,4 +1,5 @@
 import { getChatConfig } from "./chat-config.js";
+import { chatOutputPath } from "./chat-output.js";
 // Match the existing backend's prompt perimeter. Context uses its history field.
 const characterCount = (value) => Array.from(value).length;
 
@@ -54,7 +55,11 @@ function leadingObject(text) {
 }
 
 // The existing chat profile returns text, including JSON requested in the prompt.
-export function parseChatReply(payload, config = getChatConfig()) {
+export function parseChatReply(
+  payload,
+  config = getChatConfig(),
+  outputPath = null,
+) {
   if (
     payload?.error ||
     ["error", "failed", "refused"].includes(payload?.status)
@@ -73,10 +78,28 @@ export function parseChatReply(payload, config = getChatConfig()) {
     )
   )
     return null;
-  if (typeof payload?.message === "string" && "draft" in payload)
-    return payload;
+  const reference = [payload, payload?.draft].find(
+    (value) => typeof value?.id === "string" && typeof value.title === "string",
+  );
+  const identity = reference
+    ? { id: reference.id, title: reference.title }
+    : null;
+  const withIdentity = (reply) => {
+    if (!identity) return reply;
+    return reply.draft
+      ? { ...reply, draft: { ...reply.draft, ...identity } }
+      : { ...reply, draftIdentity: identity };
+  };
+  if (
+    typeof payload?.message === "string" &&
+    "draft" in payload &&
+    (!identity ||
+      payload.draft === null ||
+      Object.hasOwn(payload.draft ?? {}, "files"))
+  )
+    return withIdentity(payload);
   if (typeof payload?.data?.message === "string" && "draft" in payload.data)
-    return payload.data;
+    return withIdentity(payload.data);
   // Raw-output profiles need an explicit destination; never guess a repository path.
   if (config.preset.outputFile) {
     const content =
@@ -90,13 +113,20 @@ export function parseChatReply(payload, config = getChatConfig()) {
           payload?.components);
     if (content === undefined || content === null || content === "")
       return null;
-    return {
+    const path =
+      outputPath ||
+      chatOutputPath(config.preset.outputFile, null, identity?.id);
+    if (!path)
+      throw new Error(
+        "The backend did not return a valid draft ID for the configured output path.",
+      );
+    return withIdentity({
       message: "Changes are ready.",
       draft: {
         title: config.preset.ui.sessionTitle,
-        files: { [config.preset.outputFile]: content },
+        files: { [path]: content },
       },
-    };
+    });
   }
   const message =
     payload?.message ??
@@ -117,11 +147,11 @@ export function parseChatReply(payload, config = getChatConfig()) {
     try {
       const value = JSON.parse(candidate);
       if (value && typeof value.message === "string" && "draft" in value)
-        return value;
+        return withIdentity(value);
     } catch {
       /* Ordinary conversational replies are allowed without a file draft. */
     }
   }
   if (/^\s*\{|^\s*```(?:json)?\s*\{/i.test(text)) return null;
-  return { message, draft: null };
+  return withIdentity({ message, draft: null });
 }

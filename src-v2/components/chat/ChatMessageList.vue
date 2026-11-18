@@ -4,7 +4,10 @@ import ChatMarkdown from "./ChatMarkdown.vue";
 import ChatFileCard from "./ChatFileCard.vue";
 import ChatPullRequest from "./ChatPullRequest.vue";
 import { getChatConfig } from "@/helpers/chat-config.js";
-const ui = getChatConfig().preset.ui;
+const { ui, outputFile } = getChatConfig().preset;
+const pathTemplate = outputFile?.includes("<id>")
+  ? outputFile.replace(/^\//, "")
+  : null;
 
 defineProps({
   onOpenFile: { type: Function, default: null },
@@ -73,9 +76,13 @@ defineProps({
         <ChatMarkdown :text="msg.text" :streaming="msg.streaming" />
         <ChatPullRequest v-if="msg.pr" :pr="msg.pr" />
         <ChatFileCard
-          v-if="msg.files?.length"
+          v-if="msg.files?.length || (msg.streaming && pathTemplate)"
           :files="msg.files"
           :stage="msg.fileStage || 'saved'"
+          :path-template="pathTemplate"
+          :pending="
+            Boolean(msg.streaming && pathTemplate && !msg.files?.length)
+          "
           :on-open-file="onOpenFile"
           :on-open-changes="onOpenChanges"
         />

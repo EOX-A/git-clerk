@@ -32,7 +32,7 @@ jobs:
         run: npm ci
         if: ${{ fromJSON(steps.release.outputs.releases_created) }}
       - name: Build package 🔧
-        run: npm run build --if-present
+        run: npm run build:v2
         if: ${{ fromJSON(steps.release.outputs.releases_created) }}
       - name: Build image 🔧
         run: docker build -t ghcr.io/eox-a/git-clerk:${{ steps.release.outputs.tag_name }} .

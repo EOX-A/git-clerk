@@ -5,6 +5,7 @@ import { sessionDetails } from "./session.js";
 import { fileContent } from "./file-content.js";
 import { gitBlobSha } from "../helpers/file-publication.js";
 import { getChatConfig } from "../helpers/chat-config.js";
+import { chatPrTitle } from "../helpers/chat-output.js";
 
 export async function publishChatFiles(context, bundle, attempt = {}, session) {
   const config = getChatConfig();
@@ -39,13 +40,17 @@ export async function publishChatFiles(context, bundle, attempt = {}, session) {
   attempt.target = target;
 
   if (!session && !attempt.draftSession) {
-    brokerAuthor(context);
+    const { username } = brokerAuthor(context);
     attempt.creation ||= {};
     try {
       // The broker's initial_files only creates files. Publish also handles updates.
       attempt.draftSession = await createDraftSession(
         context,
-        { title: bundle.draft.title, body: config.publishing.prBody },
+        {
+          title: chatPrTitle(config.publishing.prTitle, bundle.draft, username),
+          branchTitle: bundle.draft.title,
+          body: config.publishing.prBody,
+        },
         attempt.creation,
       );
     } catch (error) {

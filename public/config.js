@@ -20,28 +20,6 @@ const basePath = "/";
 // Define JSON schemas for specific file paths
 const schemaMap = [
   {
-    path: "/stories/<name>.md",
-    output: "Story",
-    schema: {
-      title: "Narrative editor",
-      type: "object",
-      properties: {
-        Story: {
-          title: "Narrative",
-          type: "string",
-          format: "textarea",
-          description:
-            "Write Markdown headings, paragraphs, lists, links and images.",
-        },
-      },
-    },
-    content: { Story: "# Untitled narrative\n\nStart writing here.\n" },
-    jsonform: {
-      options: { disable_edit_json: true, disable_properties: true },
-    },
-    preview: "/narrative-preview.html",
-  },
-  {
     path: "/foo/bar/<id>.json",
     schema: {
       title: "FooBar editor",
@@ -102,23 +80,6 @@ const schemaMap = [
     },
     preview: "/example-preview.html",
   },
-  // OSC example editor mappings; chat publishing does not validate against these.
-  ...Object.entries({
-    products: "collection.json",
-    projects: "collection.json",
-    variables: "catalog.json",
-    themes: "catalog.json",
-    "eo-missions": "catalog.json",
-  }).flatMap(([category, filename]) => [
-    {
-      path: `/${category}/catalog.json`,
-      url: `https://esa-earthcode.github.io/open-science-catalog-validation/schemas/${category}/parent.json`,
-    },
-    {
-      path: `/${category}/<id>/${filename}`,
-      url: `https://esa-earthcode.github.io/open-science-catalog-validation/schemas/${category}/children.json`,
-    },
-  ]),
 ];
 
 // Define automations to perform multiple steps for the user
@@ -340,9 +301,6 @@ const forkingLocation = {
 const allowedOrigins = [import.meta.url.replace("/config.js", "")];
 
 globalThis.gitClerkConfig = {
-  // V2 only. Use the workspace gateway URL in a hosted deployment.
-  gitBrokerUrl: "http://localhost:8015",
-  // gitBroker: { provider: "github", repo: "owner/repository" },
   ghConfig,
   basePath,
   schemaMap,
@@ -355,96 +313,3 @@ globalThis.gitClerkConfig = {
   allowedOrigins,
   forkingLocation,
 };
-
-// V2 chat: one active preset per Git Clerk instance. Streaming defaults to true.
-// globalThis.gitClerkConfig.chat = {
-//   enabled: true,
-//   backend: {
-//     baseUrl: "http://localhost:8000",
-//   },
-//   preset: {
-//     projectId: "earthcode-osc",
-//     profile: "chat",
-//     output_format: "text_and_a2ui",
-//     promptInstructions: "Complete linked STAC/OSC JSON files",
-//     prBody:
-//       "OSC metadata generated in Git Clerk. Schema validation has not been performed.",
-//     fileExample: { "relative/path.json": {} },
-//     context: { extensions: [".json"] },
-//     ui: {
-//       assistantName: "Git Clerk",
-//       panelTitle: "Git Clerk AI Assistant",
-//       heading: "What would you like to update?",
-//       description: "Create and edit EarthCODE catalogue content.",
-//       placeholder: "Describe a product, project or metadata change…",
-//       followUpPlaceholder: "Describe the next catalogue change…",
-//       sessionTitle: "New catalogue session",
-//       welcome: "What would you like to edit or add to this catalogue?",
-//       generating: "Preparing catalogue changes…",
-//       footer:
-//         "Catalogue files are published as a PR in the configured repository. Chat stays in this app session.",
-//       suggestions: [
-//         "Create a synthetic sample product",
-//         "Update a project description",
-//       ],
-//     },
-//   },
-//   features: {
-//     attachments: false,
-//     modelSelector: false,
-//     manualSessionCreation: true,
-//   },
-//   publishing: {
-//     enabled: true,
-//     automatic: true,
-//     updateExistingSession: true,
-//   },
-// };
-
-// Alternative narrative editor config. Comment out the OSC assignment above and
-// uncomment this block to activate it. Use only one chat configuration at a time.
-// outputFile is the file this profile creates/edits in each session; change it here.
-// /* NARRATIVE_CHAT_CONFIG
-globalThis.gitClerkConfig.chat = {
-  enabled: true,
-  backend: { baseUrl: "http://localhost:8000" },
-  preset: {
-    projectId: "generic-eox",
-    profile: "markdown_editor",
-    output_format: "markdown",
-    outputFile: "stories/narrative.md",
-    promptInstructions:
-      "Create or edit the complete Markdown narrative. Preserve existing content unless asked to change it. Return only Markdown",
-    prBody: "Narrative content generated in Git Clerk.",
-    context: { extensions: [".md"], inputField: "markdownSection" },
-    ui: {
-      assistantName: "Git Clerk",
-      panelTitle: "Narrative editor",
-      heading: "What story would you like to tell?",
-      description:
-        "Create and refine a narrative with a live Markdown preview.",
-      placeholder: "Describe the narrative you want to write…",
-      followUpPlaceholder: "How would you like to revise this narrative?",
-      sessionTitle: "New narrative session",
-      welcome: "What would you like to write or improve in this narrative?",
-      generating: "Writing your narrative…",
-      footer:
-        "Narratives are saved to stories/narrative.md in a PR. Chat stays in this app session.",
-      suggestions: [
-        "Write a synthetic ocean observation story",
-        "Draft an introduction about urban heat",
-      ],
-    },
-  },
-  features: {
-    attachments: false,
-    modelSelector: false,
-    manualSessionCreation: true,
-  },
-  publishing: {
-    enabled: true,
-    automatic: true,
-    updateExistingSession: true,
-  },
-};
-// NARRATIVE_CHAT_CONFIG */

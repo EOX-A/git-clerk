@@ -5,6 +5,7 @@ import {
 } from "../helpers/chat-request.js";
 import { readEventStream, checkChatResponse } from "../helpers/event-stream.js";
 import { getChatConfig } from "../helpers/chat-config.js";
+import { chatOutputPath } from "../helpers/chat-output.js";
 
 // Console-only chat smoke test. Provider credentials stay on the backend.
 export async function generateChatTest(prompt, signal) {
@@ -52,7 +53,7 @@ export async function generatePresetTest(prompt, signal) {
 
 // Keep prompt text within the existing backend limit; the chat profile reads history.
 export async function streamChat(
-  { prompt, history, draft, model, branch },
+  { prompt, history, draft, draftIdentity, model, branch },
   onEvent,
   signal,
 ) {
@@ -60,6 +61,13 @@ export async function streamChat(
   if (!config.enabled) throw new Error(config.preset.ui.disabledMessage);
   const baseURL = config.backend.baseUrl;
   const requestPrompt = buildChatPrompt(prompt, config);
+  const identity = draftIdentity || draft;
+  const outputPath = chatOutputPath(
+    config.preset.outputFile,
+    draft,
+    identity?.id,
+  );
+  const currentContent = outputPath ? draft?.files?.[outputPath] : undefined;
   const response = await fetch(`${baseURL}/api/generate`, {
     method: "POST",
     headers: {
@@ -76,15 +84,14 @@ export async function streamChat(
       output_format: config.preset.output_format,
       project_id: config.preset.projectId,
       stream: config.backend.stream,
+      ...(identity?.id ? { id: identity.id, title: identity.title } : {}),
       ...(model ? { model } : {}),
-      ...(config.preset.outputFile &&
+      ...(outputPath &&
       config.preset.context.inputField &&
-      draft?.files?.[config.preset.outputFile] !== undefined
+      currentContent !== undefined
         ? {
             [config.preset.context.inputField]:
-              typeof draft.files[config.preset.outputFile] === "string"
-                ? draft.files[config.preset.outputFile]
-                : "",
+              typeof currentContent === "string" ? currentContent : "",
           }
         : {}),
     }),
@@ -93,7 +100,7 @@ export async function streamChat(
   let finished = false;
   if (!config.backend.stream) {
     await checkChatResponse(response);
-    result = parseChatReply(await response.json(), config);
+    result = parseChatReply(await response.json(), config, outputPath);
     finished = true;
   } else
     await readEventStream(
@@ -107,7 +114,8 @@ export async function streamChat(
           throw new Error(
             "Chat generation failed. Check the backend logs or retry your request.",
           );
-        if (event === "STATE_DELTA") result = parseChatReply(data, config);
+        if (event === "STATE_DELTA")
+          result = parseChatReply(data, config, outputPath);
         if (event === "RUN_FINISHED") {
           if (data.status !== "success")
             throw new Error(
