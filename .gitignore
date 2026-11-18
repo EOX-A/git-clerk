@@ -31,3 +31,4 @@ cypress/downloads/
 .env
 
 *.tsbuildinfo
+test/
