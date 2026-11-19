@@ -172,6 +172,10 @@ export function createChatConversation({
             draftIdentity: state.draftIdentity,
             model: payload.model,
             branch: session?.branch,
+            sessionTitle: session?.title,
+            onTitle: (identity) => {
+              if (!current.signal.aborted) state.draftIdentity = identity;
+            },
           },
           (event, data) => {
             if (current.signal.aborted) return;

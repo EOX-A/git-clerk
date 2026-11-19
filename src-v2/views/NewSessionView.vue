@@ -25,6 +25,12 @@ const chatStore = useChatStore();
 const sessionsStore = useSessionsStore();
 const conversation = shallowRef(chatStore.getConversation());
 const state = computed(() => conversation.value.state);
+const titlePending = computed(
+  () =>
+    state.value.messages.length > 0 &&
+    state.value.busy &&
+    !state.value.draftIdentity,
+);
 const createSessionOpen = ref(false);
 const scroller = ref(null);
 const pinned = ref(true);
@@ -115,6 +121,7 @@ onUnmounted(() => {
     >
       <h1
         id="new-session-heading"
+        aria-live="polite"
         :class="
           state.messages.length
             ? 'text-left text-lg'
@@ -122,7 +129,20 @@ onUnmounted(() => {
         "
         class="mb-4 font-semibold text-balance"
       >
-        {{ state.messages.length ? ui.sessionTitle : ui.heading }}
+        <template v-if="titlePending">
+          <span
+            aria-hidden="true"
+            class="file-placeholder my-1 block h-5 w-48 max-w-full rounded-md"
+          />
+          <span class="sr-only">{{ ui.sessionTitle }}</span>
+        </template>
+        <template v-else>
+          {{
+            state.messages.length
+              ? state.draftIdentity?.title || ui.sessionTitle
+              : ui.heading
+          }}
+        </template>
       </h1>
       <p
         v-if="!state.messages.length && ui.description"

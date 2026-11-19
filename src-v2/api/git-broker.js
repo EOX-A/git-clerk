@@ -1,4 +1,12 @@
-const setting = (value) => value?.trim() || "";
+const setting = (value) => (typeof value === "string" ? value.trim() : "");
+
+export function resolveBrokerUser(profile, fallback = {}) {
+  return {
+    name: setting(profile?.name) || setting(fallback.name),
+    email: setting(profile?.email) || setting(fallback.email),
+    username: setting(profile?.username) || setting(fallback.username),
+  };
+}
 
 export function gitBrokerConfig(root = globalThis, env = import.meta.env) {
   const config = root.gitClerkConfig || {};
@@ -9,11 +17,11 @@ export function gitBrokerConfig(root = globalThis, env = import.meta.env) {
     ),
     provider: config.gitBroker?.provider,
     repo: config.gitBroker?.repo,
-    user: {
-      name: setting(env?.GITCLERK_PROFILE_NAME),
-      email: setting(env?.GITCLERK_EMAIL),
-      username: setting(env?.GITCLERK_USERNAME),
-    },
+    user: resolveBrokerUser({
+      name: env?.GITCLERK_PROFILE_NAME,
+      email: env?.GITCLERK_EMAIL,
+      username: env?.GITCLERK_USERNAME,
+    }),
   };
 }
 

@@ -1,5 +1,5 @@
 import { getChatConfig } from "./chat-config.js";
-import { chatOutputPath } from "./chat-output.js";
+import { chatDraftIdentity, chatOutputPath } from "./chat-output.js";
 // Match the existing backend's prompt perimeter. Context uses its history field.
 const characterCount = (value) => Array.from(value).length;
 
@@ -30,7 +30,7 @@ export function buildChatHistory(history = [], draft) {
   if (draft)
     context.push({
       role: "user",
-      content: `Current draft in Git Clerk. Preserve existing paths, IDs and unmentioned fields. Return complete contents for changed files only; unlisted files stay unchanged.\n${JSON.stringify(draft)}`,
+      content: `Current draft in Git Clerk. Preserve existing paths, IDs and unmentioned fields. Return complete contents for changed files only; unlisted files stay unchanged.\n${JSON.stringify({ files: draft.files })}`,
     });
   return context;
 }
@@ -55,11 +55,7 @@ function leadingObject(text) {
 }
 
 // The existing chat profile returns text, including JSON requested in the prompt.
-export function parseChatReply(
-  payload,
-  config = getChatConfig(),
-  outputPath = null,
-) {
+export function parseChatReply(payload, config = getChatConfig(), naming) {
   if (
     payload?.error ||
     ["error", "failed", "refused"].includes(payload?.status)
@@ -78,28 +74,31 @@ export function parseChatReply(
     )
   )
     return null;
-  const reference = [payload, payload?.draft].find(
-    (value) => typeof value?.id === "string" && typeof value.title === "string",
-  );
-  const identity = reference
-    ? { id: reference.id, title: reference.title }
-    : null;
-  const withIdentity = (reply) => {
-    if (!identity) return reply;
-    return reply.draft
-      ? { ...reply, draft: { ...reply.draft, ...identity } }
-      : { ...reply, draftIdentity: identity };
+  const resolveIdentity = (draftTitle) =>
+    naming?.identity ??
+    chatDraftIdentity(
+      naming?.sessionTitle,
+      draftTitle,
+      naming?.prompt,
+      config.preset.ui.sessionTitle,
+      "New session",
+    );
+  const finishReply = (reply) => {
+    if (!naming) return reply;
+    if (!reply.draft) return { ...reply, draftIdentity: resolveIdentity() };
+    return {
+      ...reply,
+      draft: { ...reply.draft, ...resolveIdentity(reply.draft.title) },
+    };
   };
   if (
     typeof payload?.message === "string" &&
     "draft" in payload &&
-    (!identity ||
-      payload.draft === null ||
-      Object.hasOwn(payload.draft ?? {}, "files"))
+    (payload.draft === null || Object.hasOwn(payload.draft ?? {}, "files"))
   )
-    return withIdentity(payload);
+    return finishReply(payload);
   if (typeof payload?.data?.message === "string" && "draft" in payload.data)
-    return withIdentity(payload.data);
+    return finishReply(payload.data);
   // Raw-output profiles need an explicit destination; never guess a repository path.
   if (config.preset.outputFile) {
     const content =
@@ -113,20 +112,19 @@ export function parseChatReply(
           payload?.components);
     if (content === undefined || content === null || content === "")
       return null;
+    const heading =
+      typeof content === "string" ? /^#[ \t]+(.+)/m.exec(content)?.[1] : null;
+    const identity = resolveIdentity(heading);
     const path =
-      outputPath ||
-      chatOutputPath(config.preset.outputFile, null, identity?.id);
-    if (!path)
-      throw new Error(
-        "The backend did not return a valid draft ID for the configured output path.",
-      );
-    return withIdentity({
+      naming?.outputPath ||
+      chatOutputPath(config.preset.outputFile, null, identity.id);
+    return {
       message: "Changes are ready.",
       draft: {
-        title: config.preset.ui.sessionTitle,
+        ...identity,
         files: { [path]: content },
       },
-    });
+    };
   }
   const message =
     payload?.message ??
@@ -147,11 +145,11 @@ export function parseChatReply(
     try {
       const value = JSON.parse(candidate);
       if (value && typeof value.message === "string" && "draft" in value)
-        return withIdentity(value);
+        return finishReply(value);
     } catch {
       /* Ordinary conversational replies are allowed without a file draft. */
     }
   }
   if (/^\s*\{|^\s*```(?:json)?\s*\{/i.test(text)) return null;
-  return withIdentity({ message, draft: null });
+  return finishReply({ message, draft: null });
 }

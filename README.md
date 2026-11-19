@@ -438,10 +438,12 @@ uses `http://localhost:8015`. Optional `gitBroker: { provider, repo }` settings 
 the backend's repository selection; set `provider` explicitly for GitLab or Forgejo.
 V1 continues to use `public/config.js` and its own GitHub configuration and credentials.
 
-Set `GITCLERK_PROFILE_NAME`, `GITCLERK_EMAIL`, and `GITCLERK_USERNAME` in Git Clerk's
-`.env` file and restart Vite. V2 uses these values for the profile and sends them
-as `author: { name, email, username }` on file publish and delete requests. The
-username must resolve to the user slug the gateway enforces. The gateway supplies
+V2 uses `name`, `email`, and `preferred_username` from Luigi's `context.user`.
+Missing fields fall back to `GITCLERK_PROFILE_NAME`, `GITCLERK_EMAIL`, and
+`GITCLERK_USERNAME` from Git Clerk's `.env` file. Restart Vite after changing
+these variables. V2 sends the resolved profile as `author: { name, email, username }`
+on file publish and delete requests. The username must resolve to the user slug
+the gateway enforces. The gateway supplies
 identity to the broker; v2 does not send provider credentials. For local development,
 configure repository access on the broker and run the updated version that exposes
 `GET /api/git/repo` and the remaining Git REST routes.
@@ -563,9 +565,12 @@ The chat configuration supports:
 editor (`NARRATIVE_CHAT_CONFIG`). Switch by commenting out one assignment and
 uncommenting the other; keep only one active and reload the app. The narrative example uses `generic-eox`,
 `profile: "markdown_editor"`, `output_format: "markdown"`, and
-`outputFile: "stories/<id>.md"`. The backend's draft ID fills in `<id>` for new
-files. The preset's PR title is `Publish: <title> (<username>)`. Follow-up requests
-keep the existing file path and send the current file in
+`outputFile: "stories/<id>.md"`. For a new chat, Git Clerk requests a short title
+through the existing text mode of `/api/generate` while the main reply streams.
+It builds `<id>` from the title with a short random suffix. If title generation
+fails, Git Clerk uses the draft title, a Markdown heading, or the first prompt.
+The narrative preset's PR title is `Publish: <title> (<username>)`. Follow-up
+requests keep the existing file path and send the current file in
 `preset.context.inputField: "markdownSection"`, matching the existing backend.
 Other raw-output profiles can configure their own input field (for example `markdown`).
 

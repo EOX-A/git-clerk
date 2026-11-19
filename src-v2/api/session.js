@@ -26,7 +26,7 @@ export function mapSession(context, data) {
   const repoPath = data.repo || context.repository.repo;
   const repo = repoPath.split("/").at(-1);
   const owner = repoPath.slice(0, -(repo.length + 1));
-  const writable =
+  const isWritable = () =>
     ownsBranch(context, branch) &&
     branch !== context.repository.default_branch &&
     branch !== data.base_branch;
@@ -56,9 +56,16 @@ export function mapSession(context, data) {
     headRepo: repo,
     provider: data.provider || context.repository.provider,
     repositoryUrl: context.repository.html_url,
-    canManage: writable && status !== "merged",
-    canEdit: writable && open,
-    canDelete: writable && open,
+    // Luigi can supply the user after the session has already loaded.
+    get canManage() {
+      return status !== "merged" && isWritable();
+    },
+    get canEdit() {
+      return open && isWritable();
+    },
+    get canDelete() {
+      return open && isWritable();
+    },
     body: data.body,
     changedFiles: data.changed_files,
     checks: checkStates[data.ci_status?.toLowerCase()],
@@ -85,7 +92,9 @@ export async function sessionsList(context, after = null, signal) {
 export async function sessionDetails(context, number, signal) {
   const data = await context.request(`/pulls/${number}`, { signal });
   signal?.throwIfAborted();
-  return { ...mapSession(context, data), hasDetails: true };
+  const session = mapSession(context, data);
+  session.hasDetails = true;
+  return session;
 }
 
 export async function findSessionBranch(context, branch) {

@@ -1,29 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html>
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Narrative preview</title>
+    <title>Preview</title>
     <style>
-      html,
-      body {
+      html, body {
         height: 100%;
       }
       body {
-        margin: 0;
         overflow-y: auto;
-        font-family: system-ui, sans-serif;
-      }
-      #preview-status,
-      #preview-source {
-        margin: 24px;
-      }
-      #preview-source {
-        white-space: pre-wrap;
-        overflow-wrap: anywhere;
-      }
-      [hidden] {
-        display: none !important;
       }
       #storytelling-preview eox-storytelling-editor {
         display: none;
@@ -34,26 +18,104 @@
     <eox-storytelling
       disable-autosave
       no-shadow
+      show-editor
       show-nav
       id="storytelling-preview"
     ></eox-storytelling>
-    <p id="preview-status" role="status">Loading narrative preview…</p>
-    <pre id="preview-source" hidden></pre>
     <script type="module">
-      import { mountNarrativePreview } from "./narrative-preview.js";
-      const preview = mountNarrativePreview(window);
-      Promise.all([
-        import("https://cdn.jsdelivr.net/npm/@eox/storytelling@1.11.0/dist/eox-storytelling.js"),
-        import("https://cdn.jsdelivr.net/npm/@eox/chart@1.1.0/dist/eox-chart.js"),
-        import("https://cdn.jsdelivr.net/npm/@eox/jsonform@1.9.1/dist/eox-jsonform.js"),
-        import("https://cdn.jsdelivr.net/npm/@eox/map@2.4.0/dist/eox-map.js"),
-        import("https://cdn.jsdelivr.net/npm/@eox/map@2.4.0/dist/eox-map-advanced-layers-and-sources.js"),
-      ])
-        .then(() => preview.ready())
-        .catch(() => preview.showUnavailable());
-      window.addEventListener("pagehide", () => preview.dispose(), {
-        once: true,
-      });
+      import "https://cdn.jsdelivr.net/npm/@eox/storytelling@1.11.0/dist/eox-storytelling.js";
+      import "https://cdn.jsdelivr.net/npm/@eox/chart@1.1.0/dist/eox-chart.js";
+      import "https://cdn.jsdelivr.net/npm/@eox/jsonform@1.9.1/dist/eox-jsonform.js";
+      import "https://cdn.jsdelivr.net/npm/@eox/map@2.4.0/dist/eox-map.js";
+      import "https://cdn.jsdelivr.net/npm/@eox/map@2.4.0/dist/eox-map-advanced-layers-and-sources.js";
+    </script>
+
+    <script>
+      let callBackFunc = null;
+      function throttle(fn, delay) {
+        let lastCall = 0;
+        return function (...args) {
+          const now = Date.now();
+          if (now - lastCall >= delay) {
+            lastCall = now;
+            fn.apply(this, args);
+          }
+        };
+      }
+      async function handleFileUpload(e) {
+        const { file, update } = e.detail;
+
+        // Check if file is larger than 10MB
+        if (file.size > 10 * 1024 * 1024) {
+          update(null, new Error("File size must be less than 10MB"));
+          return;
+        }
+
+        const reader = new FileReader();
+        const base64Promise = new Promise((resolve) => {
+          reader.onload = () => {
+            const base64 = reader.result.split(",")[1];
+            resolve(base64);
+          };
+        });
+        reader.readAsDataURL(file);
+        const base64Content = await base64Promise;
+
+        const message = {
+          type: "FILE_UPLOAD",
+          file: {
+            type: file.type,
+            size: file.size,
+            name: file.name,
+            base64Content: base64Content,
+            format: "base64",
+          }
+        }
+
+        callBackFunc = update;
+        window.parent.postMessage(message, "*");
+      }
+      const throttledHandler = throttle(handleFileUpload, 1000);
+      document.querySelector("#storytelling-preview").addEventListener("upload:file", throttledHandler);
+
+
+      let previousMarkdown;
+      // Listen for messages from parent
+      window.onload = function () {
+        window.addEventListener("message", function (event) {
+          console.log(event.data)
+          if (event.data && event.data.type === "SCHEMA_DATA_EDITOR_UPDATE") {
+            const preview = document.querySelector("#storytelling-preview");
+            if (preview.markdown !== event.data.detail.Story) {
+              previousMarkdown = event.data.detail.Story;
+              preview.markdown = previousMarkdown;
+            }
+          } else if (event.data && event.data.type === "FILE_UPLOADED") {
+            const { fileUrl, fallbackUrl, message } = event.data.file;
+            if(message) {
+              callBackFunc(null, null, event.data.file);
+            } else {
+              callBackFunc(fileUrl, fallbackUrl);
+            }
+          }
+        });
+      };
+
+      // Send messages to parent
+      document
+        .querySelector("#storytelling-preview")
+        .addEventListener("changed", (e) => {
+          if (previousMarkdown !== e.detail) {
+            const message = {
+              type: "SCHEMA_DATA_PREVIEW_UPDATE",
+              detail: {
+                Story: e.detail,
+              },
+            };
+
+            window.parent.postMessage(message, "*");
+          }
+        });
     </script>
   </body>
 </html>

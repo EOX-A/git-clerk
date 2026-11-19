@@ -23,22 +23,27 @@ const schemaMap = [
     path: "/stories/<id>.md",
     output: "Story",
     schema: {
-      title: "Narrative editor",
+      title: "Story",
       type: "object",
       properties: {
         Story: {
-          title: "Narrative",
           type: "string",
-          format: "textarea",
-          description:
-            "Write Markdown headings, paragraphs, lists, links and images.",
+          format: "markdown",
+          options: {
+            titleHidden: true,
+            resolver: "ace",
+            disableUndoRedo: true,
+            ace: {
+              highlightActiveLine: true,
+              fontSize: 14,
+              maxLines: 1000,
+              minLines: 10,
+            },
+          },
         },
       },
     },
-    content: { Story: "# Untitled narrative\n\nStart writing here.\n" },
-    jsonform: {
-      options: { disable_edit_json: true, disable_properties: true },
-    },
+    content: "# My New Story",
     preview: "/narrative-preview.html",
   },
   {
@@ -403,7 +408,7 @@ globalThis.gitClerkConfig = {
 
 // Alternative narrative editor config. Comment out the OSC assignment above and
 // uncomment this block to activate it. Use only one chat configuration at a time.
-// Use <id> to put the backend draft ID in the output file path.
+// Use <id> to put Git Clerk's title-based ID in the output file path.
 // /* NARRATIVE_CHAT_CONFIG
 globalThis.gitClerkConfig.chat = {
   enabled: true,

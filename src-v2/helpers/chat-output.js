@@ -1,4 +1,28 @@
+import slugify from "slugify";
 import { matchesFilePath } from "./file-editor.js";
+
+export function chatDraftIdentity(...titles) {
+  const title = titles
+    .filter((value) => typeof value === "string")
+    .map((value) =>
+      value
+        .trim()
+        .split(/\r?\n/, 1)[0]
+        .replace(/^#{1,6}\s+/, "")
+        .replace(/^["'`*“‘]+|["'`*”’]+$/g, "")
+        .replace(/\s+/g, " ")
+        .slice(0, 100)
+        .trim(),
+    )
+    .find(Boolean);
+  if (!title) return null;
+  const slug =
+    slugify(title, { lower: true, strict: true })
+      .replace(/-+/g, "-")
+      .slice(0, 100)
+      .replace(/^-|-$/g, "") || "draft";
+  return { title, id: `${slug}-${crypto.randomUUID().slice(0, 8)}` };
+}
 
 export function chatOutputPath(template, draft, id = draft?.id) {
   if (!template) return null;
