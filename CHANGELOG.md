@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.19.2](https://github.com/EOX-A/git-clerk/compare/v1.19.1...v1.19.2) (2026-11-19)
+
+
+### Bug Fixes
+
+* **docker:** Pin nginx base image to 1.31.9-alpine ([#289](https://github.com/EOX-A/git-clerk/issues/289)) ([4a61780](https://github.com/EOX-A/git-clerk/commit/4a617809d8a7238d4932595e62b7c650dd9bc2e2))
+
 ## [1.19.1](https://github.com/EOX-A/git-clerk/compare/v1.19.0...v1.19.1) (2026-10-12)
 
 
