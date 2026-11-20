@@ -10,6 +10,7 @@ lerna-debug.log*
 node_modules
 .DS_Store
 dist
+dist-v2
 dist-ssr
 coverage
 *.local
@@ -30,3 +31,4 @@ cypress/downloads/
 .env
 
 *.tsbuildinfo
+test/

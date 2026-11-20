@@ -1,5 +1,10 @@
 dist
+dist-v2
 public/*
 !public/config.js
+!public/config-v2.js
 !public/storytelling.html
 CHANGELOG.md
+
+# Keep the temporary design references unchanged.
+src-v2/docs/
