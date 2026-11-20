@@ -415,14 +415,14 @@ globalThis.gitClerkConfig.chat = {
   backend: { baseUrl: "http://localhost:8000" },
   preset: {
     projectId: "generic-eox",
-    profile: "markdown_editor",
+    profile: "storytelling",
     output_format: "markdown",
     outputFile: "stories/<id>.md",
     promptInstructions:
-      "Create or edit the complete Markdown narrative. Preserve existing content unless asked to change it. Return only Markdown",
+      "Create or edit the interactive storytelling narrative. Preserve existing content unless asked to change it",
     prBody: "Narrative content generated in Git Clerk.",
     prTitle: "Publish: <title> (<username>)",
-    context: { extensions: [".md"], inputField: "markdownSection" },
+    context: { extensions: [".md"], inputField: "markdown" },
     ui: {
       assistantName: "Git Clerk",
       panelTitle: "Narrative editor",
