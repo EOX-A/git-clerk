@@ -101,8 +101,9 @@ export function parseChatReply(payload, config = getChatConfig(), naming) {
     return finishReply(payload.data);
   // Raw-output profiles need an explicit destination; never guess a repository path.
   if (config.preset.outputFile) {
+    const format = config.preset.output_format;
     const content =
-      config.preset.output_format === "a2ui"
+      format === "a2ui"
         ? (payload?.components ?? payload?.data)
         : (payload?.markdown ??
           payload?.data ??
@@ -112,6 +113,7 @@ export function parseChatReply(payload, config = getChatConfig(), naming) {
           payload?.components);
     if (content === undefined || content === null || content === "")
       return null;
+    if (format === "markdown" && typeof content !== "string") return null;
     const heading =
       typeof content === "string" ? /^#[ \t]+(.+)/m.exec(content)?.[1] : null;
     const identity = resolveIdentity(heading);
@@ -120,6 +122,7 @@ export function parseChatReply(payload, config = getChatConfig(), naming) {
       chatOutputPath(config.preset.outputFile, null, identity.id);
     return {
       message: "Changes are ready.",
+      ...(format === "markdown" ? { markdown: content } : {}),
       draft: {
         ...identity,
         files: { [path]: content },

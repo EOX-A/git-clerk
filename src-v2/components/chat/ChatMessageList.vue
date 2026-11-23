@@ -73,7 +73,12 @@ defineProps({
 
       <!-- Assistant message body -->
       <template v-else-if="msg.role === 'assistant'">
-        <ChatMarkdown :text="msg.text" :streaming="msg.streaming" />
+        <ChatMarkdown
+          :text="msg.text"
+          :streaming="msg.streaming"
+          :revealing="msg.revealing"
+          :activity="msg.activity"
+        />
         <ChatPullRequest v-if="msg.pr" :pr="msg.pr" />
         <ChatFileCard
           v-if="msg.files?.length || (msg.streaming && pathTemplate)"

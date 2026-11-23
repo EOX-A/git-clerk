@@ -1,5 +1,5 @@
 import "./assets/main.css";
 
-import app from "./app.js";
+import app, { luigiReady } from "./app.js";
 
-app.mount("#app");
+luigiReady.then(() => app.mount("#app"));

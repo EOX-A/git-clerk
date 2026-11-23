@@ -9,19 +9,24 @@ import useGitStore from "@/stores/git.js";
 
 const props = defineProps({
   theme: { type: String, required: true },
+  showTheme: { type: Boolean, default: true },
   updateTheme: { type: Function, required: true },
   mobileOpen: { type: Boolean, default: false },
   closeSidebar: { type: Function, required: true },
 });
 
 const router = useRouter();
-const { user } = useGitStore();
+const gitStore = useGitStore();
+const { user } = gitStore;
 const narrowViewport = window.matchMedia("(max-width: 859px)");
 const isNarrow = ref(narrowViewport.matches);
 const isCollapsed = ref(false);
 const sidebarWidth = ref(280);
 const isRail = computed(() => isCollapsed.value && !isNarrow.value);
 const accountOpen = ref(false);
+const accountLabel = computed(() =>
+  props.showTheme ? "Account and appearance" : "Account",
+);
 const sidebar = ref(null);
 const toggleButton = ref(null);
 const accountArea = ref(null);
@@ -37,7 +42,8 @@ const toggleAccountMethod = async () => {
   accountOpen.value = !accountOpen.value;
   if (accountOpen.value) {
     await nextTick();
-    accountPanel.value?.querySelector("input:checked")?.focus();
+    const selectedTheme = accountPanel.value?.querySelector("input:checked");
+    (selectedTheme ?? accountPanel.value)?.focus();
   }
 };
 
@@ -110,6 +116,12 @@ const viewportChangeMethod = (event) => {
   if (props.mobileOpen) props.closeSidebar();
 };
 
+watch(
+  () => gitStore.showAccountMenu,
+  (visible) => {
+    if (!visible) closeAccountMethod();
+  },
+);
 watch(
   () => props.mobileOpen,
   async (open) => {
@@ -220,14 +232,18 @@ onUnmounted(() => {
       </template>
       <div v-else class="flex-1"></div>
 
-      <div :class="isRail ? 'px-2 pb-3' : 'border-t border-border-soft p-3'">
+      <div
+        v-if="gitStore.showAccountMenu"
+        :class="isRail ? 'px-2 pb-3' : 'border-t border-border-soft p-3'"
+      >
         <div ref="accountArea" class="relative" @focusout="accountBlurMethod">
           <div
             v-if="accountOpen"
             id="account-panel"
             ref="accountPanel"
             role="dialog"
-            aria-label="Account and appearance"
+            :aria-label="accountLabel"
+            tabindex="-1"
             :class="
               isRail
                 ? 'bottom-0 left-[calc(100%+10px)] w-sidebar'
@@ -236,11 +252,10 @@ onUnmounted(() => {
             class="absolute z-50 rounded-xl border border-border-soft bg-elev p-1.5 shadow-menu"
           >
             <p class="px-2 pt-1.5 pb-2 text-meta text-muted">
-              {{
-                user.username ? `@${user.username}` : "No profile configured"
-              }}
+              @{{ user.username }}
             </p>
             <fieldset
+              v-if="showTheme"
               class="mx-0.5 mb-1.5 flex gap-0.5 rounded-[10px] bg-hover p-[3px]"
             >
               <legend class="sr-only">Theme</legend>
@@ -272,8 +287,8 @@ onUnmounted(() => {
           <button
             ref="accountButton"
             type="button"
-            aria-label="Account and appearance"
-            title="Account and appearance"
+            :aria-label="accountLabel"
+            :title="accountLabel"
             aria-haspopup="dialog"
             aria-controls="account-panel"
             :aria-expanded="accountOpen"
@@ -287,14 +302,14 @@ onUnmounted(() => {
             <span
               aria-hidden="true"
               class="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-on-primary"
-              >{{ (user.name || user.username)[0]?.toUpperCase() || "G" }}</span
+              >{{ user.name[0]?.toUpperCase() }}</span
             >
             <span v-if="!isRail" class="min-w-0 flex-1">
               <span class="block truncate text-ui font-medium">{{
-                user.name || (user.username ? `@${user.username}` : "Account")
+                user.name
               }}</span>
               <span class="block truncate text-meta text-muted">{{
-                user.email || "Git Clerk profile"
+                user.email
               }}</span>
             </span>
             <NavIcon

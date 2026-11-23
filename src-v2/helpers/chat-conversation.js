@@ -2,6 +2,7 @@ import { reactive } from "vue";
 import { streamedMessage } from "./event-stream.js";
 import { buildChatPrompt } from "./chat-request.js";
 import { createChatDraftStream } from "./chat-draft-stream.js";
+import { createChatTextReveal } from "./chat-text-reveal.js";
 import { getChatConfig } from "./chat-config.js";
 
 // State belongs to the conversation, so switching from New Session to a PR retains it.
@@ -112,6 +113,7 @@ export function createChatConversation({
   };
   const runMethod = async (payload, session) => {
     const current = new AbortController();
+    let reveal;
     controller = current;
     state.busy = true;
     state.error = "";
@@ -136,9 +138,9 @@ export function createChatConversation({
             ["user", "assistant", "error"].includes(message.role),
           )
           .slice(-40)
-          .map(({ role, text }) => ({
+          .map(({ role, text, historyText }) => ({
             role: role === "error" ? "assistant" : role,
-            content: text,
+            content: historyText ?? text,
           }));
         state.messages.push({
           id: crypto.randomUUID(),
@@ -157,6 +159,12 @@ export function createChatConversation({
         state.phase = "generating";
         state.progress = config.preset.ui.generating;
         raw = "";
+        const streamsMarkdown =
+          config.preset.outputFile &&
+          config.preset.output_format === "markdown";
+        if (streamsMarkdown && config.backend.stream)
+          reveal = createChatTextReveal(assistant);
+        const activeTools = new Set();
         const readDraftChunk = createChatDraftStream((file) => {
           const index = assistant.files.findIndex(
             (item) => item.path === file.path,
@@ -185,16 +193,35 @@ export function createChatConversation({
                 throw new Error(
                   "The response is too large. Request fewer files at a time.",
                 );
-              assistant.text = /^\s*(?:```(?:json)?\s*)?\{/i.test(raw)
-                ? streamedMessage(raw)
-                : raw;
-              readDraftChunk(data.chunk || "");
+              if (streamsMarkdown) {
+                if (reveal) reveal.update(raw);
+                else assistant.text = raw;
+              } else {
+                assistant.text = /^\s*(?:```(?:json)?\s*)?\{/i.test(raw)
+                  ? streamedMessage(raw)
+                  : raw;
+                readDraftChunk(data.chunk || "");
+              }
+            } else if (
+              event === "TOOL_CALL_START" ||
+              event === "TOOL_CALL_END"
+            ) {
+              const key = data.toolCallId ?? data.toolName;
+              if (event === "TOOL_CALL_START") activeTools.add(key);
+              else activeTools.delete(key);
+              assistant.activity = activeTools.size ? "Using tools…" : "";
             }
           },
           current.signal,
         );
         current.signal.throwIfAborted();
-        assistant.text = result.message;
+        if (result.markdown && reveal) {
+          reveal.update(result.markdown);
+        } else {
+          reveal?.finish();
+          assistant.text = result.markdown ?? result.message;
+        }
+        if (result.markdown) assistant.historyText = result.message;
         assistant.streaming = false;
         if (result.draftIdentity) state.draftIdentity = result.draftIdentity;
         else if (result.draft?.id)
@@ -228,6 +255,7 @@ export function createChatConversation({
     } catch (cause) {
       if (!current.signal.aborted) errorMethod(cause);
     } finally {
+      if (current.signal.aborted) reveal?.finish();
       if (assistant) assistant.streaming = false;
       if (controller === current) {
         state.busy = false;

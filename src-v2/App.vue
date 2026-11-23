@@ -1,5 +1,14 @@
 <script setup>
-import { nextTick, onMounted, provide, ref, shallowRef } from "vue";
+import {
+  computed,
+  inject,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  provide,
+  ref,
+  shallowRef,
+} from "vue";
 import { RouterView, useRoute } from "vue-router";
 import Navbar from "@/components/nav/Navbar.vue";
 import NavIcon from "@/components/nav/NavIcon.vue";
@@ -7,7 +16,17 @@ import Toast from "@/components/global/Toast.vue";
 import useSessionsStore from "@/stores/sessions.js";
 
 const route = useRoute();
-const theme = ref("light");
+const localTheme = ref("light");
+const luigiDarkMode = inject("luigi-dark-mode", null);
+const systemScheme = window.matchMedia("(prefers-color-scheme: dark)");
+const prefersDark = ref(systemScheme.matches);
+const updateSystemScheme = ({ matches }) => (prefersDark.value = matches);
+const hostTheme = computed(() => {
+  const mode = luigiDarkMode?.value;
+  if (mode === "auto") return prefersDark.value ? "dark" : "light";
+  return mode === "light" || mode === "dark" ? mode : null;
+});
+const theme = computed(() => hostTheme.value ?? localTheme.value);
 const snackbar = ref(false);
 provide("set-snackbar", snackbar);
 const mobileSidebarOpen = ref(false);
@@ -22,7 +41,13 @@ provide("session-sidebar", {
   openMethod: openSidebarMethod,
 });
 
-onMounted(() => useSessionsStore().loadSessions(false, true));
+onMounted(() => {
+  systemScheme.addEventListener("change", updateSystemScheme);
+  useSessionsStore().loadSessions(false, true);
+});
+onUnmounted(() =>
+  systemScheme.removeEventListener("change", updateSystemScheme),
+);
 
 const closeSidebarMethod = async () => {
   mobileSidebarOpen.value = false;
@@ -36,7 +61,8 @@ const closeSidebarMethod = async () => {
   <div :data-gc="theme" class="flex h-dvh overflow-hidden bg-bg text-text">
     <Navbar
       :theme="theme"
-      :update-theme="(value) => (theme = value)"
+      :show-theme="hostTheme === null"
+      :update-theme="(value) => (localTheme = value)"
       :mobile-open="mobileSidebarOpen"
       :close-sidebar="closeSidebarMethod"
     />

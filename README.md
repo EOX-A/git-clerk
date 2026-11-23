@@ -441,9 +441,11 @@ V1 continues to use `public/config.js` and its own GitHub configuration and cred
 V2 uses `name`, `email`, and `preferred_username` from Luigi's `context.user`.
 Missing fields fall back to `GITCLERK_PROFILE_NAME`, `GITCLERK_EMAIL`, and
 `GITCLERK_USERNAME` from Git Clerk's `.env` file. Restart Vite after changing
-these variables. V2 sends the resolved profile as `author: { name, email, username }`
-on file publish and delete requests. The username must resolve to the user slug
-the gateway enforces. The gateway supplies
+these variables. The sidebar profile and theme controls appear when all three
+profile fields come from the environment. Git Clerk follows the user area's
+theme from `context.darkMode` at startup and on context updates. V2 sends the
+resolved profile as `author: { name, email, username }` on file publish and delete requests. The
+username must resolve to the user slug the gateway enforces. The gateway supplies
 identity to the broker; v2 does not send provider credentials. For local development,
 configure repository access on the broker and run the updated version that exposes
 `GET /api/git/repo` and the remaining Git REST routes.

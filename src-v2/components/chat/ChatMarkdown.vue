@@ -8,7 +8,12 @@ import {
 } from "@/helpers/chat-markdown.js";
 import "vue-stream-markdown/index.css";
 
-defineProps({ text: { type: String, default: "" }, streaming: Boolean });
+defineProps({
+  text: { type: String, default: "" },
+  streaming: Boolean,
+  revealing: Boolean,
+  activity: { type: String, default: "" },
+});
 const container = ref(null);
 </script>
 
@@ -19,7 +24,7 @@ const container = ref(null);
   >
     <Markdown
       :content="text"
-      :mode="streaming ? 'streaming' : 'static'"
+      :mode="streaming || revealing ? 'streaming' : 'static'"
       :parser-options="chatMarkdownParser"
       :harden-options="chatMarkdownSecurity"
       :theme-element="() => container"
@@ -46,7 +51,9 @@ const container = ref(null);
       class="mt-2 inline-flex min-h-6 items-center gap-2 text-meta text-muted"
     >
       <ChatActivity />
-      {{ text ? "Generating response" : "Working on your request…" }}
+      {{
+        activity || (text ? "Generating response" : "Working on your request…")
+      }}
     </span>
   </div>
 </template>
