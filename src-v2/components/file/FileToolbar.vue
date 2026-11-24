@@ -102,7 +102,8 @@ defineProps({
           <button
             type="button"
             aria-label="Undo edit"
-            title="Undo edit"
+            title="Undo edit (Ctrl/⌘ + Z)"
+            aria-keyshortcuts="Control+Z Meta+Z"
             :disabled="temporary || !doc.historyIndex || doc.saving"
             class="inline-flex size-7 items-center justify-center rounded-md text-muted hover:bg-hover disabled:opacity-30"
             @click="onHistory(-1)"
@@ -112,7 +113,8 @@ defineProps({
           <button
             type="button"
             aria-label="Redo edit"
-            title="Redo edit"
+            title="Redo edit (Ctrl/⌘ + Shift + Z or Ctrl + Y)"
+            aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y"
             :disabled="
               temporary ||
               doc.historyIndex >= doc.history.length - 1 ||
@@ -124,26 +126,24 @@ defineProps({
             <FileIcon name="redo" />
           </button>
         </div>
-        <span
-          role="status"
-          class="text-xs empty:absolute"
-          :class="dirty ? 'text-muted' : 'text-open'"
-          >{{
-            dirty
-              ? "Unsaved changes"
-              : doc.saved
-                ? `✓ Saved to PR #${session.number}`
-                : ""
-          }}</span
-        >
         <button
           type="button"
           :disabled="temporary || !dirty || doc.saving"
-          title="Save changes (Ctrl/⌘ + S)"
+          :title="
+            !dirty && doc.saved && session
+              ? `Saved to PR #${session.number}`
+              : 'Save changes (Ctrl/⌘ + S)'
+          "
           class="h-[30px] rounded-lg bg-primary px-3 text-[12.5px] font-semibold text-on-primary disabled:bg-hover disabled:text-muted"
           @click="onSave"
         >
-          {{ doc.saving ? "Saving…" : "Save changes" }}
+          <span aria-live="polite">{{
+            doc.saving
+              ? "Saving…"
+              : !dirty && doc.saved
+                ? "Saved"
+                : "Save changes"
+          }}</span>
         </button>
       </div>
     </template>

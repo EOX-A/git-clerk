@@ -75,3 +75,23 @@ export function closeFileTab(tabs, activeID, id) {
         : activeID,
   };
 }
+
+export function handleFileHistoryShortcut(event, onHistory) {
+  if (
+    event.defaultPrevented ||
+    event.isComposing ||
+    event.altKey ||
+    event.ctrlKey === event.metaKey
+  )
+    return;
+
+  const key = event.key.toLowerCase();
+  const undo = key === "z" && !event.shiftKey;
+  const redo =
+    (key === "z" && event.shiftKey) ||
+    (key === "y" && event.ctrlKey && !event.shiftKey);
+  if ((!undo && !redo) || !onHistory(undo ? -1 : 1)) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+}
