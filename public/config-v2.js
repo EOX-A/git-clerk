@@ -387,7 +387,7 @@ globalThis.gitClerkConfig = {
 //       welcome: "What would you like to edit or add to this catalogue?",
 //       generating: "Preparing catalogue changes…",
 //       footer:
-//         "Catalogue files are published as a PR in the configured repository. Chat stays in this app session.",
+//         "Catalogue files are saved to a draft pull request. Chat stays in this app session.",
 //       suggestions: [
 //         "Create a synthetic sample product",
 //         "Update a project description",

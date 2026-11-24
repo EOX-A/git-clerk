@@ -64,8 +64,8 @@ export function getChatConfig(root = globalThis) {
           chat.publishing?.enabled === false
             ? "Chat stays in this app session."
             : chat.publishing?.automatic === false
-              ? "Review the generated files, then publish them to a PR."
-              : "Files are published as a PR in the configured repository. Chat stays in this app session.",
+              ? "Review the generated files, then save your draft."
+              : "Files are saved to a draft pull request. Chat stays in this app session.",
         disabledMessage: "AI chat is disabled for this instance.",
         suggestions: [],
         ...preset.ui,

@@ -13,10 +13,10 @@ const url = computed(() => chatPullRequestUrl(props.pr));
     <div class="mb-2 flex items-center gap-2 text-meta font-medium text-add-fg">
       <ChatIcon name="check-circle" class="size-4" />
       {{
-        pr.updated
-          ? "Pull request updated"
-          : pr.draft
-            ? "Draft pull request created"
+        pr.draft
+          ? "Draft saved"
+          : pr.updated
+            ? "Pull request updated"
             : "Pull request created"
       }}
     </div>

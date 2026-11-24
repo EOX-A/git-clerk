@@ -60,21 +60,21 @@ export function createChatConversation({
   };
   const saveMethod = async () => {
     if (!config.publishing.enabled)
-      throw new Error("Chat publishing is disabled for this instance.");
+      throw new Error("Saving drafts from chat is disabled for this instance.");
     if (state.session && !config.publishing.updateExistingSession)
       throw new Error(
         "Chat updates to existing sessions are disabled for this instance.",
       );
     state.phase = "preparing";
-    state.progress = "Preparing files for Git…";
+    state.progress = "Preparing files…";
     const bundle = await prepare(state.pending, controller.signal);
     controller.signal.throwIfAborted();
     state.phase = "saving";
     if (assistant) assistant.fileStage = "publishing";
     const updating = Boolean(state.session);
     state.progress = state.session
-      ? `Updating files in PR #${state.session.number} through the Git broker…`
-      : "Creating a draft PR and saving files through the Git broker…";
+      ? `Updating files in PR #${state.session.number}…`
+      : "Creating your draft…";
     const result = await publish(
       bundle,
       saveAttempt,
@@ -315,7 +315,7 @@ export function createChatConversation({
       return false;
     if (state.pending && saveAttempt.requested) {
       state.error =
-        "Check the previous publish result with Retry before starting another request.";
+        "Retry saving the draft before starting another request.";
       return false;
     }
     try {

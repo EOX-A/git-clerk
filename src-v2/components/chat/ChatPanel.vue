@@ -234,6 +234,7 @@ const headerPointerDownMethod = (event) => {
 
         <ChatProgress
           v-if="!isReadOnly"
+          :existing-session="Boolean(session)"
           :busy="busy"
           :phase="phase"
           :progress="progress"
