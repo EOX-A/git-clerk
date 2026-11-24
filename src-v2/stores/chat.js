@@ -2,10 +2,18 @@ import { defineStore } from "pinia";
 import { shallowReactive } from "vue";
 import useSessionsStore from "./sessions.js";
 import useGitStore from "./git.js";
-import { publishChatDraft, streamChat, readSessionDraft } from "@/api/index.js";
+import {
+  createChatDraftSession,
+  generateSessionTitle,
+  publishChatDraft,
+  readSessionDraft,
+  streamChat,
+  uploadSessionMedia,
+} from "@/api/index.js";
 import { prepareChatDraft } from "@/helpers/prepare-chat-draft.js";
 import { createChatConversation } from "@/helpers/chat-conversation.js";
-import { chatScopeKey } from "@/helpers/chat-config.js";
+import { chatScopeKey, getChatConfig } from "@/helpers/chat-config.js";
+import { chatPrTitle } from "@/helpers/chat-output.js";
 
 export default defineStore("chat-v2", () => {
   const conversations = shallowReactive({});
@@ -24,12 +32,31 @@ export default defineStore("chat-v2", () => {
     const scope = scopeMethod();
     const key = `${scope}:${number}`;
     if (!conversations[key]) {
+      const chatConfig = getChatConfig();
       const conversation = createChatConversation({
         connect: sessions.ensureConnected,
         generate: streamChat,
         loadDraft: readSessionDraft,
         prepare: prepareChatDraft,
         publish: publishChatDraft,
+        uploadMedia: uploadSessionMedia,
+        generateTitle: generateSessionTitle,
+        createDraft: (identity, attempt, onProgress) => {
+          const username = useGitStore().context?.user?.username || "";
+          return createChatDraftSession(
+            {
+              title: chatPrTitle(
+                chatConfig.publishing.prTitle,
+                identity,
+                username,
+              ),
+              branchTitle: identity.title,
+              body: chatConfig.publishing.prBody,
+            },
+            attempt,
+            onProgress,
+          );
+        },
         onSaved: (session) => {
           sessions.rememberSession(session);
           conversations[`${scope}:${session.number}`] = conversation;

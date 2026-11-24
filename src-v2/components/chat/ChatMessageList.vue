@@ -61,12 +61,27 @@ defineProps({
             v-for="(file, fileIndex) in msg.attachments"
             :key="fileIndex"
             :title="file.name"
-            class="flex max-w-full items-center gap-1 rounded-md border border-border-soft px-2 py-1 text-meta text-muted"
+            class="flex max-w-full items-center gap-1.5 rounded-md border border-border-soft px-2 py-1 text-meta text-muted"
           >
-            <ChatIcon name="file" class="size-3.5 shrink-0" /><span
-              class="truncate"
-              >{{ file.name }}</span
+            <img
+              v-if="
+                (file.previewUrl || file.url) &&
+                (file.type || file.mediaType || '').startsWith('image/')
+              "
+              :src="file.previewUrl || file.url"
+              :alt="file.name"
+              class="size-5 shrink-0 rounded object-cover"
+            />
+            <ChatIcon v-else name="file" class="size-3.5 shrink-0" />
+            <a
+              v-if="file.url"
+              :href="file.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="truncate hover:text-text hover:underline"
+              >{{ file.name }}</a
             >
+            <span v-else class="truncate">{{ file.name }}</span>
           </li>
         </ul>
       </div>

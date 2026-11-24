@@ -107,3 +107,31 @@ export function chatContextContent(text, path) {
   }
   return text;
 }
+
+const DEFAULT_MEDIA_MAX_FILE_SIZE = 25 * 1024 * 1024;
+const DEFAULT_MEDIA_MAX_FILES = 10;
+
+export function getMediaUploadConfig(root = globalThis) {
+  const config = root.gitClerkConfig || {};
+  const mediaUpload = config.mediaUpload || {};
+  const chatAttachments = config.chat?.features?.attachments ?? false;
+  return {
+    enabled: mediaUpload.enabled ?? chatAttachments,
+    target: mediaUpload.target ?? "repo",
+    path: String(mediaUpload.path ?? "assets").replace(/^\/+|\/+$/g, ""),
+    maxFileSize:
+      typeof mediaUpload.maxFileSize === "number" && mediaUpload.maxFileSize > 0
+        ? mediaUpload.maxFileSize
+        : DEFAULT_MEDIA_MAX_FILE_SIZE,
+    maxFiles:
+      typeof mediaUpload.maxFiles === "number" && mediaUpload.maxFiles > 0
+        ? mediaUpload.maxFiles
+        : DEFAULT_MEDIA_MAX_FILES,
+    urlTemplate: mediaUpload.urlTemplate ?? null,
+    bucket: mediaUpload.bucket || null,
+    customUpload:
+      typeof mediaUpload.customUpload === "function"
+        ? mediaUpload.customUpload
+        : null,
+  };
+}

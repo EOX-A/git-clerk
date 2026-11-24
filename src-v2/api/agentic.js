@@ -32,7 +32,11 @@ export function generateChatTest(prompt, signal) {
   return requestChatText(prompt, getChatConfig(), signal);
 }
 
-async function generateSessionTitle(prompt, config, signal) {
+export async function generateSessionTitle(
+  prompt,
+  config = getChatConfig(),
+  signal,
+) {
   try {
     // Leave room for the instructions within the backend's 400-character limit.
     const request = Array.from(prompt.trim()).slice(0, 290).join("");
@@ -84,6 +88,7 @@ export async function streamChat(
     model,
     branch,
     sessionTitle,
+    attachments,
     onTitle,
   },
   onEvent,
@@ -118,6 +123,7 @@ export async function streamChat(
       project_id: config.preset.projectId,
       stream: config.backend.stream,
       ...(model ? { model } : {}),
+      ...(attachments?.length ? { attachments } : {}),
       ...(outputPath &&
       config.preset.context.inputField &&
       currentContent !== undefined
