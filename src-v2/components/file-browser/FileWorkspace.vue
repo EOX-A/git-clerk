@@ -197,6 +197,12 @@ const confirmMethod = async (paths) => {
     (resolve) => (pending.value = { paths: [...paths], resolve }),
   );
 };
+const closePaneMethod = () => {
+  workspace.value
+    ?.querySelector('[aria-label="File view"] [aria-pressed="true"]')
+    ?.focus();
+  activeDocument.value.mode = "none";
+};
 const saveActiveMethod = async (path = activePath.value) => {
   if (!path || fileOperationPending.value) return false;
   const saved = await saveMethod(path);
@@ -567,6 +573,7 @@ onUnmounted(() => {
         :inert="fileOperationPending || undefined"
         :session="fileSession"
         :changed="activeChange"
+        :on-close-pane="showingDraft ? null : closePaneMethod"
         :on-change="
           (text) => {
             if (!fileOperationPending) changeMethod(activePath, text);

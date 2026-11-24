@@ -1,6 +1,7 @@
 <script setup>
 import { computed, defineAsyncComponent } from "vue";
 import { formValue, formText } from "@/helpers/file-editor.js";
+import FileIcon from "../file-browser/FileIcon.vue";
 import FileSource from "./FileSource.vue";
 import FilePreview from "./FilePreview.vue";
 import FileSplit from "./FileSplit.vue";
@@ -12,6 +13,7 @@ const props = defineProps({
   session: { type: Object, default: null },
   readOnly: Boolean,
   changed: { type: Object, default: null },
+  onClosePane: { type: Function, default: null },
   onChange: { type: Function, required: true },
   onRetry: { type: Function, required: true },
   onHistory: { type: Function, required: true },
@@ -97,6 +99,23 @@ const previewChangeMethod = (value) => {
       </p>
       <FileSplit :side="doc.mode !== 'none'" :preview="Boolean(doc.preview)">
         <template #side>
+          <div
+            v-if="doc.preview && onClosePane"
+            class="flex h-9 shrink-0 items-center justify-between border-b border-border-soft pr-1.5 pl-3.5"
+          >
+            <span class="text-xs font-medium">{{
+              doc.mode === "editor" ? "Editor" : "Source"
+            }}</span>
+            <button
+              type="button"
+              :aria-label="`Close ${doc.mode} pane and show preview`"
+              title="Close pane and show preview"
+              class="inline-flex size-7 items-center justify-center rounded-md text-muted hover:bg-hover hover:text-text focus-visible:outline-2 focus-visible:outline-primary"
+              @click="onClosePane()"
+            >
+              <FileIcon name="close" />
+            </button>
+          </div>
           <FileForm
             v-if="doc.mode === 'editor' && doc.meta?.schema"
             :text="doc.text"
