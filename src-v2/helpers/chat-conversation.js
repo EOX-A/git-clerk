@@ -6,6 +6,28 @@ import { createChatTextReveal } from "./chat-text-reveal.js";
 import { getChatConfig } from "./chat-config.js";
 
 // State belongs to the conversation, so switching from New Session to a PR retains it.
+const TOOL_ACTIVITY_LABELS = {
+  discover_narrative: "Searching narratives…",
+  search_unsplash_image: "Finding imagery…",
+  resolve_loremflickr_image: "Finding imagery…",
+  web_search: "Searching the web…",
+  resolve_doi: "Resolving DOI metadata…",
+  search_connected_bucket: "Inspecting dataset…",
+};
+
+function toolActivityLabel(toolName) {
+  if (!toolName || typeof toolName !== "string") return "Using tools…";
+  const normalized = toolName.trim().toLowerCase();
+  if (TOOL_ACTIVITY_LABELS[normalized]) return TOOL_ACTIVITY_LABELS[normalized];
+  if (normalized.includes("stac") || normalized.includes("catalog"))
+    return "Searching satellite catalog…";
+  if (normalized.includes("bucket") || normalized.includes("dataset"))
+    return "Inspecting dataset…";
+  if (normalized.includes("image") || normalized.includes("unsplash"))
+    return "Finding imagery…";
+  return `Running ${normalized.replace(/_/g, " ")}…`;
+}
+
 export function createChatConversation({
   connect,
   generate,
@@ -164,7 +186,7 @@ export function createChatConversation({
           config.preset.output_format === "markdown";
         if (streamsMarkdown && config.backend.stream)
           reveal = createChatTextReveal(assistant);
-        const activeTools = new Set();
+        const activeTools = new Map();
         const readDraftChunk = createChatDraftStream((file) => {
           const index = assistant.files.findIndex(
             (item) => item.path === file.path,
@@ -187,12 +209,20 @@ export function createChatConversation({
           },
           (event, data) => {
             if (current.signal.aborted) return;
-            if (event === "TEXT_MESSAGE_CONTENT") {
+            if (event === "RUN_STARTED") {
+              state.progress = config.preset.ui.generating || "Generating…";
+            } else if (event === "TEXT_MESSAGE_CONTENT") {
               raw += data.chunk || "";
               if (raw.length > 2_000_000)
                 throw new Error(
                   "The response is too large. Request fewer files at a time.",
                 );
+              if (!activeTools.size) {
+                state.progress =
+                  streamsMarkdown && raw.trim()
+                    ? "Streaming narrative…"
+                    : config.preset.ui.generating || "Generating…";
+              }
               if (streamsMarkdown) {
                 if (reveal) reveal.update(raw);
                 else assistant.text = raw;
@@ -207,9 +237,27 @@ export function createChatConversation({
               event === "TOOL_CALL_END"
             ) {
               const key = data.toolCallId ?? data.toolName;
-              if (event === "TOOL_CALL_START") activeTools.add(key);
+              if (event === "TOOL_CALL_START")
+                activeTools.set(key, data.toolName);
               else activeTools.delete(key);
-              assistant.activity = activeTools.size ? "Using tools…" : "";
+              if (activeTools.size) {
+                const latestTool = Array.from(activeTools.values()).at(-1);
+                const label = toolActivityLabel(latestTool);
+                assistant.activity = label;
+                state.progress = label;
+              } else {
+                assistant.activity = "";
+                state.progress = config.preset.ui.generating || "Generating…";
+              }
+            } else if (
+              event !== "STATE_DELTA" &&
+              event !== "DATA_MESSAGE" &&
+              event !== "RUN_FINISHED" &&
+              event !== "RUN_ERROR" &&
+              typeof data?.message === "string" &&
+              data.message.trim()
+            ) {
+              state.progress = data.message.trim();
             }
           },
           current.signal,
