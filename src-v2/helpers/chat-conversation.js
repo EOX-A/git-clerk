@@ -239,10 +239,16 @@ export function createChatConversation({
                   "The response is too large. Request fewer files at a time.",
                 );
               if (!activeTools.size) {
-                state.progress =
-                  streamsMarkdown && raw.trim()
-                    ? "Streaming to editor…"
-                    : config.preset.ui.generating || "Generating…";
+                const lines = raw ? raw.split("\n").length : 0;
+                if (streamsMarkdown && lines) {
+                  const targetPath =
+                    streamingTargetPath || config.preset.outputFile;
+                  state.progress = `Generating ${targetPath} (${lines} ${lines === 1 ? "line" : "lines"})…`;
+                } else if (lines) {
+                  state.progress = `Generating files (${lines} ${lines === 1 ? "line" : "lines"})…`;
+                } else {
+                  state.progress = config.preset.ui.generating || "Generating…";
+                }
               }
               if (streamsMarkdown) {
                 const targetPath =
