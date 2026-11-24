@@ -23,6 +23,7 @@ const props = defineProps({
     type: Array,
     default: () => [],
   },
+  expandOnDock: Boolean,
   busy: Boolean,
   phase: { type: String, default: "idle" },
   progress: { type: String, default: "" },
@@ -143,8 +144,12 @@ const headerPointerDownMethod = (event) => {
         data-chat-mode-button
         type="button"
         :disabled="!onDock"
-        aria-label="Dock chat beside the visualizer"
-        title="Dock chat beside the visualizer"
+        :aria-label="
+          expandOnDock ? 'Expand chat' : 'Dock chat beside the visualizer'
+        "
+        :title="
+          expandOnDock ? 'Expand chat' : 'Dock chat beside the visualizer'
+        "
         class="flex size-[30px] shrink-0 items-center justify-center rounded-[7px] text-on-primary hover:bg-white/16"
         @click.stop="onDock?.()"
       >

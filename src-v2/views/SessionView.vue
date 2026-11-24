@@ -59,6 +59,14 @@ const {
   dockedKeyMethod,
   toggleDockMethod,
 } = useChatLayout(workspaceContainer, mobileView);
+const temporaryMobile = computed(() => newSession.value && narrow.value);
+const floatingOnMobile = computed(
+  () => temporaryMobile.value && mobileView.value === "files",
+);
+const minimizeChatMethod = () => {
+  collapsed.value = true;
+  if (temporaryMobile.value) mobileView.value = "files";
+};
 const chatStore = useChatStore();
 const conversation = shallowRef(
   chatStore.getConversation(
@@ -286,10 +294,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <section
-    ref="workspaceContainer"
-    class="relative flex h-full min-h-0 flex-col overflow-hidden"
-  >
+  <section class="relative flex h-full min-h-0 flex-col overflow-hidden">
     <NewSessionView
       v-if="starter"
       :connecting="connecting"
@@ -311,7 +316,7 @@ onUnmounted(() => {
       :on-mobile-view="
         (view) => {
           mobileView = view;
-          collapsed = false;
+          collapsed = newSession && view === 'files';
         }
       "
     />
@@ -329,6 +334,7 @@ onUnmounted(() => {
     <div
       v-if="!starter && (session || newSession)"
       :key="workspaceKey"
+      ref="workspaceContainer"
       class="relative flex min-h-0 flex-1 overflow-hidden"
     >
       <aside
@@ -339,11 +345,11 @@ onUnmounted(() => {
         :style="collapsed ? undefined : style"
         :class="
           collapsed
-            ? 'fixed right-4 bottom-4 z-[45] rounded-2xl border border-border-soft shadow-floating'
-            : newSession && narrow
-              ? 'fixed inset-x-2 bottom-2 z-[45] h-[55dvh] rounded-2xl border border-border-soft shadow-floating'
+            ? 'absolute right-4 bottom-4 z-[45] rounded-2xl border border-border-soft shadow-floating'
+            : floatingOnMobile
+              ? 'absolute inset-x-2 bottom-2 z-[45] h-3/5 rounded-2xl border border-border-soft shadow-floating'
               : mode === 'floating'
-                ? 'fixed z-[45] rounded-2xl border border-border-soft shadow-floating'
+                ? 'absolute z-[45] rounded-2xl border border-border-soft shadow-floating'
                 : mode === 'docked'
                   ? 'relative h-full shrink-0 border-r border-border-soft'
                   : 'h-full w-full'
@@ -364,7 +370,10 @@ onUnmounted(() => {
           :on-resize="startResizeMethod"
         />
         <ChatPanel
-          :mode="newSession && narrow ? 'floating' : mode"
+          :mode="
+            temporaryMobile ? (floatingOnMobile ? 'floating' : 'docked') : mode
+          "
+          :expand-on-dock="temporaryMobile"
           v-show="!collapsed"
           :session="session"
           :messages="messages"
@@ -387,7 +396,7 @@ onUnmounted(() => {
                 ? dockedWidth < 470
                 : containerWidth < 470
           "
-          :on-dock="newSession ? null : () => toggleDockMethod(true)"
+          :on-dock="() => toggleDockMethod(true)"
           :on-float="() => toggleDockMethod(false)"
           :on-drag-start="narrow ? null : startDragMethod"
           :on-open-file="handleOpenFileMethod"
@@ -400,7 +409,7 @@ onUnmounted(() => {
               aria-label="Minimize chat"
               title="Minimize chat"
               class="flex size-[30px] items-center justify-center rounded-[7px] hover:bg-white/16"
-              @click="collapsed = true"
+              @click="minimizeChatMethod"
             >
               −
             </button>
@@ -420,7 +429,7 @@ onUnmounted(() => {
         </ChatPanel>
       </aside>
       <div
-        v-if="chatConfig.enabled && mode === 'docked'"
+        v-if="chatConfig.enabled && mode === 'docked' && !collapsed"
         role="separator"
         aria-orientation="vertical"
         aria-label="Chat width"
@@ -438,9 +447,7 @@ onUnmounted(() => {
         <span class="h-full w-px bg-border-soft" />
       </div>
       <div
-        v-show="
-          newSession || !chatConfig.enabled || !narrow || mobileView === 'files'
-        "
+        v-show="!chatConfig.enabled || !narrow || mobileView === 'files'"
         :inert="(!newSession && chat.busy) || undefined"
         class="relative flex min-w-0 flex-1 flex-col overflow-hidden bg-bg"
       >

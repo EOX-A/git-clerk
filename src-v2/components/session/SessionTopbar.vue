@@ -225,13 +225,12 @@ onUnmounted(() => {
         </div>
       </div>
       <div
-        v-if="showViewSwitch && (temporary || onMobileView)"
+        v-if="showViewSwitch && onMobileView"
         role="group"
         aria-label="Workspace view"
         class="flex shrink-0 gap-0.5 rounded-[10px] bg-hover p-[3px]"
       >
         <button
-          :disabled="temporary"
           :aria-pressed="mobileView === 'chat'"
           type="button"
           :class="
@@ -245,7 +244,6 @@ onUnmounted(() => {
           Chat
         </button>
         <button
-          :disabled="temporary"
           :aria-pressed="mobileView === 'files'"
           type="button"
           :class="

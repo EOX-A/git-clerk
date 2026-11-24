@@ -504,7 +504,7 @@ file content updates the preview in memory. Floating chat lists each file path a
 generation status. After publication, select a saved path to open it in the workspace. Files with a configured visualizer
 use it as soon as their content can be rendered. Other files show their source.
 With automatic publishing enabled, the completed response is saved to a draft
-PR. Minimize chat to see the whole preview or expand it to stop generation.
+PR. Floating chat starts at 60% of the workspace height. Drag or resize it within the area below the session header.
 
 In an existing session, assistant replies use `vue-stream-markdown` inside the existing Tailwind chat layout
 for headings, lists, tables, links and code blocks. File cards appear incrementally

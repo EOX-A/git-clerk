@@ -1,7 +1,8 @@
-import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import {
   clampDockedWidth,
   clampFloatingBounds,
+  initialFloatingBounds,
   resizeFloatingBounds,
 } from "./chat-layout.js";
 
@@ -9,8 +10,18 @@ export default function useChatLayout(container, mobileView) {
   const docked = ref(false);
   const narrow = ref(false);
   const dockedWidth = ref(420);
-  const containerWidth = ref(0);
-  const bounds = ref({ x: 0, y: 70, w: 480, h: 600 });
+  const containerWidth = ref(window.innerWidth);
+  const containerHeight = ref(window.innerHeight);
+  const customBounds = ref(null);
+  const bounds = computed(() =>
+    customBounds.value
+      ? clampFloatingBounds(
+          customBounds.value,
+          containerWidth.value,
+          containerHeight.value,
+        )
+      : initialFloatingBounds(containerWidth.value, containerHeight.value),
+  );
   const dragging = ref(false);
   const mode = computed(() =>
     narrow.value ? "mobile" : docked.value ? "docked" : "floating",
@@ -27,20 +38,17 @@ export default function useChatLayout(container, mobileView) {
         ? { width: `${dockedWidth.value}px` }
         : {},
   );
-  let observer;
   let stopPointer = () => {};
 
   const measureMethod = () => {
-    containerWidth.value = container.value?.clientWidth || window.innerWidth;
+    if (container.value) {
+      containerWidth.value = container.value.clientWidth;
+      containerHeight.value = container.value.clientHeight;
+    }
     narrow.value = window.innerWidth < 860;
     dockedWidth.value = clampDockedWidth(
       dockedWidth.value,
       containerWidth.value,
-    );
-    bounds.value = clampFloatingBounds(
-      bounds.value,
-      window.innerWidth,
-      window.innerHeight,
     );
     stopPointer();
   };
@@ -48,13 +56,7 @@ export default function useChatLayout(container, mobileView) {
     stopPointer();
     docked.value = false;
     if (mobileView) mobileView.value = "chat";
-    const w = Math.min(480, window.innerWidth - 32);
-    const h = Math.min(640, window.innerHeight - 94);
-    bounds.value = clampFloatingBounds(
-      { x: window.innerWidth - w - 24, y: window.innerHeight - h - 24, w, h },
-      window.innerWidth,
-      window.innerHeight,
-    );
+    customBounds.value = null;
   };
   const startPointerMethod = (event, move) => {
     if (event.button !== 0 || dragging.value) return;
@@ -86,14 +88,14 @@ export default function useChatLayout(container, mobileView) {
     const x = event.clientX,
       y = event.clientY;
     startPointerMethod(event, (next) => {
-      bounds.value = clampFloatingBounds(
+      customBounds.value = clampFloatingBounds(
         {
           ...start,
           x: start.x + next.clientX - x,
           y: start.y + next.clientY - y,
         },
-        window.innerWidth,
-        window.innerHeight,
+        containerWidth.value,
+        containerHeight.value,
       );
     });
   };
@@ -102,13 +104,13 @@ export default function useChatLayout(container, mobileView) {
     const x = event.clientX,
       y = event.clientY;
     startPointerMethod(event, (next) => {
-      bounds.value = resizeFloatingBounds(
+      customBounds.value = resizeFloatingBounds(
         start,
         direction,
         next.clientX - x,
         next.clientY - y,
-        window.innerWidth,
-        window.innerHeight,
+        containerWidth.value,
+        containerHeight.value,
       );
     });
   };
@@ -139,20 +141,29 @@ export default function useChatLayout(container, mobileView) {
   };
   const toggleDockMethod = async (value) => {
     stopPointer();
-    docked.value = value;
+    if (narrow.value && mobileView) mobileView.value = value ? "chat" : "files";
+    else docked.value = value;
     await nextTick();
     container.value?.querySelector("[data-chat-mode-button]")?.focus();
   };
+  watch(
+    container,
+    (element, previous, onCleanup) => {
+      if (!element) return;
+      measureMethod();
+      const observer = new ResizeObserver(measureMethod);
+      observer.observe(element);
+      onCleanup(() => observer.disconnect());
+    },
+    { flush: "post" },
+  );
   onMounted(() => {
     resetMethod();
     measureMethod();
-    observer = new ResizeObserver(measureMethod);
-    observer.observe(container.value);
     window.addEventListener("resize", measureMethod);
   });
   onUnmounted(() => {
     stopPointer();
-    observer?.disconnect();
     window.removeEventListener("resize", measureMethod);
   });
   return {
