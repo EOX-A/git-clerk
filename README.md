@@ -492,7 +492,10 @@ The app opens the draft PR with the conversation and file cards intact. Use
 After a confirmed chat update, open files receive the saved contents immediately
 without re-fetching files or editor schemas. The current editor/preview mode is
 preserved; ordinary background metadata refreshes continue.
-New sessions open with the full-page chat. Submitting the first prompt opens
+New sessions show a card for each enabled creation option. **Use Git Clerk AI** opens
+the prompt and suggestions. **Create a session** opens a full-page form that asks
+for a session name. Submitting opens the draft workspace where you can add or edit files.
+Submitting the first AI prompt opens
 the session workspace with chat floating over an in-memory file preview. The
 title appears as soon as it arrives. PR metadata shows loading placeholders.
 The preview can be scrolled during generation. File tabs and the active preview stay
@@ -571,7 +574,7 @@ The chat configuration supports:
 | `features`                                     | Attachments and model selector visibility; manual session creation visibility. When `attachments` is enabled, attached files are uploaded via `mediaUpload` and sent to `/api/generate`. |
 | `mediaUpload`                                  | Top-level media upload configuration: `enabled`, `target` (`"repo"` \| `"bucket"` \| `"custom"`), `path` (default `"assets"`), `maxFileSize` (default 25 MiB), `urlTemplate`, and `customUpload`. |
 | `preset.models`                                | Model options `{ label, value, description }`; the selected nonempty `value` is sent as `model`. Auto omits it. Use models supported by the backend.                                              |
-| `publishing.enabled`, `automatic`              | Disable publishing, or set `automatic: false` to show **Publish changes** after generation.                                                                                                       |
+| `publishing.enabled`, `automatic`              | Disable draft saving, or set `automatic: false` to show **Create draft** or **Update draft** after generation.                                                                                                       |
 | `publishing.updateExistingSession`             | Allow or disable follow-up publication into an existing PR.                                                                                                                                       |
 | `publishing.serverId`, `toolName`, `prBody`    | Broker route and new-PR description. Replacement tools must implement the same publish-bundle contract.                                                                                           |
 

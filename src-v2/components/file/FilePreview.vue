@@ -1,9 +1,16 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  onUnmounted,
+  ref,
+  watch,
+} from "vue";
 import useGitStore from "@/stores/git.js";
 import { getMediaPreviewMap, uploadMediaFiles } from "@/api/media-upload.js";
 import { getMediaUploadConfig } from "@/helpers/chat-config.js";
-
+import { handleFileHistoryShortcut } from "@/helpers/file-workspace.js";
 const props = defineProps({
   url: { type: String, required: true },
   path: { type: String, required: true },
@@ -35,7 +42,19 @@ const sendMethod = () => {
     origin.value,
   );
 };
+const previewKeyMethod = (event) => {
+  if (props.readOnly) return;
+  handleFileHistoryShortcut(event, (direction) =>
+    direction < 0 ? props.onUndo?.() : props.onRedo?.(),
+  );
+};
 const loadedMethod = () => {
+  // Key events stay inside the iframe. Cross-origin previews use the undo/redo message protocol.
+  frame.value?.contentDocument?.addEventListener(
+    "keydown",
+    previewKeyMethod,
+    true,
+  );
   busy.value = false;
   sendMethod();
 };
@@ -98,6 +117,13 @@ watch(() => [props.value, props.readOnly, props.undo, props.redo], sendMethod, {
   deep: true,
 });
 onMounted(() => window.addEventListener("message", messageMethod));
+onBeforeUnmount(() =>
+  frame.value?.contentDocument?.removeEventListener(
+    "keydown",
+    previewKeyMethod,
+    true,
+  ),
+);
 onUnmounted(() => window.removeEventListener("message", messageMethod));
 </script>
 <template>

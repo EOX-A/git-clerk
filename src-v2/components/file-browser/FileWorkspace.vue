@@ -31,6 +31,7 @@ import {
 } from "@/api/index.js";
 import {
   changedFileTabs,
+  handleFileHistoryShortcut,
   closeFileTab,
   fileDirectory,
   fileTab,
@@ -48,6 +49,7 @@ const props = defineProps({
   onDirtyChange: { type: Function, required: true },
   onOperationChange: { type: Function, default: null },
 });
+const workspace = ref(null);
 const files = ref([]);
 const tabs = ref([]);
 const activeID = ref(null);
@@ -195,6 +197,12 @@ const confirmMethod = async (paths) => {
     (resolve) => (pending.value = { paths: [...paths], resolve }),
   );
 };
+const closePaneMethod = () => {
+  workspace.value
+    ?.querySelector('[aria-label="File view"] [aria-pressed="true"]')
+    ?.focus();
+  activeDocument.value.mode = "none";
+};
 const saveActiveMethod = async (path = activePath.value) => {
   if (!path || fileOperationPending.value) return false;
   const saved = await saveMethod(path);
@@ -227,6 +235,38 @@ const unloadMethod = (event) => {
     event.preventDefault();
     event.returnValue = "";
   }
+};
+const activeHistoryMethod = (direction) => {
+  const doc = activeDocument.value;
+  if (
+    !props.active ||
+    !props.session?.canEdit ||
+    showingDraft.value ||
+    fileOperationPending.value ||
+    pending.value ||
+    validation.value.length ||
+    !doc?.loaded ||
+    doc.saving ||
+    doc.removed ||
+    doc.diff ||
+    doc.unavailable ||
+    activeChange.value?.status === "removed"
+  )
+    return false;
+  historyMethod(activePath.value, direction);
+  return true;
+};
+const historyKeyMethod = (event) => {
+  const target = event.target;
+  if (
+    target !== document.body &&
+    target !== document.documentElement &&
+    !workspace.value?.contains(target)
+  )
+    return;
+  if (target.closest?.("dialog, .file-drawer input, .file-drawer textarea"))
+    return;
+  handleFileHistoryShortcut(event, activeHistoryMethod);
 };
 const saveKeyMethod = (event) => {
   if (!props.active) return;
@@ -270,6 +310,7 @@ watch(dirtyPaths, (paths) => props.onDirtyChange(paths.length > 0), {
 onMounted(() => {
   window.addEventListener("beforeunload", unloadMethod);
   window.addEventListener("keydown", saveKeyMethod);
+  window.addEventListener("keydown", historyKeyMethod, true);
 });
 const initialized = ref(false);
 let requestID = 0;
@@ -428,6 +469,7 @@ onUnmounted(() => {
   controller?.abort();
   window.removeEventListener("beforeunload", unloadMethod);
   window.removeEventListener("keydown", saveKeyMethod);
+  window.removeEventListener("keydown", historyKeyMethod, true);
   props.onDirtyChange(false);
   props.onOperationChange?.(false);
   finishDialogMethod(false);
@@ -436,6 +478,7 @@ onUnmounted(() => {
 
 <template>
   <div
+    ref="workspace"
     class="file-workspace flex min-h-0 flex-1 flex-col"
     :role="!session ? 'region' : undefined"
     :aria-label="!session ? 'Temporary file preview' : undefined"
@@ -501,7 +544,7 @@ onUnmounted(() => {
           if (activeDocument) activeDocument.diff = !activeDocument.diff;
         }
       "
-      :on-history="(direction) => historyMethod(activePath, direction)"
+      :on-history="activeHistoryMethod"
     />
     <div class="relative flex min-h-0 flex-1" @keydown.esc="closeDrawerMethod">
       <FileDrawer
@@ -530,6 +573,7 @@ onUnmounted(() => {
         :inert="fileOperationPending || undefined"
         :session="fileSession"
         :changed="activeChange"
+        :on-close-pane="showingDraft ? null : closePaneMethod"
         :on-change="
           (text) => {
             if (!fileOperationPending) changeMethod(activePath, text);
@@ -546,11 +590,7 @@ onUnmounted(() => {
               };
           }
         "
-        :on-history="
-          (direction) => {
-            if (!fileOperationPending) historyMethod(activePath, direction);
-          }
-        "
+        :on-history="activeHistoryMethod"
       />
       <p v-else-if="!session" class="p-5 text-ui text-muted" role="status">
         Waiting for file content…

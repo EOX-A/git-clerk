@@ -233,7 +233,10 @@ watch(
     if (previous !== conversation.value) previous?.cancelMethod();
     workspaceKey.value++;
     resetMethod();
-    collapsed.value = false;
+    collapsed.value = Boolean(
+      number && router.options.history.state.manualSession,
+    );
+    if (collapsed.value) mobileView.value = "files";
     hasUnsaved.value = false;
     fileOperationPending.value = false;
     session.value = null;
@@ -266,6 +269,7 @@ watch(
 );
 
 onMounted(() => {
+  if (collapsed.value) mobileView.value = "files";
   window.addEventListener("beforeunload", chatUnloadMethod);
   window.addEventListener("focus", backgroundRefreshMethod);
   refreshTimer = window.setInterval(backgroundRefreshMethod, 30000);
