@@ -119,6 +119,7 @@ const previewChangeMethod = (value) => {
             :key="doc.preview"
             :url="doc.preview"
             :path="path"
+            :session="session"
             :value="previewValue"
             :dirty="dirty"
             :read-only="readOnly || doc.saving"

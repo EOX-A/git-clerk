@@ -568,7 +568,8 @@ The chat configuration supports:
 | `preset.context.inputField`                    | Optional backend field receiving the current `outputFile` text; use `markdownSection` for the Markdown editor. Unset by default.                                                                  |
 | `preset.context.extensions`                    | Which changed files supply follow-up context; `[]` includes readable text files. This does not restrict publication paths. JSON is decoded when possible; Markdown and other text remain strings. |
 | `preset.ui`                                    | Assistant/panel names, heading, description, initial/follow-up placeholders, session title, welcome/read-only welcome, progress wording, footer, disabled message and suggestion buttons.         |
-| `features`                                     | Attachments and model selector visibility; manual session creation visibility. Attachments remain local-only and block sending if selected.                                                       |
+| `features`                                     | Attachments and model selector visibility; manual session creation visibility. When `attachments` is enabled, attached files are uploaded via `mediaUpload` and sent to `/api/generate`. |
+| `mediaUpload`                                  | Top-level media upload configuration: `enabled`, `target` (`"repo"` \| `"bucket"` \| `"custom"`), `path` (default `"assets"`), `maxFileSize` (default 25 MiB), `urlTemplate`, and `customUpload`. |
 | `preset.models`                                | Model options `{ label, value, description }`; the selected nonempty `value` is sent as `model`. Auto omits it. Use models supported by the backend.                                              |
 | `publishing.enabled`, `automatic`              | Disable publishing, or set `automatic: false` to show **Publish changes** after generation.                                                                                                       |
 | `publishing.updateExistingSession`             | Allow or disable follow-up publication into an existing PR.                                                                                                                                       |
@@ -595,9 +596,11 @@ JSON Form and map imports. The companion `narrative-preview.js` connects
 `SCHEMA_DATA_EDITOR_UPDATE` and `SCHEMA_DATA_PREVIEW_UPDATE` with `detail.Story`,
 checks the parent window/origin, suppresses update echoes, and respects read-only
 sessions. The preview opens by default; Source and Editor can be opened alongside it.
-If CDN imports fail, the page shows the source with a loading error. Image uploads
-are not connected in v2; the upload callback reports this instead of waiting for an
-unsupported `FILE_UPLOADED` reply. Existing image URLs can still be used in narratives.
+If CDN imports fail, the page shows the source with a loading error. Media uploads
+from the storytelling preview (`FILE_UPLOAD` / `FILE_UPLOADED`) and chat attachments
+use `globalThis.gitClerkConfig.mediaUpload` (defaulting to `POST /api/git/upload` on the
+active session branch) and provide instant local/broker fallback URLs while GitHub's
+raw CDN propagates.
 
 Missing fields inherit generic defaults: no project ID and no context extension
 filter. Replacing the preset changes chat behaviour only; editor schemas and

@@ -1,8 +1,13 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import useGitStore from "@/stores/git.js";
+import { getMediaPreviewMap, uploadMediaFiles } from "@/api/media-upload.js";
+import { getMediaUploadConfig } from "@/helpers/chat-config.js";
+
 const props = defineProps({
   url: { type: String, required: true },
   path: { type: String, required: true },
+  session: { type: Object, default: null },
   value: { required: true },
   readOnly: Boolean,
   dirty: Boolean,
@@ -12,6 +17,7 @@ const props = defineProps({
   onUndo: { type: Function, default: null },
   onRedo: { type: Function, default: null },
 });
+const gitStore = useGitStore();
 const frame = ref(null);
 const busy = ref(true);
 const origin = computed(() => new URL(props.url).origin);
@@ -24,6 +30,7 @@ const sendMethod = () => {
       undo: !props.readOnly && props.undo,
       redo: !props.readOnly && props.redo,
       readOnly: props.readOnly,
+      mediaPreviews: getMediaPreviewMap(),
     },
     origin.value,
   );
@@ -31,6 +38,41 @@ const sendMethod = () => {
 const loadedMethod = () => {
   busy.value = false;
   sendMethod();
+};
+const uploadPreviewFileMethod = async (file) => {
+  const reply = (payload) => {
+    frame.value?.contentWindow?.postMessage(
+      { type: "FILE_UPLOADED", file: payload },
+      origin.value,
+    );
+  };
+  if (props.readOnly) {
+    reply({ message: "This session is read-only." });
+    return;
+  }
+  const mediaConfig = getMediaUploadConfig();
+  if (mediaConfig.target === "repo" && !props.session?.branch) {
+    reply({ message: "Open a session branch before uploading files." });
+    return;
+  }
+  try {
+    const result = await uploadMediaFiles([file], {
+      context: gitStore.context,
+      session: props.session,
+      config: mediaConfig,
+    });
+    const uploaded = result.files?.[0];
+    if (!uploaded?.url) {
+      throw new Error("The upload did not return a file URL.");
+    }
+    reply({
+      fileUrl: uploaded.url,
+      fallbackUrl: uploaded.previewUrl || uploaded.brokerRawUrl,
+    });
+    sendMethod();
+  } catch (error) {
+    reply({ message: error?.message || "File upload failed." });
+  }
 };
 const messageMethod = (event) => {
   if (
@@ -42,6 +84,10 @@ const messageMethod = (event) => {
   const { type, detail } = event.data;
   if (type === "ENABLE_LOADER_POSTMESSAGE") busy.value = true;
   if (type === "DISABLE_LOADER_POSTMESSAGE") busy.value = false;
+  if (type === "FILE_UPLOAD" && event.data.file) {
+    void uploadPreviewFileMethod(event.data.file);
+    return;
+  }
   if (props.readOnly) return;
   if (type === "SCHEMA_DATA_PREVIEW_UPDATE" && detail !== undefined)
     props.onChange?.(detail);

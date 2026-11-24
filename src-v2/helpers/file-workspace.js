@@ -55,10 +55,7 @@ export function fileTab(path) {
   return { id: path, path };
 }
 export function changedFileTabs(files, root = globalThis) {
-  // The broker's draft marker is available in the drawer but never auto-opens.
-  const tabs = files
-    .filter(({ path }) => path !== ".gitclerk-session")
-    .map(({ path }) => fileTab(path));
+  const tabs = files.map(({ path }) => fileTab(path));
   const priority = tabs.findIndex(({ path }) => matchFileSchema(path, root));
   if (priority > 0) tabs.unshift(...tabs.splice(priority, 1));
   return tabs;

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, ref, shallowRef, watch } from "vue";
+import { computed, nextTick, onUnmounted, ref, shallowRef, watch } from "vue";
 import ChatIcon from "./ChatIcon.vue";
 import ChatMenu from "./ChatMenu.vue";
 import { getChatConfig } from "@/helpers/chat-config.js";
@@ -28,9 +28,18 @@ const message = ref("");
 const textarea = ref(null);
 const fileInput = ref(null);
 const attachments = shallowRef([]);
+const attachmentPreviews = new WeakMap();
+const draggingOver = ref(false);
+let dragDepth = 0;
 const model = ref(models[0]?.label || "Auto");
 const menu = ref("");
 const menuTrigger = shallowRef(null);
+const canAttach = computed(
+  () =>
+    Boolean(chatConfig.features.attachments) &&
+    !props.busy &&
+    !props.blockedReason,
+);
 const canSend = computed(
   () =>
     Boolean(props.onSend) &&
@@ -39,18 +48,79 @@ const canSend = computed(
     message.value.trim().length > 0,
 );
 
+const previewForFile = (file) => {
+  if (!file?.type?.startsWith("image/")) return null;
+  if (attachmentPreviews.has(file)) return attachmentPreviews.get(file);
+  if (typeof URL?.createObjectURL === "function") {
+    const url = URL.createObjectURL(file);
+    attachmentPreviews.set(file, url);
+    return url;
+  }
+  return null;
+};
+
+const revokePreviewForFile = (file) => {
+  const url = attachmentPreviews.get(file);
+  if (url && typeof URL?.revokeObjectURL === "function") {
+    URL.revokeObjectURL(url);
+  }
+  attachmentPreviews.delete(file);
+};
+
+const addFilesMethod = (files) => {
+  const list = Array.from(files || []).filter(Boolean);
+  if (!list.length) return;
+  attachments.value = [...attachments.value, ...list];
+};
+
 const resizeInputMethod = () => {
   if (!textarea.value) return;
   textarea.value.style.height = "auto";
   textarea.value.style.height = `${Math.min(260, Math.max(60, textarea.value.scrollHeight))}px`;
 };
 const attachFilesMethod = (event) => {
-  // Files stay in memory; selecting them does not upload or read their contents.
-  attachments.value = [...attachments.value, ...event.target.files];
+  addFilesMethod(event.target.files);
   event.target.value = "";
 };
 const removeAttachmentMethod = (index) => {
+  const removed = attachments.value[index];
+  if (removed) revokePreviewForFile(removed);
   attachments.value = attachments.value.filter((_, i) => i !== index);
+};
+const dragEnterMethod = (event) => {
+  if (!canAttach.value) return;
+  if (!event.dataTransfer?.types?.includes("Files")) return;
+  dragDepth++;
+  draggingOver.value = true;
+};
+const dragOverMethod = (event) => {
+  if (!canAttach.value) return;
+  if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+};
+const dragLeaveMethod = () => {
+  if (!canAttach.value) return;
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (dragDepth === 0) draggingOver.value = false;
+};
+const dropMethod = (event) => {
+  dragDepth = 0;
+  draggingOver.value = false;
+  if (!canAttach.value) return;
+  addFilesMethod(event.dataTransfer?.files);
+};
+const pasteMethod = (event) => {
+  if (!canAttach.value) return;
+  const items = Array.from(event.clipboardData?.items || []);
+  const itemFiles = items
+    .filter((item) => item.kind === "file")
+    .map((item) => item.getAsFile())
+    .filter(Boolean);
+  const files = itemFiles.length
+    ? itemFiles
+    : Array.from(event.clipboardData?.files || []);
+  if (!files.length) return;
+  event.preventDefault();
+  addFilesMethod(files);
 };
 const closeMenuMethod = (restoreFocus = true) => {
   menu.value = "";
@@ -75,6 +145,7 @@ const sendMethod = () => {
       models.find((item) => item.label === model.value)?.value || undefined,
   };
   if (props.onSend(payload) === false) return;
+  for (const file of attachments.value) revokePreviewForFile(file);
   message.value = "";
   attachments.value = [];
   nextTick(() => {
@@ -102,6 +173,9 @@ watch(
     }
   },
 );
+onUnmounted(() => {
+  for (const file of attachments.value) revokePreviewForFile(file);
+});
 defineExpose({
   setMessage: (text) => {
     if (props.busy || props.blockedReason) return;
@@ -117,16 +191,31 @@ defineExpose({
 <template>
   <form
     :aria-label="onSend ? 'Session message' : 'New session message'"
-    class="relative flex flex-col gap-1.5 rounded-composer border border-border bg-elev pt-3 pr-3 pb-2.5 pl-[18px] shadow-composer focus-within:border-primary"
+    :class="
+      draggingOver
+        ? 'border-primary bg-tint/20 ring-2 ring-primary/25'
+        : 'border-border bg-elev'
+    "
+    class="relative flex flex-col gap-1.5 rounded-composer border pt-3 pr-3 pb-2.5 pl-[18px] shadow-composer transition-colors focus-within:border-primary"
     @submit.prevent="sendMethod"
+    @dragenter.prevent="dragEnterMethod"
+    @dragover.prevent="dragOverMethod"
+    @dragleave.prevent="dragLeaveMethod"
+    @drop.prevent="dropMethod"
   >
     <div v-if="attachments.length" class="flex flex-wrap gap-1.5 pt-0.5 pb-1">
       <span
         v-for="(file, index) in attachments"
         :key="index"
-        class="inline-flex h-7 max-w-[220px] items-center gap-1.5 rounded-lg bg-hover pr-[3px] pl-[9px] text-[12.5px]"
+        class="inline-flex h-7 max-w-[220px] items-center gap-1.5 rounded-lg bg-hover pr-[3px] pl-[7px] text-[12.5px]"
       >
-        <ChatIcon name="file" class="size-3.5 text-muted" />
+        <img
+          v-if="previewForFile(file)"
+          :src="previewForFile(file)"
+          :alt="file.name"
+          class="size-5 shrink-0 rounded object-cover"
+        />
+        <ChatIcon v-else name="file" class="size-3.5 shrink-0 text-muted" />
         <span :title="file.name" class="min-w-0 truncate">{{ file.name }}</span>
         <button
           type="button"
@@ -150,6 +239,7 @@ defineExpose({
         style="height: 60px; max-height: 260px"
         @input="resizeInputMethod"
         @keydown="inputKeyMethod"
+        @paste="pasteMethod"
       ></textarea>
     </div>
     <div class="-ml-2 flex flex-wrap items-center gap-1">

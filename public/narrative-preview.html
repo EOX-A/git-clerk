@@ -32,6 +32,56 @@
 
     <script>
       let callBackFunc = null;
+      const mediaPreviews = new Map();
+      const targetOrigin =
+        window.location.origin && window.location.origin !== "null"
+          ? window.location.origin
+          : "*";
+      const previewEl = document.querySelector("#storytelling-preview");
+
+      function applyMediaPreviews(root = previewEl) {
+        if (!root || !mediaPreviews.size) return;
+        const elements = root.querySelectorAll("img[src], video[src], source[src]");
+        for (const el of elements) {
+          const originalSrc = el.dataset.originalSrc || el.getAttribute("src");
+          if (originalSrc && mediaPreviews.has(originalSrc)) {
+            const previewUrl = mediaPreviews.get(originalSrc);
+            el.dataset.originalSrc = originalSrc;
+            if (previewUrl && el.getAttribute("src") !== previewUrl) {
+              el.setAttribute("src", previewUrl);
+            }
+          }
+        }
+      }
+
+      previewEl.addEventListener(
+        "error",
+        (event) => {
+          const target = event.target;
+          if (!target || typeof target.getAttribute !== "function") return;
+          const originalSrc =
+            target.dataset?.originalSrc || target.getAttribute("src");
+          if (originalSrc && mediaPreviews.has(originalSrc)) {
+            const fallbackUrl = mediaPreviews.get(originalSrc);
+            target.dataset.originalSrc = originalSrc;
+            if (fallbackUrl && target.getAttribute("src") !== fallbackUrl) {
+              target.setAttribute("src", fallbackUrl);
+            }
+          }
+        },
+        true,
+      );
+
+      const previewObserver = new MutationObserver(() => {
+        applyMediaPreviews(previewEl);
+      });
+      previewObserver.observe(previewEl, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["src"],
+      });
+
       function throttle(fn, delay) {
         let lastCall = 0;
         return function (...args) {
@@ -45,9 +95,9 @@
       async function handleFileUpload(e) {
         const { file, update } = e.detail;
 
-        // Check if file is larger than 10MB
-        if (file.size > 10 * 1024 * 1024) {
-          update(null, new Error("File size must be less than 10MB"));
+        // Check if file is larger than 25MB
+        if (file.size > 25 * 1024 * 1024) {
+          update(null, new Error("File size must be less than 25MB"));
           return;
         }
 
@@ -69,53 +119,69 @@
             name: file.name,
             base64Content: base64Content,
             format: "base64",
-          }
-        }
+          },
+        };
 
         callBackFunc = update;
-        window.parent.postMessage(message, "*");
+        window.parent.postMessage(message, targetOrigin);
       }
       const throttledHandler = throttle(handleFileUpload, 1000);
-      document.querySelector("#storytelling-preview").addEventListener("upload:file", throttledHandler);
-
+      previewEl.addEventListener("upload:file", throttledHandler);
 
       let previousMarkdown;
       // Listen for messages from parent
       window.onload = function () {
         window.addEventListener("message", function (event) {
-          console.log(event.data)
-          if (event.data && event.data.type === "SCHEMA_DATA_EDITOR_UPDATE") {
-            const preview = document.querySelector("#storytelling-preview");
-            if (preview.markdown !== event.data.detail.Story) {
-              previousMarkdown = event.data.detail.Story;
-              preview.markdown = previousMarkdown;
+          if (event.source !== window.parent) return;
+          if (targetOrigin !== "*" && event.origin !== targetOrigin) return;
+          if (!event.data) return;
+
+          if (event.data.type === "SCHEMA_DATA_EDITOR_UPDATE") {
+            if (
+              event.data.mediaPreviews &&
+              typeof event.data.mediaPreviews === "object"
+            ) {
+              for (const [remoteUrl, localUrl] of Object.entries(
+                event.data.mediaPreviews,
+              )) {
+                if (remoteUrl && localUrl) {
+                  mediaPreviews.set(remoteUrl, localUrl);
+                }
+              }
             }
-          } else if (event.data && event.data.type === "FILE_UPLOADED") {
-            const { fileUrl, fallbackUrl, message } = event.data.file;
-            if(message) {
-              callBackFunc(null, null, event.data.file);
+            if (previewEl.markdown !== event.data.detail.Story) {
+              previousMarkdown = event.data.detail.Story;
+              previewEl.markdown = previousMarkdown;
+            }
+            applyMediaPreviews(previewEl);
+          } else if (event.data.type === "FILE_UPLOADED") {
+            const { fileUrl, fallbackUrl, message } = event.data.file || {};
+            if (message) {
+              callBackFunc?.(null, null, event.data.file);
             } else {
-              callBackFunc(fileUrl, fallbackUrl);
+              if (fileUrl && fallbackUrl) {
+                mediaPreviews.set(fileUrl, fallbackUrl);
+              }
+              callBackFunc?.(fileUrl, fallbackUrl);
+              applyMediaPreviews(previewEl);
             }
           }
         });
       };
 
       // Send messages to parent
-      document
-        .querySelector("#storytelling-preview")
-        .addEventListener("changed", (e) => {
-          if (previousMarkdown !== e.detail) {
-            const message = {
-              type: "SCHEMA_DATA_PREVIEW_UPDATE",
-              detail: {
-                Story: e.detail,
-              },
-            };
+      previewEl.addEventListener("changed", (e) => {
+        if (previousMarkdown !== e.detail) {
+          const message = {
+            type: "SCHEMA_DATA_PREVIEW_UPDATE",
+            detail: {
+              Story: e.detail,
+            },
+          };
 
-            window.parent.postMessage(message, "*");
-          }
-        });
+          window.parent.postMessage(message, targetOrigin);
+        }
+      });
     </script>
   </body>
 </html>

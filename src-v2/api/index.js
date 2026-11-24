@@ -1,6 +1,12 @@
 import { publishChatFiles } from "./chat-publish.js";
-import { generateChatTest, generatePresetTest, streamChat } from "./agentic.js";
-import { createSession } from "./session-create.js";
+import {
+  generateChatTest,
+  generatePresetTest,
+  generateSessionTitle,
+  streamChat,
+} from "./agentic.js";
+import { createDraftSession, createSession } from "./session-create.js";
+import { uploadMediaFiles } from "./media-upload.js";
 import {
   fileContent,
   saveFileContent,
@@ -84,6 +90,25 @@ export async function fetchFileSchema(url, signal) {
 export function createSessionByName(name, attempt, onProgress) {
   return createSession(useGitStore().context, name, attempt, onProgress);
 }
+
+export function createChatDraftSession(options, attempt, onProgress) {
+  return createDraftSession(
+    useGitStore().context,
+    options,
+    attempt,
+    onProgress,
+  );
+}
+
+export function uploadSessionMedia(files, session, options = {}) {
+  return uploadMediaFiles(files, {
+    ...options,
+    context: useGitStore().context,
+    session,
+  });
+}
+
+export { generateSessionTitle };
 
 export function sendChatTest(prompt, signal) {
   return generateChatTest(prompt, signal);

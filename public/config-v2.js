@@ -359,6 +359,21 @@ globalThis.gitClerkConfig = {
   i18n,
   allowedOrigins,
   forkingLocation,
+  mediaUpload: {
+    enabled: true,
+    target: "repo", // "repo" | "bucket" | "custom"
+    path: "assets", // repo directory prefix (e.g. "assets" -> "assets/<filename>")
+    maxFileSize: 25 * 1024 * 1024, // 25 MiB per file default
+    urlTemplate: null, // optional custom URL template passed to broker
+    // TODO: Generic bucket upload configuration placeholder (to be connected when EOxHub bucket upload endpoint is finalized):
+    // bucket: {
+    //   endpointUrl: "", // e.g. generic HTTP PUT/POST or presigned URL endpoint
+    //   publicBaseUrl: "",
+    //   method: "PUT",
+    //   headers: {},
+    // },
+    // customUpload: async (files, context) => [{ name, url, path, mediaType, size }],
+  },
 };
 
 // V2 chat: one active preset per Git Clerk instance. Streaming defaults to true.
@@ -395,7 +410,7 @@ globalThis.gitClerkConfig = {
 //     },
 //   },
 //   features: {
-//     attachments: false,
+//     attachments: true,
 //     modelSelector: false,
 //     manualSessionCreation: true,
 //   },
@@ -443,7 +458,7 @@ globalThis.gitClerkConfig.chat = {
     },
   },
   features: {
-    attachments: false,
+    attachments: true,
     modelSelector: false,
     manualSessionCreation: true,
   },
