@@ -166,9 +166,14 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     collapsedGroups.value = closed;
   }
 
-  async function createSession(name, attempt, onProgress) {
+  async function createSession(name, attempt, onProgress, initialFiles) {
     await ensureConnected();
-    const session = await createSessionByName(name, attempt, onProgress);
+    const session = await createSessionByName(
+      name,
+      attempt,
+      onProgress,
+      initialFiles,
+    );
     return rememberSession(session);
   }
 

@@ -87,8 +87,14 @@ export async function fetchFileSchema(url, signal) {
   return response.json();
 }
 
-export function createSessionByName(name, attempt, onProgress) {
-  return createSession(useGitStore().context, name, attempt, onProgress);
+export function createSessionByName(name, attempt, onProgress, initialFiles) {
+  return createSession(
+    useGitStore().context,
+    name,
+    attempt,
+    onProgress,
+    initialFiles,
+  );
 }
 
 export function createChatDraftSession(options, attempt, onProgress) {

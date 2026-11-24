@@ -11,6 +11,7 @@ const props = defineProps({
     type: String,
     default: () => getChatConfig().preset.ui.placeholder,
   },
+  starter: Boolean,
   compact: {
     type: Boolean,
     default: false,
@@ -245,13 +246,14 @@ defineExpose({
     <div class="-ml-2 flex flex-wrap items-center gap-1">
       <button
         type="button"
-        aria-label="Attach files"
+        :aria-label="starter ? 'Add Items' : 'Attach files'"
         v-if="chatConfig.features.attachments"
         title="Attach files"
-        class="flex size-8 shrink-0 items-center justify-center rounded-full text-muted hover:bg-hover hover:text-text"
+        :class="starter ? 'gap-1.5 px-2' : 'w-8'"
+        class="flex h-8 shrink-0 items-center justify-center rounded-full text-ui text-muted hover:bg-hover hover:text-text"
         @click="fileInput.click()"
       >
-        <ChatIcon name="plus" />
+        <ChatIcon name="plus" /><span v-if="starter">Add Items</span>
       </button>
       <input
         ref="fileInput"

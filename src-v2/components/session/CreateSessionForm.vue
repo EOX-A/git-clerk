@@ -3,6 +3,9 @@ import { computed, inject, onMounted, onUnmounted, ref } from "vue";
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRouter } from "vue-router";
 import useSessionsStore from "@/stores/sessions.js";
 
+import { chatDraftIdentity, chatOutputPath } from "@/helpers/chat-output.js";
+defineEmits(["cancel"]);
+const props = defineProps({ blankOutput: { type: String, default: null } });
 const router = useRouter();
 const sessionsStore = useSessionsStore();
 const snackbar = inject("set-snackbar");
@@ -12,6 +15,7 @@ const name = ref(""),
   error = ref(""),
   progress = ref("");
 const attempt = {};
+let initialFiles;
 const started = ref(false);
 const created = ref(null);
 const allowed = computed(
@@ -23,10 +27,15 @@ const createMethod = async () => {
   busy.value = true;
   error.value = "";
   try {
+    if (props.blankOutput && !attempt.title) {
+      const { id } = chatDraftIdentity(name.value, "narrative");
+      initialFiles = { [chatOutputPath(props.blankOutput, null, id)]: "" };
+    }
     created.value ||= await sessionsStore.createSession(
       name.value,
       attempt,
       (text) => (progress.value = text),
+      initialFiles,
     );
     progress.value = "Opening your session…";
     const failure = await router.push({
@@ -72,7 +81,7 @@ const unloadMethod = (event) => {
   }
 };
 onMounted(() => {
-  input.value.focus();
+  if (!props.blankOutput) input.value?.focus();
   window.addEventListener("beforeunload", unloadMethod);
 });
 onUnmounted(() => window.removeEventListener("beforeunload", unloadMethod));
@@ -80,23 +89,38 @@ onUnmounted(() => window.removeEventListener("beforeunload", unloadMethod));
 
 <template>
   <form
-    class="space-y-5"
+    :class="{ 'space-y-5': !blankOutput }"
     aria-labelledby="create-session-title"
     :aria-busy="busy"
     @submit.prevent="createMethod"
   >
     <header>
+      <h2
+        v-if="blankOutput"
+        id="create-session-title"
+        class="text-base font-semibold"
+      >
+        Start with a blank narrative
+      </h2>
       <h1
+        v-else
         id="create-session-title"
         class="text-heading font-semibold text-balance"
       >
         Create a session
       </h1>
-      <p class="mt-2 text-sm text-muted">
+      <p
+        v-if="blankOutput"
+        id="create-session-description"
+        class="mt-2 text-ui text-muted"
+      >
+        Give your session a name to start writing your narrative.
+      </p>
+      <p v-else class="mt-2 text-sm text-muted">
         Group your file changes in a draft session, then submit them for review.
       </p>
     </header>
-    <div>
+    <div :class="{ 'mt-5': blankOutput }">
       <label for="new-session-name" class="block text-ui font-medium"
         >Session name</label
       >
@@ -108,6 +132,9 @@ onUnmounted(() => window.removeEventListener("beforeunload", unloadMethod));
         required
         maxlength="256"
         autocomplete="off"
+        :placeholder="
+          blankOutput ? 'What would you like to change?' : undefined
+        "
         :disabled="busy || started || Boolean(created)"
         :aria-invalid="error && !allowed ? true : undefined"
         class="mt-1.5 w-full rounded-lg border border-border bg-bg px-3 py-2 text-ui disabled:opacity-60"
@@ -126,20 +153,34 @@ onUnmounted(() => window.removeEventListener("beforeunload", unloadMethod));
     <p v-if="error" role="alert" class="mt-3 text-ui text-closed">
       {{ error }}
     </p>
-    <button
-      type="submit"
-      :disabled="busy || !allowed"
-      class="rounded-lg bg-primary px-3 py-2 text-ui font-semibold text-on-primary disabled:opacity-40"
-    >
-      {{
-        busy
-          ? "Creating…"
-          : created
-            ? "Open session"
-            : error
-              ? "Retry"
-              : "Create session"
-      }}
-    </button>
+    <div :class="blankOutput && 'mt-6 flex justify-end gap-2'">
+      <button
+        v-if="blankOutput"
+        type="button"
+        :disabled="busy"
+        class="rounded-lg px-3 py-2 text-ui hover:bg-hover disabled:opacity-40"
+        @click="$emit('cancel')"
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        :disabled="busy || !allowed"
+        :class="blankOutput ? 'px-3 py-2' : 'px-4 py-2.5'"
+        class="rounded-lg bg-primary text-ui font-semibold text-on-primary disabled:opacity-40"
+      >
+        {{
+          busy
+            ? "Creating…"
+            : created
+              ? "Open session"
+              : error
+                ? "Retry"
+                : blankOutput
+                  ? "Create New Session"
+                  : "Create session"
+        }}
+      </button>
+    </div>
   </form>
 </template>

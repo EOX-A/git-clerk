@@ -11,13 +11,24 @@ function newSessionBranch(context, title) {
   return `${prefix}${slug}-${crypto.randomUUID().slice(0, 8)}`;
 }
 
-export function createSession(context, name, attempt, onProgress) {
-  return createDraftSession(context, { title: name }, attempt, onProgress);
+export function createSession(
+  context,
+  name,
+  attempt,
+  onProgress,
+  initialFiles,
+) {
+  return createDraftSession(
+    context,
+    { title: name, initialFiles },
+    attempt,
+    onProgress,
+  );
 }
 
 export async function createDraftSession(
   context,
-  { title: name, body, branchTitle },
+  { title: name, body, branchTitle, initialFiles },
   attempt = {},
   onProgress = () => {},
 ) {
@@ -48,6 +59,7 @@ export async function createDraftSession(
         head_branch: attempt.branch,
         base_branch: context.repository.default_branch,
         draft: true,
+        ...(initialFiles ? { initial_files: initialFiles } : {}),
         ...(body ? { body } : {}),
       },
     });

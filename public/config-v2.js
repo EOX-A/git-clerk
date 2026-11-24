@@ -441,16 +441,14 @@ globalThis.gitClerkConfig.chat = {
     ui: {
       assistantName: "Git Clerk",
       panelTitle: "Narrative editor",
-      heading: "What story would you like to tell?",
-      description:
-        "Create and refine a narrative with a live Markdown preview.",
-      placeholder: "Describe the narrative you want to write…",
+      heading: "What would you like to work on?",
+      description: "Create a narrative or update existing content.",
+      placeholder: "Describe what you’d like to create or change…",
       followUpPlaceholder: "How would you like to revise this narrative?",
       sessionTitle: "New narrative session",
       welcome: "What would you like to write or improve in this narrative?",
       generating: "Writing your narrative…",
-      footer:
-        "Narratives are saved in the stories folder in a PR. Chat stays in this app session.",
+      footer: "",
       suggestions: [
         "Write a synthetic ocean observation story",
         "Draft an introduction about urban heat",
