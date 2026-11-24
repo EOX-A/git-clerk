@@ -2,7 +2,7 @@ import { reactive } from "vue";
 import { streamedMessage } from "./event-stream.js";
 import { buildChatPrompt } from "./chat-request.js";
 import { createChatDraftStream } from "./chat-draft-stream.js";
-import { createChatTextReveal } from "./chat-text-reveal.js";
+import { chatOutputPath } from "./chat-output.js";
 import { getChatConfig } from "./chat-config.js";
 
 // State belongs to the conversation, so switching from New Session to a PR retains it.
@@ -43,6 +43,7 @@ export function createChatConversation({
     phase: "idle",
     progress: "",
     error: "",
+    streamingFiles: null,
     draft: null,
     draftIdentity: null,
     pending: null,
@@ -135,10 +136,10 @@ export function createChatConversation({
   };
   const runMethod = async (payload, session) => {
     const current = new AbortController();
-    let reveal;
     controller = current;
     state.busy = true;
     state.error = "";
+    state.streamingFiles = null;
     try {
       await connect();
       current.signal.throwIfAborted();
@@ -184,8 +185,14 @@ export function createChatConversation({
         const streamsMarkdown =
           config.preset.outputFile &&
           config.preset.output_format === "markdown";
-        if (streamsMarkdown && config.backend.stream)
-          reveal = createChatTextReveal(assistant);
+        let streamingTargetPath = streamsMarkdown
+          ? chatOutputPath(
+              config.preset.outputFile,
+              state.draft,
+              state.draftIdentity?.id,
+            )
+          : null;
+        let lastStreamFlush = 0;
         const activeTools = new Map();
         const readDraftChunk = createChatDraftStream((file) => {
           const index = assistant.files.findIndex(
@@ -193,6 +200,12 @@ export function createChatConversation({
           );
           if (index === -1) assistant.files.push(file);
           else assistant.files[index] = file;
+          if (file.content !== undefined) {
+            state.streamingFiles = {
+              ...(state.streamingFiles || {}),
+              [file.path]: file.content,
+            };
+          }
         });
         const result = await generate(
           {
@@ -204,7 +217,15 @@ export function createChatConversation({
             branch: session?.branch,
             sessionTitle: session?.title,
             onTitle: (identity) => {
-              if (!current.signal.aborted) state.draftIdentity = identity;
+              if (current.signal.aborted) return;
+              state.draftIdentity = identity;
+              if (streamsMarkdown && !raw) {
+                streamingTargetPath = chatOutputPath(
+                  config.preset.outputFile,
+                  state.draft,
+                  identity.id,
+                );
+              }
             },
           },
           (event, data) => {
@@ -220,12 +241,21 @@ export function createChatConversation({
               if (!activeTools.size) {
                 state.progress =
                   streamsMarkdown && raw.trim()
-                    ? "Streaming narrative…"
+                    ? "Streaming to editor…"
                     : config.preset.ui.generating || "Generating…";
               }
               if (streamsMarkdown) {
-                if (reveal) reveal.update(raw);
-                else assistant.text = raw;
+                const targetPath =
+                  streamingTargetPath || config.preset.outputFile;
+                assistant.text = `Writing \`${targetPath}\`…`;
+                assistant.files = [
+                  { path: targetPath, status: "Generating", content: raw },
+                ];
+                const now = Date.now();
+                if (now - lastStreamFlush >= 300) {
+                  lastStreamFlush = now;
+                  state.streamingFiles = { [targetPath]: raw };
+                }
               } else {
                 assistant.text = /^\s*(?:```(?:json)?\s*)?\{/i.test(raw)
                   ? streamedMessage(raw)
@@ -263,13 +293,7 @@ export function createChatConversation({
           current.signal,
         );
         current.signal.throwIfAborted();
-        if (result.markdown && reveal) {
-          reveal.update(result.markdown);
-        } else {
-          reveal?.finish();
-          assistant.text = result.markdown ?? result.message;
-        }
-        if (result.markdown) assistant.historyText = result.message;
+        assistant.text = result.message;
         assistant.streaming = false;
         if (result.draftIdentity) state.draftIdentity = result.draftIdentity;
         else if (result.draft?.id)
@@ -303,7 +327,7 @@ export function createChatConversation({
     } catch (cause) {
       if (!current.signal.aborted) errorMethod(cause);
     } finally {
-      if (current.signal.aborted) reveal?.finish();
+      state.streamingFiles = null;
       if (assistant) assistant.streaming = false;
       if (controller === current) {
         state.busy = false;

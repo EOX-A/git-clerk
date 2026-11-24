@@ -280,6 +280,7 @@ onUnmounted(() => {
             !chat.busy
           "
           :publication="chat.publication"
+          :streaming-files="chat.streamingFiles"
           :on-reveal="() => (mobileView = 'files')"
           :on-saved="refreshSessionMethod"
           :on-dirty-change="(value) => (hasUnsaved = value)"
