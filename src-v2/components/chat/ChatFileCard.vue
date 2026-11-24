@@ -31,11 +31,9 @@ const fileStatus = (file) =>
     ? file.status || "Saved"
     : props.stage === "publishing"
       ? "Publishing"
-      : props.stage === "generating"
-        ? file.status || "Generating"
-        : file.content === undefined
-          ? "Incomplete"
-          : "Generated";
+      : file.content === undefined
+        ? "Incomplete"
+        : "Generated";
 const preview = (file) =>
   (typeof file.content === "string"
     ? file.content

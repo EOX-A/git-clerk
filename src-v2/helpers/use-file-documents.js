@@ -178,51 +178,6 @@ export default function useFileDocuments(
     if (applied) controllers.get(path)?.abort();
     return applied;
   };
-  const applyStreamingFileMethod = (path, content) => {
-    if (!path || content === undefined || content === null) return;
-    const text =
-      typeof content === "string"
-        ? content
-        : JSON.stringify(content, null, 2);
-    const existing = documents.value[path];
-    if (existing?.loaded) {
-      if (existing.text === text) return;
-      Object.assign(existing, {
-        text,
-        savedText: text,
-        error: "",
-        history: [text],
-        historyIndex: 0,
-      });
-      return;
-    }
-    controllers.get(path)?.abort();
-    controllers.delete(path);
-    const meta = fileConfiguration(path);
-    const preview = previewAddress(meta);
-    documents.value[path] = {
-      loading: false,
-      loaded: true,
-      error: "",
-      text,
-      savedText: text,
-      mode: initialFileMode(meta, Boolean(preview)),
-      meta,
-      preview,
-      interfaces: {},
-      saving: false,
-      validation: [],
-      history: [text],
-      historyIndex: 0,
-      headSha: session.value.headSha,
-      sha: null,
-      removed: false,
-      unavailable: false,
-      saved: false,
-      remoteChanged: false,
-      diff: false,
-    };
-  };
   const changeMethod = (path, text) => {
     const doc = documents.value[path];
     if (
@@ -331,7 +286,6 @@ export default function useFileDocuments(
     dirtyPaths,
     loadMethod,
     applyPublicationMethod,
-    applyStreamingFileMethod,
     changeMethod,
     historyMethod,
     saveMethod,

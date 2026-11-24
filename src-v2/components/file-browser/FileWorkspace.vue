@@ -33,7 +33,6 @@ import FileDrawer from "./FileDrawer.vue";
 const props = defineProps({
   session: { type: Object, required: true },
   publication: { type: Object, default: null },
-  streamingFiles: { type: Object, default: null },
   active: { type: Boolean, default: true },
   onReveal: { type: Function, default: null },
   onSaved: { type: Function, required: true },
@@ -79,7 +78,6 @@ const {
   dirtyPaths,
   loadMethod,
   applyPublicationMethod,
-  applyStreamingFileMethod,
   changeMethod,
   historyMethod,
   saveMethod,
@@ -167,17 +165,6 @@ watch([() => fileSession.value.headSha, () => props.publication], () => {
       loadMethod(path, { background: true });
   }
 });
-watch(
-  () => props.streamingFiles,
-  (streaming) => {
-    if (!streaming) return;
-    for (const [path, content] of Object.entries(streaming)) {
-      applyStreamingFileMethod(path, content);
-      openFileMethod(path);
-    }
-  },
-  { deep: true },
-);
 watch(activePath, (path) => {
   if (path) loadMethod(path);
 });
