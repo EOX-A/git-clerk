@@ -5,6 +5,7 @@ import NavIcon from "@/components/nav/NavIcon.vue";
 import SessionList from "@/components/nav/SessionList.vue";
 import SessionFilters from "@/components/nav/SessionFilters.vue";
 import SidebarResizeHandle from "@/components/nav/SidebarResizeHandle.vue";
+import useChatStore from "@/stores/chat.js";
 import useGitStore from "@/stores/git.js";
 
 const props = defineProps({
@@ -17,6 +18,7 @@ const props = defineProps({
 
 const router = useRouter();
 const gitStore = useGitStore();
+const chatStore = useChatStore();
 const { user } = gitStore;
 const narrowViewport = window.matchMedia("(max-width: 859px)");
 const isNarrow = ref(narrowViewport.matches);
@@ -55,7 +57,7 @@ const toggleSidebarMethod = () => {
 
 const newSessionMethod = async () => {
   closeAccountMethod();
-  await router.push({ name: "new-session" });
+  if (!(await chatStore.startNewSession())) return;
   if (props.mobileOpen) await props.closeSidebar();
   document.getElementById("workspace")?.focus();
 };

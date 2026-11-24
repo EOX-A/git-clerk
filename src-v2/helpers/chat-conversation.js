@@ -428,8 +428,7 @@ export function createChatConversation({
     if (state.busy || !payload.text?.trim() || (session && !session.canEdit))
       return false;
     if (state.pending && saveAttempt.requested) {
-      state.error =
-        "Retry saving the draft before starting another request.";
+      state.error = "Retry saving the draft before starting another request.";
       return false;
     }
     try {

@@ -1,5 +1,6 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from "vue";
+import useChatStore from "@/stores/chat.js";
 import useScrollbar from "@/helpers/use-scrollbar.js";
 import useChatAutoscroll from "@/helpers/use-chat-autoscroll.js";
 import ChatComposer from "./ChatComposer.vue";
@@ -9,6 +10,7 @@ import ChatProgress from "./ChatProgress.vue";
 import ChatSessionWelcome from "./ChatSessionWelcome.vue";
 import { getChatConfig } from "@/helpers/chat-config.js";
 const chatConfig = getChatConfig();
+const chatStore = useChatStore();
 
 const props = defineProps({
   session: {
@@ -229,12 +231,13 @@ const headerPointerDownMethod = (event) => {
             }}
             Start a new session to make changes.
           </span>
-          <router-link
-            to="/"
+          <button
+            type="button"
+            @click="chatStore.startNewSession()"
             class="rounded-md px-1.5 py-1 text-ui font-medium text-primary hover:bg-hover"
           >
             New session
-          </router-link>
+          </button>
         </div>
 
         <ChatProgress

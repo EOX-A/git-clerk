@@ -215,7 +215,11 @@ const handleOpenChangesMethod = () => {
 };
 
 watch(
-  [() => route.params.sessionNumber, () => chatStore.scopeMethod()],
+  [
+    () => route.params.sessionNumber,
+    () => chatStore.scopeMethod(),
+    () => chatStore.newSessionRevision,
+  ],
   async ([number], [previousNumber, previousScope] = []) => {
     const previous = conversation.value;
     conversation.value = chatStore.getConversation(
@@ -297,6 +301,7 @@ onUnmounted(() => {
   <section class="relative flex h-full min-h-0 flex-col overflow-hidden">
     <NewSessionView
       v-if="starter"
+      :key="workspaceKey"
       :connecting="connecting"
       :error="chat.error"
       :on-send="sendMethod"

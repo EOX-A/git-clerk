@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
-import { shallowReactive } from "vue";
+import { ref, shallowReactive } from "vue";
+import { useRouter } from "vue-router";
 import useSessionsStore from "./sessions.js";
 import useGitStore from "./git.js";
 import {
@@ -17,6 +18,8 @@ import { chatPrTitle } from "@/helpers/chat-output.js";
 
 export default defineStore("chat-v2", () => {
   const conversations = shallowReactive({});
+  const router = useRouter();
+  const newSessionRevision = ref(0);
   const sessions = useSessionsStore();
   const scopeMethod = () => {
     const { config } = useGitStore();
@@ -68,5 +71,25 @@ export default defineStore("chat-v2", () => {
     }
     return conversations[key];
   };
-  return { getConversation, scopeMethod };
+  const startNewSession = async () => {
+    const destination = { name: "new-session" };
+    const samePage =
+      router.currentRoute.value.fullPath ===
+      router.resolve(destination).fullPath;
+    // Run the normal navigation guards even when the temporary workspace is already at "/".
+    const failure = await router.push({
+      ...destination,
+      force: true,
+      replace: samePage,
+    });
+    if (failure) return false;
+
+    const key = `${scopeMethod()}:new`;
+    const temporary = conversations[key];
+    if (temporary && !temporary.cancelMethod()) return false;
+    delete conversations[key];
+    newSessionRevision.value++;
+    return true;
+  };
+  return { getConversation, scopeMethod, startNewSession, newSessionRevision };
 });
