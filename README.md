@@ -497,7 +497,8 @@ the session workspace with chat floating over an in-memory file preview. The
 title appears as soon as it arrives. PR metadata shows loading placeholders.
 The preview can be scrolled during generation. File tabs and the active preview stay
 in place when publication unlocks workspace controls. Incoming
-file content updates the preview in memory. Files with a configured visualizer
+file content updates the preview in memory. Floating chat lists each file path and its
+generation status. After publication, select a saved path to open it in the workspace. Files with a configured visualizer
 use it as soon as their content can be rendered. Other files show their source.
 With automatic publishing enabled, the completed response is saved to a draft
 PR. Minimize chat to see the whole preview or expand it to stop generation.

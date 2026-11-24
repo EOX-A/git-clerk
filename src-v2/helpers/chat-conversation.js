@@ -6,6 +6,12 @@ import { createChatTextReveal } from "./chat-text-reveal.js";
 import { chatOutputPath } from "./chat-output.js";
 import { getChatConfig } from "./chat-config.js";
 
+function updateFile(files, file) {
+  const index = files.findIndex((item) => item.path === file.path);
+  if (index === -1) files.push(file);
+  else files[index] = file;
+}
+
 // State belongs to the conversation, so switching from New Session to a PR retains it.
 export function createChatConversation({
   connect,
@@ -88,11 +94,16 @@ export function createChatConversation({
       text: result.files.length
         ? `Saved ${result.files.length} ${result.files.length === 1 ? "file" : "files"} to PR #${state.session.number}.`
         : "These files already match the session branch.",
-      files: result.files.map((file) => ({
-        ...file,
-        status: "Saved",
-        content: bundle.staged_files[file.path],
-      })),
+      previewInWorkspace: assistant?.previewInWorkspace,
+      files: result.files.map((file) =>
+        assistant?.previewInWorkspace
+          ? { path: file.path, status: "Saved" }
+          : {
+              ...file,
+              status: "Saved",
+              content: bundle.staged_files[file.path],
+            },
+      ),
       fileStage: "saved",
       pr: {
         updated: updating,
@@ -167,23 +178,26 @@ export function createChatConversation({
         const previewPath = () =>
           chatOutputPath(outputFile, state.draft, state.draftIdentity?.id) ||
           outputFile.replace(/^\//, "");
-        if (preview && outputFile)
-          state.previewFiles.push({ path: previewPath(), content: "" });
+        if (preview && outputFile) {
+          const path = previewPath();
+          state.previewFiles.push({ path, content: "" });
+          assistant.files.push({ path, status: "Generating" });
+        }
         const streamsMarkdown =
           config.preset.outputFile &&
           config.preset.output_format === "markdown";
         if (!preview && streamsMarkdown && config.backend.stream)
           reveal = createChatTextReveal(assistant);
         const activeTools = new Set();
-        const updateFile = (file) => {
-          const files = preview ? state.previewFiles : assistant.files;
-          const index = files.findIndex((item) => item.path === file.path);
-          if (index === -1) files.push(file);
-          else files[index] = file;
-        };
         const readDraftChunk = createChatDraftStream(
-          updateFile,
-          preview ? updateFile : null,
+          (file) => {
+            if (preview) updateFile(state.previewFiles, file);
+            updateFile(
+              assistant.files,
+              preview ? { path: file.path, status: file.status } : file,
+            );
+          },
+          preview ? (file) => updateFile(state.previewFiles, file) : null,
         );
         const result = await generate(
           {
@@ -197,8 +211,11 @@ export function createChatConversation({
             onTitle: (identity) => {
               if (current.signal.aborted) return;
               state.draftIdentity = identity;
-              if (preview && outputFile && state.previewFiles.length)
-                state.previewFiles[0].path = previewPath();
+              if (preview && outputFile && state.previewFiles.length) {
+                const path = previewPath();
+                state.previewFiles[0].path = path;
+                assistant.files[0].path = path;
+              }
             },
           },
           (event, data) => {
@@ -263,7 +280,9 @@ export function createChatConversation({
             status: "Generated",
           }));
         if (preview) state.previewFiles = generatedFiles;
-        else assistant.files = generatedFiles;
+        assistant.files = preview
+          ? generatedFiles.map(({ path, status }) => ({ path, status }))
+          : generatedFiles;
         assistant.fileStage = "generated";
         state.draft = result.draft;
         state.pending = result.draft;
@@ -320,7 +339,7 @@ export function createChatConversation({
   const cancelMethod = () => {
     if (state.phase === "saving") return false;
     controller?.abort();
-    if (assistant?.files?.length) assistant.fileStage = "stopped";
+    if (state.busy && assistant?.files?.length) assistant.fileStage = "stopped";
     if (state.busy)
       state.messages.push({
         id: crypto.randomUUID(),

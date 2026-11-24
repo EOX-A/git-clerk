@@ -86,6 +86,7 @@ defineProps({
             (msg.streaming && pathTemplate && !msg.previewInWorkspace)
           "
           :files="msg.files"
+          :summary-only="msg.previewInWorkspace"
           :stage="msg.fileStage || 'saved'"
           :path-template="pathTemplate"
           :pending="

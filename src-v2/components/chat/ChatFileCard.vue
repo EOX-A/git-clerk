@@ -9,6 +9,7 @@ const props = defineProps({
   stage: { type: String, default: "saved" },
   pathTemplate: { type: String, default: null },
   pending: Boolean,
+  summaryOnly: Boolean,
   onOpenFile: { type: Function, default: null },
   onOpenChanges: { type: Function, default: null },
 });
@@ -34,6 +35,10 @@ const fileStatus = (file) =>
       : file.content === undefined
         ? "Incomplete"
         : "Generated";
+const summaryStatus = (file) =>
+  ({ publishing: "Publishing", stopped: "Stopped", failed: "Not saved" })[
+    props.stage
+  ] || file.status;
 const preview = (file) =>
   (typeof file.content === "string"
     ? file.content
@@ -78,6 +83,41 @@ const toggleMethod = (path, open) => {
         Generating
       </span>
     </div>
+    <ul
+      v-else-if="summaryOnly"
+      class="nav-scrollbar max-h-[360px] overflow-y-auto overscroll-contain"
+    >
+      <li
+        v-for="file in files"
+        :key="file.path"
+        class="flex items-center gap-2 border-b border-border-soft px-3 py-2.5 last:border-0"
+      >
+        <ChatIcon name="file" class="size-3.5 shrink-0 text-muted" />
+        <button
+          v-if="stage === 'saved' && onOpenFile"
+          type="button"
+          :aria-label="`Open file ${file.path}`"
+          class="min-w-0 flex-1 text-left font-mono text-[12px] text-primary hover:underline [overflow-wrap:anywhere]"
+          @click="onOpenFile(file.path)"
+        >
+          {{ file.path }}
+        </button>
+        <span
+          v-else
+          class="min-w-0 flex-1 font-mono text-[12px] [overflow-wrap:anywhere]"
+          >{{ file.path }}</span
+        >
+        <span
+          class="shrink-0 rounded px-1.5 py-0.5 text-[10px] font-medium"
+          :class="
+            stage === 'saved'
+              ? 'bg-add-bg text-add-fg'
+              : 'bg-surface text-muted'
+          "
+          >{{ summaryStatus(file) }}</span
+        >
+      </li>
+    </ul>
     <div
       v-else
       class="nav-scrollbar max-h-[360px] overflow-y-auto overscroll-contain"
