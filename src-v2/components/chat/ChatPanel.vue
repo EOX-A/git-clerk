@@ -124,9 +124,9 @@ const headerPointerDownMethod = (event) => {
     <!-- Header bar -->
     <div
       v-if="mode !== 'mobile'"
-      :title="mode === 'floating' ? 'Drag to move' : undefined"
+      :title="mode === 'floating' && onDragStart ? 'Drag to move' : undefined"
       :class="
-        mode === 'floating'
+        mode === 'floating' && onDragStart
           ? 'cursor-grab active:cursor-grabbing touch-none select-none'
           : 'cursor-default'
       "
@@ -142,6 +142,7 @@ const headerPointerDownMethod = (event) => {
         v-if="mode === 'floating'"
         data-chat-mode-button
         type="button"
+        :disabled="!onDock"
         aria-label="Dock chat beside the visualizer"
         title="Dock chat beside the visualizer"
         class="flex size-[30px] shrink-0 items-center justify-center rounded-[7px] text-on-primary hover:bg-white/16"
@@ -160,6 +161,7 @@ const headerPointerDownMethod = (event) => {
       >
         <ChatIcon name="pip" class="size-4" />
       </button>
+      <slot name="header-actions" />
     </div>
 
     <!-- Scrollable Messages Area -->
@@ -241,6 +243,7 @@ const headerPointerDownMethod = (event) => {
           :on-retry="onRetry"
           :on-stop="onStop"
         />
+        <slot name="after-progress" />
         <p
           v-if="!isReadOnly && blockedReason"
           role="status"

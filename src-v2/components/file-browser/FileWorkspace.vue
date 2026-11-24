@@ -11,7 +11,15 @@ import {
   watch,
 } from "vue";
 import { onBeforeRouteLeave, onBeforeRouteUpdate } from "vue-router";
-import { fileRepositoryUrl, toggleFileMode } from "@/helpers/file-editor.js";
+import {
+  fileRepositoryUrl,
+  toggleFileMode,
+  matchFileSchema,
+  matchesFilePath,
+  previewAddress,
+  formValue,
+} from "@/helpers/file-editor.js";
+import { getChatConfig } from "@/helpers/chat-config.js";
 import { FileContent, FileDialog, FileToolbar } from "@/components/file";
 import useFileDocuments from "@/helpers/use-file-documents.js";
 import {
@@ -31,7 +39,8 @@ import FileTabs from "./FileTabs.vue";
 import FileDrawer from "./FileDrawer.vue";
 
 const props = defineProps({
-  session: { type: Object, required: true },
+  session: { type: Object, default: null },
+  draftFiles: { type: Array, default: () => [] },
   publication: { type: Object, default: null },
   active: { type: Boolean, default: true },
   onReveal: { type: Function, default: null },
@@ -51,12 +60,12 @@ const fileOperationPending = ref(false);
 const confirmedHead = shallowRef(null);
 const fileSession = computed(() => {
   const headSha = confirmedHead.value?.commitSha;
-  return headSha && headSha !== props.session.headSha
+  return headSha && headSha !== props.session?.headSha
     ? { ...props.session, headSha }
     : props.session;
 });
 watch(
-  () => props.session.headSha,
+  () => props.session?.headSha,
   (headSha) => {
     const confirmed = confirmedHead.value;
     if (
@@ -68,9 +77,55 @@ watch(
       confirmedHead.value = null;
   },
 );
-const activePath = computed(
-  () => tabs.value.find((tab) => tab.id === activeID.value)?.path || null,
+const draftFile = computed(() => props.draftFiles.at(-1));
+const draftTabs = computed(() => changedFileTabs(props.draftFiles));
+const promotedPath = ref(null);
+const promotedDocument = shallowRef(null);
+const outputTemplate = getChatConfig().preset.outputFile?.replace(/^\//, "");
+const draftDocument = computed(() => {
+  const file = draftFile.value;
+  const text =
+    file?.source ??
+    (typeof file?.content === "string"
+      ? file.content
+      : JSON.stringify(file?.content, null, 2)) ??
+    "";
+  const meta = file && matchFileSchema(file.path);
+  let preview = previewAddress(meta?.preview, window.location.href);
+  if (file?.source !== undefined) preview = null;
+  if (preview && !meta.generic) {
+    try {
+      formValue(text, meta);
+    } catch {
+      preview = null;
+    }
+  }
+  return {
+    loaded: true,
+    text,
+    savedText: text,
+    meta,
+    preview,
+    mode: preview ? "none" : "source",
+    history: [],
+    historyIndex: 0,
+  };
+});
+const activePath = computed(() =>
+  props.session ? activeID.value : draftFile.value?.path,
 );
+// Naming a single configured output can change its path, but it is still the same preview.
+const contentKey = computed(() => {
+  const streamedPath = props.session
+    ? promotedPath.value
+    : draftFile.value?.path;
+  return streamedPath &&
+    streamedPath === activePath.value &&
+    outputTemplate &&
+    matchesFilePath(streamedPath, outputTemplate)
+    ? outputTemplate
+    : activePath.value;
+});
 const openedPaths = computed(() => tabs.value.map((tab) => tab.path));
 const snackbar = inject("set-snackbar");
 const {
@@ -92,10 +147,34 @@ const {
 const canMutateFiles = computed(
   () =>
     props.active &&
-    props.session.canEdit &&
+    props.session?.canEdit &&
     !Object.values(documents.value).some((doc) => doc.saving),
 );
-const activeDocument = computed(() => documents.value[activePath.value]);
+const editorDocument = computed(() => documents.value[activePath.value]);
+const showingDraft = computed(
+  () =>
+    !props.session ||
+    (activePath.value === promotedPath.value &&
+      Boolean(promotedDocument.value)),
+);
+const activeDocument = computed(() =>
+  !props.session
+    ? draftDocument.value
+    : showingDraft.value
+      ? promotedDocument.value
+      : editorDocument.value,
+);
+watch(
+  () => [
+    activePath.value,
+    editorDocument.value?.loaded,
+    editorDocument.value?.error,
+  ],
+  ([path, loaded, failed]) => {
+    if (path !== promotedPath.value || loaded || failed)
+      promotedDocument.value = null;
+  },
+);
 const activeChange = computed(
   () => files.value.find((file) => file.path === activePath.value) || null,
 );
@@ -156,7 +235,8 @@ const saveKeyMethod = (event) => {
     if (!pending.value && !validation.value.length) saveActiveMethod();
   }
 };
-watch([() => fileSession.value.headSha, () => props.publication], () => {
+watch([() => fileSession.value?.headSha, () => props.publication], () => {
+  if (!fileSession.value) return;
   for (const [path, doc] of Object.entries(documents.value)) {
     if (!doc.loaded || doc.saving || doc.headSha === fileSession.value.headSha)
       continue;
@@ -165,8 +245,24 @@ watch([() => fileSession.value.headSha, () => props.publication], () => {
       loadMethod(path, { background: true });
   }
 });
-watch(activePath, (path) => {
-  if (path) loadMethod(path);
+watch(
+  () => props.session,
+  (session, previous) => {
+    if (!session || previous || !props.publication) return;
+    // Keep the streamed tab and its rendered document while the editor loads schema metadata.
+    tabs.value = changedFileTabs(
+      Object.keys(props.publication.documents || {}).map(fileTab),
+    );
+    const file = draftFile.value;
+    if (file && Object.hasOwn(props.publication.documents || {}, file.path)) {
+      promotedPath.value = file.path;
+      promotedDocument.value = draftDocument.value;
+    }
+    activeID.value = promotedPath.value || tabs.value[0]?.id || null;
+  },
+);
+watch([activePath, () => Boolean(props.session)], ([path, saved]) => {
+  if (path && saved) loadMethod(path);
 });
 watch(dirtyPaths, (paths) => props.onDirtyChange(paths.length > 0), {
   immediate: true,
@@ -180,6 +276,7 @@ let requestID = 0;
 let controller;
 
 const loadChangesMethod = async () => {
+  if (!props.session) return;
   const currentRequest = ++requestID;
   controller?.abort();
   controller = new AbortController();
@@ -276,7 +373,7 @@ const fileOperationMethod = async (action, entry, name) => {
     // reports the old head or the intermediate copy commit during a rename.
     const previous = new Set([
       ...(confirmedHead.value?.previous || []),
-      props.session.headSha,
+      props.session?.headSha,
       session.headSha,
       result.copyCommitSha,
     ]);
@@ -319,9 +416,9 @@ const fileOperationMethod = async (action, entry, name) => {
 // Compare revisions and counts by value so metadata refreshes don't reload files.
 watch(
   [
-    () => props.session.headSha || props.session.branch,
-    () => props.session.baseSha || props.session.baseBranch,
-    () => props.session.changedFiles,
+    () => props.session?.headSha || props.session?.branch,
+    () => props.session?.baseSha || props.session?.baseBranch,
+    () => props.session?.changedFiles,
   ],
   loadChangesMethod,
   { immediate: true },
@@ -338,14 +435,19 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="file-workspace flex min-h-0 flex-1 flex-col">
+  <div
+    class="file-workspace flex min-h-0 flex-1 flex-col"
+    :role="!session ? 'region' : undefined"
+    :aria-label="!session ? 'Temporary file preview' : undefined"
+  >
     <FileTabs
-      :tabs="tabs"
+      :tabs="session ? tabs : draftTabs"
+      :disabled="!session"
       :dirty-paths="dirtyPaths"
-      :active-id="activeID"
+      :active-id="activePath"
       :drawer-open="drawerOpen"
-      :change-count="session.changedFiles"
-      :loading="loading && !initialized"
+      :change-count="session?.changedFiles ?? draftTabs.length"
+      :loading="session ? loading && !initialized : !draftTabs.length"
       :on-select="(id) => (activeID = id)"
       :on-close="closeFileMethod"
       :on-toggle-drawer="
@@ -369,15 +471,20 @@ onUnmounted(() => {
       </button>
     </div>
     <FileToolbar
-      v-if="activePath"
-      :path="activePath"
+      v-if="activePath || !session"
+      :temporary="Boolean(showingDraft)"
+      :path="activePath || ''"
       :doc="activeDocument"
       :inert="fileOperationPending || undefined"
       :session="fileSession"
       :dirty="dirtyPaths.includes(activePath)"
       :changed="activeChange"
-      :read-only="!session.canEdit || activeChange?.status === 'removed'"
+      :read-only="
+        Boolean(session && !session.canEdit) ||
+        activeChange?.status === 'removed'
+      "
       :repository-url="
+        session &&
         fileRepositoryUrl(session, activePath, activeDocument, activeChange)
       "
       :on-mode="
@@ -398,6 +505,7 @@ onUnmounted(() => {
     />
     <div class="relative flex min-h-0 flex-1" @keydown.esc="closeDrawerMethod">
       <FileDrawer
+        v-if="session"
         :session="fileSession"
         :open="drawerOpen"
         :view="drawerView"
@@ -415,9 +523,10 @@ onUnmounted(() => {
       />
       <FileContent
         v-if="activePath"
-        :key="activePath"
+        :key="contentKey"
         :path="activePath"
         :doc="activeDocument"
+        :read-only="Boolean(showingDraft)"
         :inert="fileOperationPending || undefined"
         :session="fileSession"
         :changed="activeChange"
@@ -443,6 +552,9 @@ onUnmounted(() => {
           }
         "
       />
+      <p v-else-if="!session" class="p-5 text-ui text-muted" role="status">
+        Waiting for file content…
+      </p>
       <div
         v-else-if="initialized || !loading"
         class="flex min-w-0 flex-1 flex-col items-center justify-center gap-2 p-6 text-center"

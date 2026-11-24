@@ -5,7 +5,7 @@ const props = defineProps({
   path: { type: String, required: true },
   text: { type: String, required: true },
   readOnly: Boolean,
-  onChange: { type: Function, required: true },
+  onChange: { type: Function, default: null },
 });
 const source = ref(null);
 const scrollTop = ref(0),
@@ -22,7 +22,7 @@ const indentMethod = async (event) => {
   const input = source.value;
   const start = input.selectionStart,
     end = input.selectionEnd;
-  props.onChange(props.text.slice(0, start) + "  " + props.text.slice(end));
+  props.onChange?.(props.text.slice(0, start) + "  " + props.text.slice(end));
   await nextTick();
   input.setSelectionRange(start + 2, start + 2);
 };
@@ -58,7 +58,7 @@ const indentMethod = async (event) => {
         autocomplete="off"
         wrap="off"
         class="nav-scrollbar source-input absolute inset-0 h-full w-full resize-none border-0 bg-transparent px-4 py-3 font-[inherit] leading-[inherit] text-transparent caret-text outline-none"
-        @input="onChange($event.target.value)"
+        @input="onChange?.($event.target.value)"
         @scroll="scrollMethod"
         @keydown.tab="indentMethod"
       />

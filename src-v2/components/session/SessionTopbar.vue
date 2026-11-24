@@ -8,9 +8,12 @@ import SessionActionDialog from "./SessionActionDialog.vue";
 
 const props = defineProps({
   session: { type: Object, default: null },
+  temporary: Boolean,
+  draftTitle: { type: String, default: "" },
+  draftRepository: { type: String, default: "" },
   failed: { type: Boolean, default: false },
   hasUnsaved: Boolean,
-  onUpdated: { type: Function, required: true },
+  onUpdated: { type: Function, default: null },
   showViewSwitch: Boolean,
   mobileView: { type: String, default: "chat" },
   onMobileView: { type: Function, default: null },
@@ -97,16 +100,36 @@ onUnmounted(() => {
     >
       <SessionIcon name="menu" class="size-5" />
     </button>
-    <template v-if="session">
+    <template v-if="session || temporary">
       <div class="flex min-w-0 flex-1 flex-col gap-0.5">
         <div class="flex min-w-0 items-center gap-2">
           <h1
-            :title="session.title"
+            v-if="session || draftTitle"
+            :title="session?.title || draftTitle"
             class="min-w-[40px] flex-[0_1_auto] truncate text-sm leading-[22px] font-semibold"
           >
-            {{ session.title }}
+            {{ session?.title || draftTitle }}
           </h1>
           <span
+            v-else
+            role="status"
+            class="file-placeholder h-4 w-44 max-w-[42%] rounded"
+            ><span class="sr-only">Waiting for session title</span></span
+          >
+          <template v-if="temporary">
+            <span class="sr-only">Pull request status and checks pending</span>
+            <span
+              aria-hidden="true"
+              class="file-placeholder h-[22px] w-14 shrink-0 rounded-full"
+            />
+            <span
+              aria-hidden="true"
+              class="file-placeholder h-[22px] shrink-0 rounded-full"
+              :class="wide ? 'w-24' : 'w-6'"
+            />
+          </template>
+          <span
+            v-else
             :class="status.color"
             class="inline-flex h-[22px] shrink-0 items-center gap-1 rounded-[11px] bg-current/7 pr-[9px] pl-[7px] text-meta leading-none font-medium whitespace-nowrap ring-1 ring-border-soft/55 ring-inset"
             ><SessionIcon :name="status.icon" class="size-[13px]" />{{
@@ -137,29 +160,47 @@ onUnmounted(() => {
         >
           <SessionIcon name="repo" class="size-[13px]" />
           <span
-            :title="`${session.owner}/${session.repo}`"
+            v-if="session || draftRepository"
+            :title="
+              session ? `${session.owner}/${session.repo}` : draftRepository
+            "
             class="min-w-[40px] flex-[0_1_auto] truncate"
-            >{{ session.owner }}/{{ session.repo }}</span
+            >{{
+              session ? `${session.owner}/${session.repo}` : draftRepository
+            }}</span
           >
+          <span
+            v-else
+            aria-hidden="true"
+            class="file-placeholder h-3 w-20 rounded"
+          />
           <span aria-hidden="true" class="shrink-0">·</span>
           <a
+            v-if="session"
             :href="session.url"
             target="_blank"
             rel="noopener noreferrer"
             class="shrink-0 hover:text-primary hover:underline"
             >PR #{{ session.number }}</a
           >
+          <span v-else class="file-placeholder h-3 w-9 shrink-0 rounded"
+            ><span class="sr-only">PR number pending</span></span
+          >
           <span aria-hidden="true" class="shrink-0">·</span>
           <span
+            v-if="session"
             :title="session.branch"
             class="min-w-[40px] flex-[0_1_auto] truncate font-mono text-meta"
             >{{ session.branch }}</span
+          >
+          <span v-else class="file-placeholder h-3 w-32 rounded"
+            ><span class="sr-only">Branch pending</span></span
           >
           <button
             type="button"
             :aria-label="copyState || 'Copy branch name'"
             :title="copyState || 'Copy branch name'"
-            :disabled="!session.branch || copying"
+            :disabled="!session?.branch || copying"
             :class="
               copyState === 'Copied'
                 ? 'text-open'
@@ -184,12 +225,13 @@ onUnmounted(() => {
         </div>
       </div>
       <div
-        v-if="showViewSwitch && onMobileView"
+        v-if="showViewSwitch && (temporary || onMobileView)"
         role="group"
         aria-label="Workspace view"
         class="flex shrink-0 gap-0.5 rounded-[10px] bg-hover p-[3px]"
       >
         <button
+          :disabled="temporary"
           :aria-pressed="mobileView === 'chat'"
           type="button"
           :class="
@@ -203,6 +245,7 @@ onUnmounted(() => {
           Chat
         </button>
         <button
+          :disabled="temporary"
           :aria-pressed="mobileView === 'files'"
           type="button"
           :class="
@@ -217,10 +260,12 @@ onUnmounted(() => {
         </button>
       </div>
       <button
-        v-if="session.status === 'draft' && session.changedFiles > 0"
+        v-if="
+          temporary || (session.status === 'draft' && session.changedFiles > 0)
+        "
         type="button"
         aria-label="Submit for review"
-        :title="submitTip"
+        :title="temporary ? 'Available after publication' : submitTip"
         :disabled="!submitEnabled"
         class="flex h-11 shrink-0 items-center gap-1.5 rounded-lg bg-primary px-[9px] text-[12.5px] font-semibold whitespace-nowrap text-on-primary disabled:cursor-default disabled:bg-hover disabled:text-muted workspace:h-8"
         :class="wide ? 'px-3.5' : ''"
@@ -231,6 +276,7 @@ onUnmounted(() => {
         >
       </button>
       <SessionOptions
+        :disabled="temporary"
         :session="session"
         :on-action="(value) => (action = value)"
       />

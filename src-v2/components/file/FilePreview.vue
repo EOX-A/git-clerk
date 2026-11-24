@@ -8,9 +8,9 @@ const props = defineProps({
   dirty: Boolean,
   undo: Boolean,
   redo: Boolean,
-  onChange: { type: Function, required: true },
-  onUndo: { type: Function, required: true },
-  onRedo: { type: Function, required: true },
+  onChange: { type: Function, default: null },
+  onUndo: { type: Function, default: null },
+  onRedo: { type: Function, default: null },
 });
 const frame = ref(null);
 const busy = ref(true);
@@ -44,9 +44,9 @@ const messageMethod = (event) => {
   if (type === "DISABLE_LOADER_POSTMESSAGE") busy.value = false;
   if (props.readOnly) return;
   if (type === "SCHEMA_DATA_PREVIEW_UPDATE" && detail !== undefined)
-    props.onChange(detail);
-  if (type === "SCHEMA_DATA_EDITOR_UNDO") props.onUndo();
-  if (type === "SCHEMA_DATA_EDITOR_REDO") props.onRedo();
+    props.onChange?.(detail);
+  if (type === "SCHEMA_DATA_EDITOR_UNDO") props.onUndo?.();
+  if (type === "SCHEMA_DATA_EDITOR_REDO") props.onRedo?.();
 };
 watch(() => [props.value, props.readOnly, props.undo, props.redo], sendMethod, {
   deep: true,

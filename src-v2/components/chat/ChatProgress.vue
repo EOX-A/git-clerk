@@ -20,7 +20,7 @@ const step = computed(() =>
 );
 </script>
 <template>
-  <div v-if="busy || error" class="flex flex-col gap-2 text-ui">
+  <div v-if="busy || error || canRetry" class="flex flex-col gap-2 text-ui">
     <ol
       v-if="busy && step >= 0"
       aria-label="Response progress"

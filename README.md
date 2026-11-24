@@ -492,7 +492,17 @@ The app opens the draft PR with the conversation and file cards intact. Use
 After a confirmed chat update, open files receive the saved contents immediately
 without re-fetching files or editor schemas. The current editor/preview mode is
 preserved; ordinary background metadata refreshes continue.
-Assistant replies use `vue-stream-markdown` inside the existing Tailwind chat layout
+New sessions open with the full-page chat. Submitting the first prompt opens
+the session workspace with chat floating over an in-memory file preview. The
+title appears as soon as it arrives. PR metadata shows loading placeholders.
+The preview can be scrolled during generation. File tabs and the active preview stay
+in place when publication unlocks workspace controls. Incoming
+file content updates the preview in memory. Files with a configured visualizer
+use it as soon as their content can be rendered. Other files show their source.
+With automatic publishing enabled, the completed response is saved to a draft
+PR. Minimize chat to see the whole preview or expand it to stop generation.
+
+In an existing session, assistant replies use `vue-stream-markdown` inside the existing Tailwind chat layout
 for headings, lists, tables, links and code blocks. File cards appear incrementally
 as draft JSON arrives, with expandable, bounded JSON previews. Generated and publishing
 states remain separate from the confirmed Saved state; the PR result card appears

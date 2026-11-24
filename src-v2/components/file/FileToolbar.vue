@@ -1,16 +1,18 @@
 <script setup>
+import FileIcon from "../file-browser/FileIcon.vue";
 import { fileDirectory, fileName } from "@/helpers/file-workspace.js";
 defineProps({
   path: { type: String, required: true },
   doc: { type: Object, default: null },
-  session: { type: Object, required: true },
+  session: { type: Object, default: null },
+  temporary: Boolean,
   dirty: Boolean,
   changed: { type: Object, default: null },
   readOnly: Boolean,
-  onMode: { type: Function, required: true },
-  onSave: { type: Function, required: true },
-  onDiff: { type: Function, required: true },
-  onHistory: { type: Function, required: true },
+  onMode: { type: Function, default: null },
+  onSave: { type: Function, default: null },
+  onDiff: { type: Function, default: null },
+  onHistory: { type: Function, default: null },
   repositoryUrl: { type: String, default: null },
 });
 </script>
@@ -22,12 +24,18 @@ defineProps({
       class="flex min-w-0 max-w-full flex-[1_0_240px] flex-wrap items-center gap-x-2 gap-y-1"
     >
       <div
+        v-if="path"
         :title="path"
         class="flex min-w-0 max-w-full overflow-hidden font-mono text-xs whitespace-nowrap"
       >
         <span class="truncate text-muted">{{ fileDirectory(path) }}</span
         ><span class="shrink-0 font-medium">{{ fileName(path) }}</span>
       </div>
+      <span
+        v-else
+        class="file-placeholder h-3 w-40 rounded"
+        aria-label="File path pending"
+      />
       <span
         v-if="readOnly"
         class="inline-flex h-[18px] shrink-0 items-center rounded-full bg-del-bg px-1.5 text-[10.5px]/none font-medium whitespace-nowrap text-del-fg"
@@ -43,18 +51,19 @@ defineProps({
         }}</span
       >
     </div>
-    <template v-if="doc?.loaded && !doc.unavailable">
+    <template v-if="temporary || (doc?.loaded && !doc.unavailable)">
       <div
-        v-if="!doc.diff && (doc.preview || doc.meta?.schema)"
+        v-if="temporary || (!doc.diff && (doc.preview || doc.meta?.schema))"
         role="group"
         aria-label="File view"
         class="flex shrink-0 gap-0.5 rounded-lg bg-hover p-0.5"
       >
         <button
-          v-if="doc.meta?.schema && !doc.meta.generic"
+          v-if="temporary || (doc.meta?.schema && !doc.meta.generic)"
           type="button"
+          :disabled="temporary"
           :aria-pressed="doc.mode === 'editor'"
-          class="h-[26px] rounded-md px-[9px] text-xs font-medium"
+          class="h-[26px] rounded-md px-[9px] text-xs font-medium disabled:cursor-default disabled:opacity-60"
           :class="
             doc.mode === 'editor'
               ? 'bg-elev shadow-selected'
@@ -66,8 +75,9 @@ defineProps({
         </button>
         <button
           type="button"
+          :disabled="temporary"
           :aria-pressed="doc.mode === 'source'"
-          class="h-[26px] rounded-md px-[9px] text-xs font-medium"
+          class="h-[26px] rounded-md px-[9px] text-xs font-medium disabled:cursor-default disabled:opacity-60"
           :class="
             doc.mode === 'source'
               ? 'bg-elev shadow-selected'
@@ -85,26 +95,33 @@ defineProps({
           doc.preview || doc.meta?.schema ? 'border-l border-border pl-2.5' : ''
         "
       >
-        <div v-if="doc.history.length > 1" class="flex items-center gap-1">
+        <div
+          v-if="temporary || doc.history.length > 1"
+          class="flex items-center gap-1"
+        >
           <button
             type="button"
             aria-label="Undo edit"
             title="Undo edit"
-            :disabled="!doc.historyIndex || doc.saving"
-            class="size-7 rounded-md text-muted hover:bg-hover disabled:opacity-30"
+            :disabled="temporary || !doc.historyIndex || doc.saving"
+            class="inline-flex size-7 items-center justify-center rounded-md text-muted hover:bg-hover disabled:opacity-30"
             @click="onHistory(-1)"
           >
-            ↶
+            <FileIcon name="undo" />
           </button>
           <button
             type="button"
             aria-label="Redo edit"
             title="Redo edit"
-            :disabled="doc.historyIndex >= doc.history.length - 1 || doc.saving"
-            class="size-7 rounded-md text-muted hover:bg-hover disabled:opacity-30"
+            :disabled="
+              temporary ||
+              doc.historyIndex >= doc.history.length - 1 ||
+              doc.saving
+            "
+            class="inline-flex size-7 items-center justify-center rounded-md text-muted hover:bg-hover disabled:opacity-30"
             @click="onHistory(1)"
           >
-            ↷
+            <FileIcon name="redo" />
           </button>
         </div>
         <span
@@ -121,7 +138,7 @@ defineProps({
         >
         <button
           type="button"
-          :disabled="!dirty || doc.saving"
+          :disabled="temporary || !dirty || doc.saving"
           title="Save changes (Ctrl/⌘ + S)"
           class="h-[30px] rounded-lg bg-primary px-3 text-[12.5px] font-semibold text-on-primary disabled:bg-hover disabled:text-muted"
           @click="onSave"
@@ -135,17 +152,20 @@ defineProps({
       ><span class="text-del-fg">−{{ changed.deletions }}</span></span
     >
     <button
-      v-if="changed"
+      v-if="temporary || changed"
+      :disabled="temporary"
       type="button"
       :aria-pressed="Boolean(doc?.diff)"
-      class="h-[30px] rounded-lg border border-border-soft px-2 text-xs hover:bg-hover"
+      class="h-[30px] rounded-lg border border-border-soft px-2 text-xs hover:bg-hover disabled:cursor-default disabled:opacity-60"
       @click="onDiff"
     >
       {{ doc?.diff ? "Back to file" : "View changes" }}
     </button>
     <a
-      v-if="repositoryUrl"
-      :href="repositoryUrl"
+      v-if="temporary || repositoryUrl"
+      :aria-disabled="temporary || undefined"
+      :href="temporary ? undefined : repositoryUrl"
+      role="link"
       target="_blank"
       rel="noopener noreferrer"
       aria-label="View file in repository"

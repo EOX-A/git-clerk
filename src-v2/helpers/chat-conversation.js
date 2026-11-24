@@ -3,6 +3,7 @@ import { streamedMessage } from "./event-stream.js";
 import { buildChatPrompt } from "./chat-request.js";
 import { createChatDraftStream } from "./chat-draft-stream.js";
 import { createChatTextReveal } from "./chat-text-reveal.js";
+import { chatOutputPath } from "./chat-output.js";
 import { getChatConfig } from "./chat-config.js";
 
 // State belongs to the conversation, so switching from New Session to a PR retains it.
@@ -26,16 +27,16 @@ export function createChatConversation({
     pending: null,
     session: null,
     completed: 0,
+    previewFiles: [],
     savedFiles: [],
     publication: null,
   });
   let controller;
   let saveAttempt = {};
   let assistant;
-  let raw = "";
 
   const errorMethod = (cause) => {
-    if (assistant?.files?.length) assistant.fileStage = "failed";
+    if (assistant) assistant.fileStage = "failed";
     state.error = ["BROKER_DRY_RUN", "BROKER_AUTHOR_REQUIRED"].includes(
       cause.code,
     )
@@ -63,7 +64,7 @@ export function createChatConversation({
     const bundle = await prepare(state.pending, controller.signal);
     controller.signal.throwIfAborted();
     state.phase = "saving";
-    if (assistant?.files?.length) assistant.fileStage = "publishing";
+    if (assistant) assistant.fileStage = "publishing";
     const updating = Boolean(state.session);
     state.progress = state.session
       ? `Updating files in PR #${state.session.number} through the Git broker…`
@@ -152,26 +153,38 @@ export function createChatConversation({
           role: "assistant",
           text: "",
           streaming: true,
+          previewInWorkspace: !session,
           files: [],
           fileStage: "generating",
         });
         state.messages.push(assistant);
         state.phase = "generating";
         state.progress = config.preset.ui.generating;
-        raw = "";
+        let raw = "";
+        const preview = !session;
+        state.previewFiles = [];
+        const outputFile = config.preset.outputFile;
+        const previewPath = () =>
+          chatOutputPath(outputFile, state.draft, state.draftIdentity?.id) ||
+          outputFile.replace(/^\//, "");
+        if (preview && outputFile)
+          state.previewFiles.push({ path: previewPath(), content: "" });
         const streamsMarkdown =
           config.preset.outputFile &&
           config.preset.output_format === "markdown";
-        if (streamsMarkdown && config.backend.stream)
+        if (!preview && streamsMarkdown && config.backend.stream)
           reveal = createChatTextReveal(assistant);
         const activeTools = new Set();
-        const readDraftChunk = createChatDraftStream((file) => {
-          const index = assistant.files.findIndex(
-            (item) => item.path === file.path,
-          );
-          if (index === -1) assistant.files.push(file);
-          else assistant.files[index] = file;
-        });
+        const updateFile = (file) => {
+          const files = preview ? state.previewFiles : assistant.files;
+          const index = files.findIndex((item) => item.path === file.path);
+          if (index === -1) files.push(file);
+          else files[index] = file;
+        };
+        const readDraftChunk = createChatDraftStream(
+          updateFile,
+          preview ? updateFile : null,
+        );
         const result = await generate(
           {
             prompt: payload.text.trim(),
@@ -182,7 +195,10 @@ export function createChatConversation({
             branch: session?.branch,
             sessionTitle: session?.title,
             onTitle: (identity) => {
-              if (!current.signal.aborted) state.draftIdentity = identity;
+              if (current.signal.aborted) return;
+              state.draftIdentity = identity;
+              if (preview && outputFile && state.previewFiles.length)
+                state.previewFiles[0].path = previewPath();
             },
           },
           (event, data) => {
@@ -193,7 +209,10 @@ export function createChatConversation({
                 throw new Error(
                   "The response is too large. Request fewer files at a time.",
                 );
-              if (streamsMarkdown) {
+              if (preview) {
+                if (outputFile) state.previewFiles[0].content = raw;
+                else readDraftChunk(data.chunk || "");
+              } else if (streamsMarkdown) {
                 if (reveal) reveal.update(raw);
                 else assistant.text = raw;
               } else {
@@ -219,7 +238,9 @@ export function createChatConversation({
           reveal.update(result.markdown);
         } else {
           reveal?.finish();
-          assistant.text = result.markdown ?? result.message;
+          assistant.text = preview
+            ? result.message
+            : (result.markdown ?? result.message);
         }
         if (result.markdown) assistant.historyText = result.message;
         assistant.streaming = false;
@@ -231,15 +252,18 @@ export function createChatConversation({
           };
         if (!result.draft) {
           assistant.files = [];
+          state.previewFiles = [];
           return;
         }
-        assistant.files = Object.entries(result.draft.files || {})
+        const generatedFiles = Object.entries(result.draft.files || {})
           .slice(0, 100)
           .map(([path, content]) => ({
             path,
             content,
             status: "Generated",
           }));
+        if (preview) state.previewFiles = generatedFiles;
+        else assistant.files = generatedFiles;
         assistant.fileStage = "generated";
         state.draft = result.draft;
         state.pending = result.draft;
@@ -253,6 +277,7 @@ export function createChatConversation({
       )
         await saveMethod();
     } catch (cause) {
+      if (!state.pending) state.previewFiles = [];
       if (!current.signal.aborted) errorMethod(cause);
     } finally {
       if (current.signal.aborted) reveal?.finish();

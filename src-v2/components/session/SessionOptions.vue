@@ -3,7 +3,8 @@ import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import SessionIcon from "./SessionIcon.vue";
 
 const props = defineProps({
-  session: { type: Object, required: true },
+  session: { type: Object, default: null },
+  disabled: Boolean,
   onAction: { type: Function, required: true },
   compact: { type: Boolean, default: false },
   label: { type: String, default: "Session options" },
@@ -12,7 +13,9 @@ const open = ref(false);
 const area = ref(null);
 const trigger = ref(null);
 const panel = ref(null);
-const menuId = computed(() => `session-options-${props.session.number}`);
+const menuId = computed(
+  () => `session-options-${props.session?.number ?? "pending"}`,
+);
 const closeMethod = (restore = true) => {
   open.value = false;
   if (restore) trigger.value?.focus();
@@ -68,6 +71,7 @@ onUnmounted(() => document.removeEventListener("pointerdown", outsideMethod));
     <button
       ref="trigger"
       type="button"
+      :disabled="disabled"
       :aria-label="label"
       :title="compact ? 'More options' : label"
       aria-haspopup="menu"
@@ -96,7 +100,7 @@ onUnmounted(() => document.removeEventListener("pointerdown", outsideMethod));
       />
     </button>
     <div
-      v-if="open"
+      v-if="open && session"
       :id="menuId"
       ref="panel"
       role="menu"

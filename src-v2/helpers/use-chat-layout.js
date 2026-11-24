@@ -47,7 +47,7 @@ export default function useChatLayout(container, mobileView) {
   const resetMethod = () => {
     stopPointer();
     docked.value = false;
-    mobileView.value = "chat";
+    if (mobileView) mobileView.value = "chat";
     const w = Math.min(480, window.innerWidth - 32);
     const h = Math.min(640, window.innerHeight - 94);
     bounds.value = clampFloatingBounds(

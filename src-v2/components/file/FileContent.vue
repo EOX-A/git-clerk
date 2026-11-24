@@ -9,7 +9,8 @@ const FileForm = defineAsyncComponent(() => import("./FileForm.vue"));
 const props = defineProps({
   path: { type: String, required: true },
   doc: { type: Object, default: null },
-  session: { type: Object, required: true },
+  session: { type: Object, default: null },
+  readOnly: Boolean,
   changed: { type: Object, default: null },
   onChange: { type: Function, required: true },
   onRetry: { type: Function, required: true },
@@ -19,7 +20,10 @@ const dirty = computed(
   () => props.doc?.loaded && props.doc.text !== props.doc.savedText,
 );
 const readOnly = computed(
-  () => !props.session.canEdit || props.changed?.status === "removed",
+  () =>
+    props.readOnly ||
+    !props.session?.canEdit ||
+    props.changed?.status === "removed",
 );
 const previewValue = computed(() => {
   try {

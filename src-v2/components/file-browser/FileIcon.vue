@@ -14,6 +14,11 @@ defineProps({ name: { type: String, default: "file" } });
     class="size-4 shrink-0"
   >
     <path v-if="name === 'close'" d="m6 6 12 12M18 6 6 18" />
+    <path
+      v-else-if="name === 'undo' || name === 'redo'"
+      :transform="name === 'redo' ? 'translate(24 0) scale(-1 1)' : undefined"
+      d="M9 4 3.5 9.5 9 15M4 9.5h10a6 6 0 0 1 0 12"
+    />
     <path v-else-if="name === 'chevron'" d="m9 5 7 7-7 7" />
     <path v-else-if="name === 'edit'" d="m4 16-1 5 5-1L20 8l-4-4zM14 6l4 4" />
     <path

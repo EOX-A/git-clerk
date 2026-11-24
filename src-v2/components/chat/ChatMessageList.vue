@@ -81,7 +81,10 @@ defineProps({
         />
         <ChatPullRequest v-if="msg.pr" :pr="msg.pr" />
         <ChatFileCard
-          v-if="msg.files?.length || (msg.streaming && pathTemplate)"
+          v-if="
+            msg.files?.length ||
+            (msg.streaming && pathTemplate && !msg.previewInWorkspace)
+          "
           :files="msg.files"
           :stage="msg.fileStage || 'saved'"
           :path-template="pathTemplate"

@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from "vue-router";
-import NewSessionView from "@/views/NewSessionView.vue";
 import SessionView from "@/views/SessionView.vue";
 
 const router = createRouter({
@@ -8,7 +7,7 @@ const router = createRouter({
     {
       path: "/",
       name: "new-session",
-      component: NewSessionView,
+      component: SessionView,
     },
     {
       path: "/:sessionNumber(\\d+)",

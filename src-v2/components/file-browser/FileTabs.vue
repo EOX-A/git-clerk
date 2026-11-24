@@ -11,9 +11,10 @@ const props = defineProps({
   drawerOpen: Boolean,
   changeCount: { type: Number, default: 0 },
   loading: Boolean,
-  onSelect: { type: Function, required: true },
-  onClose: { type: Function, required: true },
-  onToggleDrawer: { type: Function, required: true },
+  disabled: Boolean,
+  onSelect: { type: Function, default: null },
+  onClose: { type: Function, default: null },
+  onToggleDrawer: { type: Function, default: null },
 });
 const tabList = ref(null);
 const drawerButton = ref(null);
@@ -56,6 +57,7 @@ watch(
     <button
       ref="drawerButton"
       type="button"
+      :disabled="disabled"
       :aria-label="`${drawerOpen ? 'Hide' : 'Show'} files panel (${changeCount} changes)`"
       :title="`${drawerOpen ? 'Hide' : 'Show'} files panel (${changeCount} changes)`"
       :aria-expanded="drawerOpen"
@@ -89,6 +91,7 @@ watch(
       >
         <button
           type="button"
+          :disabled="disabled"
           role="tab"
           :aria-selected="tab.id === activeId"
           :tabindex="tab.id === activeId ? 0 : -1"
@@ -108,6 +111,7 @@ watch(
         </button>
         <button
           type="button"
+          :disabled="disabled"
           :aria-label="`Close ${tab.path}`"
           :title="`Close ${tab.path}`"
           class="file-tab-close mr-1.5 flex size-6 shrink-0 items-center justify-center rounded-md text-muted hover:bg-ws-hover hover:text-text"
