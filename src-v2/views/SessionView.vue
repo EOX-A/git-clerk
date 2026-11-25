@@ -85,12 +85,17 @@ const draftTitle = computed(() => {
     : identity?.title;
 });
 const messages = computed(() => chat.value.messages);
+const readOnlyRepo = computed(
+  () => gitStore.context?.repository?.permissions?.push === false,
+);
 const blockedReason = computed(() =>
-  fileOperationPending.value
-    ? "Wait for the file operation to finish before asking for another change."
-    : hasUnsaved.value
-      ? "Save or discard your file edits before asking for another change."
-      : "",
+  newSession.value && readOnlyRepo.value
+    ? "This repository is read-only for your current Git broker credentials. You cannot start a new session or save changes."
+    : fileOperationPending.value
+      ? "Wait for the file operation to finish before asking for another change."
+      : hasUnsaved.value
+        ? "Save or discard your file edits before asking for another change."
+        : "",
 );
 const sendMethod = (payload) => {
   if (blockedReason.value || (!newSession.value && !session.value?.canEdit))

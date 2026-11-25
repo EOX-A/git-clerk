@@ -1,13 +1,18 @@
 <script setup>
 import { computed, inject, onMounted, onUnmounted, ref } from "vue";
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRouter } from "vue-router";
+import useGitStore from "@/stores/git.js";
 import useSessionsStore from "@/stores/sessions.js";
 
 import { chatDraftIdentity, chatOutputPath } from "@/helpers/chat-output.js";
 defineEmits(["cancel"]);
 const props = defineProps({ blankOutput: { type: String, default: null } });
 const router = useRouter();
+const gitStore = useGitStore();
 const sessionsStore = useSessionsStore();
+const readOnlyRepo = computed(
+  () => gitStore.context?.repository?.permissions?.push === false,
+);
 const snackbar = inject("set-snackbar");
 const input = ref(null);
 const name = ref(""),
@@ -19,7 +24,10 @@ let initialFiles;
 const started = ref(false);
 const created = ref(null);
 const allowed = computed(
-  () => Boolean(name.value.trim()) && name.value.trim().length <= 256,
+  () =>
+    !readOnlyRepo.value &&
+    Boolean(name.value.trim()) &&
+    name.value.trim().length <= 256,
 );
 defineExpose({ busy });
 const createMethod = async () => {
@@ -135,11 +143,19 @@ onUnmounted(() => window.removeEventListener("beforeunload", unloadMethod));
         :placeholder="
           blankOutput ? 'What would you like to change?' : undefined
         "
-        :disabled="busy || started || Boolean(created)"
+        :disabled="busy || started || Boolean(created) || readOnlyRepo"
         :aria-invalid="error && !allowed ? true : undefined"
         class="mt-1.5 w-full rounded-lg border border-border bg-bg px-3 py-2 text-ui disabled:opacity-60"
       />
     </div>
+    <p
+      v-if="readOnlyRepo"
+      role="status"
+      class="mt-3 rounded-xl border border-closed/32 bg-closed/8 px-3.5 py-2.5 text-ui text-text"
+    >
+      This repository is read-only for your current Git broker credentials. You
+      cannot create a new session.
+    </p>
     <p
       v-if="busy"
       role="status"
