@@ -1,8 +1,19 @@
 import { createRouter, createWebHistory } from "vue-router";
 import SessionView from "@/views/SessionView.vue";
 
+const normalizeBasePath = (value) => {
+  if (typeof value !== "string") return "";
+  const trimmed = value.trim();
+  return trimmed && trimmed !== "./" ? trimmed : "";
+};
+
+export const resolveBasePath = (
+  configBasePath = globalThis.gitClerkConfig?.basePath,
+  envBaseUrl = import.meta.env?.BASE_URL,
+) => normalizeBasePath(configBasePath) || normalizeBasePath(envBaseUrl) || "/";
+
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(resolveBasePath()),
   routes: [
     {
       path: "/",
@@ -13,6 +24,10 @@ const router = createRouter({
       path: "/:sessionNumber(\\d+)",
       name: "session",
       component: SessionView,
+    },
+    {
+      path: "/:pathMatch(.*)*",
+      redirect: "/",
     },
   ],
 });
