@@ -4,6 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import { CreateSessionForm } from "@/components/session";
 import { ChatComposer, ChatIcon, ChatProgress } from "@/components/chat";
 import { getChatConfig } from "@/helpers/chat-config.js";
+import useGitStore from "@/stores/git.js";
 
 defineProps({
   connecting: Boolean,
@@ -12,6 +13,12 @@ defineProps({
 });
 const chatConfig = getChatConfig();
 const ui = chatConfig.preset.ui;
+const gitStore = useGitStore();
+const readOnlyRepo = computed(
+  () => gitStore.context?.repository?.permissions?.push === false,
+);
+const readOnlyMessage =
+  "This repository is read-only for your current Git broker credentials. You cannot start a new session or save changes.";
 const manualEnabled = chatConfig.features.manualSessionCreation;
 const narrativeOutput =
   chatConfig.preset.output_format === "markdown" &&
@@ -65,6 +72,14 @@ const backMethod = async () => {
       <CreateSessionForm ref="manualForm" />
     </div>
     <div v-show="!showNameForm" class="m-auto w-full max-w-[640px]">
+      <div
+        v-if="readOnlyRepo"
+        role="status"
+        class="mb-5 flex items-center gap-2 rounded-2xl border border-closed/32 bg-closed/8 p-3.5 text-ui text-text"
+      >
+        <ChatIcon name="x" class="size-4 shrink-0 text-closed" />
+        <span>{{ readOnlyMessage }}</span>
+      </div>
       <template v-if="chatConfig.enabled">
         <header class="mb-5">
           <h1 class="text-heading font-semibold text-balance">
@@ -79,6 +94,7 @@ const backMethod = async () => {
           starter
           :placeholder="ui.placeholder"
           :busy="connecting || manualForm?.busy"
+          :blocked-reason="readOnlyRepo ? readOnlyMessage : ''"
           :active="!showNameForm"
           :on-send="onSend"
         />
@@ -87,8 +103,8 @@ const backMethod = async () => {
             v-for="suggestion in ui.suggestions"
             :key="suggestion"
             type="button"
-            :disabled="connecting || manualForm?.busy"
-            class="rounded-lg border border-border-soft px-3 py-1.5 text-ui text-primary hover:bg-hover"
+            :disabled="connecting || manualForm?.busy || readOnlyRepo"
+            class="rounded-lg border border-border-soft px-3 py-1.5 text-ui text-primary hover:bg-hover disabled:opacity-40"
             @click="composer?.setMessage(suggestion)"
           >
             {{ suggestion }}
@@ -113,8 +129,10 @@ const backMethod = async () => {
         <button
           ref="manualTrigger"
           type="button"
+          :disabled="readOnlyRepo"
+          :title="readOnlyRepo ? readOnlyMessage : undefined"
           :aria-haspopup="narrativeOutput ? 'dialog' : undefined"
-          class="inline-flex items-center gap-2 rounded-lg border border-border bg-elev px-4 py-2.5 text-ui font-semibold hover:bg-hover"
+          class="inline-flex items-center gap-2 rounded-lg border border-border bg-elev px-4 py-2.5 text-ui font-semibold hover:bg-hover disabled:opacity-40"
           @click="
             narrativeOutput
               ? nameDialog.showModal()

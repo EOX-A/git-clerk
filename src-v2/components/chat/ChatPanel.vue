@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 import useChatStore from "@/stores/chat.js";
+import useGitStore from "@/stores/git.js";
 import useScrollbar from "@/helpers/use-scrollbar.js";
 import useChatAutoscroll from "@/helpers/use-chat-autoscroll.js";
 import ChatComposer from "./ChatComposer.vue";
@@ -11,6 +12,10 @@ import ChatSessionWelcome from "./ChatSessionWelcome.vue";
 import { getChatConfig } from "@/helpers/chat-config.js";
 const chatConfig = getChatConfig();
 const chatStore = useChatStore();
+const gitStore = useGitStore();
+const isRepoReadOnly = computed(
+  () => gitStore.context?.repository?.permissions?.push === false,
+);
 
 const props = defineProps({
   session: {
@@ -227,11 +232,18 @@ const headerPointerDownMethod = (event) => {
             {{
               isClosed
                 ? `PR #${session?.number} is ${session?.status?.toLowerCase()}.`
-                : `PR #${session?.number} is read-only for this account.`
+                : isRepoReadOnly
+                  ? `PR #${session?.number} is read-only.`
+                  : `PR #${session?.number} is read-only for this account.`
             }}
-            Start a new session to make changes.
+            {{
+              isRepoReadOnly
+                ? "This repository is read-only for your current Git broker credentials."
+                : "Start a new session to make changes."
+            }}
           </span>
           <button
+            v-if="!isRepoReadOnly"
             type="button"
             @click="chatStore.startNewSession()"
             class="rounded-md px-1.5 py-1 text-ui font-medium text-primary hover:bg-hover"
