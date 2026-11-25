@@ -132,9 +132,7 @@ onUnmounted(() => window.removeEventListener("beforeunload", unloadMethod));
         required
         maxlength="256"
         autocomplete="off"
-        :placeholder="
-          blankOutput ? 'What would you like to change?' : undefined
-        "
+        :placeholder="blankOutput ? 'e.g. Arctic sea ice trends' : undefined"
         :disabled="busy || started || Boolean(created)"
         :aria-invalid="error && !allowed ? true : undefined"
         class="mt-1.5 w-full rounded-lg border border-border bg-bg px-3 py-2 text-ui disabled:opacity-60"
