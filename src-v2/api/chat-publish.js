@@ -72,31 +72,7 @@ export async function publishChatFiles(context, bundle, attempt = {}, session) {
       throw new Error("The broker did not confirm the expected draft PR.");
   }
 
-  if (!attempt.result && attempt.uncertain) {
-    // A failed connection can hide a completed write. Retry only the readback.
-    const saved = await sessionDetails(context, targetSession.number);
-    if (
-      !saved.headSha ||
-      saved.branch !== targetSession.branch ||
-      saved.headSha === targetSession.headSha
-    )
-      throw new Error(
-        "The broker has not confirmed the previous save. Refresh the session or inspect the repository before retrying.",
-      );
-    for (const [path, text] of Object.entries(files)) {
-      if ((await fileContent(context, saved, path)).text !== text)
-        throw new Error(
-          "The session does not match the attempted save. Refresh it before making more edits.",
-        );
-    }
-    attempt.result = {
-      pr_number: saved.number,
-      commit_sha: saved.headSha,
-      branch: saved.branch,
-    };
-    attempt.session = saved;
-  }
-  if (!attempt.result) {
+  if (!attempt.result && !attempt.uncertain) {
     attempt.requested = true;
     try {
       const result = await publishGitBundle(
@@ -122,8 +98,33 @@ export async function publishChatFiles(context, bundle, attempt = {}, session) {
     } catch (error) {
       attempt.uncertain = !error.status || error.status >= 500;
       attempt.requested = Boolean(attempt.draftSession) || attempt.uncertain;
-      throw error;
+      if (!attempt.uncertain) throw error;
     }
+  }
+  if (!attempt.result && attempt.uncertain) {
+    // A failed publish response can arrive after the commit landed. Read back before reporting success.
+    const saved = await sessionDetails(context, targetSession.number);
+    if (
+      saved.number !== targetSession.number ||
+      !saved.headSha ||
+      saved.branch !== targetSession.branch ||
+      saved.headSha === targetSession.headSha
+    )
+      throw new Error(
+        "The broker has not confirmed the previous save. Refresh the session or inspect the repository before retrying.",
+      );
+    for (const [path, text] of Object.entries(files)) {
+      if ((await fileContent(context, saved, path)).text !== text)
+        throw new Error(
+          "The session does not match the attempted save. Refresh it before making more edits.",
+        );
+    }
+    attempt.result = {
+      pr_number: saved.number,
+      commit_sha: saved.headSha,
+      branch: saved.branch,
+    };
+    attempt.session = saved;
   }
   const {
     pr_number: number,

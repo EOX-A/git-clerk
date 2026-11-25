@@ -519,8 +519,9 @@ After a page refresh, an empty session chat shows a Git Clerk greeting and a liv
 PR summary with status, changed-file count, checks, branch and links to Changes
 and the repository. This uses the already-loaded session metadata; it does not restore
 previous conversations or send a dummy message to the AI.
-Retries reconcile a lost response by reading the branch, its exact files and PR;
-they never blindly resend a request whose outcome is uncertain. A confirmed result
+If the publish response is lost, GitClerk checks the PR and reads each generated
+file at the new branch head. If it cannot confirm the save, “Retry saving draft”
+repeats that check without sending another publish request. A confirmed result
 is retained if loading the PR fails. No base-branch concurrency check runs before
 publishing. Saved chat file cards use “Saved” because the frontend no longer reads
 previous contents to classify files as added or modified. No live Git writes occur in tests.

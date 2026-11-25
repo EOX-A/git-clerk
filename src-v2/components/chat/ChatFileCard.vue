@@ -21,6 +21,7 @@ const label = computed(
       generated: "Generated files",
       publishing: "Saving files",
       failed: "Files not saved",
+      unconfirmed: "Save unconfirmed",
       stopped: "Generation stopped",
       saved: "Saved files",
     })[props.stage] || "Generated files",
@@ -36,9 +37,12 @@ const fileStatus = (file) =>
         ? "Incomplete"
         : "Generated";
 const summaryStatus = (file) =>
-  ({ publishing: "Saving", stopped: "Stopped", failed: "Not saved" })[
-    props.stage
-  ] || file.status;
+  ({
+    publishing: "Saving",
+    stopped: "Stopped",
+    failed: "Not saved",
+    unconfirmed: "Unconfirmed",
+  })[props.stage] || file.status;
 const preview = (file) =>
   (typeof file.content === "string"
     ? file.content

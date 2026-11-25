@@ -47,16 +47,18 @@ export function createChatConversation({
   let assistant;
 
   const errorMethod = (cause) => {
-    if (assistant) assistant.fileStage = "failed";
-    state.error = ["BROKER_DRY_RUN", "BROKER_AUTHOR_REQUIRED"].includes(
-      cause.code,
-    )
-      ? cause.message
-      : cause.status === 403
-        ? "The Git broker denied the save. Check your repository access and session branch."
-        : cause.status
-          ? "The Git broker could not save the draft. Retry saving to check the result."
-          : cause.message || "The request failed. Please retry.";
+    const unconfirmed =
+      state.phase === "saving" && (saveAttempt.uncertain || saveAttempt.result);
+    if (assistant) assistant.fileStage = unconfirmed ? "unconfirmed" : "failed";
+    state.error = unconfirmed
+      ? "GitClerk could not confirm that the files were saved. Retry saving to check the session branch."
+      : ["BROKER_DRY_RUN", "BROKER_AUTHOR_REQUIRED"].includes(cause.code)
+        ? cause.message
+        : cause.status === 403
+          ? "The Git broker denied the save. Check your repository access and session branch."
+          : cause.status
+            ? "The Git broker could not save the draft. Retry saving to check the result."
+            : cause.message || "The request failed. Please retry.";
     state.messages.push({
       id: crypto.randomUUID(),
       role: "error",
