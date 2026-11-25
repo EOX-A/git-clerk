@@ -453,8 +453,9 @@ configure repository access on the broker and run the updated version that expos
 The sidebar shows every PR returned by the broker, regardless of author or branch.
 Filter and sort changes fetch fresh pages. Selecting a session loads its current
 branch, checks and review status. Session actions use the broker's rename, review
-submission, and close/delete routes. File edits still require an open session in
-the user's branch namespace. `src-v2/api/index.js` keeps these operations behind the
+submission, and close/delete routes. Collaborators can edit files and use AI chat in another user’s open session.
+Writes target the session branch and use the current collaborator’s author details.
+The Git broker enforces its configured write permissions. `src-v2/api/index.js` keeps these operations behind the
 UI boundary.
 
 V2 chat is configured by one `globalThis.gitClerkConfig.chat.preset` per instance

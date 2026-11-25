@@ -124,8 +124,7 @@ onUnmounted(() => document.removeEventListener("pointerdown", outsideMethod));
         rel="noopener noreferrer"
         class="flex min-h-9 items-center gap-2 rounded-lg px-2 text-ui hover:bg-hover"
         @click="closeMethod()"
-        ><SessionIcon name="external" class="size-[15px]" />Open in
-        repository</a
+        ><SessionIcon name="external" class="size-[15px]" />View Pull Request</a
       >
       <div role="separator" class="my-1 border-t border-border-soft"></div>
       <button
