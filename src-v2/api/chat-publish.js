@@ -25,6 +25,11 @@ export async function publishChatFiles(context, bundle, attempt = {}, session) {
       "This session is read-only. Reopen it before saving AI edits.",
     );
 
+  if (!session && context.repository.permissions?.push === false)
+    throw new Error(
+      "This repository is read-only for your current Git broker credentials.",
+    );
+
   const entries = checkDraftFiles(bundle);
   const files = Object.fromEntries(
     entries.map(([path, content]) => [
@@ -63,6 +68,13 @@ export async function publishChatFiles(context, bundle, attempt = {}, session) {
   const targetSession = session || attempt.draftSession;
   if (!session) {
     attempt.requested = true;
+    if (
+      !targetSession.canEdit &&
+      context.repository.permissions?.push === false
+    )
+      throw new Error(
+        "This repository is read-only for your current Git broker credentials.",
+      );
     if (
       targetSession.status !== "draft" ||
       !targetSession.canEdit ||
