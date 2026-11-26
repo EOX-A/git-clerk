@@ -82,7 +82,7 @@ onUnmounted(() => {
       </h2>
       <p id="session-action-description" class="mt-3 text-ui text-muted">
         <template v-if="action === 'delete'"
-          >This closes PR #{{ session.number
+          >This closes session #{{ session.number
           }}<template v-if="session.headRefID">
             and deletes
             <span class="font-mono break-all"
@@ -90,13 +90,13 @@ onUnmounted(() => {
                 session.branch
               }}</span
             ></template
-          >. The PR and its discussion remain in the repository.</template
+          >. The session and its discussion remain in the repository.</template
         >
         <template v-else-if="action === 'review'"
-          >Move draft PR #{{ session.number }} into review?</template
+          >Move draft session #{{ session.number }} into review?</template
         >
         <template v-else
-          >Update the title of PR #{{ session.number }}.</template
+          >Update the title of session #{{ session.number }}.</template
         >
       </p>
       <label v-if="action === 'rename'" class="mt-4 block text-ui"

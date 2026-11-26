@@ -81,7 +81,7 @@ export async function publishChatFiles(context, bundle, attempt = {}, session) {
       !targetSession.headSha ||
       targetSession.branch !== attempt.creation.branch
     )
-      throw new Error("The broker did not confirm the expected draft PR.");
+      throw new Error("The broker did not confirm the expected draft session.");
   }
 
   if (!attempt.result && !attempt.uncertain) {
@@ -105,7 +105,7 @@ export async function publishChatFiles(context, bundle, attempt = {}, session) {
         result.pr_number !== targetSession.number
       )
         throw new Error(
-          "The broker did not confirm the expected PR and commit.",
+          "The broker did not confirm the expected session and commit.",
         );
       attempt.result = result;
     } catch (error) {
@@ -151,7 +151,7 @@ export async function publishChatFiles(context, bundle, attempt = {}, session) {
     (!session && published.status !== "draft")
   )
     throw new Error(
-      "The PR no longer matches the confirmed save. Refresh the session to see its current state.",
+      "The session no longer matches the confirmed save. Refresh the session to see its current state.",
     );
   const documents = Object.fromEntries(
     await Promise.all(

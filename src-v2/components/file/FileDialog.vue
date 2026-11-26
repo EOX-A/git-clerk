@@ -47,7 +47,7 @@ onUnmounted(() => {
       {{
         errors.length
           ? "Review these errors before saving."
-          : `Your edits haven't been saved to PR #${sessionNumber}. If you discard them, they're gone.`
+          : `Your edits haven't been saved to session #${sessionNumber}. If you discard them, they're gone.`
       }}
     </p>
     <ul v-if="errors.length" class="mt-4 space-y-2 text-ui text-closed">

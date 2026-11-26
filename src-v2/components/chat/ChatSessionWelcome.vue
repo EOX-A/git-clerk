@@ -41,14 +41,14 @@ const updated = computed(() => {
       {{ readOnly ? ui.readOnlyWelcome : ui.welcome }}
     </p>
     <section
-      aria-label="Current pull request summary"
+      aria-label="Current session summary"
       class="mt-4 overflow-hidden rounded-xl border border-border-soft bg-elev"
     >
       <div
         class="flex flex-wrap items-center justify-between gap-2 border-b border-border-soft bg-surface/60 px-3 py-2.5"
       >
         <span class="text-meta font-medium text-muted"
-          >Current PR · #{{ session.number }}</span
+          >Current session · #{{ session.number }}</span
         >
         <span
           v-if="status"

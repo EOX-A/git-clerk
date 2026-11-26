@@ -84,7 +84,7 @@ const actionMethod = (action) => {
         rel="noopener noreferrer"
         class="flex min-h-9 items-center gap-2 rounded-lg px-2 text-ui hover:bg-hover"
         @click="closeMethod()"
-        ><SessionIcon name="external" class="size-[15px]" />View Pull Request</a
+        ><SessionIcon name="external" class="size-[15px]" />View session</a
       >
       <div role="separator" class="my-1 border-t border-border-soft"></div>
       <button
@@ -93,7 +93,7 @@ const actionMethod = (action) => {
         :disabled="!session.canDelete"
         :title="
           session.canDelete
-            ? 'Close the PR and delete its branch'
+            ? 'Close the session and delete its branch'
             : 'This session or its branch cannot be deleted by this account'
         "
         class="flex min-h-9 w-full items-center gap-2 rounded-lg px-2 text-ui text-closed hover:bg-hover disabled:cursor-default disabled:opacity-40"

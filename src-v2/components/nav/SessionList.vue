@@ -102,7 +102,7 @@ const updatedSessionMethod = async () => {
         >
           <button
             type="button"
-            :aria-label="`${session.title}, PR #${session.number}, ${SESSION_STATUS[sessionTag(session)].label}`"
+            :aria-label="`${session.title}, Session #${session.number}, ${SESSION_STATUS[sessionTag(session)].label}`"
             :aria-current="
               Number(route.params.sessionNumber) === session.number
                 ? 'page'

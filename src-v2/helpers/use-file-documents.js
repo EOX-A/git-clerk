@@ -254,7 +254,7 @@ export default function useFileDocuments(
       doc.remoteChanged = false;
       snackbar.value = {
         text: "Changes saved",
-        description: `Saved ${path} to PR #${session.value.number}`,
+        description: `Saved ${path} to session #${session.value.number}`,
         status: "success",
       };
       await onSaved();

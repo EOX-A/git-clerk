@@ -7,7 +7,7 @@ const url = computed(() => chatPullRequestUrl(props.pr));
 </script>
 <template>
   <section
-    aria-label="Pull request"
+    aria-label="Session"
     class="mt-3 rounded-xl border border-border-soft bg-elev p-3.5"
   >
     <div class="mb-2 flex items-center gap-2 text-meta font-medium text-add-fg">
@@ -16,8 +16,8 @@ const url = computed(() => chatPullRequestUrl(props.pr));
         pr.draft
           ? "Draft saved"
           : pr.updated
-            ? "Pull request updated"
-            : "Pull request created"
+            ? "Session updated"
+            : "Session created"
       }}
     </div>
     <router-link

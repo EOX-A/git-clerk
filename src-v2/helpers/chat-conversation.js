@@ -111,9 +111,9 @@ export function createChatConversation({
     if (assistant) assistant.fileStage = "publishing";
     const updating = Boolean(state.session && !saveAttempt.createdForUpload);
     state.progress = updating
-      ? `Updating files in PR #${state.session.number}…`
+      ? `Updating files in session #${state.session.number}…`
       : state.session
-        ? `Saving files to draft PR #${state.session.number}…`
+        ? `Saving files to draft session #${state.session.number}…`
         : "Creating your draft…";
     const result = await publish(
       bundle,
@@ -132,7 +132,7 @@ export function createChatConversation({
       id: crypto.randomUUID(),
       role: "assistant",
       text: result.files.length
-        ? `Saved ${result.files.length} ${result.files.length === 1 ? "file" : "files"} to PR #${state.session.number}.`
+        ? `Saved ${result.files.length} ${result.files.length === 1 ? "file" : "files"} to session #${state.session.number}.`
         : "These files already match the session branch.",
       previewInWorkspace: assistant?.previewInWorkspace,
       files: result.files.map((file) =>

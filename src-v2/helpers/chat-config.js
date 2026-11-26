@@ -57,14 +57,14 @@ export function getChatConfig(root = globalThis) {
         welcome:
           "What would you like to edit or add? Tell me what you have in mind, or explore the current changes below.",
         readOnlyWelcome:
-          "This session is read-only. You can explore its files and review the current PR below.",
+          "This session is read-only. You can explore its files and review the current session below.",
         generating: "Preparing your changes…",
         footer:
           chat.publishing?.enabled === false
             ? "Chat stays in this app session."
             : chat.publishing?.automatic === false
               ? "Review the generated files, then save your draft."
-              : "Files are saved to a draft pull request. Chat stays in this app session.",
+              : "Files are saved to a draft session. Chat stays in this app session.",
         disabledMessage: "AI chat is disabled for this instance.",
         suggestions: [],
         ...preset.ui,

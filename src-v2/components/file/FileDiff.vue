@@ -47,7 +47,7 @@ onUnmounted(() => {
 <template>
   <div class="nav-scrollbar min-h-0 flex-1 overflow-auto bg-bg">
     <p class="border-b border-border-soft px-4 py-2 text-meta text-muted">
-      Saved changes in PR #{{ session.number }} · unsaved edits are not included
+      Saved changes in session #{{ session.number }} · unsaved edits are not included
     </p>
     <p v-if="loading" role="status" class="p-6 text-muted">Loading changes…</p>
     <p v-else-if="error" role="alert" class="p-6 text-closed">

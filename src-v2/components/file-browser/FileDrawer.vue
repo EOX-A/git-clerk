@@ -302,7 +302,7 @@ const inlineEditor = computed(() =>
       </button>
     </div>
     <p v-else class="shrink-0 px-3.5 pt-0.5 pb-2 text-meta text-muted">
-      Files changed in PR #{{ session.number }}
+      Files changed in session #{{ session.number }}
     </p>
     <div
       :id="`drawer-${view}`"

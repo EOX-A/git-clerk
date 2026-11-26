@@ -3,7 +3,7 @@ import { SESSION_STATUS, sessionTag } from "./session-status.js";
 
 export const SESSION_SORT_OPTIONS = [
   { value: "recent", label: "Recent activity" },
-  { value: "pr", label: "PR number" },
+  { value: "pr", label: "Session number" },
   { value: "title", label: "Title" },
   { value: "status", label: "Status" },
 ];

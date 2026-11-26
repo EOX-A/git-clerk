@@ -117,7 +117,7 @@ watch([() => props.path, () => props.temporary], () => closeMethod(false));
           :disabled="temporary || !dirty || doc.saving"
           :title="
             !dirty && doc.saved && session
-              ? `Saved to PR #${session.number}`
+              ? `Saved to session #${session.number}`
               : 'Save changes (Ctrl/⌘ + S)'
           "
           class="h-[30px] rounded-lg bg-primary px-3 text-[12.5px] font-semibold text-on-primary disabled:bg-hover disabled:text-muted"

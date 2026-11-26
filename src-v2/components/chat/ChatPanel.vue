@@ -237,10 +237,10 @@ const headerPointerDownMethod = (event) => {
           <span>
             {{
               isClosed
-                ? `PR #${session?.number} is ${session?.status?.toLowerCase()}.`
+                ? `Session #${session?.number} is ${session?.status?.toLowerCase()}.`
                 : isRepoReadOnly
-                  ? `PR #${session?.number} is read-only.`
-                  : `PR #${session?.number} is read-only for this account.`
+                  ? `Session #${session?.number} is read-only.`
+                  : `Session #${session?.number} is read-only for this account.`
             }}
             {{
               isRepoReadOnly

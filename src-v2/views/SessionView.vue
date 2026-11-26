@@ -438,7 +438,7 @@ onUnmounted(() => {
               class="rounded px-3 py-2 text-primary hover:bg-hover"
               @click="openPublishedMethod"
             >
-              View PR #{{ chat.session.number }}
+              View session #{{ chat.session.number }}
             </button>
           </template>
         </ChatPanel>

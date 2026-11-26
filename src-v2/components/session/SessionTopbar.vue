@@ -68,7 +68,7 @@ const submitTip = computed(() =>
       ? "This account cannot submit this session"
       : !submitEnabled.value
         ? "Checks must pass before submitting for review"
-        : `Move draft PR #${props.session.number} into review`,
+        : `Move draft session #${props.session.number} into review`,
 );
 let resizeObserver;
 onMounted(() => {
@@ -117,7 +117,7 @@ onUnmounted(() => {
             ><span class="sr-only">Waiting for session title</span></span
           >
           <template v-if="temporary">
-            <span class="sr-only">Pull request status and checks pending</span>
+            <span class="sr-only">Session status and checks pending</span>
             <span
               aria-hidden="true"
               class="file-placeholder h-[22px] w-14 shrink-0 rounded-full"
@@ -181,10 +181,10 @@ onUnmounted(() => {
             target="_blank"
             rel="noopener noreferrer"
             class="shrink-0 hover:text-primary hover:underline"
-            >PR #{{ session.number }}</a
+            >Session #{{ session.number }}</a
           >
           <span v-else class="file-placeholder h-3 w-9 shrink-0 rounded"
-            ><span class="sr-only">PR number pending</span></span
+            ><span class="sr-only">Session number pending</span></span
           >
           <span aria-hidden="true" class="shrink-0">·</span>
           <span
