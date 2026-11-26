@@ -15,6 +15,7 @@ import { prepareChatDraft } from "@/helpers/prepare-chat-draft.js";
 import { createChatConversation } from "@/helpers/chat-conversation.js";
 import { chatScopeKey, getChatConfig } from "@/helpers/chat-config.js";
 import { chatPrTitle } from "@/helpers/chat-output.js";
+import { brokerGitUsername } from "@/api/git-broker.js";
 
 export default defineStore("chat-v2", () => {
   const conversations = shallowReactive({});
@@ -45,7 +46,7 @@ export default defineStore("chat-v2", () => {
         uploadMedia: uploadSessionMedia,
         generateTitle: generateSessionTitle,
         createDraft: (identity, attempt, onProgress) => {
-          const username = useGitStore().context?.user?.username || "";
+          const username = brokerGitUsername(useGitStore().context);
           return createChatDraftSession(
             {
               title: chatPrTitle(

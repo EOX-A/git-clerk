@@ -20,6 +20,11 @@ const updateLuigiContext = (context) => {
     username: user?.preferred_username,
     email: user?.email,
     name: user?.name,
+    gitUser:
+      user?.gitUser ??
+      user?.git_username ??
+      user?.github_username ??
+      user?.login,
   });
   luigiDarkMode.value =
     context?.darkMode ??

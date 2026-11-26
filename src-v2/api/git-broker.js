@@ -5,6 +5,15 @@ export function resolveBrokerUser(profile, fallback = {}) {
     name: setting(profile?.name) || setting(fallback.name),
     email: setting(profile?.email) || setting(fallback.email),
     username: setting(profile?.username) || setting(fallback.username),
+    gitUser:
+      setting(profile?.gitUser) ||
+      setting(profile?.git_username) ||
+      setting(profile?.github_username) ||
+      setting(profile?.login) ||
+      setting(fallback.gitUser) ||
+      setting(fallback.git_username) ||
+      setting(fallback.github_username) ||
+      setting(fallback.login),
   };
 }
 
@@ -21,6 +30,7 @@ export function gitBrokerConfig(root = globalThis, env = import.meta.env) {
       name: env?.GITCLERK_PROFILE_NAME,
       email: env?.GITCLERK_EMAIL,
       username: env?.GITCLERK_USERNAME,
+      gitUser: env?.GITCLERK_GIT_USER ?? config.gitUser,
     }),
   };
 }
@@ -43,6 +53,39 @@ export function brokerAuthor(context) {
       { status: 400, code: "BROKER_AUTHOR_REQUIRED" },
     );
   return { name, email, username };
+}
+
+export function brokerGitUsername(context) {
+  const repo = context?.repository;
+  return (
+    setting(context?.user?.gitUser) ||
+    setting(repo?.git_user) ||
+    setting(repo?.gitUser) ||
+    setting(repo?.login) ||
+    setting(repo?.user?.login) ||
+    setting(repo?.user?.username) ||
+    setting(repo?.authenticated_user?.login) ||
+    setting(repo?.authenticated_user?.username) ||
+    setting(context?.user?.username)
+  );
+}
+
+export function brokerPrAttribution(context) {
+  const name = setting(context?.user?.name);
+  const username = brokerGitUsername(context);
+  const actor =
+    name && username && name !== username
+      ? `${name} (${username})`
+      : name || username;
+  return actor ? `*Created on behalf of ${actor}*` : "";
+}
+
+export function withPrAttribution(body, context) {
+  const text = typeof body === "string" ? body.trim() : "";
+  const attribution = brokerPrAttribution(context);
+  if (!attribution) return text;
+  if (text.includes("*Created on behalf of ")) return text;
+  return text ? `${text}\n\n---\n${attribution}` : attribution;
 }
 
 export function createGitBrokerRequest(config, fetchImpl = globalThis.fetch) {
@@ -111,11 +154,16 @@ export async function initGitBroker(config = gitBrokerConfig(), fetchImpl) {
 
 export function publishGitBundle(context, body, session) {
   const provider = context.repository.provider || context.config?.provider;
+  const prBody =
+    !session || body.pr_body !== undefined
+      ? withPrAttribution(body.pr_body, context)
+      : undefined;
   return context.request("/publish", {
     method: "POST",
     branch: session?.branch,
     body: {
       ...body,
+      ...(prBody !== undefined ? { pr_body: prBody } : {}),
       // The GitHub broker builds from base_branch and looks up an existing PR on 422.
       // The other providers commit against the target branch directly.
       base_branch:

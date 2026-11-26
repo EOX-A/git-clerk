@@ -25,6 +25,7 @@ import { getChatConfig } from "@/helpers/chat-config.js";
 import NewSessionView from "./NewSessionView.vue";
 import useGitStore from "@/stores/git.js";
 import { chatPrTitle } from "@/helpers/chat-output.js";
+import { brokerGitUsername } from "@/api/git-broker.js";
 const chatConfig = getChatConfig();
 
 const route = useRoute();
@@ -93,7 +94,7 @@ const starter = computed(
 );
 const draftTitle = computed(() => {
   const identity = chat.value.draftIdentity;
-  const username = gitStore.context?.user?.username;
+  const username = brokerGitUsername(gitStore.context);
   return identity?.title && username
     ? chatPrTitle(chatConfig.publishing.prTitle, identity, username)
     : identity?.title;

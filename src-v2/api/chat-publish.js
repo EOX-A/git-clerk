@@ -1,5 +1,10 @@
 import { checkDraftFiles } from "./draft-files.js";
-import { brokerAuthor, publishGitBundle } from "./git-broker.js";
+import {
+  brokerAuthor,
+  brokerGitUsername,
+  publishGitBundle,
+  withPrAttribution,
+} from "./git-broker.js";
 import { createDraftSession } from "./session-create.js";
 import { sessionDetails } from "./session.js";
 import { fileContent } from "./file-content.js";
@@ -58,7 +63,8 @@ export async function publishChatFiles(context, bundle, attempt = {}, session) {
   attempt.target = target;
 
   if (!session && !attempt.draftSession) {
-    const { username } = brokerAuthor(context);
+    brokerAuthor(context);
+    const username = brokerGitUsername(context);
     attempt.creation ||= {};
     try {
       // The broker's initial_files only creates files. Publish also handles updates.
@@ -108,7 +114,10 @@ export async function publishChatFiles(context, bundle, attempt = {}, session) {
           files,
           commit_message: `${session ? "Update" : "Create"} ${bundle.draft.title}`,
           pr_title: targetSession.title,
-          pr_body: targetSession.body ?? defaultPrBody,
+          pr_body: withPrAttribution(
+            targetSession.body ?? defaultPrBody,
+            context,
+          ),
         },
         targetSession,
       );

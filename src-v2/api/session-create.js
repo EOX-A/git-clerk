@@ -1,5 +1,5 @@
 import slugify from "slugify";
-import { brokerBranchPrefix } from "./git-broker.js";
+import { brokerBranchPrefix, withPrAttribution } from "./git-broker.js";
 import { findSessionBranch, sessionDetails } from "./session.js";
 
 function newSessionBranch(context, title) {
@@ -50,7 +50,7 @@ export async function createDraftSession(
     return session;
   }
   attempt.branch ||= newSessionBranch(context, branchTitle ?? title);
-  const prBody =
+  const rawPrBody =
     body?.trim() ||
     [
       "## Summary",
@@ -69,6 +69,7 @@ export async function createDraftSession(
       "",
       "- Review the proposed changes before merging.",
     ].join("\n");
+  const prBody = withPrAttribution(rawPrBody, context);
   onProgress("Creating the session through the Git broker…");
   try {
     const result = await context.request("/pulls", {
@@ -79,7 +80,7 @@ export async function createDraftSession(
         base_branch: context.repository.default_branch,
         draft: true,
         ...(initialFiles ? { initial_files: initialFiles } : {}),
-        body: prBody,
+        ...(prBody ? { body: prBody } : {}),
       },
     });
     const number = result.number ?? result.pr_number;

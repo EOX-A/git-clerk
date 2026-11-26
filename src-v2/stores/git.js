@@ -6,7 +6,11 @@ export default defineStore("git-v2", () => {
   const config = gitBrokerConfig();
   const context = shallowRef(null);
   const fallbackUser = config.user;
-  const hasEnvironmentProfile = Object.values(fallbackUser).every(Boolean);
+  const hasEnvironmentProfile = [
+    fallbackUser.name,
+    fallbackUser.email,
+    fallbackUser.username,
+  ].every(Boolean);
   const hasLuigiProfile = shallowRef(false);
   const showAccountMenu = computed(
     () => hasEnvironmentProfile && !hasLuigiProfile.value,
