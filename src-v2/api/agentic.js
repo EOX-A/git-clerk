@@ -139,7 +139,7 @@ export async function streamChat(
   if (!branch && !sessionTitle && !draft && !identity) {
     const titleSignal = AbortSignal.any([
       namingController.signal,
-      AbortSignal.timeout(8_000),
+      AbortSignal.timeout(15_000),
       ...(signal ? [signal] : []),
     ]);
     titleIdentity = generateSessionTitle(prompt, config, titleSignal).then(

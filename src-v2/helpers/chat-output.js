@@ -7,6 +7,11 @@ export function chatDraftIdentity(...titles) {
     .map((value) =>
       value
         .trim()
+        .replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/, "")
+        .replace(/<!--[\s\S]*?-->/g, " ")
+        .replace(/<!--[\s\S]*$/g, " ")
+        .replace(/<[^>]*>/g, " ")
+        .trim()
         .split(/\r?\n/, 1)[0]
         .replace(/^#{1,6}\s+/, "")
         .replace(/^["'`*“‘]+|["'`*”’]+$/g, "")
