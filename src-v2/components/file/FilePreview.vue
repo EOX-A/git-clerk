@@ -1,0 +1,163 @@
+<script setup>
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  onUnmounted,
+  ref,
+  watch,
+} from "vue";
+import useGitStore from "@/stores/git.js";
+import { getMediaPreviewMap, uploadMediaFiles } from "@/api/media-upload.js";
+import { getMediaUploadConfig } from "@/helpers/chat-config.js";
+import { handleFileHistoryShortcut } from "@/helpers/file-workspace.js";
+const props = defineProps({
+  url: { type: String, required: true },
+  path: { type: String, required: true },
+  session: { type: Object, default: null },
+  value: { required: true },
+  readOnly: Boolean,
+  dirty: Boolean,
+  undo: Boolean,
+  redo: Boolean,
+  onChange: { type: Function, default: null },
+  onUndo: { type: Function, default: null },
+  onRedo: { type: Function, default: null },
+});
+const gitStore = useGitStore();
+const frame = ref(null);
+const busy = ref(true);
+const origin = computed(() => new URL(props.url).origin);
+const sendMethod = () => {
+  if (props.value === null) return;
+  frame.value?.contentWindow?.postMessage(
+    {
+      type: "SCHEMA_DATA_EDITOR_UPDATE",
+      detail: JSON.parse(JSON.stringify(props.value)),
+      undo: !props.readOnly && props.undo,
+      redo: !props.readOnly && props.redo,
+      readOnly: props.readOnly,
+      mediaPreviews: getMediaPreviewMap(),
+    },
+    origin.value,
+  );
+};
+const previewKeyMethod = (event) => {
+  if (props.readOnly) return;
+  handleFileHistoryShortcut(event, (direction) =>
+    direction < 0 ? props.onUndo?.() : props.onRedo?.(),
+  );
+};
+const loadedMethod = () => {
+  // Key events stay inside the iframe. Cross-origin previews use the undo/redo message protocol.
+  frame.value?.contentDocument?.addEventListener(
+    "keydown",
+    previewKeyMethod,
+    true,
+  );
+  busy.value = false;
+  sendMethod();
+};
+const uploadPreviewFileMethod = async (file) => {
+  const reply = (payload) => {
+    frame.value?.contentWindow?.postMessage(
+      { type: "FILE_UPLOADED", file: payload },
+      origin.value,
+    );
+  };
+  if (props.readOnly) {
+    reply({ message: "This session is read-only." });
+    return;
+  }
+  const mediaConfig = getMediaUploadConfig();
+  if (mediaConfig.target === "repo" && !props.session?.branch) {
+    reply({ message: "Open a session branch before uploading files." });
+    return;
+  }
+  try {
+    const result = await uploadMediaFiles([file], {
+      context: gitStore.context,
+      session: props.session,
+      config: mediaConfig,
+    });
+    const uploaded = result.files?.[0];
+    if (!uploaded?.url) {
+      throw new Error("The upload did not return a file URL.");
+    }
+    reply({
+      fileUrl: uploaded.url,
+      fallbackUrl: uploaded.previewUrl || uploaded.brokerRawUrl,
+    });
+    sendMethod();
+  } catch (error) {
+    reply({ message: error?.message || "File upload failed." });
+  }
+};
+const messageMethod = (event) => {
+  if (
+    event.source !== frame.value?.contentWindow ||
+    event.origin !== origin.value ||
+    !event.data
+  )
+    return;
+  const { type, detail } = event.data;
+  if (type === "ENABLE_LOADER_POSTMESSAGE") busy.value = true;
+  if (type === "DISABLE_LOADER_POSTMESSAGE") busy.value = false;
+  if (type === "FILE_UPLOAD" && event.data.file) {
+    void uploadPreviewFileMethod(event.data.file);
+    return;
+  }
+  if (props.readOnly) return;
+  if (type === "SCHEMA_DATA_PREVIEW_UPDATE" && detail !== undefined)
+    props.onChange?.(detail);
+  if (type === "SCHEMA_DATA_EDITOR_UNDO") props.onUndo?.();
+  if (type === "SCHEMA_DATA_EDITOR_REDO") props.onRedo?.();
+};
+watch(() => [props.value, props.readOnly, props.undo, props.redo], sendMethod, {
+  deep: true,
+});
+onMounted(() => window.addEventListener("message", messageMethod));
+onBeforeUnmount(() =>
+  frame.value?.contentDocument?.removeEventListener(
+    "keydown",
+    previewKeyMethod,
+    true,
+  ),
+);
+onUnmounted(() => window.removeEventListener("message", messageMethod));
+</script>
+<template>
+  <div
+    role="region"
+    aria-label="Preview"
+    class="relative flex min-h-0 min-w-0 flex-1 flex-col bg-bg"
+  >
+    <div
+      class="flex h-10 shrink-0 items-center gap-2 border-b border-border pr-1.5 pl-3.5"
+    >
+      <span class="text-xs font-medium">Preview</span>
+      <span v-if="dirty" class="text-meta text-muted"
+        >· includes unsaved edits</span
+      >
+    </div>
+    <p
+      v-if="busy && value !== null"
+      role="status"
+      class="absolute top-12 left-3 z-10 rounded-lg bg-elev px-3 py-2 text-meta text-muted shadow-selected"
+    >
+      Loading preview…
+    </p>
+    <p v-if="value === null" role="alert" class="p-6 text-ui text-closed">
+      Fix the invalid JSON in Source to update the preview.
+    </p>
+    <iframe
+      v-else
+      ref="frame"
+      id="previewFrame"
+      :src="url"
+      :title="`Preview of ${path}`"
+      class="min-h-0 w-full flex-1 border-0 bg-white"
+      @load="loadedMethod"
+    />
+  </div>
+</template>

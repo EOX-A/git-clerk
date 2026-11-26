@@ -1,0 +1,11 @@
+export { default as FileWorkspace } from "./FileWorkspace.vue";
+export { default as FileTabs } from "./FileTabs.vue";
+export { default as FileDrawer } from "./FileDrawer.vue";
+export { default as FileTree } from "./FileTree.vue";
+export { default as FileTreeActionMenu } from "./FileTreeActionMenu.vue";
+export { default as FileTreeDeleteDialog } from "./FileTreeDeleteDialog.vue";
+export { default as FileTreeName } from "./FileTreeName.vue";
+export { default as ChangesList } from "./ChangesList.vue";
+export { default as FileIcon } from "./FileIcon.vue";
+export { default as FileTreePlaceholder } from "./FileTreePlaceholder.vue";
+export { default as FileTabsPlaceholder } from "./FileTabsPlaceholder.vue";
