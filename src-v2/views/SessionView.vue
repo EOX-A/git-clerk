@@ -8,12 +8,7 @@ import {
   shallowRef,
   watch,
 } from "vue";
-import {
-  onBeforeRouteLeave,
-  onBeforeRouteUpdate,
-  useRoute,
-  useRouter,
-} from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import useSessionsStore from "@/stores/sessions.js";
 import sessionError from "@/helpers/session-error.js";
 import useChatLayout from "@/helpers/use-chat-layout.js";
@@ -169,14 +164,8 @@ watch(
     if (editable === false) conversation.value.cancelMethod();
   },
 );
-onBeforeRouteLeave(() => conversation.value.cancelMethod());
-onBeforeRouteUpdate(
-  (to, from) =>
-    to.params.sessionNumber === from.params.sessionNumber ||
-    conversation.value.cancelMethod(),
-);
 const chatUnloadMethod = (event) => {
-  if (chat.value.phase === "saving") {
+  if (chatStore.hasSavingConversation()) {
     event.preventDefault();
     event.returnValue = "";
   }
@@ -261,8 +250,10 @@ watch(
     controller?.abort();
     loading = false;
     connecting.value = false;
-    if (previous !== conversation.value) previous?.cancelMethod();
     workspaceKey.value++;
+    if (published?.number === Number(number)) {
+      conversation.value.state.previewFiles = [];
+    }
     resetMethod();
     collapsed.value = Boolean(
       number && router.options.history.state.manualSession,
@@ -307,7 +298,6 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  conversation.value.cancelMethod();
   window.removeEventListener("beforeunload", chatUnloadMethod);
   requestID++;
   controller?.abort();

@@ -87,10 +87,29 @@ export default defineStore("chat-v2", () => {
 
     const key = `${scopeMethod()}:new`;
     const temporary = conversations[key];
+    if (
+      !samePage &&
+      temporary &&
+      (temporary.state.busy ||
+        temporary.state.pending ||
+        temporary.state.messages.length)
+    ) {
+      return true;
+    }
     if (temporary && !temporary.cancelMethod()) return false;
     delete conversations[key];
     newSessionRevision.value++;
     return true;
   };
-  return { getConversation, scopeMethod, startNewSession, newSessionRevision };
+  const hasSavingConversation = () =>
+    Object.values(conversations).some(
+      (conversation) => conversation.state.phase === "saving",
+    );
+  return {
+    getConversation,
+    scopeMethod,
+    startNewSession,
+    hasSavingConversation,
+    newSessionRevision,
+  };
 });
