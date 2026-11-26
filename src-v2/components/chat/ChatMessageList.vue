@@ -81,13 +81,6 @@ defineProps({
               >{{ file.name }}</a
             >
             <span v-else class="truncate">{{ file.name }}</span>
-            <span
-              v-if="file.source === 'context'"
-              class="shrink-0 rounded bg-hover px-1 py-0.5 text-[10px] leading-none font-medium text-muted"
-              title="Sent as chat context only (not committed to repository)"
-            >
-              Context
-            </span>
           </li>
         </ul>
       </div>

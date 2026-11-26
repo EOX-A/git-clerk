@@ -12,29 +12,32 @@ import {
   validateMediaFiles,
 } from "../api/media-upload.js";
 
-const REPO_IMAGE_INTENT_RE =
-  /\b(?:add|include|insert|embed|place|put|use|upload|save|commit|attach)\b[^.!?\n]{0,60}\b(?:image|images|photo|photos|picture|pictures|pic|pics|screenshot|screenshots|figure|figures|graphic|graphics|diagram|diagrams|chart|charts|media|asset|assets|it|this|these|them)\b[^.!?\n]{0,60}\b(?:story|stories|dashboard|page|article|post|document|doc|file|markdown|draft|repo|repository|assets?|branch|git)\b|\b(?:upload|save|commit)\b[^.!?\n]{0,40}\b(?:image|images|photo|photos|picture|pictures|pic|pics|screenshot|screenshots|media|asset|assets|it|this|these|them)\b/i;
+const CONTEXT_INTENT_RE =
+  /\b(?:as|for)\s+(?:story\s+)?context\b|\buse\s+(?:the\s+)?(?:content|text|info|information|data)\s+(?:of|from|in)\b|\b(?:summarize|summarise|read|extract|based\s+on|from)\b[^.!?\n]{0,30}\b(?:this|the|attached)\b/i;
+
+const REPO_UPLOAD_INTENT_RE =
+  /\b(?:upload|save|commit)\s+(?:this|it|these|them|the\s+(?:file|pdf|image|photo|picture|media|asset))?\b|\b(?:add|include|insert|embed|place|put|use)\b[^.!?\n]{0,60}\b(?:to|in|into|on|as)\b[^.!?\n]{0,40}\b(?:story|stories|dashboard|page|article|post|document|doc|markdown|header|hero|background|banner|cover|repo|repository|assets?|branch)\b|\b(?:add|use)\s+(?:this|it)\b/i;
 
 export function shouldUploadImageToRepo(prompt) {
   if (typeof prompt !== "string" || !prompt.trim()) return false;
-  return REPO_IMAGE_INTENT_RE.test(prompt);
+  if (
+    CONTEXT_INTENT_RE.test(prompt) &&
+    !/\b(?:upload|save|commit)\b/i.test(prompt)
+  )
+    return false;
+  return REPO_UPLOAD_INTENT_RE.test(prompt);
 }
 
 function resolveAttachmentTargets(attachments, payload, mediaConfig) {
-  const modes = payload.attachmentModes || [];
-  const explicitFlags = payload.attachmentModeExplicit || [];
-  const promptWantsRepoImage = shouldUploadImageToRepo(payload.text);
-  return attachments.map((file, index) => {
-    if (isPdfFile(file)) return "context";
+  const promptWantsRepoUpload = shouldUploadImageToRepo(payload.text);
+  return attachments.map((file) => {
     if (!mediaConfig?.enabled) return "context";
-    const mode = modes[index];
-    const explicit = Boolean(explicitFlags[index]);
-    if (mode === "repo") return "repo";
-    if (isImageFile(file)) {
-      if (explicit && mode === "context") return "context";
-      if (promptWantsRepoImage) return "repo";
+    if (isPdfFile(file)) {
+      return /\b(?:upload|save|commit)\b/i.test(payload.text || "")
+        ? "repo"
+        : "context";
     }
-    return "context";
+    return promptWantsRepoUpload ? "repo" : "context";
   });
 }
 
