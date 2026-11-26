@@ -2,7 +2,6 @@ import { reactive } from "vue";
 import { streamedMessage } from "./event-stream.js";
 import { buildChatPrompt } from "./chat-request.js";
 import { createChatDraftStream } from "./chat-draft-stream.js";
-import { createChatTextReveal } from "./chat-text-reveal.js";
 import { chatDraftIdentity, chatOutputPath } from "./chat-output.js";
 import { getChatConfig, getMediaUploadConfig } from "./chat-config.js";
 import {
@@ -170,7 +169,6 @@ export function createChatConversation({
   };
   const runMethod = async (payload, session) => {
     const current = new AbortController();
-    let reveal;
     controller = current;
     state.busy = true;
     state.error = "";
@@ -380,8 +378,6 @@ export function createChatConversation({
         const streamsMarkdown =
           config.preset.outputFile &&
           config.preset.output_format === "markdown";
-        if (!preview && streamsMarkdown && config.backend.stream)
-          reveal = createChatTextReveal(assistant);
         const activeTools = new Set();
         const readDraftChunk = createChatDraftStream(
           (file) => {
@@ -424,10 +420,7 @@ export function createChatConversation({
               if (preview) {
                 if (outputFile) state.previewFiles[0].content = raw;
                 else readDraftChunk(data.chunk || "");
-              } else if (streamsMarkdown) {
-                if (reveal) reveal.update(raw);
-                else assistant.text = raw;
-              } else {
+              } else if (!streamsMarkdown) {
                 assistant.text = /^\s*(?:```(?:json)?\s*)?\{/i.test(raw)
                   ? streamedMessage(raw)
                   : raw;
@@ -446,15 +439,17 @@ export function createChatConversation({
           current.signal,
         );
         current.signal.throwIfAborted();
-        if (result.markdown && reveal) {
-          reveal.update(result.markdown);
+        if (result.markdown) {
+          const storyPath = Object.keys(result.draft?.files || {})[0];
+          assistant.text = storyPath
+            ? pendingDraft || !preview
+              ? `Updated \`${storyPath}\` in preview.`
+              : `Draft ready in preview (\`${storyPath}\`).`
+            : "Draft ready in preview.";
+          assistant.historyText = result.message;
         } else {
-          reveal?.finish();
-          assistant.text = preview
-            ? result.message
-            : (result.markdown ?? result.message);
+          assistant.text = result.message;
         }
-        if (result.markdown) assistant.historyText = result.message;
         assistant.streaming = false;
         if (result.draftIdentity) state.draftIdentity = result.draftIdentity;
         else if (result.draft?.id)
@@ -500,7 +495,6 @@ export function createChatConversation({
       if (!state.pending) state.previewFiles = [];
       if (!current.signal.aborted) errorMethod(cause);
     } finally {
-      if (current.signal.aborted) reveal?.finish();
       if (assistant) assistant.streaming = false;
       if (controller === current) {
         state.busy = false;
