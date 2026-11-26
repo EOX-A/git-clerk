@@ -28,12 +28,7 @@ const useSessionsStore = defineStore("sessions-v2", () => {
   const group = ref("none");
   const collapsedGroups = ref(new Set());
   const filterSummary = computed(() =>
-    sessionFilterSummary(
-      statuses.value,
-      sort.value,
-      group.value,
-      onlyMine.value,
-    ),
+    sessionFilterSummary(statuses.value, sort.value, group.value),
   );
   const filtersActive = computed(() => Boolean(filterSummary.value));
   const visibleSessions = computed(() =>
@@ -146,9 +141,15 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     }
   }
 
-  function toggleOnlyMine() {
-    onlyMine.value = !onlyMine.value;
+  function setOnlyMine(value) {
+    const next = Boolean(value);
+    if (onlyMine.value === next) return;
+    onlyMine.value = next;
     return loadSessions(true, true);
+  }
+
+  function toggleOnlyMine() {
+    return setOnlyMine(!onlyMine.value);
   }
 
   function toggleStatus(status) {
@@ -171,10 +172,8 @@ const useSessionsStore = defineStore("sessions-v2", () => {
 
   function clearFilters() {
     const refresh =
-      onlyMine.value ||
       statuses.value.length !== Object.keys(SESSION_STATUS).length ||
       sort.value !== "recent";
-    onlyMine.value = false;
     statuses.value = Object.keys(SESSION_STATUS);
     sort.value = "recent";
     group.value = "none";
@@ -251,6 +250,7 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     sessionGroups,
     statusCounts,
     allLoaded,
+    setOnlyMine,
     toggleOnlyMine,
     toggleStatus,
     setSort,

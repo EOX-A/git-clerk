@@ -88,9 +88,8 @@ export function groupSessions(sessions, group) {
   return [...groups.values()].sort((a, b) => a.title.localeCompare(b.title));
 }
 
-export function sessionFilterSummary(statuses, sort, group, onlyMine = false) {
+export function sessionFilterSummary(statuses, sort, group) {
   const parts = [];
-  if (onlyMine) parts.push("My sessions");
   if (statuses.length < Object.keys(SESSION_STATUS).length) {
     parts.push(
       statuses.length

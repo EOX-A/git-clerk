@@ -148,37 +148,42 @@ onUnmounted(() => {
       aria-label="Filter and sort sessions"
       :style="position"
       :data-scrolling="isScrolling"
-      class="nav-scrollbar fixed z-50 flex max-h-[calc(100dvh-16px)] w-[264px] max-w-[calc(100vw-16px)] flex-col gap-3.5 overflow-y-auto rounded-xl border border-border-soft bg-elev p-3 shadow-menu"
+      class="nav-scrollbar fixed z-50 flex max-h-[calc(100dvh-16px)] w-[296px] max-w-[calc(100vw-16px)] flex-col gap-3.5 overflow-y-auto rounded-xl border border-border-soft bg-elev p-3 shadow-menu"
       @scroll.passive="scrollMethod"
       @keydown.esc.stop.prevent="closeMethod(true)"
     >
-      <div>
-        <button
-          type="button"
-          role="switch"
-          aria-label="My sessions"
-          :aria-checked="onlyMine"
-          :class="
-            onlyMine
-              ? 'bg-hover font-semibold text-text'
-              : 'font-medium text-muted'
-          "
-          class="flex h-11 w-full items-center gap-2 rounded-lg px-2.5 text-[12.5px] hover:bg-hover workspace:h-8"
-          @click="sessionsStore.toggleOnlyMine()"
-        >
-          <span class="flex-1 text-left">My sessions</span>
-          <span
-            aria-hidden="true"
-            :class="onlyMine ? 'bg-primary' : 'bg-border'"
-            class="relative inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors"
+      <fieldset>
+        <legend class="mb-1.5 text-meta font-semibold text-muted">Show</legend>
+        <div class="-mx-1.5 flex flex-col gap-px">
+          <label
+            v-for="option in [
+              { value: true, label: 'My sessions' },
+              { value: false, label: 'All sessions' },
+            ]"
+            :key="String(option.value)"
+            class="relative cursor-pointer"
           >
+            <input
+              type="radio"
+              name="session-scope"
+              :value="String(option.value)"
+              :checked="onlyMine === option.value"
+              class="peer sr-only"
+              @change="sessionsStore.setOnlyMine(option.value)"
+            />
             <span
-              :class="onlyMine ? 'translate-x-3.5' : 'translate-x-0.5'"
-              class="inline-block size-3 rounded-full bg-elev transition-transform"
-            ></span>
-          </span>
-        </button>
-      </div>
+              class="flex h-11 items-center gap-2 rounded-[7px] px-2 text-[12.5px] hover:bg-hover peer-checked:bg-hover peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-primary workspace:h-[30px]"
+            >
+              <span class="flex-1">{{ option.label }}</span>
+              <NavIcon
+                v-if="onlyMine === option.value"
+                name="check"
+                class="size-[15px] text-primary"
+              />
+            </span>
+          </label>
+        </div>
+      </fieldset>
 
       <div>
         <h3
@@ -211,7 +216,9 @@ onUnmounted(() => {
               :class="statuses.includes(value) ? status.color : 'text-muted'"
               class="size-3.5"
             />
-            <span class="flex-1 text-left">{{ status.label }}</span>
+            <span class="flex-1 text-left whitespace-nowrap">{{
+              status.label
+            }}</span>
             <span
               :class="statuses.includes(value) ? 'bg-elev' : ''"
               class="inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums"
