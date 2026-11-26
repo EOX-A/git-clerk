@@ -13,6 +13,59 @@ export function getMediaPreviewMap() {
   return Object.fromEntries(mediaPreviewUrls);
 }
 
+const EXTENSION_MEDIA_TYPES = {
+  pdf: "application/pdf",
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  webp: "image/webp",
+  svg: "image/svg+xml",
+  bmp: "image/bmp",
+  avif: "image/avif",
+  txt: "text/plain",
+  md: "text/markdown",
+  csv: "text/csv",
+  json: "application/json",
+};
+
+export function resolveMediaType(file) {
+  const explicit = String(file?.type || "").trim();
+  if (explicit) return explicit;
+  const name = String(file?.name || "");
+  const dotIndex = name.lastIndexOf(".");
+  if (dotIndex > 0 && dotIndex < name.length - 1) {
+    const ext = name.slice(dotIndex + 1).toLowerCase();
+    if (EXTENSION_MEDIA_TYPES[ext]) return EXTENSION_MEDIA_TYPES[ext];
+  }
+  return "application/octet-stream";
+}
+
+export function isPdfFile(file) {
+  const type = resolveMediaType(file).toLowerCase();
+  if (type === "application/pdf") return true;
+  return String(file?.name || "")
+    .trim()
+    .toLowerCase()
+    .endsWith(".pdf");
+}
+
+export function isImageFile(file) {
+  return resolveMediaType(file).toLowerCase().startsWith("image/");
+}
+
+export async function readContextAttachment(file) {
+  const mediaType = resolveMediaType(file);
+  const base64 = await blobToBase64(file);
+  return {
+    name: file?.name || "file",
+    media_type: mediaType,
+    size: Number(file?.size ?? 0),
+    source: "context",
+    data_url: `data:${mediaType};base64,${base64}`,
+  };
+}
+
 export function sanitizeMediaFilename(filename, suffix) {
   const raw = String(filename || "file")
     .split(/[/\\]/)

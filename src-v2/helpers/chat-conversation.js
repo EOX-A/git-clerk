@@ -5,7 +5,39 @@ import { createChatDraftStream } from "./chat-draft-stream.js";
 import { createChatTextReveal } from "./chat-text-reveal.js";
 import { chatDraftIdentity, chatOutputPath } from "./chat-output.js";
 import { getChatConfig, getMediaUploadConfig } from "./chat-config.js";
-import { validateMediaFiles } from "../api/media-upload.js";
+import {
+  isImageFile,
+  isPdfFile,
+  readContextAttachment,
+  resolveMediaType,
+  validateMediaFiles,
+} from "../api/media-upload.js";
+
+const REPO_IMAGE_INTENT_RE =
+  /\b(?:add|include|insert|embed|place|put|use|upload|save|commit|attach)\b[^.!?\n]{0,60}\b(?:image|images|photo|photos|picture|pictures|pic|pics|screenshot|screenshots|figure|figures|graphic|graphics|diagram|diagrams|chart|charts|media|asset|assets|it|this|these|them)\b[^.!?\n]{0,60}\b(?:story|stories|dashboard|page|article|post|document|doc|file|markdown|draft|repo|repository|assets?|branch|git)\b|\b(?:upload|save|commit)\b[^.!?\n]{0,40}\b(?:image|images|photo|photos|picture|pictures|pic|pics|screenshot|screenshots|media|asset|assets|it|this|these|them)\b/i;
+
+export function shouldUploadImageToRepo(prompt) {
+  if (typeof prompt !== "string" || !prompt.trim()) return false;
+  return REPO_IMAGE_INTENT_RE.test(prompt);
+}
+
+function resolveAttachmentTargets(attachments, payload, mediaConfig) {
+  const modes = payload.attachmentModes || [];
+  const explicitFlags = payload.attachmentModeExplicit || [];
+  const promptWantsRepoImage = shouldUploadImageToRepo(payload.text);
+  return attachments.map((file, index) => {
+    if (isPdfFile(file)) return "context";
+    if (!mediaConfig?.enabled) return "context";
+    const mode = modes[index];
+    const explicit = Boolean(explicitFlags[index]);
+    if (mode === "repo") return "repo";
+    if (isImageFile(file)) {
+      if (explicit && mode === "context") return "context";
+      if (promptWantsRepoImage) return "repo";
+    }
+    return "context";
+  });
+}
 
 function updateFile(files, file) {
   const index = files.findIndex((item) => item.path === file.path);
@@ -170,12 +202,13 @@ export function createChatConversation({
                 attachments: attachments.map((file) => ({
                   name: file.name,
                   size: file.size,
-                  type: file.type || "application/octet-stream",
+                  type: resolveMediaType(file),
+                  source: "context",
                   previewUrl:
                     typeof Blob !== "undefined" &&
                     file instanceof Blob &&
                     typeof URL?.createObjectURL === "function" &&
-                    file.type?.startsWith("image/")
+                    isImageFile(file)
                       ? URL.createObjectURL(file)
                       : null,
                 })),
@@ -184,82 +217,130 @@ export function createChatConversation({
         });
         state.messages.push(userMessage);
 
-        let uploadedAttachments;
+        let preparedAttachments;
         if (attachments.length) {
           const activeMediaConfig = mediaConfig || getMediaUploadConfig();
-          if (activeMediaConfig.target === "repo" && !activeSession) {
-            if (!createDraft) {
-              throw new Error(
-                "Draft session creation is not configured for repo uploads.",
+          const targets = resolveAttachmentTargets(
+            attachments,
+            payload,
+            activeMediaConfig,
+          );
+          const repoIndexes = [];
+          const contextIndexes = [];
+          targets.forEach((target, index) => {
+            if (target === "repo") repoIndexes.push(index);
+            else contextIndexes.push(index);
+          });
+
+          const resolvedAttachments = new Array(attachments.length);
+
+          if (repoIndexes.length) {
+            const repoFiles = repoIndexes.map((index) => attachments[index]);
+            if (activeMediaConfig.target === "repo" && !activeSession) {
+              if (!createDraft) {
+                throw new Error(
+                  "Draft session creation is not configured for repo uploads.",
+                );
+              }
+              state.phase = "uploading";
+              state.progress = "Preparing a draft session for attached files…";
+              const titleSignal = AbortSignal.any([
+                AbortSignal.timeout(8_000),
+                current.signal,
+              ]);
+              const generatedIdentity = generateTitle
+                ? await generateTitle(
+                    payload.text.trim(),
+                    config,
+                    titleSignal,
+                  ).catch(() => null)
+                : null;
+              current.signal.throwIfAborted();
+              const identity =
+                state.draftIdentity ||
+                generatedIdentity ||
+                chatDraftIdentity(payload.text.trim());
+              state.draftIdentity = identity;
+              saveAttempt.creation ||= {};
+              const draftSession = await createDraft(
+                identity,
+                saveAttempt.creation,
+                (progressText) => {
+                  state.progress = progressText;
+                },
               );
+              current.signal.throwIfAborted();
+              saveAttempt.draftSession = draftSession;
+              saveAttempt.createdForUpload = true;
+              activeSession = draftSession;
+              state.session = { ...draftSession };
+              createdForUpload = true;
             }
             state.phase = "uploading";
-            state.progress = "Preparing a draft session for attached files…";
-            const titleSignal = AbortSignal.any([
-              AbortSignal.timeout(8_000),
-              current.signal,
-            ]);
-            const generatedIdentity = generateTitle
-              ? await generateTitle(
-                  payload.text.trim(),
-                  config,
-                  titleSignal,
-                ).catch(() => null)
-              : null;
+            state.progress = "Uploading attached files…";
+            if (!uploadMedia) {
+              throw new Error("Media upload is not configured.");
+            }
+            const uploadResult = await uploadMedia(repoFiles, activeSession);
             current.signal.throwIfAborted();
-            const identity =
-              state.draftIdentity ||
-              generatedIdentity ||
-              chatDraftIdentity(payload.text.trim());
-            state.draftIdentity = identity;
-            saveAttempt.creation ||= {};
-            const draftSession = await createDraft(
-              identity,
-              saveAttempt.creation,
-              (progressText) => {
-                state.progress = progressText;
-              },
+            if (activeSession && uploadResult?.commitSha) {
+              activeSession = {
+                ...activeSession,
+                headSha: uploadResult.commitSha,
+              };
+              state.session = { ...activeSession };
+              if (saveAttempt.draftSession) {
+                saveAttempt.draftSession = { ...activeSession };
+              }
+            }
+            const uploadedFiles = uploadResult?.files || [];
+            repoIndexes.forEach((origIndex, uploadIndex) => {
+              const file = uploadedFiles[uploadIndex];
+              if (!file) return;
+              resolvedAttachments[origIndex] = {
+                name: file.name,
+                url: file.url,
+                path: file.path,
+                media_type: file.mediaType || "application/octet-stream",
+                size: file.size,
+                source: "repo",
+              };
+              userMessage.attachments[origIndex] = {
+                name: file.name,
+                size: file.size,
+                type: file.mediaType || "application/octet-stream",
+                url: file.url,
+                previewUrl:
+                  file.previewUrl ||
+                  file.brokerRawUrl ||
+                  userMessage.attachments[origIndex]?.previewUrl ||
+                  null,
+                path: file.path,
+                source: "repo",
+              };
+            });
+          }
+
+          if (contextIndexes.length) {
+            state.phase = "preparing";
+            state.progress = "Reading attached context files…";
+            const contextPayloads = await Promise.all(
+              contextIndexes.map((index) =>
+                readContextAttachment(attachments[index]),
+              ),
             );
             current.signal.throwIfAborted();
-            saveAttempt.draftSession = draftSession;
-            saveAttempt.createdForUpload = true;
-            activeSession = draftSession;
-            state.session = { ...draftSession };
-            createdForUpload = true;
+            contextIndexes.forEach((origIndex, contextIndex) => {
+              const item = contextPayloads[contextIndex];
+              resolvedAttachments[origIndex] = item;
+              if (userMessage.attachments[origIndex]) {
+                userMessage.attachments[origIndex].type = item.media_type;
+                userMessage.attachments[origIndex].source = "context";
+              }
+            });
           }
-          state.phase = "uploading";
-          state.progress = "Uploading attached files…";
-          if (!uploadMedia) {
-            throw new Error("Media upload is not configured.");
-          }
-          const uploadResult = await uploadMedia(attachments, activeSession);
-          current.signal.throwIfAborted();
-          if (activeSession && uploadResult?.commitSha) {
-            activeSession = {
-              ...activeSession,
-              headSha: uploadResult.commitSha,
-            };
-            state.session = { ...activeSession };
-            if (saveAttempt.draftSession) {
-              saveAttempt.draftSession = { ...activeSession };
-            }
-          }
-          const uploadedFiles = uploadResult?.files || [];
-          uploadedAttachments = uploadedFiles.map((file) => ({
-            name: file.name,
-            url: file.url,
-            path: file.path,
-            media_type: file.mediaType || "application/octet-stream",
-            size: file.size,
-          }));
-          userMessage.attachments = uploadedFiles.map((file) => ({
-            name: file.name,
-            size: file.size,
-            type: file.mediaType || "application/octet-stream",
-            url: file.url,
-            previewUrl: file.previewUrl || file.brokerRawUrl || null,
-            path: file.path,
-          }));
+
+          preparedAttachments = resolvedAttachments.filter(Boolean);
         }
 
         if (activeSession && !createdForUpload) {
@@ -321,7 +402,7 @@ export function createChatConversation({
             model: payload.model,
             branch: activeSession?.branch,
             sessionTitle: activeSession?.title,
-            attachments: uploadedAttachments,
+            attachments: preparedAttachments,
             onTitle: (identity) => {
               if (current.signal.aborted) return;
               state.draftIdentity = identity;

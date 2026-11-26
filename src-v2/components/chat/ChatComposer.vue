@@ -2,8 +2,10 @@
 import { computed, nextTick, onUnmounted, ref, shallowRef, watch } from "vue";
 import ChatIcon from "./ChatIcon.vue";
 import ChatMenu from "./ChatMenu.vue";
-import { getChatConfig } from "@/helpers/chat-config.js";
+import { getChatConfig, getMediaUploadConfig } from "@/helpers/chat-config.js";
+import { isImageFile, isPdfFile } from "@/api/media-upload.js";
 const chatConfig = getChatConfig();
+const mediaUploadConfig = getMediaUploadConfig();
 const models = chatConfig.preset.models;
 
 const props = defineProps({
@@ -41,6 +43,8 @@ const canAttach = computed(
     !props.busy &&
     !props.blockedReason,
 );
+const canToggleRepoUpload = (file) =>
+  Boolean(mediaUploadConfig.enabled) && !isPdfFile(file) && isImageFile(file);
 const canSend = computed(
   () =>
     Boolean(props.onSend) &&
@@ -50,7 +54,7 @@ const canSend = computed(
 );
 
 const previewForFile = (file) => {
-  if (!file?.type?.startsWith("image/")) return null;
+  if (!isImageFile(file)) return null;
   if (attachmentPreviews.has(file)) return attachmentPreviews.get(file);
   if (typeof URL?.createObjectURL === "function") {
     const url = URL.createObjectURL(file);
@@ -69,9 +73,24 @@ const revokePreviewForFile = (file) => {
 };
 
 const addFilesMethod = (files) => {
-  const list = Array.from(files || []).filter(Boolean);
+  const list = Array.from(files || [])
+    .filter(Boolean)
+    .map((file) => ({
+      file,
+      mode: "context",
+      explicitMode: false,
+    }));
   if (!list.length) return;
   attachments.value = [...attachments.value, ...list];
+};
+
+const toggleAttachmentModeMethod = (index) => {
+  const item = attachments.value[index];
+  if (!item || !canToggleRepoUpload(item.file)) return;
+  const nextMode = item.mode === "repo" ? "context" : "repo";
+  attachments.value = attachments.value.map((entry, i) =>
+    i === index ? { ...entry, mode: nextMode, explicitMode: true } : entry,
+  );
 };
 
 const resizeInputMethod = () => {
@@ -85,7 +104,7 @@ const attachFilesMethod = (event) => {
 };
 const removeAttachmentMethod = (index) => {
   const removed = attachments.value[index];
-  if (removed) revokePreviewForFile(removed);
+  if (removed?.file) revokePreviewForFile(removed.file);
   attachments.value = attachments.value.filter((_, i) => i !== index);
 };
 const dragEnterMethod = (event) => {
@@ -141,12 +160,16 @@ const sendMethod = () => {
   if (!canSend.value) return;
   const payload = {
     text: message.value.trim(),
-    attachments: [...attachments.value],
+    attachments: attachments.value.map((item) => item.file),
+    attachmentModes: attachments.value.map((item) => item.mode),
+    attachmentModeExplicit: attachments.value.map(
+      (item) => item.explicitMode,
+    ),
     model:
       models.find((item) => item.label === model.value)?.value || undefined,
   };
   if (props.onSend(payload) === false) return;
-  for (const file of attachments.value) revokePreviewForFile(file);
+  for (const item of attachments.value) revokePreviewForFile(item.file);
   message.value = "";
   attachments.value = [];
   nextTick(() => {
@@ -175,7 +198,7 @@ watch(
   },
 );
 onUnmounted(() => {
-  for (const file of attachments.value) revokePreviewForFile(file);
+  for (const item of attachments.value) revokePreviewForFile(item.file);
 });
 defineExpose({
   setMessage: (text) => {
@@ -206,21 +229,53 @@ defineExpose({
   >
     <div v-if="attachments.length" class="flex flex-wrap gap-1.5 pt-0.5 pb-1">
       <span
-        v-for="(file, index) in attachments"
+        v-for="(item, index) in attachments"
         :key="index"
-        class="inline-flex h-7 max-w-[220px] items-center gap-1.5 rounded-lg bg-hover pr-[3px] pl-[7px] text-[12.5px]"
+        class="inline-flex h-7 max-w-[260px] items-center gap-1.5 rounded-lg bg-hover pr-[3px] pl-[7px] text-[12.5px]"
       >
         <img
-          v-if="previewForFile(file)"
-          :src="previewForFile(file)"
-          :alt="file.name"
+          v-if="previewForFile(item.file)"
+          :src="previewForFile(item.file)"
+          :alt="item.file.name"
           class="size-5 shrink-0 rounded object-cover"
         />
         <ChatIcon v-else name="file" class="size-3.5 shrink-0 text-muted" />
-        <span :title="file.name" class="min-w-0 truncate">{{ file.name }}</span>
+        <span :title="item.file.name" class="min-w-0 truncate">{{
+          item.file.name
+        }}</span>
+        <button
+          v-if="canToggleRepoUpload(item.file)"
+          type="button"
+          :aria-label="
+            item.mode === 'repo'
+              ? `${item.file.name}: will upload to repository. Click to use as chat context only.`
+              : `${item.file.name}: chat context only. Click to upload to repository.`
+          "
+          :title="
+            item.mode === 'repo'
+              ? 'Uploading to repository (click for context only)'
+              : 'Chat context only (click to upload to repository)'
+          "
+          :class="
+            item.mode === 'repo'
+              ? 'bg-tint text-primary'
+              : 'bg-border-soft/70 text-muted hover:text-text'
+          "
+          class="shrink-0 rounded px-1.5 py-0.5 text-[10.5px] leading-none font-medium transition-colors"
+          @click="toggleAttachmentModeMethod(index)"
+        >
+          {{ item.mode === "repo" ? "Repo" : "Context" }}
+        </button>
+        <span
+          v-else
+          class="shrink-0 rounded bg-border-soft/70 px-1.5 py-0.5 text-[10.5px] leading-none font-medium text-muted"
+          title="Sent as chat context only"
+        >
+          Context
+        </span>
         <button
           type="button"
-          :aria-label="`Remove ${file.name}`"
+          :aria-label="`Remove ${item.file.name}`"
           title="Remove"
           class="flex size-[22px] shrink-0 items-center justify-center rounded-md text-muted hover:bg-border-soft hover:text-text"
           @click="removeAttachmentMethod(index)"
