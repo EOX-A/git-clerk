@@ -50,6 +50,25 @@ export async function createDraftSession(
     return session;
   }
   attempt.branch ||= newSessionBranch(context, branchTitle ?? title);
+  const prBody =
+    body?.trim() ||
+    [
+      "## Summary",
+      "",
+      `Session **${title}** created in Git Clerk.`,
+      ...(initialFiles && Object.keys(initialFiles).length
+        ? [
+            "",
+            "### Initial files",
+            "",
+            ...Object.keys(initialFiles).map((path) => `- \`${path}\``),
+          ]
+        : []),
+      "",
+      "## Notes",
+      "",
+      "- Review the proposed changes before merging.",
+    ].join("\n");
   onProgress("Creating the session through the Git broker…");
   try {
     const result = await context.request("/pulls", {
@@ -60,7 +79,7 @@ export async function createDraftSession(
         base_branch: context.repository.default_branch,
         draft: true,
         ...(initialFiles ? { initial_files: initialFiles } : {}),
-        ...(body ? { body } : {}),
+        body: prBody,
       },
     });
     const number = result.number ?? result.pr_number;

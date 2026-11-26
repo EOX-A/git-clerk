@@ -1,11 +1,12 @@
 import { sessionDetails } from "./session.js";
 import { canSubmitSession } from "../helpers/session-checks.js";
 
-export async function updateSession(context, number, action, title = "") {
+export async function updateSession(context, number, action, value = "") {
   const session = await sessionDetails(context, number);
   const path = `/pulls/${number}`;
   if (!session.canManage) throw new Error("Session cannot be changed.");
   if (action === "rename") {
+    const title = typeof value === "string" ? value : (value?.title ?? "");
     if (!title.trim() || title.trim().length > 256)
       throw new Error("Invalid session title.");
     await context.request(`${path}/rename`, {
@@ -15,7 +16,27 @@ export async function updateSession(context, number, action, title = "") {
   } else if (action === "review") {
     if (!canSubmitSession(session))
       throw new Error("Session is not ready for review.");
-    await context.request(`${path}/submit`, { method: "POST", body: {} });
+    const rawMessage =
+      typeof value === "string"
+        ? value
+        : (value?.message ?? value?.body ?? "");
+    const message = rawMessage.trim();
+    const fallbackBody = !session.body?.trim()
+      ? [
+          "## Summary",
+          "",
+          `Session **${session.title}** submitted for review in Git Clerk.`,
+          "",
+          "## Notes",
+          "",
+          "- Review the proposed changes before merging.",
+        ].join("\n")
+      : undefined;
+    const body = message || fallbackBody;
+    await context.request(`${path}/submit`, {
+      method: "POST",
+      body: body ? { body } : {},
+    });
   } else if (action === "delete") {
     if (!session.canDelete)
       throw new Error("Session branch cannot be deleted.");

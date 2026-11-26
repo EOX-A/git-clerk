@@ -388,7 +388,7 @@ globalThis.gitClerkConfig = {
 //     output_format: "text_and_a2ui",
 //     promptInstructions: "Complete linked STAC/OSC JSON files",
 //     prBody:
-//       "OSC metadata generated in Git Clerk. Schema validation has not been performed.",
+//       "## Summary\n\nOSC metadata drafted in Git Clerk.\n\n## Notes\n\n- Review the generated STAC/OSC JSON files before merging.\n- Automated schema validation has not been performed.",
 //     fileExample: { "relative/path.json": {} },
 //     context: { extensions: [".json"] },
 //     ui: {
@@ -434,7 +434,8 @@ globalThis.gitClerkConfig.chat = {
     outputFile: "stories/<id>.md",
     promptInstructions:
       "Create or edit the interactive storytelling narrative. Preserve existing content unless asked to change it",
-    prBody: "Narrative content generated in Git Clerk.",
+    prBody:
+      "## Summary\n\nNarrative content drafted in Git Clerk.\n\n## Notes\n\n- Review the narrative markdown and linked assets before merging.",
     prTitle: "Publish: <title> (<username>)",
     context: { extensions: [".md"], inputField: "markdown" },
     ui: {

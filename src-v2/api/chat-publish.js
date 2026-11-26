@@ -7,6 +7,15 @@ import { gitBlobSha } from "../helpers/file-publication.js";
 import { getChatConfig } from "../helpers/chat-config.js";
 import { chatPrTitle } from "../helpers/chat-output.js";
 
+function formatChatPrBody(baseBody, filePaths = []) {
+  const base =
+    baseBody?.trim() ||
+    "## Summary\n\nDraft changes prepared in Git Clerk.\n\n## Notes\n\n- Review the modified files and metadata before merging.";
+  if (!filePaths.length) return base;
+  const fileList = filePaths.map((path) => `- \`${path}\``).join("\n");
+  return `${base}\n\n### Files\n\n${fileList}`;
+}
+
 export async function publishChatFiles(context, bundle, attempt = {}, session) {
   const config = getChatConfig();
   if (
@@ -39,6 +48,10 @@ export async function publishChatFiles(context, bundle, attempt = {}, session) {
         : JSON.stringify(content, null, 2) + "\n",
     ]),
   );
+  const defaultPrBody = formatChatPrBody(
+    config.publishing.prBody,
+    Object.keys(files),
+  );
   const target = `${context.repository.repo}:${session?.number ?? "new"}:${session?.branch ?? ""}`;
   if (attempt.target && attempt.target !== target)
     throw new Error("Return to the original session to retry this save.");
@@ -54,7 +67,7 @@ export async function publishChatFiles(context, bundle, attempt = {}, session) {
         {
           title: chatPrTitle(config.publishing.prTitle, bundle.draft, username),
           branchTitle: bundle.draft.title,
-          body: config.publishing.prBody,
+          body: defaultPrBody,
         },
         attempt.creation,
       );
@@ -95,7 +108,7 @@ export async function publishChatFiles(context, bundle, attempt = {}, session) {
           files,
           commit_message: `${session ? "Update" : "Create"} ${bundle.draft.title}`,
           pr_title: targetSession.title,
-          pr_body: targetSession.body ?? config.publishing.prBody,
+          pr_body: targetSession.body ?? defaultPrBody,
         },
         targetSession,
       );

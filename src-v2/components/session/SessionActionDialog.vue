@@ -13,6 +13,7 @@ const dialog = ref(null);
 const titleInput = ref(null);
 const cancelButton = ref(null);
 const title = ref(props.session.title);
+const message = ref("");
 const busy = ref(false);
 const error = ref("");
 const labels = {
@@ -38,7 +39,13 @@ const submitMethod = async () => {
   busy.value = true;
   error.value = "";
   try {
-    await updateSessionDetails(props.session.number, props.action, title.value);
+    const value =
+      props.action === "rename"
+        ? title.value
+        : props.action === "review"
+          ? message.value
+          : "";
+    await updateSessionDetails(props.session.number, props.action, value);
     await props.onUpdated();
     props.onClose();
   } catch (cause) {
@@ -108,6 +115,16 @@ onUnmounted(() => {
           maxlength="256"
           :disabled="busy"
           class="mt-1.5 w-full rounded-lg border border-border bg-bg px-3 py-2"
+        />
+      </label>
+      <label v-else-if="action === 'review'" class="mt-4 block text-ui"
+        >Review message <span class="text-muted">(optional)</span>
+        <textarea
+          v-model="message"
+          rows="4"
+          :disabled="busy"
+          placeholder="Add a note for reviewers (replaces the PR description if provided)…"
+          class="mt-1.5 w-full resize-y rounded-lg border border-border bg-bg px-3 py-2 text-ui placeholder:text-muted"
         />
       </label>
       <p v-if="error" role="alert" class="mt-3 text-ui text-closed">

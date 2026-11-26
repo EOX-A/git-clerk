@@ -24,7 +24,7 @@ export function getChatConfig(root = globalThis) {
       prTitle: preset.prTitle ?? "<title> (<username>)",
       prBody:
         preset.prBody ??
-        "Content generated in Git Clerk. Schema validation has not been performed.",
+        "## Summary\n\nDraft changes prepared in Git Clerk.\n\n## Notes\n\n- Review the modified files and metadata before merging.\n- Automated schema validation has not been performed.",
       ...chat.publishing,
     },
     preset: {

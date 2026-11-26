@@ -42,8 +42,8 @@ export function getSessionDetails(number, signal) {
   return sessionDetails(useGitStore().context, number, signal);
 }
 
-export function updateSessionDetails(number, action, title) {
-  return updateSession(useGitStore().context, number, action, title);
+export function updateSessionDetails(number, action, value) {
+  return updateSession(useGitStore().context, number, action, value);
 }
 
 export function getSessionFiles(session, signal) {
