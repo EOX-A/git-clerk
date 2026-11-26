@@ -12,37 +12,52 @@ import { SESSION_STATUS, sessionTag } from "@/helpers/session-status.js";
 import {
   filterSessions,
   groupSessions,
+  isMySession,
   sessionFilterSummary,
 } from "@/helpers/session-filters.js";
 
 const useSessionsStore = defineStore("sessions-v2", () => {
+  const gitStore = useGitStore();
   const sessions = ref([]);
   const loading = ref(false);
   const error = ref("");
   const pageInfo = ref(null);
+  const onlyMine = ref(true);
   const statuses = ref(Object.keys(SESSION_STATUS));
   const sort = ref("recent");
   const group = ref("none");
   const collapsedGroups = ref(new Set());
   const filterSummary = computed(() =>
-    sessionFilterSummary(statuses.value, sort.value, group.value),
+    sessionFilterSummary(
+      statuses.value,
+      sort.value,
+      group.value,
+      onlyMine.value,
+    ),
   );
   const filtersActive = computed(() => Boolean(filterSummary.value));
   const visibleSessions = computed(() =>
-    filterSessions(sessions.value, statuses.value, sort.value),
+    filterSessions(sessions.value, statuses.value, sort.value, {
+      onlyMine: onlyMine.value,
+      user: gitStore.user,
+    }),
   );
   const sessionGroups = computed(() =>
     groupSessions(visibleSessions.value, group.value),
   );
-  const statusCounts = computed(() =>
-    Object.fromEntries(
+  const statusCounts = computed(() => {
+    const scoped = onlyMine.value
+      ? sessions.value.filter((session) =>
+          isMySession(session, gitStore.user),
+        )
+      : sessions.value;
+    return Object.fromEntries(
       Object.keys(SESSION_STATUS).map((status) => [
         status,
-        sessions.value.filter((session) => sessionTag(session) === status)
-          .length,
+        scoped.filter((session) => sessionTag(session) === status).length,
       ]),
-    ),
-  );
+    );
+  });
   const allLoaded = computed(() => pageInfo.value?.hasNextPage === false);
   let connecting = null;
   let loadAllRequested = false;
@@ -131,6 +146,11 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     }
   }
 
+  function toggleOnlyMine() {
+    onlyMine.value = !onlyMine.value;
+    return loadSessions(true, true);
+  }
+
   function toggleStatus(status) {
     statuses.value = statuses.value.includes(status)
       ? statuses.value.filter((value) => value !== status)
@@ -151,8 +171,10 @@ const useSessionsStore = defineStore("sessions-v2", () => {
 
   function clearFilters() {
     const refresh =
+      onlyMine.value ||
       statuses.value.length !== Object.keys(SESSION_STATUS).length ||
       sort.value !== "recent";
+    onlyMine.value = false;
     statuses.value = Object.keys(SESSION_STATUS);
     sort.value = "recent";
     group.value = "none";
@@ -218,6 +240,7 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     ensureConnected,
     createSession,
     rememberSession,
+    onlyMine,
     statuses,
     sort,
     group,
@@ -228,6 +251,7 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     sessionGroups,
     statusCounts,
     allLoaded,
+    toggleOnlyMine,
     toggleStatus,
     setSort,
     setGroup,

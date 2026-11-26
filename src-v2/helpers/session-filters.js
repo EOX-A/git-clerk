@@ -1,3 +1,4 @@
+import { brokerBranchPrefix } from "../api/git-broker.js";
 import { SESSION_STATUS, sessionTag } from "./session-status.js";
 
 export const SESSION_SORT_OPTIONS = [
@@ -13,7 +14,41 @@ export const SESSION_GROUP_OPTIONS = [
   { value: "repo", label: "Repository" },
 ];
 
-export function filterSessions(sessions, statuses, sort) {
+export function isMySession(session, user) {
+  const username =
+    typeof user?.username === "string"
+      ? user.username.trim().toLowerCase()
+      : "";
+  if (!username) return false;
+  const prefix = brokerBranchPrefix(user);
+  if (
+    prefix &&
+    session?.branch?.startsWith(prefix) &&
+    session.branch.length > prefix.length
+  ) {
+    return true;
+  }
+  const author =
+    typeof session?.author === "string"
+      ? session.author
+      : session?.author?.username || session?.author?.login;
+  const creator =
+    typeof session?.creator === "string"
+      ? session.creator
+      : session?.creator?.username || session?.creator?.login;
+  return [author, creator, session?.headOwner].some(
+    (candidate) =>
+      typeof candidate === "string" &&
+      candidate.trim().toLowerCase() === username,
+  );
+}
+
+export function filterSessions(
+  sessions,
+  statuses,
+  sort,
+  { onlyMine = false, user = null } = {},
+) {
   const ranks = Object.keys(SESSION_STATUS);
   const recent = (a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt);
   const compare = {
@@ -25,7 +60,11 @@ export function filterSessions(sessions, statuses, sort) {
       recent(a, b),
   };
   return sessions
-    .filter((session) => statuses.includes(sessionTag(session)))
+    .filter(
+      (session) =>
+        statuses.includes(sessionTag(session)) &&
+        (!onlyMine || isMySession(session, user)),
+    )
     .sort(compare[sort]);
 }
 
@@ -49,8 +88,9 @@ export function groupSessions(sessions, group) {
   return [...groups.values()].sort((a, b) => a.title.localeCompare(b.title));
 }
 
-export function sessionFilterSummary(statuses, sort, group) {
+export function sessionFilterSummary(statuses, sort, group, onlyMine = false) {
   const parts = [];
+  if (onlyMine) parts.push("My sessions");
   if (statuses.length < Object.keys(SESSION_STATUS).length) {
     parts.push(
       statuses.length

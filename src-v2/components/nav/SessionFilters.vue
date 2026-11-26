@@ -10,6 +10,7 @@ import useScrollbar from "@/helpers/use-scrollbar.js";
 const props = defineProps({ visible: { type: Boolean, default: true } });
 const sessionsStore = useSessionsStore();
 const {
+  onlyMine,
   statuses,
   sort,
   filterSummary,
@@ -151,6 +152,34 @@ onUnmounted(() => {
       @scroll.passive="scrollMethod"
       @keydown.esc.stop.prevent="closeMethod(true)"
     >
+      <div>
+        <button
+          type="button"
+          role="switch"
+          aria-label="My sessions"
+          :aria-checked="onlyMine"
+          :class="
+            onlyMine
+              ? 'bg-hover font-semibold text-text'
+              : 'font-medium text-muted'
+          "
+          class="flex h-11 w-full items-center gap-2 rounded-lg px-2.5 text-[12.5px] hover:bg-hover workspace:h-8"
+          @click="sessionsStore.toggleOnlyMine()"
+        >
+          <span class="flex-1 text-left">My sessions</span>
+          <span
+            aria-hidden="true"
+            :class="onlyMine ? 'bg-primary' : 'bg-border'"
+            class="relative inline-flex h-4 w-7 shrink-0 items-center rounded-full transition-colors"
+          >
+            <span
+              :class="onlyMine ? 'translate-x-3.5' : 'translate-x-0.5'"
+              class="inline-block size-3 rounded-full bg-elev transition-transform"
+            ></span>
+          </span>
+        </button>
+      </div>
+
       <div>
         <h3
           id="session-status-label"
