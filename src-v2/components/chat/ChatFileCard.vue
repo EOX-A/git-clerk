@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref } from "vue";
+import ChatFileDiff from "./ChatFileDiff.vue";
 import ChatIcon from "./ChatIcon.vue";
 import { splitFilePath } from "@/helpers/chat-dummy.js";
 import { matchesFilePath } from "@/helpers/file-editor.js";
@@ -11,8 +12,9 @@ const props = defineProps({
   pending: Boolean,
   summaryOnly: Boolean,
   onOpenFile: { type: Function, default: null },
-  onOpenChanges: { type: Function, default: null },
+  turnDiff: { type: Object, default: null },
 });
+const showDiff = ref(false);
 const expanded = ref(new Set());
 const label = computed(
   () =>
@@ -211,12 +213,29 @@ const toggleMethod = (path, open) => {
       </details>
     </div>
     <button
-      v-if="stage === 'saved' && onOpenChanges"
+      v-if="stage === 'saved' && turnDiff"
+      :aria-expanded="showDiff"
       type="button"
       class="flex w-full items-center justify-center gap-1.5 border-t border-border-soft px-3 py-2 text-ui font-medium text-primary hover:bg-hover"
-      @click="onOpenChanges()"
+      @click="showDiff = !showDiff"
     >
-      <ChatIcon name="diff" class="size-4" /> View changes
+      <ChatIcon name="diff" class="size-4" />
+      {{ showDiff ? "Hide changes" : "View changes" }}
     </button>
+    <div
+      v-if="showDiff"
+      role="region"
+      aria-label="Changes from this message"
+      tabindex="0"
+      class="nav-scrollbar max-h-80 overflow-auto overscroll-x-contain overscroll-y-auto"
+    >
+      <ChatFileDiff
+        v-for="file in files"
+        :key="file.path"
+        :path="file.path"
+        :before-sha="turnDiff.beforeSha"
+        :text="turnDiff.documents?.[file.path]?.text"
+      />
+    </div>
   </section>
 </template>

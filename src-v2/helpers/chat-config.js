@@ -49,7 +49,6 @@ export function getChatConfig(root = globalThis) {
       },
       ui: {
         assistantName: "Git Clerk",
-        panelTitle: "Git Clerk AI Assistant",
         heading: "What would you like to change?",
         description: "",
         placeholder: "Describe a change to your repository…",
@@ -69,6 +68,7 @@ export function getChatConfig(root = globalThis) {
         disabledMessage: "AI chat is disabled for this instance.",
         suggestions: [],
         ...preset.ui,
+        panelTitle: "AI Assistant",
       },
     },
   };

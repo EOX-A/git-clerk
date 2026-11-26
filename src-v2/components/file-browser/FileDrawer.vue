@@ -10,6 +10,7 @@ import FileTreeDeleteDialog from "./FileTreeDeleteDialog.vue";
 import FileTreePlaceholder from "./FileTreePlaceholder.vue";
 import FileIcon from "./FileIcon.vue";
 
+const emit = defineEmits(["close"]);
 const props = defineProps({
   session: { type: Object, required: true },
   open: Boolean,
@@ -234,35 +235,47 @@ const inlineEditor = computed(() =>
     aria-label="Branch files"
     class="file-drawer flex w-drawer max-w-full shrink-0 flex-col border-r border-border-soft bg-ws-nav"
   >
-    <div
-      role="tablist"
-      aria-label="Drawer view"
-      class="m-2 flex shrink-0 gap-0.5 rounded-control bg-ws-seg p-[3px]"
-      @keydown="switchViewMethod"
-    >
-      <button
-        v-for="item in ['files', 'changes']"
-        :key="item"
-        type="button"
-        role="tab"
-        :data-view="item"
-        :aria-selected="view === item"
-        :tabindex="view === item ? 0 : -1"
-        :aria-controls="`drawer-${item}`"
-        class="flex h-7 flex-1 items-center justify-center gap-1.5 rounded-[7px] text-[12.5px] font-medium"
-        :class="
-          view === item
-            ? 'bg-elev text-text shadow-selected'
-            : 'text-muted hover:text-text'
-        "
-        @click="onView(item)"
+    <div class="m-2 flex shrink-0 items-center gap-1">
+      <div
+        role="tablist"
+        aria-label="Drawer view"
+        class="flex min-w-0 flex-1 gap-0.5 rounded-control bg-ws-seg p-[3px]"
+        @keydown="switchViewMethod"
       >
-        {{ item === "files" ? "Files" : "Changes" }}
-        <span
-          v-if="item === 'changes'"
-          class="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-tint px-[5px] text-[10.5px] font-semibold text-primary"
-          >{{ session.changedFiles }}</span
+        <button
+          v-for="item in ['files', 'changes']"
+          :key="item"
+          type="button"
+          role="tab"
+          :data-view="item"
+          :aria-selected="view === item"
+          :tabindex="view === item ? 0 : -1"
+          :aria-controls="`drawer-${item}`"
+          class="flex h-7 flex-1 items-center justify-center gap-1.5 rounded-[7px] text-[12.5px] font-medium"
+          :class="
+            view === item
+              ? 'bg-elev text-text shadow-selected'
+              : 'text-muted hover:text-text'
+          "
+          @click="onView(item)"
         >
+          {{ item === "files" ? "Files" : "Changes" }}
+          <span
+            v-if="item === 'changes'"
+            class="flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-tint px-[5px] text-[10.5px] font-semibold text-primary"
+            >{{ session.changedFiles }}</span
+          >
+        </button>
+      </div>
+      <button
+        type="button"
+        class="drawer-close hidden size-8 shrink-0 items-center justify-center rounded-control text-muted hover:bg-ws-hover hover:text-text"
+        aria-label="Close files panel"
+        title="Close files panel"
+        :disabled="working"
+        @click="emit('close')"
+      >
+        <FileIcon name="close" class="size-4" />
       </button>
     </div>
     <div

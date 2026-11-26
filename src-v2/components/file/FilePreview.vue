@@ -133,7 +133,7 @@ onUnmounted(() => window.removeEventListener("message", messageMethod));
     class="relative flex min-h-0 min-w-0 flex-1 flex-col bg-bg"
   >
     <div
-      class="flex h-9 shrink-0 items-center gap-2 border-b border-border-soft pr-1.5 pl-3.5"
+      class="flex h-10 shrink-0 items-center gap-2 border-b border-border pr-1.5 pl-3.5"
     >
       <span class="text-xs font-medium">Preview</span>
       <span v-if="dirty" class="text-meta text-muted"

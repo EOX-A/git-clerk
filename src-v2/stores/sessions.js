@@ -8,7 +8,7 @@ import {
 } from "@/api/index.js";
 import useGitStore from "@/stores/git.js";
 import sessionError from "@/helpers/session-error.js";
-import { SESSION_STATUS } from "@/helpers/session-status.js";
+import { SESSION_STATUS, sessionTag } from "@/helpers/session-status.js";
 import {
   filterSessions,
   groupSessions,
@@ -38,7 +38,8 @@ const useSessionsStore = defineStore("sessions-v2", () => {
     Object.fromEntries(
       Object.keys(SESSION_STATUS).map((status) => [
         status,
-        sessions.value.filter((session) => session.status === status).length,
+        sessions.value.filter((session) => sessionTag(session) === status)
+          .length,
       ]),
     ),
   );

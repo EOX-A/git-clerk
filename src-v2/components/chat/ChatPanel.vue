@@ -45,6 +45,7 @@ const props = defineProps({
     type: Boolean,
     default: false,
   },
+  onMinimize: { type: Function, required: true },
   onDock: {
     type: Function,
     default: null,
@@ -131,7 +132,6 @@ const headerPointerDownMethod = (event) => {
   >
     <!-- Header bar -->
     <div
-      v-if="mode !== 'mobile'"
       :title="mode === 'floating' && onDragStart ? 'Drag to move' : undefined"
       :class="
         mode === 'floating' && onDragStart
@@ -151,16 +151,15 @@ const headerPointerDownMethod = (event) => {
         data-chat-mode-button
         type="button"
         :disabled="!onDock"
-        :aria-label="
-          expandOnDock ? 'Expand chat' : 'Dock chat beside the visualizer'
-        "
-        :title="
-          expandOnDock ? 'Expand chat' : 'Dock chat beside the visualizer'
-        "
+        :aria-label="expandOnDock ? 'Expand chat' : 'Dock chat to the left'"
+        :title="expandOnDock ? 'Expand chat' : 'Dock chat to the left'"
         class="flex size-[30px] shrink-0 items-center justify-center rounded-[7px] text-on-primary hover:bg-white/16"
         @click.stop="onDock?.()"
       >
-        <ChatIcon name="collapse" class="size-4" />
+        <ChatIcon
+          :name="expandOnDock ? 'expand' : 'dock-left'"
+          class="size-4"
+        />
       </button>
       <button
         v-else-if="mode === 'docked'"
@@ -173,7 +172,15 @@ const headerPointerDownMethod = (event) => {
       >
         <ChatIcon name="pip" class="size-4" />
       </button>
-      <slot name="header-actions" />
+      <button
+        type="button"
+        aria-label="Minimize chat"
+        title="Minimize chat"
+        class="flex size-[30px] shrink-0 items-center justify-center rounded-[7px] hover:bg-white/16"
+        @click.stop="onMinimize"
+      >
+        <ChatIcon name="minimize" class="size-4" />
+      </button>
     </div>
 
     <!-- Scrollable Messages Area -->
@@ -199,7 +206,6 @@ const headerPointerDownMethod = (event) => {
           v-else
           :messages="messages"
           :on-open-file="onOpenFile"
-          :on-open-changes="onOpenChanges"
         />
       </div>
     </div>

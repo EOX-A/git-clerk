@@ -53,9 +53,18 @@ defineProps({ name: { type: String, required: true } });
       d="M5 19.5v-14A2.5 2.5 0 0 1 7.5 3H19v14H7.5A2.5 2.5 0 0 0 5 19.5zm0 0A2.5 2.5 0 0 0 7.5 22H19v-5"
     />
     <path
-      v-else-if="name === 'collapse'"
-      d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"
+      v-else-if="name === 'expand'"
+      d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"
     />
+    <g v-else-if="name === 'dock-left'">
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <path
+        d="M5 4h5v16H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Z"
+        fill="currentColor"
+        stroke="none"
+      />
+    </g>
+    <path v-else-if="name === 'minimize'" d="M5 12h14" />
     <g v-else-if="name === 'pip'">
       <rect x="3" y="5" width="18" height="14" rx="2.5" />
       <rect

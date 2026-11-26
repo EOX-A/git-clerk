@@ -1,7 +1,7 @@
 <script setup>
 import { computed } from "vue";
 import ChatIcon from "./ChatIcon.vue";
-import { SESSION_STATUS } from "@/helpers/session-status.js";
+import { SESSION_STATUS, sessionTag } from "@/helpers/session-status.js";
 import { sessionChecks } from "@/helpers/session-checks.js";
 import { chatPullRequestUrl } from "@/helpers/chat-markdown.js";
 import { getChatConfig } from "@/helpers/chat-config.js";
@@ -11,7 +11,7 @@ const props = defineProps({
   session: { type: Object, required: true },
   onOpenChanges: { type: Function, default: null },
 });
-const status = computed(() => SESSION_STATUS[props.session.status]);
+const status = computed(() => SESSION_STATUS[sessionTag(props.session)]);
 const checks = computed(() => sessionChecks(props.session));
 const url = computed(() => chatPullRequestUrl(props.session));
 const readOnly = computed(() => !props.session.canEdit);
@@ -92,7 +92,7 @@ const updated = computed(() => {
           class="inline-flex items-center gap-1.5 rounded-sm hover:underline underline-offset-4"
           @click="onOpenChanges()"
         >
-          <ChatIcon name="diff" class="size-3.5" /> View changes
+          <ChatIcon name="diff" class="size-3.5" /> View PR changes
         </button>
         <a
           v-if="url"

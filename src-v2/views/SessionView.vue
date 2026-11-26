@@ -63,10 +63,24 @@ const temporaryMobile = computed(() => newSession.value && narrow.value);
 const floatingOnMobile = computed(
   () => temporaryMobile.value && mobileView.value === "files",
 );
-const minimizeChatMethod = () => {
+const expandButton = ref(null);
+const minimizeChatMethod = async () => {
   collapsed.value = true;
-  if (temporaryMobile.value) mobileView.value = "files";
+  if (narrow.value) mobileView.value = "files";
+  await nextTick();
+  expandButton.value?.focus();
 };
+const expandChatMethod = async () => {
+  collapsed.value = false;
+  if (narrow.value && !newSession.value) mobileView.value = "chat";
+  await nextTick();
+  workspaceContainer.value
+    ?.querySelector('[aria-label="Minimize chat"]')
+    ?.focus();
+};
+watch(narrow, (isNarrow) => {
+  if (isNarrow && collapsed.value) mobileView.value = "files";
+});
 const chatStore = useChatStore();
 const conversation = shallowRef(
   chatStore.getConversation(
@@ -132,7 +146,6 @@ watch(
   () => {
     if (newSession.value && chat.value.completed && !chat.value.busy)
       void openPublishedMethod();
-    else if (newSession.value && !chat.value.busy) collapsed.value = false;
   },
 );
 watch(
@@ -349,7 +362,8 @@ onUnmounted(() => {
     >
       <aside
         v-show="
-          chatConfig.enabled && (newSession || !narrow || mobileView === 'chat')
+          chatConfig.enabled &&
+          (collapsed || newSession || !narrow || mobileView === 'chat')
         "
         aria-label="Session chat"
         :style="collapsed ? undefined : style"
@@ -368,10 +382,11 @@ onUnmounted(() => {
       >
         <button
           v-if="collapsed"
+          ref="expandButton"
           type="button"
           aria-label="Expand chat"
           class="rounded-2xl bg-primary px-4 py-2 text-ui font-semibold text-on-primary"
-          @click="collapsed = false"
+          @click="expandChatMethod"
         >
           {{ chatConfig.preset.ui.panelTitle }}
         </button>
@@ -406,6 +421,7 @@ onUnmounted(() => {
                 ? dockedWidth < 470
                 : containerWidth < 470
           "
+          :on-minimize="minimizeChatMethod"
           :on-dock="() => toggleDockMethod(true)"
           :on-float="() => toggleDockMethod(false)"
           :on-drag-start="narrow ? null : startDragMethod"
@@ -413,17 +429,6 @@ onUnmounted(() => {
           :on-open-changes="handleOpenChangesMethod"
           :on-send="sendMethod"
         >
-          <template v-if="newSession" #header-actions>
-            <button
-              type="button"
-              aria-label="Minimize chat"
-              title="Minimize chat"
-              class="flex size-[30px] items-center justify-center rounded-[7px] hover:bg-white/16"
-              @click="minimizeChatMethod"
-            >
-              −
-            </button>
-          </template>
           <template
             v-if="newSession && chat.completed && !chat.busy"
             #after-progress

@@ -13,6 +13,8 @@ const props = defineProps({
   session: { type: Object, default: null },
   readOnly: Boolean,
   changed: { type: Object, default: null },
+  modes: { type: Array, required: true },
+  onSelectMode: { type: Function, default: null },
   onClosePane: { type: Function, default: null },
   onChange: { type: Function, required: true },
   onRetry: { type: Function, required: true },
@@ -41,6 +43,20 @@ const previewChangeMethod = (value) => {
   if (props.doc.meta && !props.doc.meta.generic)
     props.onChange(formText(value, props.doc.meta, props.doc.text));
   else if (typeof value?.file === "string") props.onChange(value.file);
+};
+const tabKeyMethod = (event) => {
+  const { modes, doc } = props;
+  const index = modes.indexOf(doc.mode);
+  const next = {
+    ArrowRight: (index + 1) % modes.length,
+    ArrowLeft: (index + modes.length - 1) % modes.length,
+    Home: 0,
+    End: modes.length - 1,
+  }[event.key];
+  if (next === undefined) return;
+  event.preventDefault();
+  props.onSelectMode(modes[next]);
+  event.currentTarget.querySelectorAll('[role="tab"]')[next].focus();
 };
 </script>
 <template>
@@ -99,38 +115,76 @@ const previewChangeMethod = (value) => {
       </p>
       <FileSplit :side="doc.mode !== 'none'" :preview="Boolean(doc.preview)">
         <template #side>
-          <div
-            v-if="doc.preview && onClosePane"
-            class="flex h-9 shrink-0 items-center justify-between border-b border-border-soft pr-1.5 pl-3.5"
+          <section
+            id="file-edit-pane"
+            aria-label="File editing pane"
+            tabindex="-1"
+            class="flex min-h-0 flex-1 flex-col bg-bg"
           >
-            <span class="text-xs font-medium">{{
-              doc.mode === "editor" ? "Editor" : "Source"
-            }}</span>
-            <button
-              type="button"
-              :aria-label="`Close ${doc.mode} pane and show preview`"
-              title="Close pane and show preview"
-              class="inline-flex size-7 items-center justify-center rounded-md text-muted hover:bg-hover hover:text-text focus-visible:outline-2 focus-visible:outline-primary"
-              @click="onClosePane()"
+            <div
+              class="flex h-10 shrink-0 items-center justify-between border-b border-border bg-ws-nav px-2"
             >
-              <FileIcon name="close" />
-            </button>
-          </div>
-          <FileForm
-            v-if="doc.mode === 'editor' && doc.meta?.schema"
-            :text="doc.text"
-            :meta="doc.meta"
-            :interfaces="doc.interfaces"
-            :read-only="readOnly || doc.saving"
-            :on-change="onChange"
-          />
-          <FileSource
-            v-else
-            :path="path"
-            :text="doc.text"
-            :read-only="readOnly || doc.saving"
-            :on-change="onChange"
-          />
+              <div
+                v-if="modes.length > 1 && onSelectMode"
+                role="tablist"
+                aria-label="Editing mode"
+                class="-mb-px flex self-stretch pt-1"
+                @keydown="tabKeyMethod"
+              >
+                <button
+                  v-for="mode in modes"
+                  :id="`file-mode-${mode}`"
+                  :key="mode"
+                  type="button"
+                  role="tab"
+                  :aria-selected="doc.mode === mode"
+                  aria-controls="file-mode-content"
+                  :tabindex="doc.mode === mode ? 0 : -1"
+                  class="rounded-t-md border border-transparent px-3.5 text-xs font-medium text-muted hover:text-text focus-visible:z-10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary aria-selected:border-border aria-selected:border-b-bg aria-selected:bg-bg aria-selected:text-text"
+                  @click="onSelectMode(mode)"
+                >
+                  {{ mode === "editor" ? "Editor" : "Source" }}
+                </button>
+              </div>
+              <span v-else class="px-2 text-xs font-medium">Source</span>
+              <button
+                type="button"
+                v-if="doc.preview && onClosePane"
+                :aria-label="`Close ${doc.mode} pane and show preview`"
+                title="Close pane and show preview"
+                class="inline-flex size-7 items-center justify-center rounded-md text-muted hover:bg-hover hover:text-text focus-visible:outline-2 focus-visible:outline-primary"
+                @click="onClosePane()"
+              >
+                <FileIcon name="close" />
+              </button>
+            </div>
+            <div
+              id="file-mode-content"
+              :role="modes.length > 1 && onSelectMode ? 'tabpanel' : undefined"
+              :aria-labelledby="
+                modes.length > 1 && onSelectMode
+                  ? `file-mode-${doc.mode}`
+                  : undefined
+              "
+              class="flex min-h-0 flex-1 flex-col"
+            >
+              <FileForm
+                v-if="doc.mode === 'editor' && doc.meta?.schema"
+                :text="doc.text"
+                :meta="doc.meta"
+                :interfaces="doc.interfaces"
+                :read-only="readOnly || doc.saving"
+                :on-change="onChange"
+              />
+              <FileSource
+                v-else
+                :path="path"
+                :text="doc.text"
+                :read-only="readOnly || doc.saving"
+                :on-change="onChange"
+              />
+            </div>
+          </section>
         </template>
         <template #preview>
           <FilePreview

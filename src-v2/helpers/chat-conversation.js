@@ -114,6 +114,10 @@ export function createChatConversation({
             },
       ),
       fileStage: "saved",
+      turnDiff: {
+        beforeSha: result.beforeSha,
+        documents: result.documents,
+      },
       pr: {
         updated: updating,
         draft: state.session.status === "draft",

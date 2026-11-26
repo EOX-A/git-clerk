@@ -633,15 +633,22 @@ full-chat mode or Visualizer toggle. Mobile Chat/Files controls switch panels wh
 preserving drafts and open tabs. Session metadata refreshes preserve conversation
 history; navigating away cancels the pending API request.
 
+Session tags are **Drafts** for draft PRs and **Under review** for open PRs ready for review.
+A merged PR shows **Published** when its provider state is merged, or **Done** when its provider state is closed.
+A PR closed without merging shows **Closed**.
+
+In a saved chat message, **View changes** expands an inline diff for the files saved by that turn.
+The comparison uses the saved text and an immutable revision from before the write.
+
 Session files open in tabs, with a Files/Changes drawer. Clicking either list
-opens a normal file; “View changes” explicitly opens its saved PR diff.
+opens a normal file. The file toolbar’s **More file actions** (⋮) menu contains
+**View changes** for the saved PR diff and **View file in repository** for the repository link.
 Configured `schemaMap` previews use an iframe and the v1 postMessage contract.
-Preview is the default when available. Editor (a configured `eox-jsonform`) and
-Source are mutually exclusive and can both be switched off to show only the preview.
+Preview opens by default when available. **Edit File** opens the editing pane.
+Use its **Editor** and **Source** tabs to switch views, or close the pane to return to the full preview.
 Files without a preview start in Source; files without a schema have no Editor.
 The split divider supports dragging and arrow keys; narrow layouts show the
-selected editing pane at full width. The read-only status tag follows the filename,
-and “View file” opens the configured repository.
+selected editing pane at full width. The read-only status tag follows the filename.
 
 Drafts remain in memory across tab switches. Save changes or Ctrl/⌘+S validates
 configured schemas, compares the current blob SHA with the opened version, commits

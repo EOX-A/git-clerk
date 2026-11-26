@@ -3,7 +3,7 @@ import { ref } from "vue";
 import { storeToRefs } from "pinia";
 import { useRoute } from "vue-router";
 import useSessionsStore from "@/stores/sessions.js";
-import { SESSION_STATUS } from "@/helpers/session-status.js";
+import { SESSION_STATUS, sessionTag } from "@/helpers/session-status.js";
 import NavIcon from "@/components/nav/NavIcon.vue";
 import SessionListPlaceholder from "@/components/nav/SessionListPlaceholder.vue";
 import { SessionActionDialog, SessionOptions } from "@/components/session";
@@ -102,13 +102,13 @@ const updatedSessionMethod = async () => {
         >
           <button
             type="button"
-            :aria-label="`${session.title}, PR #${session.number}, ${SESSION_STATUS[session.status].label}`"
+            :aria-label="`${session.title}, PR #${session.number}, ${SESSION_STATUS[sessionTag(session)].label}`"
             :aria-current="
               Number(route.params.sessionNumber) === session.number
                 ? 'page'
                 : undefined
             "
-            :title="`${session.title} · ${SESSION_STATUS[session.status].label}`"
+            :title="`${session.title} · ${SESSION_STATUS[sessionTag(session)].label}`"
             :class="
               Number(route.params.sessionNumber) === session.number
                 ? 'bg-elev font-medium shadow-selected'
@@ -118,8 +118,8 @@ const updatedSessionMethod = async () => {
             @click="onSelectSession(session)"
           >
             <NavIcon
-              :name="SESSION_STATUS[session.status].icon"
-              :class="SESSION_STATUS[session.status].color"
+              :name="SESSION_STATUS[sessionTag(session)].icon"
+              :class="SESSION_STATUS[sessionTag(session)].color"
               class="mt-0.5 size-4"
             />
             <span class="min-w-0 flex-1">
@@ -128,7 +128,7 @@ const updatedSessionMethod = async () => {
                 >#{{ session.number }} ·
                 {{
                   group === "repo"
-                    ? SESSION_STATUS[session.status].label
+                    ? SESSION_STATUS[sessionTag(session)].label
                     : session.repo
                 }}</span
               >

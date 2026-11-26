@@ -1,5 +1,6 @@
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
+import { computed } from "vue";
+import useOptionsMenu from "@/helpers/use-options-menu.js";
 import SessionIcon from "./SessionIcon.vue";
 
 const props = defineProps({
@@ -9,61 +10,23 @@ const props = defineProps({
   compact: { type: Boolean, default: false },
   label: { type: String, default: "Session options" },
 });
-const open = ref(false);
-const area = ref(null);
-const trigger = ref(null);
-const panel = ref(null);
+const {
+  open,
+  area,
+  trigger,
+  panel,
+  closeMethod,
+  toggleMethod,
+  blurMethod,
+  keyMethod,
+} = useOptionsMenu();
 const menuId = computed(
   () => `session-options-${props.session?.number ?? "pending"}`,
 );
-const closeMethod = (restore = true) => {
-  open.value = false;
-  if (restore) trigger.value?.focus();
-};
-const toggleMethod = async () => {
-  if (open.value) return closeMethod();
-  open.value = true;
-  await nextTick();
-  panel.value.querySelector('[role="menuitem"]:not(:disabled)')?.focus();
-};
 const actionMethod = (action) => {
   closeMethod();
   props.onAction(action);
 };
-const outsideMethod = (event) => {
-  if (!area.value.contains(event.target)) closeMethod(false);
-};
-const blurMethod = (event) => {
-  if (event.relatedTarget && !area.value.contains(event.relatedTarget))
-    closeMethod(false);
-};
-const keyMethod = (event) => {
-  if (event.key === "Escape") {
-    event.preventDefault();
-    event.stopPropagation();
-    closeMethod();
-  }
-  const items = [
-    ...panel.value.querySelectorAll('[role="menuitem"]:not(:disabled)'),
-  ];
-  const current = items.indexOf(document.activeElement);
-  const next =
-    event.key === "ArrowDown"
-      ? (current + 1) % items.length
-      : event.key === "ArrowUp"
-        ? (current - 1 + items.length) % items.length
-        : event.key === "Home"
-          ? 0
-          : event.key === "End"
-            ? items.length - 1
-            : null;
-  if (next !== null) {
-    event.preventDefault();
-    items[next]?.focus();
-  }
-};
-onMounted(() => document.addEventListener("pointerdown", outsideMethod));
-onUnmounted(() => document.removeEventListener("pointerdown", outsideMethod));
 </script>
 
 <template>
@@ -85,10 +48,7 @@ onUnmounted(() => document.removeEventListener("pointerdown", outsideMethod));
                 ? 'bg-border-soft opacity-100 pointer-events-auto'
                 : 'opacity-0 pointer-events-none group-hover/row:opacity-100 group-hover/row:pointer-events-auto group-focus-within/row:opacity-100 group-focus-within/row:pointer-events-auto group-data-[selected=true]/row:opacity-100 group-data-[selected=true]/row:pointer-events-auto',
             ]
-          : [
-              'size-11 rounded-lg hover:bg-hover workspace:size-8',
-              open ? 'bg-hover' : '',
-            ],
+          : 'size-11 rounded-lg border border-border-soft hover:bg-hover aria-expanded:bg-hover disabled:opacity-60 workspace:size-[30px]',
       ]"
       class="flex items-center justify-center text-muted hover:text-text focus-visible:opacity-100 focus-visible:pointer-events-auto"
       @click.stop="toggleMethod"

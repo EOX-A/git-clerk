@@ -3,7 +3,6 @@ export const getDummyMessages = () => [
   {
     id: "demo-intro",
     role: "assistant",
-    showChanges: true,
     text: "Send a message to test the chat API. The response appears only in the browser console.",
   },
 ];

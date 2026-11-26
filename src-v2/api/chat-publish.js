@@ -86,6 +86,7 @@ export async function publishChatFiles(context, bundle, attempt = {}, session) {
 
   if (!attempt.result && !attempt.uncertain) {
     attempt.requested = true;
+    attempt.beforeSha = targetSession.headSha;
     try {
       const result = await publishGitBundle(
         context,
@@ -169,6 +170,7 @@ export async function publishChatFiles(context, bundle, attempt = {}, session) {
   );
   return {
     session: published,
+    beforeSha: attempt.result.base_commit_sha || attempt.beforeSha,
     commitSha,
     files: entries.map(([path]) => ({ path })),
     documents,

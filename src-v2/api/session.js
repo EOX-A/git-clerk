@@ -46,6 +46,7 @@ export function mapSession(context, data) {
     updatedAt: data.updated_at,
     author: data.author,
     status,
+    prState: data.provider_state ?? data.state,
     branch,
     baseBranch: data.base_branch,
     headSha: data.head_sha,

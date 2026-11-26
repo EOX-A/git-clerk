@@ -393,7 +393,6 @@ globalThis.gitClerkConfig = {
 //     context: { extensions: [".json"] },
 //     ui: {
 //       assistantName: "Git Clerk",
-//       panelTitle: "Git Clerk AI Assistant",
 //       heading: "What would you like to update?",
 //       description: "Create and edit EarthCODE catalogue content.",
 //       placeholder: "Describe a product, project or metadata change…",
@@ -440,7 +439,6 @@ globalThis.gitClerkConfig.chat = {
     context: { extensions: [".md"], inputField: "markdown" },
     ui: {
       assistantName: "Git Clerk",
-      panelTitle: "Narrative editor",
       heading: "What would you like to work on?",
       description: "Create a narrative or update existing content.",
       placeholder: "Describe what you’d like to create or change…",

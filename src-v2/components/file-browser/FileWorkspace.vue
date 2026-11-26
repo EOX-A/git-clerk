@@ -197,10 +197,22 @@ const confirmMethod = async (paths) => {
     (resolve) => (pending.value = { paths: [...paths], resolve }),
   );
 };
+const editModes = computed(() => {
+  const meta = activeDocument.value?.meta;
+  return meta?.schema && !meta.generic ? ["editor", "source"] : ["source"];
+});
+const togglePaneMethod = async () => {
+  const doc = activeDocument.value;
+  const mode = doc.mode === "none" ? editModes.value[0] : doc.mode;
+  doc.mode = toggleFileMode(doc.mode, mode, doc.preview);
+  if (doc.mode !== "none") {
+    await nextTick();
+    const pane = workspace.value?.querySelector("#file-edit-pane");
+    (pane?.querySelector('[aria-selected="true"]') || pane)?.focus();
+  }
+};
 const closePaneMethod = () => {
-  workspace.value
-    ?.querySelector('[aria-label="File view"] [aria-pressed="true"]')
-    ?.focus();
+  workspace.value?.querySelector('[aria-controls="file-edit-pane"]')?.focus();
   activeDocument.value.mode = "none";
 };
 const saveActiveMethod = async (path = activePath.value) => {
@@ -364,12 +376,20 @@ defineExpose({
   openFile: openFileMethod,
   openChanges: openChangesMethod,
 });
-const closeDrawerMethod = (event) => {
-  if (fileOperationPending.value) return;
+const closeDrawerMethod = () => {
+  if (!drawerOpen.value || fileOperationPending.value) return;
   drawerOpen.value = false;
-  event.currentTarget
-    .closest(".file-workspace")
+  workspace.value
     ?.querySelector('[aria-controls="session-file-drawer"]')
+    ?.focus();
+};
+const toggleDrawerMethod = async () => {
+  if (fileOperationPending.value) return;
+  if (drawerOpen.value) return closeDrawerMethod();
+  drawerOpen.value = true;
+  await nextTick();
+  workspace.value
+    ?.querySelector('.file-drawer [role="tab"][aria-selected="true"]')
     ?.focus();
 };
 const closeFileMethod = async (id) => {
@@ -479,90 +499,81 @@ onUnmounted(() => {
 <template>
   <div
     ref="workspace"
-    class="file-workspace flex min-h-0 flex-1 flex-col"
+    class="file-workspace relative flex min-h-0 min-w-0 flex-1"
     :role="!session ? 'region' : undefined"
     :aria-label="!session ? 'Temporary file preview' : undefined"
+    @keydown.esc="closeDrawerMethod"
   >
-    <FileTabs
-      :tabs="session ? tabs : draftTabs"
-      :disabled="!session"
-      :dirty-paths="dirtyPaths"
-      :active-id="activePath"
-      :drawer-open="drawerOpen"
-      :change-count="session?.changedFiles ?? draftTabs.length"
-      :loading="session ? loading && !initialized : !draftTabs.length"
-      :on-select="(id) => (activeID = id)"
-      :on-close="closeFileMethod"
-      :on-toggle-drawer="
-        () => {
-          if (!fileOperationPending) drawerOpen = !drawerOpen;
-        }
-      "
-    />
-    <div
-      v-if="error && !drawerOpen"
-      role="alert"
-      class="px-4 py-2 text-ui text-closed"
-    >
-      {{ error }}
-      <button
-        type="button"
-        class="underline underline-offset-2"
-        @click="loadChangesMethod"
-      >
-        Retry
-      </button>
-    </div>
-    <FileToolbar
-      v-if="activePath || !session"
-      :temporary="Boolean(showingDraft)"
-      :path="activePath || ''"
-      :doc="activeDocument"
-      :inert="fileOperationPending || undefined"
+    <FileDrawer
+      v-if="session"
       :session="fileSession"
-      :dirty="dirtyPaths.includes(activePath)"
-      :changed="activeChange"
-      :read-only="
-        Boolean(session && !session.canEdit) ||
-        activeChange?.status === 'removed'
-      "
-      :repository-url="
-        session &&
-        fileRepositoryUrl(session, activePath, activeDocument, activeChange)
-      "
-      :on-mode="
-        (mode) =>
-          (activeDocument.mode = toggleFileMode(
-            activeDocument.mode,
-            mode,
-            activeDocument.preview,
-          ))
-      "
-      :on-save="() => saveActiveMethod()"
-      :on-diff="
-        () => {
-          if (activeDocument) activeDocument.diff = !activeDocument.diff;
-        }
-      "
-      :on-history="activeHistoryMethod"
+      :open="drawerOpen"
+      :view="drawerView"
+      :files="files"
+      :loading="loading"
+      :error="error"
+      :incomplete="incomplete"
+      :active-path="activePath"
+      :opened-paths="openedPaths"
+      :on-open="openFileMethod"
+      :on-view="(view) => (drawerView = view)"
+      :on-retry="loadChangesMethod"
+      :can-mutate="canMutateFiles"
+      :on-file-operation="fileOperationMethod"
+      @close="closeDrawerMethod"
     />
-    <div class="relative flex min-h-0 flex-1" @keydown.esc="closeDrawerMethod">
-      <FileDrawer
-        v-if="session"
+    <div class="flex min-h-0 min-w-0 flex-1 flex-col">
+      <FileTabs
+        :tabs="session ? tabs : draftTabs"
+        :disabled="!session"
+        :dirty-paths="dirtyPaths"
+        :active-id="activePath"
+        :drawer-open="drawerOpen"
+        :change-count="session?.changedFiles ?? draftTabs.length"
+        :loading="session ? loading && !initialized : !draftTabs.length"
+        :on-select="(id) => (activeID = id)"
+        :on-close="closeFileMethod"
+        :on-toggle-drawer="toggleDrawerMethod"
+      />
+      <div
+        v-if="error && !drawerOpen"
+        role="alert"
+        class="px-4 py-2 text-ui text-closed"
+      >
+        {{ error }}
+        <button
+          type="button"
+          class="underline underline-offset-2"
+          @click="loadChangesMethod"
+        >
+          Retry
+        </button>
+      </div>
+      <FileToolbar
+        v-if="activePath || !session"
+        :temporary="Boolean(showingDraft)"
+        :path="activePath || ''"
+        :doc="activeDocument"
+        :inert="fileOperationPending || undefined"
         :session="fileSession"
-        :open="drawerOpen"
-        :view="drawerView"
-        :files="files"
-        :loading="loading"
-        :error="error"
-        :incomplete="incomplete"
-        :active-path="activePath"
-        :opened-paths="openedPaths"
-        :on-open="openFileMethod"
-        :on-view="(view) => (drawerView = view)"
-        :on-retry="loadChangesMethod"
-        :can-mutate="canMutateFiles"
-        :on-file-operation="fileOperationMethod"
+        :dirty="dirtyPaths.includes(activePath)"
+        :changed="activeChange"
+        :read-only="
+          Boolean(session && !session.canEdit) ||
+          activeChange?.status === 'removed'
+        "
+        :repository-url="
+          session &&
+          fileRepositoryUrl(session, activePath, activeDocument, activeChange)
+        "
+        :on-toggle-pane="togglePaneMethod"
+        :on-save="() => saveActiveMethod()"
+        :on-diff="
+          () => {
+            if (activeDocument) activeDocument.diff = !activeDocument.diff;
+          }
+        "
+        :on-history="activeHistoryMethod"
       />
       <FileContent
         v-if="activePath"
@@ -573,6 +584,10 @@ onUnmounted(() => {
         :inert="fileOperationPending || undefined"
         :session="fileSession"
         :changed="activeChange"
+        :modes="editModes"
+        :on-select-mode="
+          showingDraft ? null : (mode) => (activeDocument.mode = mode)
+        "
         :on-close-pane="showingDraft ? null : closePaneMethod"
         :on-change="
           (text) => {
@@ -633,6 +648,9 @@ onUnmounted(() => {
   container-type: inline-size;
 }
 @container (max-width: 620px) {
+  :deep(.drawer-close) {
+    display: inline-flex;
+  }
   :deep(.file-drawer) {
     position: absolute;
     inset: 0 auto 0 0;

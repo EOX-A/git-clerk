@@ -1,4 +1,4 @@
-import { SESSION_STATUS } from "./session-status.js";
+import { SESSION_STATUS, sessionTag } from "./session-status.js";
 
 export const SESSION_SORT_OPTIONS = [
   { value: "recent", label: "Recent activity" },
@@ -21,10 +21,11 @@ export function filterSessions(sessions, statuses, sort) {
     pr: (a, b) => b.number - a.number || recent(a, b),
     title: (a, b) => a.title.localeCompare(b.title) || recent(a, b),
     status: (a, b) =>
-      ranks.indexOf(a.status) - ranks.indexOf(b.status) || recent(a, b),
+      ranks.indexOf(sessionTag(a)) - ranks.indexOf(sessionTag(b)) ||
+      recent(a, b),
   };
   return sessions
-    .filter((session) => statuses.includes(session.status))
+    .filter((session) => statuses.includes(sessionTag(session)))
     .sort(compare[sort]);
 }
 

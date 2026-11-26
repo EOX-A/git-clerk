@@ -36,6 +36,7 @@
     "@primer/octicons": "^19.11.0",
     "axios": "^1.7.7",
     "dayjs": "^1.11.13",
+    "diff": "^8.0.4",
     "js-base64": "^3.7.7",
     "lodash.debounce": "^4.0.8",
     "lodash.find": "^4.6.0",

@@ -11,7 +11,6 @@ const pathTemplate = outputFile?.includes("<id>")
 
 defineProps({
   onOpenFile: { type: Function, default: null },
-  onOpenChanges: { type: Function, default: null },
   messages: {
     type: Array,
     default: () => [],
@@ -108,16 +107,8 @@ defineProps({
             Boolean(msg.streaming && pathTemplate && !msg.files?.length)
           "
           :on-open-file="onOpenFile"
-          :on-open-changes="onOpenChanges"
+          :turn-diff="msg.turnDiff"
         />
-        <button
-          v-else-if="msg.showChanges && onOpenChanges"
-          type="button"
-          class="mt-2 self-start rounded-md px-2 py-1 text-ui text-primary hover:bg-hover"
-          @click="onOpenChanges()"
-        >
-          View changes
-        </button>
       </template>
 
       <p v-else-if="msg.role === 'error'" class="text-ui text-del-fg">

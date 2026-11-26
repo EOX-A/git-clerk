@@ -1,6 +1,6 @@
 <script setup>
 import { computed, inject, onMounted, onUnmounted, ref } from "vue";
-import { SESSION_STATUS } from "@/helpers/session-status.js";
+import { SESSION_STATUS, sessionTag } from "@/helpers/session-status.js";
 import { canSubmitSession, sessionChecks } from "@/helpers/session-checks.js";
 import SessionIcon from "./SessionIcon.vue";
 import SessionOptions from "./SessionOptions.vue";
@@ -53,7 +53,7 @@ const copyBranchMethod = async () => {
   }, 2000);
 };
 const status = computed(() =>
-  props.session ? SESSION_STATUS[props.session.status] : null,
+  props.session ? SESSION_STATUS[sessionTag(props.session)] : null,
 );
 const checks = computed(() =>
   props.session ? sessionChecks(props.session) : null,
