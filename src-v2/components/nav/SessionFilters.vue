@@ -148,7 +148,7 @@ onUnmounted(() => {
       aria-label="Filter and sort sessions"
       :style="position"
       :data-scrolling="isScrolling"
-      class="nav-scrollbar fixed z-50 flex max-h-[calc(100dvh-16px)] w-[296px] max-w-[calc(100vw-16px)] flex-col gap-3.5 overflow-y-auto rounded-xl border border-border-soft bg-elev p-3 shadow-menu"
+      class="nav-scrollbar fixed z-50 flex max-h-[calc(100dvh-16px)] w-[332px] max-w-[calc(100vw-16px)] flex-col gap-3.5 overflow-y-auto rounded-xl border border-border-soft bg-elev p-3 shadow-menu"
       @scroll.passive="scrollMethod"
       @keydown.esc.stop.prevent="closeMethod(true)"
     >
@@ -208,20 +208,20 @@ onUnmounted(() => {
                 ? 'bg-hover font-semibold text-text'
                 : 'font-medium text-muted'
             "
-            class="flex h-11 items-center gap-1.5 rounded-2xl pr-1.5 pl-2.5 text-[12.5px] hover:bg-hover workspace:h-8"
+            class="flex h-11 min-w-0 items-center gap-1.5 rounded-2xl pr-1.5 pl-2.5 text-[12.5px] hover:bg-hover workspace:h-8"
             @click="sessionsStore.toggleStatus(value)"
           >
             <NavIcon
               :name="status.icon"
               :class="statuses.includes(value) ? status.color : 'text-muted'"
-              class="size-3.5"
+              class="size-3.5 shrink-0"
             />
             <span class="flex-1 text-left whitespace-nowrap">{{
               status.label
             }}</span>
             <span
               :class="statuses.includes(value) ? 'bg-elev' : ''"
-              class="inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums"
+              class="inline-flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full px-1.5 text-[11px] font-semibold tabular-nums"
               >{{ allLoaded ? statusCounts[value] : "…" }}</span
             >
           </button>

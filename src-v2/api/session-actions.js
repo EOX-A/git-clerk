@@ -1,4 +1,5 @@
 import { sessionDetails } from "./session.js";
+import { withPrAttribution } from "./git-broker.js";
 import { canSubmitSession } from "../helpers/session-checks.js";
 
 export async function updateSession(context, number, action, value = "") {
@@ -32,7 +33,18 @@ export async function updateSession(context, number, action, value = "") {
           "- Review the proposed changes before merging.",
         ].join("\n")
       : undefined;
-    const body = message || fallbackBody;
+    const rawBody = message || fallbackBody;
+    const body = rawBody ? withPrAttribution(rawBody, context) : undefined;
+    if (body) {
+      try {
+        await context.request(path, {
+          method: "PATCH",
+          body: { body },
+        });
+      } catch (cause) {
+        if (![404, 405, 501].includes(cause?.status)) throw cause;
+      }
+    }
     await context.request(`${path}/submit`, {
       method: "POST",
       body: body ? { body } : {},
